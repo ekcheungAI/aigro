@@ -3,73 +3,215 @@
 @tailwind utilities;
 
 @layer base {
+  /* ============ AIGRO Design Tokens (design.md §2) ============ */
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 5.9% 10%;
-    --radius: 0.625rem;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Light mode — warm paper */
+    --bg: 45 29% 97%;            /* #FAF9F6 */
+    --surface: 0 0% 100%;        /* #FFFFFF */
+    --card: 43 23% 94%;          /* #F3F1EC */
+    --overlay: 0 0% 100%;        /* #FFFFFF @ 92% (use with /92 alpha) */
+    --text-primary: 40 6% 10%;   /* #1C1B19 */
+    --text-secondary: 40 6% 31%; /* #54514B */
+    --text-muted: 39 6% 51%;     /* #8A857C */
+    --border: 40 18% 87%;        /* #E4E0D8 */
+    --border-strong: 39 14% 75%; /* #C9C3B8 */
+    --ink: 211 55% 23%;          /* #1B3A5C */
+    --ink-hover: 211 56% 18%;    /* #142C46 */
+    --ink-solid: 211 55% 23%;    /* light: solid button = ink */
+    --ink-soft: 210 28% 93%;     /* #E8EDF2 */
+    --gold: 43 58% 42%;          /* #A8842C */
+    --gold-soft: 42 49% 91%;     /* #F3ECDC */
+    --success: 140 33% 36%;      /* #3E7A52 */
+    --warning: 37 83% 35%;       /* #A36A0F */
+    --error: 5 55% 42%;          /* #A63A30 */
+
+    /* Fonts (design.md §3.1) */
+    --font-display: "Fraunces", "Noto Serif TC", serif;
+    --font-sans: "Inter", "Noto Sans TC", system-ui, sans-serif;
+    --font-mono: "IBM Plex Mono", "Noto Sans TC", monospace;
+
+    --radius: 8px;
+
+    /* ---- shadcn token remap (design.md §7: primary→ink, destructive→error) ---- */
+    --background: var(--bg);
+    --foreground: var(--text-primary);
+    --card-foreground: var(--text-primary);
+    --popover: var(--surface);
+    --popover-foreground: var(--text-primary);
+    --primary: var(--ink);
+    --primary-foreground: 0 0% 100%;
+    --secondary: var(--card);
+    --secondary-foreground: var(--text-primary);
+    --muted: var(--card);
+    --muted-foreground: var(--text-muted);
+    --accent: var(--ink-soft);
+    --accent-foreground: var(--ink);
+    --destructive: var(--error);
+    --destructive-foreground: 0 0% 100%;
+    --input: var(--border-strong);
+    --ring: var(--ink);
+    --sidebar-background: var(--surface);
+    --sidebar-foreground: var(--text-primary);
+    --sidebar-primary: var(--ink);
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: var(--ink-soft);
+    --sidebar-accent-foreground: var(--ink);
+    --sidebar-border: var(--border);
+    --sidebar-ring: var(--ink);
+
+    /* Verified badge sheen opacity (design.md §5.3: 22% light / 14% dark) */
+    --sheen-opacity: 0.22;
   }
 
   .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Dark mode — warm charcoal */
+    --bg: 36 12% 8%;             /* #171512 */
+    --surface: 30 10% 11%;       /* #201D1A */
+    --card: 33 13% 14%;          /* #28241F */
+    --overlay: 30 10% 11%;       /* #201D1A @ 92% */
+    --text-primary: 40 24% 93%;  /* #F1EEE8 */
+    --text-secondary: 39 11% 75%;/* #C6C1B8 */
+    --text-muted: 38 7% 55%;     /* #938D83 */
+    --border: 33 12% 19%;        /* #35302A */
+    --border-strong: 36 11% 27%; /* #4C463D */
+    --ink: 210 49% 71%;          /* #8FB4D9 */
+    --ink-hover: 210 49% 79%;    /* lighter hover in dark */
+    --ink-solid: 212 45% 30%;    /* #2A4A6E solid button */
+    --ink-soft: 209 28% 19%;     /* #22303D */
+    --gold: 42 54% 54%;          /* #C9A44C */
+    --gold-soft: 42 33% 14%;     /* #2E2717 */
+    --success: 141 28% 56%;      /* #6FAE85 */
+    --warning: 38 67% 54%;       /* #D9A03C */
+    --error: 6 59% 63%;          /* #D9756A */
+
+    --sheen-opacity: 0.14;
+  }
+
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: hsl(var(--bg));
+    color: hsl(var(--text-primary));
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Headings: serif display + CJK proportional spacing (design.md §3.1) */
+  h1, h2, h3, .font-display {
+    font-family: var(--font-display);
+    font-feature-settings: "palt";
+  }
+
+  /* Theme switch: 200ms cross-fade, no full-page flash (design.md §5.3).
+     Element selectors only — class-based transitions (e.g. card hover) keep priority. */
+  body, header, footer, nav, main, section, article, aside, div, span,
+  a, button, input, textarea, p, li, ul, ol, h1, h2, h3, h4, h5, h6 {
+    transition-property: background-color, border-color, color, fill, stroke;
+    transition-duration: 200ms;
+    transition-timing-function: ease;
+  }
+
+  ::selection {
+    background-color: hsl(var(--ink-soft));
+    color: hsl(var(--ink));
+  }
+
+  :focus-visible {
+    outline: 2px solid hsl(var(--ink));
+    outline-offset: 2px;
   }
 }
 
-@layer base {
-  * {
-    @apply border-border;
+@layer components {
+  /* Hairline card chrome shared by content cards */
+  .card-hover {
+    @apply transition-[transform,border-color,box-shadow] duration-180 ease-out;
   }
-  body {
-    @apply bg-background text-foreground;
+  .card-hover:hover {
+    transform: translateY(-2px);
+    border-color: hsl(var(--border-strong));
+  }
+
+  /* Inline link underline slide-in (design.md §5.2) */
+  .link-underline {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-size: 0% 1px;
+    background-repeat: no-repeat;
+    background-position: 0 100%;
+    transition: background-size 200ms ease;
+    padding-bottom: 2px;
+  }
+  .link-underline:hover {
+    background-size: 100% 1px;
+  }
+
+  /* Verified badge sheen sweep — gold ring only, transform-only (design.md §5.3) */
+  .badge-sheen {
+    position: relative;
+    overflow: hidden;
+    border-radius: 9999px;
+  }
+  .badge-sheen::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 9999px;
+    background: linear-gradient(
+      30deg,
+      transparent 30%,
+      hsl(0 0% 100% / var(--sheen-opacity)) 50%,
+      transparent 70%
+    );
+    transform: translateX(-120%);
+    pointer-events: none;
   }
 }
+
+@layer utilities {
+  .duration-120 {
+    transition-duration: 120ms;
+  }
+  .duration-180 {
+    transition-duration: 180ms;
+  }
+  .duration-250 {
+    transition-duration: 250ms;
+  }
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Ambient sheen: runs when .badge-sheen-ambient is present (8s loop, per-badge delay via --sheen-delay) */
+  .badge-sheen-ambient::after,
+  .badge-sheen:hover::after {
+    animation: badge-sheen 900ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+  .badge-sheen-ambient::after {
+    animation: badge-sheen 900ms cubic-bezier(0.4, 0, 0.2, 1) var(--sheen-delay, 2s) both,
+      badge-sheen-loop 8s cubic-bezier(0.4, 0, 0.2, 1) calc(var(--sheen-delay, 2s) + 900ms) infinite;
+  }
+}
+
+@keyframes badge-sheen {
+  from { transform: translateX(-120%); }
+  to { transform: translateX(120%); }
+}
+
+@keyframes badge-sheen-loop {
+  0% { transform: translateX(-120%); }
+  12% { transform: translateX(120%); }
+  100% { transform: translateX(120%); }
+}
+
+/* caret-blink provided by tailwind config (530ms, design.md §5.3) */
