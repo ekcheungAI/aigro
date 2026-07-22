@@ -85,7 +85,7 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="mt-16 flex flex-col items-start justify-between gap-4 border-t pt-6 sm:flex-row sm:items-center">
           <p className="text-caption text-text-muted">
-            © 2025 AIGRO・內容經編輯審核・AI 回答僅供參考・來源與授權聲明
+            © {new Date().getFullYear()} AIGRO・內容經編輯審核・AI 回答僅供參考・來源與授權聲明
           </p>
           <button
             type="button"

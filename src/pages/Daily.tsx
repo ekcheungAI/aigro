@@ -3,14 +3,13 @@ import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Calendar, ExternalLink } from "lucide-react";
 import Reveal, { REVEAL_EASE } from "@/components/Reveal";
+import { todayInfo, recentIssues } from "@/lib/daily";
 import type { InsightCategory } from "@/data/insights";
 import { cn } from "@/lib/utils";
 
-/** 日報 mock — 固定展示 2025-01-15 第 042 期 (daily.md) */
+/** 日報 — 日期、星期、期號按今日動態生成 (src/lib/daily.ts) */
 const ISSUE = {
-  date: "2025-01-15",
-  weekday: "星期三",
-  number: "042",
+  ...todayInfo(),
   sources: 23,
   picks: 5,
 };
@@ -76,15 +75,11 @@ const DAILY_ITEMS: DailyItem[] = [
 ];
 
 /** 近 7 日（原型：全部導向同一期 mock） */
-const RECENT_ISSUES = Array.from({ length: 7 }, (_, i) => {
-  const day = 15 - i;
-  const issueNum = 42 - i;
-  return {
-    date: `2025-01-${String(day).padStart(2, "0")}`,
-    issue: `第 ${String(issueNum).padStart(3, "0")} 期`,
-    current: i === 0,
-  };
-});
+const RECENT_ISSUES = recentIssues(7).map((d) => ({
+  date: d.date,
+  issue: `第 ${d.number} 期`,
+  current: d.current,
+}));
 
 /**
  * Daily 日報 (daily.md): 報紙刊頭版式 — Masthead（雙髮絲線）→ 頭條 Lead

@@ -8,6 +8,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import Reveal, { REVEAL_EASE } from "@/components/Reveal";
+import { todayInfo } from "@/lib/daily";
 import InsightCard from "@/components/InsightCard";
 import CaseCard from "@/components/CaseCard";
 import CategoryChip from "@/components/CategoryChip";
@@ -116,7 +117,7 @@ function Hero() {
               aria-hidden="true"
             />
             <span className="ml-auto text-caption text-text-muted">
-              2025-01-15・5 條
+              {todayInfo().date}・5 條
             </span>
           </button>
           <AnimatePresence initial={false}>

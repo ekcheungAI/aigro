@@ -10,6 +10,8 @@ import { cn } from "@/lib/utils";
 
 const DAILY_QUOTA = 5;
 const QUOTA_STORAGE_KEY = "aigro-ask-quota-used";
+const HISTORY_STORAGE_KEY = "aigro-ask-history";
+const HISTORY_LIMIT = 40;
 
 const SUGGESTIONS = [
   "今日 AI 有咩大事？",
@@ -111,8 +113,26 @@ function readInitialUsed(): number {
   }
 }
 
-let messageId = 0;
-const nextId = () => ++messageId;
+function readInitialMessages(): ChatMessage[] {
+  try {
+    const raw = window.localStorage.getItem(HISTORY_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as ChatMessage[];
+    if (!Array.isArray(parsed)) return [];
+    return parsed.slice(-HISTORY_LIMIT);
+  } catch {
+    return [];
+  }
+}
+
+let messageId: number | null = null;
+const nextId = () => {
+  if (messageId === null) {
+    // 以已恢復紀錄嘅最大 id 起錶，避免 React key 撞車
+    messageId = readInitialMessages().reduce((max, m) => Math.max(max, m.id), 0);
+  }
+  return ++messageId;
+};
 
 /**
  * Ask `/ask` — AI 編輯部對話（ask.md）。
@@ -126,7 +146,7 @@ export default function Ask() {
 
   const reduced = useReducedMotion();
   const [used, setUsed] = useState<number>(readInitialUsed);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>(readInitialMessages);
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -142,6 +162,18 @@ export default function Ask() {
       /* localStorage unavailable — mock state only */
     }
   }, [used]);
+
+  // 對話紀錄持久化 — refresh / 離開後返嚟都仲喺度
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        HISTORY_STORAGE_KEY,
+        JSON.stringify(messages.slice(-HISTORY_LIMIT))
+      );
+    } catch {
+      /* localStorage unavailable */
+    }
+  }, [messages]);
 
   const scrollToBottom = useCallback(() => {
     const el = scrollRef.current;
