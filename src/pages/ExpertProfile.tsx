@@ -260,6 +260,32 @@ function VerifiedProfile({ expert }: { expert: Expert }) {
         </section>
       )}
 
+      {/* Section 2b — 公開平台連結 chips(muted external-link,僅有真實 URL 先渲染) */}
+      {expert.socials && expert.socials.length > 0 && (
+        <section className="mx-auto max-w-container px-6 pt-6">
+          <Reveal y={12} duration={0.35}>
+            <div className="flex flex-wrap items-center gap-2">
+              {expert.socials.map((s) => (
+                <a
+                  key={s.url}
+                  href={s.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-sm border bg-surface px-3 py-1.5 text-caption text-text-muted transition-colors duration-150 hover:border-border-strong hover:text-ink"
+                >
+                  {s.label}
+                  <ExternalLink
+                    className="h-3 w-3"
+                    strokeWidth={1.5}
+                    aria-hidden="true"
+                  />
+                </a>
+              ))}
+            </div>
+          </Reveal>
+        </section>
+      )}
+
       {/* Sections B–E — 風格雷達 / 核心特質 / 工作風格 / 決策原則
           （成就佐證之後、授權透明度之前；僅 verified 專家有數據） */}
       <ExpertStyleSections expert={expert} />

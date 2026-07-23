@@ -14,6 +14,12 @@ export interface Viewpoint {
   summary: string;
 }
 
+/** 專家公開平台連結(只放真實 URL,profile 頁成就下方 muted chip 呈列) */
+export interface SocialLink {
+  label: string;
+  url: string;
+}
+
 /** 領航風格雷達單一維度(編輯部風格評估,非精確測量 — 頁面附免責 caption) */
 export interface RadarDimension {
   /** 維度名,如「實戰導向」 */
@@ -69,6 +75,8 @@ export interface Expert {
   bio?: string;
   /** 成就佐證 chips(一般事實性身份,不虛構數字/獎項) */
   metrics?: AchievementMetric[];
+  /** 公開平台連結 chips(profile 頁成就佐證下方,muted external-link) */
+  socials?: SocialLink[];
   /** 授權透明度區塊文案 */
   transparency?: string;
   /** 10 個核心觀點(頁面展示首 6 個,餘下收尾卡「+ N 個觀點」) */
@@ -221,116 +229,149 @@ export const experts: Expert[] = [
     slug: "elvin-cheung",
     nameEn: "Elvin Cheung",
     nameZh: "張曉峰",
-    title: "SuperBash 主理人 · AIGRO 領航專家",
+    title: "@ekcheungAI 創辦人 · SuperBash 主理人 · AIGRO 領航專家",
     image: monogramUri("#8A5A44", "EC"),
     verified: true,
-    specialties: ["Growth Hacking", "社群增長", "私域運營"],
-    quote: "增長唔係想出嚟,係試出嚟 — 數據說話,快速試錯。",
-    achievements: "SuperBash 主理人 · AIGRO 聯合發起 · 增長實驗策動者",
+    specialties: ["AI 實戰拆解", "自動化 Workflow", "Vibe Coding"],
+    quote:
+      "AI 落地唔係追 headline — 係 source-aware 咁將工具變 workflow,workflow 變系統。",
+    achievements:
+      "ekcheungAI 創辦人 · Perskill 創辦人 · AIGRO 聯合發起 · 全平台 AI 實戰內容",
     brandColor: "#8A5A44",
-    credential: "SUPERBASH 主理人・AIGRO 領航專家・香港",
+    credential: "EKCHEUNGAI 創辦人・PERSKILL 創辦人・AIGRO 領航專家・香港",
     verifiedDate: "2025-06",
-    bio: "透過 SuperBash 策動增長實驗與社群,擅長將海外 growth playbook 本地化落地香港。主張數據說話、快速試錯 — 而家作為 AIGRO 領航專家,帶住成個 club 用實驗節奏做增長。",
+    bio: "@ekcheungAI — 用廣東話將 AI 拆到全網 builders 都跟住學嘅實戰教學者。由新工具、Agent 架構到自動化 workflow,每一篇內容都實測先行、保留來源同限制,唔會將 demo 講到似 production。由內容矩陣到創辦 Perskill(世界級人物 AI 分身庫,invite-only),再到聯合發起 AIGRO — 核心信念只有一個:AI 落地唔係追 headline,係 source-aware 咁將工具變成 workflow、workflow 變成系統。",
     metrics: [
-      { value: "SuperBash", label: "主理人・增長實驗社群" },
+      { value: "ekcheungAI", label: "創辦人・AI 實戰內容矩陣" },
+      { value: "Perskill", label: "創辦人・世界級人物 AI 分身庫" },
       { value: "AIGRO", label: "聯合發起・領航專家" },
-      { value: "本地化", label: "海外 growth playbook 落地香港" },
-      { value: "快速試錯", label: "數據說話的實驗文化" },
+      { value: "全平台", label: "YouTube / IG / X / Threads 實戰內容" },
+      { value: "Vibe Coding", label: "流程實戰者・由 demo 到產品化" },
+    ],
+    socials: [
+      {
+        label: "YouTube",
+        url: "https://www.youtube.com/channel/UCaqu5I6nqegDt-zs7jr284A",
+      },
+      { label: "Instagram", url: "https://www.instagram.com/ekcheungAI/" },
+      { label: "X", url: "https://x.com/ekcheungAI" },
+      { label: "Threads", url: "https://www.threads.com/@ekcheungai" },
+      { label: "ekcheung.com", url: "https://www.ekcheung.com" },
     ],
     transparency:
-      "此 AI 分身基於 Elvin 嘅公開分享與授權內容蒸餾,知識庫經本人審核。分身回答僅代表其增長方法論,唔代表本人即時意見;內容僅供參考,唔構成任何專業建議。",
+      "此 AI 分身基於 Elvin(@ekcheungAI)嘅公開內容與授權材料蒸餾,知識庫經本人審核。分身回答僅代表其 AI 實戰方法論,唔代表本人即時意見;內容僅供參考,唔構成任何專業建議。",
     viewpoints: [
       {
-        title: "Growth hacking 唔係招數,係實驗節奏",
-        summary: "每星期一個假設、一個實驗、一個覆盤。",
+        title: "冇來源,唔出聲",
+        summary: "每個論點保留出處同實測脈絡 — source-aware 係底線,唔係風格。",
       },
       {
-        title: "海外 playbook 要本地化,唔係複製貼上",
-        summary: "香港用戶嘅信任路徑,同歐美完全唔同。",
+        title: "Demo 唔等於 production",
+        summary: "實測過先講限制 — 將 demo 講到似 production,係對觀眾最大嘅不誠實。",
       },
       {
-        title: "社群先於流量",
-        summary: "一千個真會員,好過十萬個路人粉絲。",
+        title: "一個工具唔係答案,串成 workflow 先係",
+        summary: "工具會過時,workflow 嘅槓桿唔會。",
       },
       {
-        title: "活動唔係終點,係私域嘅起點",
-        summary: "活動後 48 小時嘅跟進,決定大部分留存。",
+        title: "Workflow 變系統,先係真正落地",
+        summary: "慳一次時間係技巧;將流程沉澱成系統,先係資產。",
       },
       {
-        title: "意見可以有好多個,實驗結果只有一個",
-        summary: "用最小成本,驗證最大嘅假設。",
+        title: "AI 落地香港,要本地語境",
+        summary: "廣東話教學、香港案例 — 香港需要更實戰、更本地、更 source-aware 嘅 AI 學習入口。",
       },
       {
-        title: "快速試錯嘅前提,係低成本試錯",
-        summary: "將實驗做到一星期內有結果,失敗都係賺咗數據。",
+        title: "Vibe coding 改變咗「邊個可以做產品」",
+        summary: "唔使再等工程師 — 識拆解問題嘅人,而家都可以親手將諗法變成產品。",
       },
       {
-        title: "增長漏斗第一步,永遠係「被人記住」",
-        summary: "冇記憶點嘅曝光,等於冇發生過。",
+        title: "分身經濟:知識可以規模化",
+        summary: "Perskill 嘅實驗 — 將世界級人物嘅思維方式,變成可以對話嘅 AI 分身。",
       },
       {
-        title: "私域運營嘅核心係「有來有往」",
-        summary: "單向廣播嘅群組,好快就會死。",
+        title: "內容係複利,唔係消耗品",
+        summary: "每一篇可以跟住做嘅內容,都會持續累積信任同讀者。",
       },
       {
-        title: "香港市場細,正好做高密度實驗",
-        summary: "小市場反饋快,驗證完先複製出海。",
+        title: "教識人,先係最大嘅擴散",
+        summary: "內容嘅終點唔係 views,係觀眾真係做到。",
       },
       {
-        title: "口碑係唯一唔使續費嘅渠道",
-        summary: "設計「值得講」嘅體驗,好過加大廣告預算。",
+        title: "唔追 hype,追實測",
+        summary: "新工具出咗第一時間唔係讚,係試 — 限制同風險,同功能一樣重要。",
       },
     ],
     askIntro:
-      "基於授權知識庫回答,附觀點出處。問佢 growth hacking、社群增長、活動策劃與私域運營嘅問題。",
+      "基於授權知識庫回答,附觀點出處。問佢 AI 工具實測、自動化 workflow、vibe coding 流程同產品化落地嘅問題。",
     promptVersion: "v1.0",
     kbUpdated: "2026-07",
     radar: [
-      { label: "實驗速度", score: 94, note: "由諗法到落地試,以日計、唔以月計。" },
-      { label: "增長直覺", score: 87, note: "將海外 playbook 本地化嘅判斷快而準。" },
-      { label: "社群洞察力", score: 86, note: "睇得穿社群嘅真互動同假熱鬧。" },
-      { label: "數據先行", score: 90, note: "感覺唔準,實驗結果先係答案。" },
-      { label: "內容爆發力", score: 78, note: "識造記憶點,但更依賴系統化測試。" },
+      {
+        label: "實測精神",
+        score: 94,
+        note: "每個工具親手試過先講 — 限制同風險唔會收埋。",
+      },
+      {
+        label: "系統拆解力",
+        score: 90,
+        note: "將 Agent 架構同 workflow 拆到一步一步,跟住就做到。",
+      },
+      {
+        label: "內容爆發力",
+        score: 88,
+        note: "YouTube / IG / X / Threads 全平台內容矩陣,篇篇可以跟住做。",
+      },
+      {
+        label: "增長直覺",
+        score: 86,
+        note: "由內容到 Perskill 到 AIGRO,每步都係產品化嘅判斷。",
+      },
+      {
+        label: "工具廣度",
+        score: 92,
+        note: "新工具、Agent、自動化平台上手極快,但永遠 source-aware。",
+      },
     ],
-    traits: ["快速試錯", "數據說話", "社群驅動", "敢於出手"],
+    traits: ["Source-aware", "實測先行", "唔追 Hype", "廣東話教學", "Builder 思維"],
     workingStyle: [
       {
-        title: "決策方式",
-        body: "假設先行:任何增長諗法都寫成一條可以驗證嘅假設,然後搵最平嘅方法試。數據支持先加大投入 — 唔係靠感覺落注。",
+        title: "內容與研究流程",
+        body: "由 source 到 briefing:每篇內容由官方文件、release notes 同一手來源出發,親手實測之後先寫。結構永遠係 — 可以點試、限制係咩、風險喺邊、下一步點落地。來源、限制同實測脈絡全部保留,唔會為流量將 demo 講到似 production。",
       },
       {
-        title: "增長節奏",
-        body: "每星期一個假設、一個實驗、一個覆盤。數據唔好就停,唔會因為「都做咗一半」而繼續 — 停得快,先試得多。",
+        title: "實測與產品化節奏",
+        body: "demo 同 production 之間有一條誠實線。新工具出咗,第一時間係試,唔係讚 — 試完先講邊度用得、邊度用唔得。驗證過嘅做法沉澱成 workflow,再行多一步產品化 — Perskill 同 ekcheungAI 內容矩陣,都係咁樣由實測行出嚟。",
       },
       {
-        title: "社群經營",
-        body: "私域係長線關係,唔係廣播頻道。活動只係槓桿:用一次線下聚會換返嚟嘅信任,之後喺私域慢慢經營。",
+        title: "社群與教學",
+        body: "廣東話教學、香港語境 — 香港 founders 同 builders 嘅問題,要用佢哋嘅語言同案例答。喺 Telegram hkvibecoders 社群同 SuperBash 活動帶住大家實戰,將 vibe coding 流程做到人人跟到、做完真係用到。",
       },
     ],
     heuristics: [
       {
-        name: "最小實驗律",
-        whenToUse: "任何增長諗法未驗證之前。",
+        name: "Source 優先律",
+        whenToUse: "講任何 AI 工具、功能或者趨勢之前。",
         example:
-          "想試新渠道?唔使即刻落廣告 — 先喺社群出個 post 試水溫,或者整一頁簡單 landing page 收 email。有反應,先加大投入。",
+          "冇來源唔出聲。每個論點搵返官方文件或者一手出處先講 — 傳聞同截圖唔係來源。保留出處,係對觀眾最基本嘅尊重。",
       },
       {
-        name: "數據否決權",
-        whenToUse: "團隊對某個方向各執一詞嘅時候。",
+        name: "Demo ≠ Production",
+        whenToUse: "介紹任何新工具或者 AI 能力嘅時候。",
         example:
-          "感覺唔準,數據先至準。兩個版本揀邊個?唔係開會投票,係做一星期 A/B test,由點擊率話事。",
+          "實測過先講限制:邊度會斷、邊度要人把關、成本係幾多。將 demo 講到似 production,觀眾跟住做就會中伏 — 呢條誠實線唔過得。",
       },
       {
-        name: "私域優先律",
-        whenToUse: "決定資源投放喺公域定私域嘅時候。",
+        name: "工具變 Workflow 律",
+        whenToUse: "有人問「邊個 AI 工具最好」嘅時候。",
         example:
-          "流量係租返嚟,名單先係資產。廣告一停流量就停;但一個願意開你訊息嘅名單,可以陪你好多年。",
+          "一個工具唔係答案 — 將佢串入你嘅流程先係。例如將研究、起草、發佈串成一條自動化 workflow,槓桿大過單獨用任何一個工具好多倍。",
       },
       {
-        name: "覆盤不過夜",
-        whenToUse: "每個實驗或者活動結束之後。",
+        name: "教識人先係擴散",
+        whenToUse: "出任何內容或者指南之前。",
         example:
-          "結果 24 小時內要覆盤:預期係咩、實際係咩、下次點改。拖過一週,細節就唔記得晒,實驗等於白做。",
+          "每一篇都要可以跟住做:有步驟、有來源、有預期結果。觀眾真係做到,先會記住你 — views 會過去,信任會留低。",
       },
     ],
   },
