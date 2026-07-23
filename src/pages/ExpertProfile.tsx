@@ -220,7 +220,6 @@ function VerifiedHero({ expert }: { expert: Expert }) {
 
 function VerifiedProfile({ expert }: { expert: Expert }) {
   const toast = useMiniToast();
-  const accent = expert.brandColor ?? "#466A5E";
   const firstName = expertFirstName(expert);
   const viewpoints = expert.viewpoints ?? [];
   const shown = viewpoints.slice(0, 6);
@@ -340,11 +339,11 @@ function VerifiedProfile({ expert }: { expert: Expert }) {
             viewport={{ once: true, amount: 0.4 }}
             transition={{ duration: 0.4, delay: 0.15, ease: REVEAL_EASE }}
           >
-            {/* Primary — 專家色 tinted 實心按鈕，hover 亮度 -8% */}
+            {/* Primary — 標準墨藍實心 (design.md §6.3)；專家色僅留 hero 染色 /
+                姓名下劃線 / Ask 氣泡邊框三處 (§2.5) */}
             <Link
               to={askHref}
-              className="inline-flex h-11 items-center gap-1.5 rounded-md px-6 text-label text-white transition-[filter] duration-120 hover:brightness-[0.92] active:scale-[0.98]"
-              style={{ backgroundColor: accent }}
+              className="inline-flex h-11 items-center gap-1.5 rounded-md bg-ink-solid px-6 text-label text-white transition-colors duration-120 hover:bg-ink-hover active:scale-[0.98]"
             >
               與 AI 分身對話
               <ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />

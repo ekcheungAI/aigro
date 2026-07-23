@@ -4,11 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Calendar, ExternalLink } from "lucide-react";
 import Reveal, { REVEAL_EASE } from "@/components/Reveal";
 import { todayInfo, recentIssues } from "@/lib/daily";
-import {
-  AIHOT_CREDIT,
-  HK_ANGLE_PLACEHOLDER,
-  aihotDaily,
-} from "@/data/aihot";
+import { AIHOT_CREDIT, aihotDaily } from "@/data/aihot";
 import { cn } from "@/lib/utils";
 
 /** 日報 — 日期、星期、期號按今日動態生成 (src/lib/daily.ts)；內容來自 AIHOT 真實日報 */
@@ -135,16 +131,6 @@ export default function Daily() {
                 </p>
               </Reveal>
               <Reveal y={16} duration={0.4} delay={0.32}>
-                <div className="mt-6 border-l-2 border-border pl-4">
-                  <p className="text-overline font-sans uppercase text-text-muted">
-                    香港視角 HK Angle
-                  </p>
-                  <p className="mt-2 max-w-prose text-body text-text-muted">
-                    {HK_ANGLE_PLACEHOLDER}
-                  </p>
-                </div>
-              </Reveal>
-              <Reveal y={16} duration={0.4} delay={0.4}>
                 <div className="mt-8 flex flex-wrap items-center gap-x-3 gap-y-3 text-caption text-text-muted">
                   <a
                     href={LEAD.permalink}

@@ -4,10 +4,13 @@ import { ArrowRight, ExternalLink } from "lucide-react";
 import CategoryChip from "@/components/CategoryChip";
 import Reveal from "@/components/Reveal";
 import {
+  INSIGHT_ARTICLES,
   INSIGHT_CATEGORIES,
   INSIGHT_CATEGORY_SLUGS,
   INSIGHT_SLUG_CATEGORIES,
   INSIGHT_CATEGORY_ICONS,
+  insights,
+  type Insight,
   type InsightCategory,
 } from "@/data/insights";
 import {
@@ -53,8 +56,8 @@ function AihotInsightCard({ insight }: { insight: AihotInsight }) {
         </span>
       </div>
 
-      {/* Title */}
-      <h4 className="mt-4 line-clamp-2 font-display text-h4 text-text-primary transition-colors duration-150 group-hover:text-ink">
+      {/* Title — h4 卡片標題用無襯線 (design.md §3.2) */}
+      <h4 className="mt-4 line-clamp-2 font-sans text-h4 text-text-primary transition-colors duration-150 group-hover:text-ink">
         {insight.title}
       </h4>
 
@@ -62,16 +65,6 @@ function AihotInsightCard({ insight }: { insight: AihotInsight }) {
       <p className="mt-2 line-clamp-3 text-body-sm text-text-secondary">
         {insight.summary}
       </p>
-
-      {/* 香港視角 — placeholder（AIHOT 暫無 HK 短評，視覺收斂） */}
-      <div className="mt-4 border-l-2 border-border pl-3">
-        <p className="text-overline font-sans uppercase text-text-muted">
-          香港視角 HK Angle
-        </p>
-        <p className="mt-1 line-clamp-2 text-body-sm text-text-muted">
-          {insight.hkAngle}
-        </p>
-      </div>
 
       {/* Footer row */}
       <div className="mt-auto flex items-center gap-2 pt-4 text-caption text-text-muted">
@@ -86,6 +79,76 @@ function AihotInsightCard({ insight }: { insight: AihotInsight }) {
         </span>
       </div>
     </a>
+  );
+}
+
+/* ============ 編輯精選 Editor's Pick ============ */
+
+/**
+ * 站內長文精選 — 有完整香港視角長評的編輯部作品（design.md §6.5:
+ * 「差異化核心，絕不可埋沒」）。示範真實 HK angle，取代已移除的 placeholder。
+ */
+const EDITOR_PICK_SLUGS = ["openai-gpt-5-unified", "hkma-genai-sandbox-2"];
+
+const EDITOR_PICKS: { insight: Insight; lead: string }[] =
+  EDITOR_PICK_SLUGS.flatMap((slug) => {
+    const insight = insights.find((i) => i.slug === slug);
+    if (!insight) return [];
+    return [
+      { insight, lead: INSIGHT_ARTICLES[slug]?.lead ?? insight.hkAngle },
+    ];
+  });
+
+/** 編輯精選卡 — 內部長文連結，展示真實香港視角節錄 */
+function EditorPickCard({
+  insight,
+  lead,
+  index,
+}: {
+  insight: Insight;
+  lead: string;
+  index: number;
+}) {
+  return (
+    <Link
+      to={`/insights/${insight.slug}`}
+      className="card-hover group flex h-full flex-col rounded-md border bg-surface p-8 shadow-card dark:shadow-none max-md:p-6"
+    >
+      <div className="flex items-center gap-3">
+        <span className="font-mono text-caption text-ink" aria-hidden="true">
+          {String(index + 1).padStart(2, "0")}
+        </span>
+        <span className="rounded-sm bg-ink-soft px-3 py-1.5 text-overline font-sans uppercase text-ink">
+          {insight.category}
+        </span>
+        <span className="ml-auto text-caption text-text-muted">
+          {insight.readMinutes} 分鐘閱讀
+        </span>
+      </div>
+
+      <h4 className="mt-4 font-sans text-h4 text-text-primary transition-colors duration-150 group-hover:text-ink">
+        {insight.title}
+      </h4>
+
+      {/* 真實香港視角節錄 — 差異化核心 */}
+      <div className="mt-4 border-l-2 border-ink pl-3">
+        <p className="text-overline font-sans uppercase text-ink">
+          香港視角 HK Angle
+        </p>
+        <p className="mt-1 line-clamp-3 text-body-sm text-text-secondary">
+          {lead}
+        </p>
+      </div>
+
+      <span className="mt-auto inline-flex items-center gap-1 pt-5 text-label text-ink">
+        閱讀全文
+        <ArrowRight
+          className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-1"
+          strokeWidth={1.5}
+          aria-hidden="true"
+        />
+      </span>
+    </Link>
   );
 }
 
@@ -162,6 +225,27 @@ export default function Insights() {
             </a>
           </p>
         </Reveal>
+      </section>
+
+      {/* Section 1.5 — 編輯精選 Editor's Pick（站內長文，真實香港視角） */}
+      <section className="mx-auto max-w-container px-6 pt-12">
+        <Reveal y={16} duration={0.4}>
+          <p className="flex items-center gap-3 text-overline font-sans uppercase text-text-muted">
+            <span className="inline-block h-px w-6 bg-border-strong" aria-hidden="true" />
+            編輯精選 Editor's Pick
+          </p>
+        </Reveal>
+        <div className="mt-6 grid gap-6 lg:grid-cols-2">
+          {EDITOR_PICKS.map((pick, i) => (
+            <Reveal key={pick.insight.slug} y={20} duration={0.45} delay={i * 0.08}>
+              <EditorPickCard
+                insight={pick.insight}
+                lead={pick.lead}
+                index={i}
+              />
+            </Reveal>
+          ))}
+        </div>
       </section>
 
       {/* Section 2 — Daily 日報入口橫幅 */}

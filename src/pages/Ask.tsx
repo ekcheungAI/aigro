@@ -283,14 +283,6 @@ export default function Ask() {
               ))}
             </span>
           </div>
-          {/* 演示切換（ask.md §5）：點擊切換 0/5 額度用盡態 */}
-          <button
-            type="button"
-            onClick={() => setUsed(exhausted ? DAILY_QUOTA - 3 : DAILY_QUOTA)}
-            className="hidden text-caption text-text-muted underline-offset-2 transition-colors duration-150 hover:text-ink hover:underline md:inline"
-          >
-            {exhausted ? "重設 3/5" : "演示 0/5"}
-          </button>
           <Link
             to="/pricing"
             className="group inline-flex items-center gap-1 text-label text-ink"

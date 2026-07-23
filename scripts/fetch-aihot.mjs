@@ -14,6 +14,11 @@
 import { writeFile, mkdir } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { Converter } from "opencc-js/cn2t";
+
+/** 簡體 → 繁體（香港 variant, s2hk）— AIGRO 全站繁體中文（香港用語） */
+const toHK = Converter({ from: "cn", to: "hk" });
+const tc = (s) => (typeof s === "string" && s ? toHK(s) : s);
 
 const BASE = "https://aihot.virxact.com/api/public";
 const UA = "aihot-skill/0.3.6 (+https://aihot.virxact.com/aihot-skill/)";
@@ -40,13 +45,13 @@ const [itemsRes, daily, hotTopics] = await Promise.all([
 
 const items = (itemsRes.items ?? []).map((it) => ({
   id: it.id,
-  title: it.title,
-  title_en: it.title_en ?? null,
+  title: tc(it.title ?? ""),
+  title_en: it.title_en ? tc(it.title_en) : null,
   url: it.url ?? null,
   permalink: it.permalink,
-  source: it.source ?? "",
+  source: tc(it.source ?? ""),
   publishedAt: it.publishedAt,
-  summary: it.summary ?? "",
+  summary: tc(it.summary ?? ""),
   category: it.category ?? "",
   score: typeof it.score === "number" ? it.score : 0,
   attribution: it.attribution ?? null,
@@ -61,12 +66,12 @@ const snapshot = {
     attribution: daily.attribution ?? null,
     lead: daily.lead ?? null,
     sections: (daily.sections ?? []).map((s) => ({
-      label: s.label ?? "",
+      label: tc(s.label ?? ""),
       items: (s.items ?? []).map((it) => ({
-        title: it.title ?? "",
-        summary: it.summary ?? "",
+        title: tc(it.title ?? ""),
+        summary: tc(it.summary ?? ""),
         sourceUrl: it.sourceUrl ?? null,
-        sourceName: it.sourceName ?? "",
+        sourceName: tc(it.sourceName ?? ""),
         permalink: it.permalink ?? "",
         attribution: it.attribution ?? null,
       })),
@@ -74,10 +79,10 @@ const snapshot = {
   },
   hotTopics: (hotTopics.items ?? []).map((t) => ({
     id: t.id,
-    title: t.title ?? "",
+    title: tc(t.title ?? ""),
     url: t.url ?? null,
     permalink: t.permalink ?? "",
-    source: t.source ?? "",
+    source: tc(t.source ?? ""),
     sourceCount: t.sourceCount ?? 0,
     latestAt: t.latestAt ?? null,
   })),

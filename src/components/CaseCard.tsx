@@ -87,8 +87,8 @@ export default function CaseCard({ caseStudy, className }: CaseCardProps) {
         </span>
       </div>
 
-      {/* Title */}
-      <h4 className="mt-4 font-display text-h4 text-text-primary transition-colors duration-150 group-hover:text-ink">
+      {/* Title — h4 卡片標題用無襯線 (design.md §3.2) */}
+      <h4 className="mt-4 font-sans text-h4 text-text-primary transition-colors duration-150 group-hover:text-ink">
         {caseStudy.title}
       </h4>
 

@@ -36,21 +36,23 @@ function Hero() {
 
   return (
     <section className="relative isolate -mt-16 overflow-hidden border-b border-band-border bg-band-bg pt-16">
-      {/* Cinematic editorial photo layer — darkened via solid overlays only
-          (no decorative gradients, brand §1.3). Kept quiet: charcoal canvas
-          first, photograph second. */}
-      <img
-        src="/hero-cinematic.jpg"
-        alt=""
-        aria-hidden="true"
-        width={2048}
-        height={1082}
-        className="absolute inset-0 -z-10 h-full w-full object-cover opacity-60"
-      />
+      {/* Brand texture — print-masthead system, not imagery (design.md §9:
+          不需要 hero 背景圖). Oversized Fraunces wordmark watermark at ~5%
+          band-text bleeding off the right edge + fine hairline rules.
+          Static, transform-only positioning, silent in both themes. */}
       <div
-        className="absolute inset-0 -z-10 bg-band-bg/65"
         aria-hidden="true"
-      />
+        className="pointer-events-none absolute inset-0 -z-10 select-none"
+      >
+        <span className="absolute right-[-0.14em] top-1/2 -translate-y-1/2 whitespace-nowrap font-display text-[clamp(20rem,32vw,36rem)] leading-none tracking-[-0.03em] text-band-text/[0.05]">
+          AIGRO
+        </span>
+        {/* Masthead double rule, directly under the overlay nav */}
+        <span className="absolute inset-x-0 top-16 h-px bg-band-border-strong/50" />
+        <span className="absolute inset-x-0 top-[68px] h-px bg-band-border/60" />
+        {/* Broadsheet column rule — right margin only, clear of the measure */}
+        <span className="absolute inset-y-0 right-[18%] hidden w-px bg-band-border/40 lg:block" />
+      </div>
 
       <div className="mx-auto max-w-container px-6 pb-24 pt-24 max-md:pb-16 max-md:pt-16 md:pt-32 lg:pb-32">
         <div className="max-w-[920px]">
@@ -70,9 +72,9 @@ function Hero() {
           <h1 className="mt-8 font-display text-[44px] leading-[1.1] tracking-[-0.01em] text-band-text md:text-display-hero">
             {[
               <>
-                <span className="text-band-ink">可信賴的</span> AI・增長・
+                <span className="text-band-ink">可信賴的</span>
               </>,
-              <>商業情報平台</>,
+              <>AI・增長・商業情報平台</>,
             ].map((line, i) => (
               <span key={i} className="block overflow-hidden pb-1">
                 <motion.span

@@ -46,8 +46,8 @@ export default function InsightCard({ insight, className }: InsightCardProps) {
         </span>
       </div>
 
-      {/* Title */}
-      <h4 className="mt-4 line-clamp-2 font-display text-h4 text-text-primary transition-colors duration-150 group-hover:text-ink">
+      {/* Title — h4 卡片標題用無襯線 (design.md §3.2) */}
+      <h4 className="mt-4 line-clamp-2 font-sans text-h4 text-text-primary transition-colors duration-150 group-hover:text-ink">
         {insight.title}
       </h4>
 
@@ -56,15 +56,17 @@ export default function InsightCard({ insight, className }: InsightCardProps) {
         {insight.summary}
       </p>
 
-      {/* 香港視角 HK ANGLE — 差異化核心 */}
-      <div className="mt-4 border-l-2 border-ink pl-3">
-        <p className="text-overline font-sans uppercase text-ink">
-          香港視角 HK Angle
-        </p>
-        <p className="mt-1 line-clamp-3 text-body-sm text-text-secondary">
-          {insight.hkAngle}
-        </p>
-      </div>
+      {/* 香港視角 HK ANGLE — 差異化核心（僅在有真實短評時呈現，绝不放 placeholder） */}
+      {insight.hkAngle && (
+        <div className="mt-4 border-l-2 border-ink pl-3">
+          <p className="text-overline font-sans uppercase text-ink">
+            香港視角 HK Angle
+          </p>
+          <p className="mt-1 line-clamp-3 text-body-sm text-text-secondary">
+            {insight.hkAngle}
+          </p>
+        </div>
+      )}
 
       {/* Footer row */}
       <div className="mt-auto flex items-center gap-2 pt-4 text-caption text-text-muted">

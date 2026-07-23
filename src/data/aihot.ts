@@ -6,8 +6,17 @@
  * 使用規則：展示時保留 attribution 與 canonical 連結；摘要為 AI 生成。
  * 更新數據：npm run fetch:aihot
  */
+import { Converter } from "opencc-js/cn2t";
 import type { Insight, InsightCategory } from "./insights";
 import rawSnapshot from "./aihot-snapshot.json";
+
+/**
+ * 簡體 → 繁體（香港 variant, s2hk）。
+ * snapshot 生成時（scripts/fetch-aihot.mjs）已轉換；此處為 belt-and-braces，
+ * 確保任何未轉換的舊 snapshot 亦不會在繁體產品中渲染簡體內容。
+ */
+const toHK = Converter({ from: "cn", to: "hk" });
+const tc = (s: string): string => (s ? toHK(s) : s);
 
 /* ============ Snapshot 原始型別 ============ */
 
@@ -77,10 +86,6 @@ export const AIHOT_CREDIT =
 export const AIHOT_CANONICAL: string =
   snapshot.daily.attribution?.canonical ?? "https://aihot.virxact.com";
 
-/** AIHOT 暫無香港視角短評 — 誠實 placeholder（不虛構內容） */
-export const HK_ANGLE_PLACEHOLDER =
-  "香港視角短評即將推出 — AIGRO 編輯部每日跟進";
-
 /* ============ 分類映射 ============ */
 
 /** AIHOT category → 本站中文分類（兼容單數/別名寫法） */
@@ -103,10 +108,13 @@ export function mapAihotCategory(raw: string): InsightCategory {
   return CATEGORY_MAP[raw] ?? "行業動態";
 }
 
-/** AIHOT daily 簡中 section label → 本站分類 */
+/** AIHOT daily section label → 本站繁體分類（snapshot 已轉繁體，簡體 key 作向下兼容） */
 const DAILY_LABEL_MAP: Record<string, InsightCategory> = {
+  "產品發佈/更新": "產品發布",
   "产品发布/更新": "產品發布",
+  行業動態: "行業動態",
   行业动态: "行業動態",
+  技巧與觀點: "觀點與技巧",
   技巧与观点: "觀點與技巧",
 };
 
@@ -151,10 +159,11 @@ function toAihotInsight(raw: AihotRawItem): AihotInsight {
   return {
     slug: raw.id,
     category: mapAihotCategory(raw.category),
-    title: raw.title,
-    summary: raw.summary,
-    hkAngle: HK_ANGLE_PLACEHOLDER,
-    source: raw.source,
+    title: tc(raw.title),
+    summary: tc(raw.summary),
+    /** AIHOT 暫無香港視角短評 — 留空即不渲染該區塊（不虛構內容） */
+    hkAngle: "",
+    source: tc(raw.source),
     timeAgo: timeAgo(raw.publishedAt),
     publishedAt: raw.publishedAt,
     score: raw.score,
@@ -162,7 +171,7 @@ function toAihotInsight(raw: AihotRawItem): AihotInsight {
     permalink: raw.permalink,
     canonical: raw.attribution?.canonical ?? raw.permalink,
     originalUrl: raw.url,
-    titleEn: raw.title_en,
+    titleEn: raw.title_en ? tc(raw.title_en) : null,
     external: true,
   };
 }
@@ -241,11 +250,11 @@ function buildDaily(): AihotDaily {
         slug: matched ? matched.id : null,
         category: matched
           ? mapAihotCategory(matched.category)
-          : (DAILY_LABEL_MAP[section.label] ?? "行業動態"),
-        sectionLabel: section.label,
-        title: item.title,
-        summary: item.summary,
-        source: item.sourceName,
+          : (DAILY_LABEL_MAP[tc(section.label)] ?? "行業動態"),
+        sectionLabel: tc(section.label),
+        title: tc(item.title),
+        summary: tc(item.summary),
+        source: tc(item.sourceName),
         permalink: item.permalink,
         canonical: item.attribution?.canonical ?? item.permalink,
         score: matched ? matched.score : null,
@@ -258,11 +267,14 @@ function buildDaily(): AihotDaily {
     canonical: snapshot.daily.attribution?.canonical ?? AIHOT_CANONICAL,
     lead: flat[0] ?? null,
     items: flat.slice(1),
-    sections: snapshot.daily.sections.map((s) => ({
-      label: s.label,
-      category: DAILY_LABEL_MAP[s.label] ?? "行業動態",
-      count: s.items.length,
-    })),
+    sections: snapshot.daily.sections.map((s) => {
+      const label = tc(s.label);
+      return {
+        label,
+        category: DAILY_LABEL_MAP[label] ?? "行業動態",
+        count: s.items.length,
+      };
+    }),
     itemCount: flat.length,
   };
 }
@@ -282,9 +294,9 @@ export interface AihotHotTopic {
 
 export const aihotHotTopics: AihotHotTopic[] = snapshot.hotTopics.map((t) => ({
   id: t.id,
-  title: t.title,
+  title: tc(t.title),
   permalink: t.permalink,
-  source: t.source,
+  source: tc(t.source),
   sourceCount: t.sourceCount,
   latestAt: t.latestAt,
 }));
