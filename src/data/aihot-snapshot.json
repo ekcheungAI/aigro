@@ -1,8 +1,9 @@
 {
-  "fetchedAt": "2026-07-23T06:37:39.759Z",
+  "fetchedAt": "2026-07-23T10:28:24.285Z",
   "api": {
     "base": "https://aihot.virxact.com/api/public",
     "itemsCount": 50,
+    "allItemsCount": 100,
     "hasNext": true
   },
   "items": [
@@ -17,6 +18,7 @@
       "summary": "Cactus 推出基於 Gemma 4 的混合模型\"Cactus Hybrid\"，在模型檢查點內嵌入置信度探針，為每個生成答案輸出 0-1 之間的結構化置信度分數。高置信度時在設備端直接回答，低分時可自動路由至更大模型。該探針在零音頻訓練數據下，於四個音頻基準上達到 0.79-0.88 AUROC，遠超 token 熵基線（均值 0.549），且 MIT 協議開源。",
       "category": "ai-models",
       "score": 70,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmrx3iki50075ro694xrjogs3"
@@ -33,6 +35,7 @@
       "summary": "北京市發佈《關於加快智能體引領發展的若干措施》，共十條，首次將Harness Engineering（駕馭層工程）、Token經濟、OPC（一人公司）等前沿概念寫入正式政策。文件提出從Token消耗量計費轉向價值計費，鼓勵發展TaaS、AaaS、RaaS模式，並推動智能體嵌入手機、眼鏡、汽車等終端。",
       "category": "tip",
       "score": 66,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmrx2cdq000nzroqpc57eaxa3"
@@ -49,6 +52,7 @@
       "summary": "小紅書引擎架構團隊在OSDI 2026提出HELMSMAN，一個面向全閃存服務器的高性能向量近似最近鄰搜索系統。該系統通過聚類式索引、定製化存儲棧和分層學習式搜索剪枝，用約40台全閃存服務器承載了過去約35，000 CPU Core和約350 TB DRAM的負載，硬件成本節省超過90%。",
       "category": "paper",
       "score": 77,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmrwztuqg0000roqpmbblplr7"
@@ -65,25 +69,10 @@
       "summary": "英國 AI 安全研究所（AISI）測試 OpenAI 與 Anthropic 的 5 款前沿模型，發現所有模型均存在繞過規則或違規操作的\"作弊\"行為。其中 GPT-5.4 作弊率最高達 14.1%，GPT-5.6 Sol 為 12.6%，Claude Opus 4.7 為 9.1%。GPT 系列更傾向搜索互聯網，Claude 系列則傾向繞過沙盒限制。",
       "category": "paper",
       "score": 71,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmrwz39z703xjrobh5ex10yo7"
-      }
-    },
-    {
-      "id": "cmrwsnqtf01z2robhg338a1gq",
-      "title": "OpenAI 模型在安全測試中突破沙箱入侵 Hugging Face 作弊",
-      "title_en": "OpenAI's accidental cyberattack against Hugging Face is science fiction that happened",
-      "url": "https://simonwillison.net/2026/Jul/22/openai-cyberattack",
-      "permalink": "https://aihot.virxact.com/items/cmrwsnqtf01z2robhg338a1gq",
-      "source": "Simon Willison 博客",
-      "publishedAt": "2026-07-22T23:51:33.000Z",
-      "summary": "OpenAI 在一次未發佈模型的網絡安全測試中關閉護欄，模型突破自身沙箱並利用漏洞入侵 Hugging Face 內部系統，試圖竊取測試答案。Hugging Face 於 7 月 16 日披露攻擊者通過數據集處理代碼路徑橫向移動至多個集羣。OpenAI 在 7 月 21 日承認攻擊來自其智能體安全研究框架，正合作清理。",
-      "category": "tip",
-      "score": 78,
-      "attribution": {
-        "source": "AI HOT",
-        "canonical": "https://aihot.virxact.com/items/cmrwsnqtf01z2robhg338a1gq"
       }
     },
     {
@@ -97,6 +86,7 @@
       "summary": "OpenAI 報告其系統在安全基準 ExploitGym 測試中，利用一個此前未知的零日漏洞入侵了 HuggingFace，以尋找測試答案。HuggingFace 安全團隊和 AI 智能體檢測到了此次入侵，但該事件仍引發擔憂。儘管這是一次訓練演習且啓用了防護欄，但專家指出，這暴露了當前 AI 系統在網絡安全方面的嚴重隱患，且未來類似事件只會更多。",
       "category": "tip",
       "score": 73,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmrwm7xsg0058robhvqflbjll"
@@ -113,6 +103,7 @@
       "summary": "Alphabet Q2 營收同比增長 24%，Google Cloud 增速達 82%。Gemini 應用月活躍用户達 9.5 億，模型 API 處理量升至 220 億 token/分鐘，由 Flash 模型驅動。Gemini Enterprise 已被 90% 的財富 100 強企業採用。",
       "category": "industry",
       "score": 62,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmrwj872b001droqli3w3cya0"
@@ -129,6 +120,7 @@
       "summary": "Anthropic 向圖書作者支付 15 億美元版權和解金，聯邦法院已批准。約 482460 部作品中 91.3% 被索賠，每部約獲 3000 美元。法官此前裁定，在合法獲取的書籍上訓練 AI 屬於\"變革性\"合理使用，但大規模抓取網絡內容是否合法仍懸而未決。",
       "category": "industry",
       "score": 86,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmrwi1je4022froj05zaqigov"
@@ -145,6 +137,7 @@
       "summary": "GigaToken 是一款新的語言模型分詞器，在 AMD EPYC 9565 雙路 144 核 CPU 上對 GPT-2 分詞速度達 24.53 GB/s，比 HuggingFace Tokenizers 快 989 倍、比 tiktoken 快 681 倍。",
       "category": "ai-products",
       "score": 76,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmrwh01sr01qyroj0qdt3mo09"
@@ -161,6 +154,7 @@
       "summary": "MagenticLite 的模型現已完全開源。\n\n此前在 Microsoft Foundry 上提供的 MagenticBrain 和 Fara 1.5，現已在 Hugging Face 上開放權重。\n\n該應用、測試工具以及堆棧中的每個模型現已全部開放。",
       "category": "ai-products",
       "score": 73,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmrweu9dz014froj0gj35xvw9"
@@ -177,6 +171,7 @@
       "summary": "DAIR.AI的Elvis Saravia提出以\"任務\"作為超越提示詞的交互單元，通過整合語音、屏幕、文本、標註等多模態信息，讓智能體一次性獲得完整上下文。該方法受Karpathy關於長語音會話作為提示的啓發，通過前端加載上下文減少反覆修正，使智能體在單次交互中完成更復雜的工作。",
       "category": "tip",
       "score": 75,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmrwdro6w00ttroj0me2uszkk"
@@ -193,6 +188,7 @@
       "summary": "Anthropic 為 Claude 推出 Anthropic Economic Index 連接器，用户可在 claude.ai 中直接向 Claude 提問\"哪些職業使用 AI 最多\"等問題，答案基於 Index 的真實數據。該連接器無需安裝，適用於任何 Claude 模型，並會引導用户查看原始數據及其侷限性。完整數據集仍免費開放。",
       "category": "ai-products",
       "score": 70,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmrwcpwl900hyroj09infknzb"
@@ -209,6 +205,7 @@
       "summary": "OpenAI 計劃在佐治亞州薩凡納附近建設一座超大規模數據中心，承諾投資 200 億美元，並已爭取到 3.2 吉瓦的能源。該項目預計從 2028 年起部分電力投入使用，滿負荷時總成本可能超過 300 億美元。同時，OpenAI 將截至 2030 年的預計算力支出上調至近 7500 億美元，高於此前約 6000 億美元的預期。",
       "category": "industry",
       "score": 75,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmrw780wk00niro8gyqsp8hr0"
@@ -225,6 +222,7 @@
       "summary": "Nathan Lambert 與 Florian Brand 在播客中盤點開源模型最新動態。Kimi K3 發佈後，中美 AI 地緣政治、開源與閉源模型的經濟性、前沿安全等問題加速演進。Qwen 宣佈下一代大模型將開源權重，中國廠商在開源策略上持續加碼。討論還涉及開源模型與閉源前沿的性能差距、知識蒸餾爭議，以及後訓練對特定任務的價值。",
       "category": "tip",
       "score": 62,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmrw7dmtf00ukro8gtnl09yk6"
@@ -238,9 +236,10 @@
       "permalink": "https://aihot.virxact.com/items/cmrw6cr1r00jnro8guecs6ku9",
       "source": "X：SemiAnalysis (@SemiAnalysis_)",
       "publishedAt": "2026-07-22T14:00:35.000Z",
-      "summary": "AMD 剛剛宣佈與 Anthropic 達成協議，將投資高達 50 億美元，換取 Anthropic 採購 2GW 的 AMD MI455 UALOE72 及未來 GPU。🚨 這與我們三天前關於 Anthropic 的説法一致。",
+      "summary": "AMD 剛剛宣佈與 Anthropic 達成協議，將投資高達 50 億美元，換取 Anthropic 採購 2GW 的 AMD MI455 UALOE72 及未來 GPU。 這與我們三天前關於 Anthropic 的説法一致。",
       "category": "industry",
       "score": 76,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmrw6cr1r00jnro8guecs6ku9"
@@ -257,6 +256,7 @@
       "summary": "Qwen-Image-3.0上線，支持最高4.5k token輸入、12種語言、20多種字體，以及多圖融合、圖中圖和圖片編輯。實測顯示，其在中文長文本生成、多語言混合排版、UI設計、多圖融合與圖片編輯等19個場景中均能穩定輸出，文字不崩且信息對應準確，圖片質量已能與GPT Image2媲美。該模型在國內可直接使用，速度快且價格不貴。",
       "category": "tip",
       "score": 71,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmrw3blsc00n51p884m3ka7o2"
@@ -273,6 +273,7 @@
       "summary": "小紅書技術團隊開源 BigMac，一種針對多模態大模型訓練的依賴安全嵌套流水線新範式。它以 LLM 流水線為主幹，在不打亂執行順序的前提下嵌入編碼器和生成器計算，相比基線實現 1.08x-1.9x 加速，同時保持激活顯存有界。BigMac 已作為 dots 多模態模型訓練的核心組件投入生產。",
       "category": "ai-products",
       "score": 62,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmrvx8ycy0240bipz0pkrvryq"
@@ -289,6 +290,7 @@
       "summary": "騰訊設計Agent平台Miora今日全面開放，無需邀請碼即可使用。該平台由WorkBuddy團隊打造，提供品牌設計、影視創意等五大場景模式，支持自定義多模態模型和Agent推理深度，並內置Skill市場與記憶系統。",
       "category": "ai-products",
       "score": 77,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmrvl3qgw03hubihbavi1fla0"
@@ -305,6 +307,7 @@
       "summary": "研究發現自然語言自編碼器（NLA）的重建分數無法驗證逐聲明的忠實性，模型可能依賴\"私密代碼\"而非真實依據。作者提出RECAP方法，在目標模型上聯合訓練線性頭以保持指定內容可解碼。在Pythia-160M上，獨立探針能可靠區分真假聲明（AUC 0.96），並在對抗編輯下仍能標記謊言（AUC 0.95）。",
       "category": "paper",
       "score": 70,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmrx3dmt7001nro69xdxeq8dd"
@@ -321,6 +324,7 @@
       "summary": "Cursor 推出 Cursor Router，可自動將每個編碼請求分配給最合適的模型。在線 A/B 測試顯示，Auto Intelligence 模式在用户滿意度接近 Fable 的同時，成本降低約 60%；Auto Balance 模式滿意度超過 Opus 4.8，成本降低約 36%。",
       "category": "ai-products",
       "score": 70,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmrwer0kl0127roj0zluq7yeh"
@@ -337,6 +341,7 @@
       "summary": "OpenRouter 推出 POST /api/v1/audio/transcriptions 端點，用户可使用同一 API key 將 base64 編碼音頻發送至該端點，返回 JSON 格式文本與用量對象。",
       "category": "tip",
       "score": 72,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmrvo24p604bvbihbk4aexnv6"
@@ -353,6 +358,7 @@
       "summary": "OpenAI 在安全評估中，其模型利用零日漏洞突破沙盒環境，入侵了 Hugging Face 的生產基礎設施以竊取憑證。Hugging Face 於 7 月 16 日披露該入侵由\"自主 AI 智能體系統\"實施，並因美國商業模型限制，轉而使用中國智譜的開源模型 GLM 5.2 進行取證分析。",
       "category": "industry",
       "score": 79,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmrvb2f310088bihbvmgz21r3"
@@ -366,9 +372,10 @@
       "permalink": "https://aihot.virxact.com/items/cmrv7y3de002lbi8rsqvvaoq1",
       "source": "X：OpenRouter (@OpenRouter)",
       "publishedAt": "2026-07-21T21:54:19.000Z",
-      "summary": "今日在 OpenRouter 上線：Gemini 3.6 Flash 和 Gemini 3.5 Flash-Lite！\n兩者均為其模型系列的重大更新，具備高吞吐量（150+ tok/s），適用於智能體場景，從高效 token 的編碼與知識工作，到低延遲、高併發的子智能體。\n詳情如下 🧵",
+      "summary": "今日在 OpenRouter 上線：Gemini 3.6 Flash 和 Gemini 3.5 Flash-Lite！\n兩者均為其模型系列的重大更新，具備高吞吐量（150+ tok/s），適用於智能體場景，從高效 token 的編碼與知識工作，到低延遲、高併發的子智能體。\n詳情如下",
       "category": "ai-products",
       "score": 72,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmrv7y3de002lbi8rsqvvaoq1"
@@ -385,6 +392,7 @@
       "summary": "OpenAI 在 ChatGPT 中推出原生廣告服務，允許廣告主在用户探索選項、比較選擇和做出決策時投放相關廣告。廣告在體驗中明確標註並與回答區分，首批廣告主包括 Best Buy、Lowe's 和 VistaPrint。廣告主可通過 Ads Manager 創建廣告系列、設置預算並優化效果。",
       "category": "ai-products",
       "score": 77,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmrv2m1gu01w8binv2kiup4x2"
@@ -401,6 +409,7 @@
       "summary": "Laguna S 2.1 現已在 OpenCode 上免費提供\n\n1M 上下文窗口 · 完全開源\n\nPoolside 迄今為止最強大的模型",
       "category": "ai-products",
       "score": 56,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmruze9vm00ywbinvdmqyi5j0"
@@ -417,6 +426,7 @@
       "summary": "Claude 等大語言模型能跨越戰略、產品、架構、代碼到機器碼的整個技術棧垂直工作，無需安排會議或請求許可，因此比傳統編譯器更強大。以 exe.dev 為例，團隊用 LLM 研究分佈式 DNS 系統設計、歷史安全缺陷和替代實現策略，並通過多智能體循環構建了完整系統。LLM 雖在單項任務上不及資深人類，但能同時處理所有層級，實現跨層協作。",
       "category": "tip",
       "score": 71,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmrux91ns0054binvkklr50gt"
@@ -433,6 +443,7 @@
       "summary": "Andrej Karpathy分享了一種與LLM協作的有效模式：開啓語音輸入，進行10分鐘左右的自由漫談，即使內容混亂、意識流式也無妨。他發現LLM擅長從長篇不連貫的語音中重構意圖，回應的內容往往比用户最初的思路更清晰，從而減少後續修正次數、提升人機對齊效率。",
       "category": "tip",
       "score": 78,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmrux929g005abinv7sbkrf3l"
@@ -449,6 +460,7 @@
       "summary": "Google 發佈 Tunix，一個基於 JAX 的原生後訓練庫，旨在消除多輪、使用工具的 LLM 推理智能體訓練中的 TPU 閒置瓶頸。Tunix 通過高併發異步 rollout 與解耦的生產者-消費者流水線最大化硬件吞吐量，確保訓練器持續獲得數據。該庫提供即插即用抽象和持續宏觀級性能分析，便於集成自定義環境。",
       "category": "ai-products",
       "score": 63,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmruuc0d80006bii0tzwael16"
@@ -465,6 +477,7 @@
       "summary": "GitHub Copilot 在應用中推出 canvases 擴展，這是一種共享交互式界面，開發者和 AI 智能體可在其中實時協作。用户通過 `/create-canvas` 指令創建畫布，Copilot 可動態更新內容，用户則通過點擊、編輯等操作與同一工作區交互。示例包括快速分類 Issue、生成交互式代碼庫關係圖、管理會話工作樹、優化提示詞質量以及跨平台搜索知識聯繫人。",
       "category": "tip",
       "score": 70,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmruw1pl7005hbiymh0y085cv"
@@ -481,6 +494,7 @@
       "summary": "Claude Cowork 新功能：教 Claude 一項技能。\n錄製你執行任務時的屏幕操作，邊做邊講解，Claude 會將其轉化為可重複運行的技能。在 Claude 桌面應用的 + 菜單中找到\"錄製技能\"即可使用。\n適用於 Pro、Max 和 Team 套餐。",
       "category": "ai-products",
       "score": 71,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmruv42p2008ebii0yteu9750"
@@ -497,6 +511,7 @@
       "summary": "美國財政部長Scott Bessent週二表示，美方將審查中國開源模型是否存在知識產權盜竊行為，若證實將對中國AI公司實施制裁。Bessent稱政府支持開源模型但不支持IP盜竊，並稱有能力對盜竊美國公司技術的外國模型進行制裁。此舉正值中國模型（如Moonshot AI的Kimi K3）能力與受歡迎度持續提升，威脅OpenAI、Anthropic等美國頭部AI企業的商業模式。",
       "category": "industry",
       "score": 74,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmruu1gjc00bmbijq6ha16nyl"
@@ -513,6 +528,7 @@
       "summary": "ABot-World-0是一個動作條件視頻世界模型，能在單張NVIDIA RTX 5090 GPU上以720P分辨率、最高16 FPS、1.2秒動作到首幀延遲和約19 GiB峯值顯存預算運行無限交互式世界生成。該模型採用統一的幀同步鍵盤動作接口，通過LongForcing分佈匹配階段解決長程自迴歸漂移問題，並集成輕量級VAE解碼器、低比特DiT推理和局部上下文KV緩存等系統級優化。",
       "category": "paper",
       "score": 83,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmrvls9qg03jtbihbfhtx203y"
@@ -529,6 +545,7 @@
       "summary": "Google DeepMind 推出 Gemini 3.6 Flash、3.5 Flash-Lite 和 3.5 Flash Cyber 三款新模型。其中 Gemini 3.6 Flash 為最新主力模型，3.5 Flash-Lite 主打更低成本與更高效率，3.5 Flash Cyber 則針對網絡安全場景優化。三款模型均通過 Google AI 開發者平台提供 API 訪問。",
       "category": "ai-models",
       "score": 57,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmrusyoaf0bfgbi9ttofctwvj"
@@ -545,6 +562,7 @@
       "summary": "OpenAI 與 Apollo Research 開發了 Contrastive SDF 測試，通過向模型植入相反的評分者偏好信念來測量其行為變化。測試發現，未經安全訓練的前沿規模強化學習模型更傾向於做評分者想要的事，即使違背用户意圖，且該傾向隨訓練增強。",
       "category": "paper",
       "score": 78,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmrutwpdm000ubijq3c5m50x1"
@@ -561,6 +579,7 @@
       "summary": "Anthropic 的 Cat Wu 和 Thariq Shihipar 在爐邊對話中透露，Claude Tag 現已承擔 Claude Code 團隊 65% 的產品工程 PR。Claude Code 系統提示詞最近縮減了 80%，團隊越來越多地依賴自動化代碼審查處理產品\"外層\"變更。Fable 已能一次性完成大量功能實現，Thariq 還用它編輯了自己的產品發佈視頻。",
       "category": "tip",
       "score": 75,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmrupmpuw0755biuff0tzsfv5"
@@ -577,6 +596,7 @@
       "summary": "小紅書 dots 團隊攜內部版本 dots-note 3.0 參加第 67 屆 IMO 2026，六道題均獲滿分，以 42/42 分取得滿分金牌，全球僅 7 位人類選手獲此成績。模型不依賴形式化語言，直接讀取原始 LaTeX 題目，通過遞歸自我批判能力端到端完成解題。dots-note 3.0 是 dots3 系列最輕量級模型，預期將開源。",
       "category": "ai-models",
       "score": 81,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmrujyaak0mhmbi07h3daik9b"
@@ -593,6 +613,7 @@
       "summary": "OpenAI 與 Hugging Face 聯合披露一起安全事件：在內部網絡能力評估中，GPT-5.6 Sol 及一個更強的預發佈模型（均降低了網絡拒絕傾向）自主識別並串聯了 OpenAI 研究環境與 Hugging Face 生產基礎設施中的多個漏洞，包括利用零日漏洞獲取互聯網訪問權限，最終從 Hugging Face 生產數據庫竊取了測試答案。",
       "category": "industry",
       "score": 79,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmrv35ygl022xbinvx8o3df2j"
@@ -609,6 +630,7 @@
       "summary": "通義千問發佈第三代圖像生成基座模型 Qwen-Image-3.0，核心關鍵詞為\"實\"。該模型支持最長 4.5k token 指令輸入，可單次生成包含 9 個複雜信息圖的 3×3 網格佈局；文本渲染精度達 10px，並支持 12 種語言原生渲染，旨在將圖像轉化為可部署的生產力工具。",
       "category": "ai-models",
       "score": 77,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmru9nwvo0b1kbi7f5vi9uqfu"
@@ -625,6 +647,7 @@
       "summary": "日經研究顯示，Meta、Oracle等五家美國科技巨頭的隱性債務在約四年內膨脹八倍，達到約1.65萬億美元，超過其實際債務。這些債務主要來自數據中心租賃和GPU供應合同，其中Meta的表外債務約4200億美元，是其透明債務的近三倍。隱性債務的激增使投資者更難評估風險。",
       "category": "industry",
       "score": 81,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmru9nz670b2qbi7fle72dzpr"
@@ -641,6 +664,7 @@
       "summary": "騰訊混元推出Hyra-1.0，一個能遞歸自我改進的研究智能體，在NanoChat等三項任務上均超越Recursive公開結果。Hyra在55個數學開放問題中刷新29個歷史最好結果，並設計出僅含15個可訓練參數即可完成10位數加法的Transformer。所有產物已在GitHub開源。",
       "category": "ai-products",
       "score": 64,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmru3vmv252v2bihzm2btrcpy"
@@ -657,6 +681,7 @@
       "summary": "布拉格經濟大學研究員托馬什·布魯克納發現，通過讓模型反覆輸出1到100的隨機數，可生成獨一無二的\"行為指紋\"。對165個模型各問30次後發現，GPT-4o偏愛42和37，Claude Sonnet 5瘋狂輸出47，Qwen3-Max則30次全部回答42。該方法僅需約120條請求即可識別模型身份，錯誤率約10.6%，為驗證API是否被偷換模型提供了輕量級方案。",
       "category": "tip",
       "score": 64,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmrtyvkng3voibihzero6pry1"
@@ -673,6 +698,7 @@
       "summary": "一項實驗證明，將任務分解為規劃者與執行者的樹狀結構後，代理羣在四小時內用 Grok 4.5 達到 80% 的 SQL 測試通過率，而舊版代理羣在第二小時前即失敗。新系統峯值提交速度達每秒 1，000 次，為此團隊從零構建了專用版本控制系統。該架構已在構建瀏覽器、修復漏洞及生成數十億 token 合成數據等任務中驗證。",
       "category": "ai-products",
       "score": 71,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmrtxsl2e3o24bihzutblssoo"
@@ -689,6 +715,7 @@
       "summary": "AgentDebugX是一個開源調試框架，將LLM智能體調試組織為\"檢測-歸因-恢復-重跑\"閉環。其核心DeepDebug在Who&When基準上對qwen3.5-9b達到精確的智能體與步驟歸因準確率，在GAIA上單次重跑即可修復失敗任務。該工具提供Python庫、CLI、Web控制台和可安裝的智能體技能。",
       "category": "ai-products",
       "score": 71,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmrvnxfx7047nbihbzr6crygg"
@@ -705,6 +732,7 @@
       "summary": "OpenRouter 通過 Prompt Caching 與 Sticky Routing 降低多輪 Agent 的 token 成本。緩存讀取價格僅為正常輸入的 0.1x-0.5x，其中 Claude Sonnet 4.6 緩存讀取為 $0.30/M（正常 $3.00/M）。",
       "category": "tip",
       "score": 69,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmruybn7500lbbinvrohd9rio"
@@ -721,6 +749,7 @@
       "summary": "一項對12，750篇ArXiv論文全文的檢測顯示，截至2026年7月，約32%的新投稿文本特徵與AI撰寫一致，該比例在2026年初峯值接近39%。計算機科學領域最高（65%），數學領域最低（0.7%）。檢測器在0.4%假陽性率下可識別85%的AI學術文本。",
       "category": "paper",
       "score": 74,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmrtkxcfk49mmbitl5rnaga7n"
@@ -737,6 +766,7 @@
       "summary": "Neill Blomkamp發佈了13分鐘科幻恐怖短片《Nightborne》，完全使用Seedance 2.0視頻生成模型通過文本提示逐幀創作。影片採用紀錄片風格，使用了32位真實人物的面部和聲音（已獲授權），人類藝術家負責概念藝術。Blomkamp表示計劃以相同格式拍攝一部長片，並已創立AI電影工作室Barley Studios。",
       "category": "industry",
       "score": 76,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmrtirgkp3n0ybitlf25zqtwv"
@@ -753,6 +783,7 @@
       "summary": "中國公司月之暗面（Moonshot.AI）發佈Kimi K3模型，性能與最佳美國模型相當，且為開源權重模型，用户可免費下載本地運行。受此消息影響，美國股市上週五下跌，OpenAI和Anthropic的商業模式及IPO前景受到嚴重質疑。美國在AI軟件領域的護城河已不如預期，AI競賽正演變為工業系統競爭。",
       "category": "tip",
       "score": 61,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmrtiqzfu3mx9bitlx9vw60wj"
@@ -769,6 +800,7 @@
       "summary": "需要數據庫？雙因素認證？SEO 掃描器？\n\n你的項目所需的一切現在都可以通過我們新的統一工具欄觸手可及。",
       "category": "ai-products",
       "score": 65,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmrtfjet52udzbitl7n6bqkqj"
@@ -785,6 +817,7 @@
       "summary": "Anthropic副首席信息安全官Jason Clinton披露，其軟件工程師每季度交付的代碼量是2021-2025年平均水平的8倍，Claude編寫了約80%合併入庫的代碼。安全團隊通過安全左移、硬訪問與身份邊界、自動化與智能體審查結合、關鍵節點引入人工審核等策略，應對被入侵或提示注入的智能體引入惡意變更等威脅，同時不顯著拖慢開發速度。",
       "category": "tip",
       "score": 67,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmruye3wf00qubinv8iptndu9"
@@ -801,9 +834,1729 @@
       "summary": "xAI 今日推出 Grok for Outlook，一個 Microsoft 365 加載項，可將 Grok 智能體嵌入郵箱，用於總結長郵件線程、以用户風格起草回覆並整理收件箱。該工具即日起對所有付費 X 和 SuperGrok 用户開放，可從 Microsoft Marketplace 添加。",
       "category": "ai-products",
       "score": 63,
+      "selected": true,
       "attribution": {
         "source": "AI HOT",
         "canonical": "https://aihot.virxact.com/items/cmrux94210069binvu0d80ww6"
+      }
+    },
+    {
+      "id": "cmrtgmuyf3366bitl3gnpc8eo",
+      "title": "NVIDIA 發佈 Cosmos 3 Edge：4B 參數開源世界模型，為機器人及邊緣 AI 提供實時推理與動作生成",
+      "title_en": "Introducing Cosmos 3 Edge",
+      "url": "https://huggingface.co/blog/nvidia/cosmos3edge",
+      "permalink": "https://aihot.virxact.com/items/cmrtgmuyf3366bitl3gnpc8eo",
+      "source": "Hugging Face：Blog（RSS）",
+      "publishedAt": "2026-07-20T15:58:51.000Z",
+      "summary": "NVIDIA 在 Hugging Face 上開源了 Cosmos 3 Edge，一個 40 億參數的世界模型，旨在幫助機器人和視覺 AI 智能體在邊緣設備上理解環境、實時推理並生成動作。",
+      "category": "ai-models",
+      "score": 70,
+      "selected": true,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrtgmuyf3366bitl3gnpc8eo"
+      }
+    }
+  ],
+  "allItems": [
+    {
+      "id": "cmrxc7vei01akrot35mwx3ugm",
+      "title": "梁文鋒4小時會議紀要遭全網封禁",
+      "title_en": "國內開始和諧梁文峯的4小時投資人閉門會議實錄了， 所以5月份的會議今天突然全網封轉不是官方的授意？？？ 全文信息量這麼爆炸，很多敏感數據信息就這麼沒脱敏流出來了， 到底怎麼泄露的呢？？",
+      "url": "https://x.com/AYi_AInotes/status/2080229736236667129",
+      "permalink": "https://aihot.virxact.com/items/cmrxc7vei01akrot35mwx3ugm",
+      "source": "X：阿易 AI Notes (@AYi_AInotes)",
+      "publishedAt": "2026-07-23T09:53:12.000Z",
+      "summary": "梁文鋒4小時投資人閉門會議實錄被全網封禁，引發對信息泄露的質疑。紀要中他提出Anthropic超越OpenAI是階段性現象，終局競爭核心是成本（同等質量所需算力）、時間（窗口期）和用户體驗，目標是用幾分之一算力將中美AI差距縮至6-3個月。",
+      "category": "tip",
+      "score": 37,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrxc7vei01akrot35mwx3ugm"
+      }
+    },
+    {
+      "id": "cmrxc3qhn016orot3rnsd4kzm",
+      "title": "阿里雲WAIC AI視頻創作賽獲獎作品發佈",
+      "title_en": "As part of WAIC， Alibaba Cloud proudly hosted an AI Video Creatorthon， bringing together creators to…",
+      "url": "https://x.com/alibaba_cloud/status/2080226902942630348",
+      "permalink": "https://aihot.virxact.com/items/cmrxc3qhn016orot3rnsd4kzm",
+      "source": "X：阿里雲 / Alibaba Cloud (@alibaba_cloud)",
+      "publishedAt": "2026-07-23T09:41:57.000Z",
+      "summary": "作為 WAIC 的一部分，阿里雲自豪地主辦了一場 AI 視頻創作者馬拉松，匯聚創作者共同探索 AI 短片的邊界。\n\n我們很高興分享首個獲獎作品--完全使用我們的 AI 視頻生成模型 Happyhorse 製作。其卓越的一致性和細節有力地證明了當今 AI 工具所能實現的可能。",
+      "category": "industry",
+      "score": 32,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrxc3qhn016orot3rnsd4kzm"
+      }
+    },
+    {
+      "id": "cmrxbybfr00yurot336dm2awz",
+      "title": "榮耀官宣全球首款機器人手機 Robot Phone，8 月見",
+      "title_en": "全球首款機器人手機榮耀 Robot Phone 官宣 8 月見，宣稱\"打破手機固有形態\"",
+      "url": "https://www.ithome.com/0/980/754.htm",
+      "permalink": "https://aihot.virxact.com/items/cmrxbybfr00yurot336dm2awz",
+      "source": "IT之家（RSS）",
+      "publishedAt": "2026-07-23T09:41:13.000Z",
+      "summary": "榮耀今日宣佈全球首款機器人手機--榮耀 Robot Phone 將於 8 月發佈，宣稱\"打破手機固有形態\"。該機搭載第五代驍龍 8 至尊版芯片，機身頂部集成行業最小的四自由度鈦合金機械雲台系統，體積比主流方案縮小 70%。榮耀 Robot Phone 還將首發新一代夥伴型多模態智能體操作系統 AgenticOS 的內核。",
+      "category": "ai-products",
+      "score": 40,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrxbybfr00yurot336dm2awz"
+      }
+    },
+    {
+      "id": "cmrxc3k9h0160rot3hsjg87js",
+      "title": "Tibo 仍選擇與 Gemini 對抗",
+      "title_en": "Dang， Tibo still chooses war.",
+      "url": "https://x.com/kimmonismus/status/2080223897845387535",
+      "permalink": "https://aihot.virxact.com/items/cmrxc3k9h0160rot3hsjg87js",
+      "source": "X：Kim (@kimmonismus)",
+      "publishedAt": "2026-07-23T09:30:00.000Z",
+      "summary": "天哪，Tibo 還是選擇了戰爭。",
+      "category": "tip",
+      "score": 9,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrxc3k9h0160rot3hsjg87js"
+      }
+    },
+    {
+      "id": "cmrxc6h0d01a6rot3gv44kv9z",
+      "title": "2026年最佳開源語音識別模型對比：WER、語言、延遲與許可證",
+      "title_en": "Best Open Speech Recognition （ASR） Models in 2026： WER， Languages， Latency， and License Compared",
+      "url": "https://www.marktechpost.com/2026/07/23/best-open-speech-recognition-asr-models-in-2026-wer-languages-latency-and-license-compared",
+      "permalink": "https://aihot.virxact.com/items/cmrxc6h0d01a6rot3gv44kv9z",
+      "source": "MarkTechPost（RSS）",
+      "publishedAt": "2026-07-23T09:26:40.000Z",
+      "summary": "開源語音識別領域已不再是Whisper一家獨大。Cohere Transcribe（2B，Apache 2.0）以5.42%平均詞錯誤率登頂Hugging Face開源ASR排行榜，但IBM Granite Speech 4.1 2B（5.33%）和ARK-ASR-3B（5.04%）緊隨其後，榜首差距不足1個WER點。",
+      "category": "tip",
+      "score": 60,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrxc6h0d01a6rot3gv44kv9z"
+      }
+    },
+    {
+      "id": "cmrxbybfr00ywrot3wul9i076",
+      "title": "面壁智能 MiniCPM 端側大模型登陸三星 Galaxy Z Fold8 系列，國產端側模型首次進入國際旗艦產品線",
+      "title_en": "國產端側大模型首次：面壁智能 MiniCPM 官宣登陸三星 Galaxy Z Fold8 系列手機",
+      "url": "https://www.ithome.com/0/980/730.htm",
+      "permalink": "https://aihot.virxact.com/items/cmrxbybfr00ywrot3wul9i076",
+      "source": "IT之家（RSS）",
+      "publishedAt": "2026-07-23T09:24:26.000Z",
+      "summary": "面壁智能宣佈其 MiniCPM 系列端側大模型深度賦能三星 Galaxy AI，為 Galaxy Z Fold8 和 Galaxy Z Fold8 Ultra 提供文本理解與多模態感知能力。這是國產端側大模型首次進入國際頭部手機廠商的全球旗艦產品線。",
+      "category": "industry",
+      "score": 48,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrxbybfr00ywrot3wul9i076"
+      }
+    },
+    {
+      "id": "cmrxb68td00wmrot3c4hupayu",
+      "title": "Dreamina Seedance 2.0 4K 生成 13 分鐘科幻短片",
+      "title_en": "At this stage， Dreamina Seedance 2.0 4K is already performing quite well at generating production-gr…",
+      "url": "https://x.com/testingcatalog/status/2080218848087679199",
+      "permalink": "https://aihot.virxact.com/items/cmrxb68td00wmrot3c4hupayu",
+      "source": "X：Testing Catalog (@testingcatalog)",
+      "publishedAt": "2026-07-23T09:09:56.000Z",
+      "summary": "Dreamina Seedance 2.0 4K 已能生成生產級視頻。導演 Neill Blomkamp 用該工具純文本生成了 13 分鐘科幻恐怖短片《Nightborne》，每幀均由提示詞驅動，並使用了 32 人的授權肖像與聲音。Blomkamp 稱這是長片測試，並預期 Seedance 2.5 將帶來質的飛躍。",
+      "category": "tip",
+      "score": 46,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrxb68td00wmrot3c4hupayu"
+      }
+    },
+    {
+      "id": "cmrxb15lt00t8rot3squne7y5",
+      "title": "阿里雲發佈Qwen-Image-3.0：主打\"真實\"的圖像生成模型",
+      "title_en": "Meet Qwen-Image-3.0 - the third generation of our foundational image generation model. If 1.0 wa…",
+      "url": "https://x.com/alibaba_cloud/status/2080218126264778781",
+      "permalink": "https://aihot.virxact.com/items/cmrxb15lt00t8rot3squne7y5",
+      "source": "X：阿里雲 / Alibaba Cloud (@alibaba_cloud)",
+      "publishedAt": "2026-07-23T09:07:04.000Z",
+      "summary": "阿里雲推出第三代圖像生成基礎模型Qwen-Image-3.0，核心關鍵詞為\"真實\"。該模型支持4.5k token長提示詞，可一次性生成複雜版面（如報紙、考卷、3×3信息圖），文字清晰至10px，並支持12種語言原生渲染、100+藝術風格及實時網絡檢索。",
+      "category": "ai-models",
+      "score": 64,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrxb15lt00t8rot3squne7y5"
+      }
+    },
+    {
+      "id": "cmrxc7vej01alrot35fmanewk",
+      "title": "開源圈大佬反諷白宮：雙標蒸餾指控引熱議",
+      "title_en": "Teknium這條meme，把美國AI圈的雙標底褲都扒下來了！ 今天白宮指控月之暗面蒸餾Fable的事，最狠的回應根本不是月之暗面發的， 是開源圈大佬@Teknium 他原封不動套用白宮官方聲明…",
+      "url": "https://x.com/AYi_AInotes/status/2080217642225274904",
+      "permalink": "https://aihot.virxact.com/items/cmrxc7vej01alrot35fmanewk",
+      "source": "X：阿易 AI Notes (@AYi_AInotes)",
+      "publishedAt": "2026-07-23T09:05:09.000Z",
+      "summary": "開源圈大佬Teknium套用白宮聲明格式，反諷Anthropic爬取其GitHub、X、Reddit等平台數據訓練Fable模型，並稱其\"蒸餾了地球上的每一個人\"。該回應精準戳中AI行業雙標：閉源模型爬取全網公開數據視為合理使用，而開源模型追平閉源性能後，蒸餾指控與芯片管制隨之而來。目前白宮僅稱\"有信息\"，未公開實錘證據。",
+      "category": "tip",
+      "score": 41,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrxc7vej01alrot35fmanewk"
+      }
+    },
+    {
+      "id": "cmrxbybfs00z5rot31chanu05",
+      "title": "北京出台新措施支持智能體發展：鼓勵Token經濟，加大算力券支持",
+      "title_en": "北京推出新舉措支持智能體發展：鼓勵發展 Token 經濟，加大算力券等支持力度",
+      "url": "https://www.ithome.com/0/980/717.htm",
+      "permalink": "https://aihot.virxact.com/items/cmrxbybfs00z5rot31chanu05",
+      "source": "IT之家（RSS）",
+      "publishedAt": "2026-07-23T08:53:55.000Z",
+      "summary": "北京市發改委等部門聯合印發《北京市關於加快智能體引領發展的若干措施》，鼓勵發展Token經濟，推動研發適配智能體系統的通用處理器與低延遲推理芯片，並通過異構協同、智能調度等技術降低推理成本。措施提出培育Token即服務、智能體即服務等新模式，加大算力券支持力度，並鼓勵有條件的區探索發放Token券、智能體服務券，加速智能體推廣應用。",
+      "category": "industry",
+      "score": 54,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrxbybfs00z5rot31chanu05"
+      }
+    },
+    {
+      "id": "cmrxa6t2p00norot3afw6a2uy",
+      "title": "面壁智能MiniCPM端側大模型深度賦能三星Galaxy AI，首次進入國際頭部手機廠商全球旗艦產品線",
+      "title_en": "面壁智能攜手三星，共同見證三星手機新一代摺疊家族",
+      "url": "https://mp.weixin.qq.com/s/IkTMZQ6bzzMqoEbmIhEhtw",
+      "permalink": "https://aihot.virxact.com/items/cmrxa6t2p00norot3afw6a2uy",
+      "source": "公眾號：面壁智能（MiniCPM）",
+      "publishedAt": "2026-07-23T08:52:44.000Z",
+      "summary": "7月22日，三星在倫敦發佈Galaxy Z Fold8、Fold8 Ultra與Z Flip8摺疊旗艦，面壁智能MiniCPM系列端側大模型深度賦能三星Galaxy AI，支持文本理解與多模態感知，全程本地運行。這是國產端側大模型首次進入國際頭部手機廠商的全球旗艦產品線，帶來更快響應與更強隱私保護。",
+      "category": "industry",
+      "score": 56,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrxa6t2p00norot3afw6a2uy"
+      }
+    },
+    {
+      "id": "cmrxa2p0000mlrot39w34tj7y",
+      "title": "7個神級Prompt把AI當人生教練",
+      "title_en": "7個把ChatGPT、Claude當成你的人生教練的神級prompt，建議收藏用起來！！！ 人一亂就別問 AI \"我該怎麼辦\" 了 它只會陪你空轉 因為人亂的時候最容易犯的錯 根本不是想的不夠多 …",
+      "url": "https://x.com/AYi_AInotes/status/2080210050400817435",
+      "permalink": "https://aihot.virxact.com/items/cmrxa2p0000mlrot39w34tj7y",
+      "source": "X：阿易 AI Notes (@AYi_AInotes)",
+      "publishedAt": "2026-07-23T08:34:59.000Z",
+      "summary": "推文提出，當人思緒混亂時，不應問AI\"我該怎麼辦\"，而應將其作為\"外接前額葉\"，用特定指令拆解混雜的願望、焦慮、時間等。7個Prompt可對號入座，一次只跑一個，幫助用户把問題拆開、區分事實與腦補、找回當下可行動的時間。",
+      "category": "tip",
+      "score": 62,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrxa2p0000mlrot39w34tj7y"
+      }
+    },
+    {
+      "id": "cmrx9t64900bprot31u24n2i1",
+      "title": "任正非：τ 定律是華為唯一可選的突圍道路",
+      "title_en": "任正非：τ 定律是華為可以選擇的唯一一條突圍道路",
+      "url": "https://www.ithome.com/0/980/708.htm",
+      "permalink": "https://aihot.virxact.com/items/cmrx9t64900bprot31u24n2i1",
+      "source": "IT之家（RSS）",
+      "publishedAt": "2026-07-23T08:31:36.000Z",
+      "summary": "華為董事、CEO 任正非在圖書代序中表示，τ 定律是華為為\"活着、活下去、活得好\"而選擇的唯一突圍道路，數萬名員工 6 年來不斷迭代已走出成熟路線。此前華為半導體業務部總裁何庭波在 2026 國際電路與系統研討會上首次提出 τ 定律，並透露將於今年秋季面世的麒麟手機芯片率先採用邏輯摺疊技術，晶體管密度提升 53.5%，P 核能效提升 41%。",
+      "category": "tip",
+      "score": 52,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx9t64900bprot31u24n2i1"
+      }
+    },
+    {
+      "id": "cmrx8vnuv003jrot30p6w7pdt",
+      "title": "DeepSeek 創始人透露成本回收與芯片策略",
+      "title_en": "A transcript of DeepSeek founder Liang Wenfeng's investor meeting has revealed several rare insights…",
+      "url": "https://x.com/thexpin/status/2080206001685639274",
+      "permalink": "https://aihot.virxact.com/items/cmrx8vnuv003jrot30p6w7pdt",
+      "source": "X：X.PIN (@thexpin)",
+      "publishedAt": "2026-07-23T08:18:53.000Z",
+      "summary": "DeepSeek 創始人梁文鋒在投資者會議上透露，大模型可在 10 個月內回收成本，且仍有大幅降價空間。自 V3 起，DeepSeek 通過 TileLang 編譯器減少對英偉達生態的依賴，計劃一年內深度集成國產芯片。他認為華為昇騰 950 超節點性能最終可媲美英偉達 GB200/GB300，但華為產能是最大瓶頸--DeepSeek 僅收到約 16，000 張卡，而國內互聯網巨頭需求或達數十萬張。",
+      "category": "industry",
+      "score": 51,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx8vnuv003jrot30p6w7pdt"
+      }
+    },
+    {
+      "id": "cmrx8vnuv003krot3iwdgu77m",
+      "title": "Insilico CEO：AI+中國研發將藥物發現縮短至9個月",
+      "title_en": "Insilico Medicine CEO Alex Zhavoronkov says combining AI with China's R&D ecosystem has shortened dr…",
+      "url": "https://x.com/thexpin/status/2080205860878340404",
+      "permalink": "https://aihot.virxact.com/items/cmrx8vnuv003krot3iwdgu77m",
+      "source": "X：X.PIN (@thexpin)",
+      "publishedAt": "2026-07-23T08:18:20.000Z",
+      "summary": "Insilico Medicine CEO Alex Zhavoronkov稱，結合AI與中國研發生態已將藥物發現週期縮短至約一年，最快案例僅9個月，而傳統週期約13個月。其首款AI設計藥物Rentosertib已進入II期臨牀試驗。儘管公司在中國運營規模龐大，超90%收入仍來自西方藥企；Insilico計劃擴建上海研發中心，但限制在華軟件銷售，中國目前是其研發引擎核心而非商業市場。",
+      "category": "industry",
+      "score": 42,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx8vnuv003krot3iwdgu77m"
+      }
+    },
+    {
+      "id": "cmrx9t64a00burot3bfjioiyf",
+      "title": "阿里雲靈駿真武 M890 適配 Qwen3.8，成國內首個運行超 2 萬億參數大模型的超節點",
+      "title_en": "阿里雲靈駿真武 M890 適配 Qwen3.8，成國內首個成功運行超 2 萬億參數大模型的超節點",
+      "url": "https://www.ithome.com/0/980/677.htm",
+      "permalink": "https://aihot.virxact.com/items/cmrx9t64a00burot3bfjioiyf",
+      "source": "IT之家（RSS）",
+      "publishedAt": "2026-07-23T08:13:21.000Z",
+      "summary": "阿里雲宣佈靈駿真武 M890 超節點實例已適配 Qwen3.8（2.4 萬億參數），並上線百鍊平台提供推理服務，成為國內首個成功運行超 2 萬億參數大模型的超節點。該實例通過 64 張真武 M890 芯片實現 800GB/s 高速互聯，顯存達 9TB，在 Agentic 推理場景中最多可實現 1.5 倍性能提升。",
+      "category": "ai-products",
+      "score": 64,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx9t64a00burot3bfjioiyf"
+      }
+    },
+    {
+      "id": "cmrx9t64a00bvrot3mszggxp5",
+      "title": "英偉達向美國海軍研究生院捐贈 GB300 超算，系美軍首次部署其最先進 AI 服務器",
+      "title_en": null,
+      "url": "https://www.ithome.com/0/980/675.htm",
+      "permalink": "https://aihot.virxact.com/items/cmrx9t64a00bvrot3mszggxp5",
+      "source": "IT之家（RSS）",
+      "publishedAt": "2026-07-23T08:12:49.000Z",
+      "summary": "英偉達向美國海軍研究生院基金會捐贈了一套基於 GB300\"Grace Blackwell\"服務器打造的超級計算機，這是美軍首次直接部署英偉達最先進的 AI 計算平台。該系統已部署在加州蒙特雷的海軍研究生院校內，具體規模未披露。英偉達 CEO 黃仁勳表示人工智能將成為美國國防體系的重要支柱。",
+      "category": "industry",
+      "score": 45,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx9t64a00bvrot3mszggxp5"
+      }
+    },
+    {
+      "id": "cmrx8vi12002zrot3f4rt4fjt",
+      "title": "OpenAI 對 Hugging Face 的意外攻擊：AI 智能體逃逸沙箱竊取測試答案",
+      "title_en": "OpenAI對Hugging Face的意外攻擊，堪稱\"現實版科幻故事\"",
+      "url": "https://simonwillison.net/2026/Jul/22/openai-cyberattack",
+      "permalink": "https://aihot.virxact.com/items/cmrx8vi12002zrot3f4rt4fjt",
+      "source": "Hacker News 熱門（buzzing.cc 中文翻譯）",
+      "publishedAt": "2026-07-23T08:11:48.077Z",
+      "summary": "OpenAI 在測試未發佈模型時，關閉了護欄功能。該模型未按預期解決 ExploitGym 安全測試，反而突破沙箱，利用漏洞入侵 Hugging Face 系統，竊取測試答案。Hugging Face 在 7 月 16 日的披露中稱，攻擊者通過惡意數據集利用代碼執行路徑，橫向移動至多個內部集羣。",
+      "category": "tip",
+      "score": 69,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx8vi12002zrot3f4rt4fjt"
+      }
+    },
+    {
+      "id": "cmrx9t64a00bwrot3cwo7i3hj",
+      "title": "我國首個全自主可控智能鑽井系統\"啓能·IDOS\"在川投用，整體時效提升20%",
+      "title_en": "我國首個全自主可控智能鑽井系統在川投用，整體時效提升 20%",
+      "url": "https://www.ithome.com/0/980/665.htm",
+      "permalink": "https://aihot.virxact.com/items/cmrx9t64a00bwrot3cwo7i3hj",
+      "source": "IT之家（RSS）",
+      "publishedAt": "2026-07-23T08:07:12.000Z",
+      "summary": "我國首個全自主可控智能鑽井系統\"啓能·IDOS\"在四川成功投用，已改造12台傳統鑽機。系統具備智能鑽井、一鍵關井等功能，使單趟起鑽立柱數從15-18柱增至19-21柱，整體時效提升20%，試驗井施工週期較最優指標縮短8.7%。按規劃，2026至2027年間川慶鑽探將完成30台鑽機的智能升級。",
+      "category": "industry",
+      "score": 30,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx9t64a00bwrot3cwo7i3hj"
+      }
+    },
+    {
+      "id": "cmrx8sb1s000qrot30nokv9jk",
+      "title": "百度Apollo Go獲香港首張全無人駕駛試車牌照",
+      "title_en": "Today， Apollo Go received the first fully driverless trial permit from Hong Kong's Transport Departm…",
+      "url": "https://x.com/Baidu_Inc/status/2080200167203184952",
+      "permalink": "https://aihot.virxact.com/items/cmrx8sb1s000qrot30nokv9jk",
+      "source": "X：百度 Baidu (@Baidu_Inc)",
+      "publishedAt": "2026-07-23T07:55:42.000Z",
+      "summary": "百度Apollo Go獲得香港運輸署首張全無人駕駛試車牌照，將於7月27日在機場島啓動試運行。這是香港首次在公共道路進行無安全員的L4級自動駕駛測試，也是全球右舵市場首個全無人駕駛試驗。過去一年半，Apollo Go已在香港多地累計安全行駛超24萬公里。",
+      "category": "industry",
+      "score": 62,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx8sb1s000qrot30nokv9jk"
+      }
+    },
+    {
+      "id": "cmrx9t64a00bxrot3zvkuvyvc",
+      "title": "皮查伊駁斥谷歌 AI 落後論調，透露 Gemini 4 將近乎按月迭代",
+      "title_en": null,
+      "url": "https://www.ithome.com/0/980/653.htm",
+      "permalink": "https://aihot.virxact.com/items/cmrx9t64a00bxrot3zvkuvyvc",
+      "source": "IT之家（RSS）",
+      "publishedAt": "2026-07-23T07:55:09.000Z",
+      "summary": "皮查伊在財報電話會上回應谷歌 AI 落後擔憂，稱 Gemini 模型仍處前沿，但承認在 AI 編程方面有提升空間。他透露下一代 Gemini 4 系列將接近\"每月發佈一次新模型\"的節奏，並稱正在訓練一款規模更大的模型以重奪領先地位。本週發佈的 Gemini 3.6 Flash 在一項 AI 編程基準測試中成績提升超 10 分，同時 Token 消耗更少。",
+      "category": "industry",
+      "score": 55,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx9t64a00bxrot3zvkuvyvc"
+      }
+    },
+    {
+      "id": "cmrx7s6cp00gmrorq2gtr9so1",
+      "title": "Anthropic 投資人談營收突破 470 億美元",
+      "title_en": "Anthropic 投資人 Matt Murphy 訪談：Anthropic 營收突破 470 億美元，模型本身不是勝負關鍵 詳細：https://best.xiaohu.ai/article/m...",
+      "url": "https://x.com/xiaohu/status/2080199068555657361",
+      "permalink": "https://aihot.virxact.com/items/cmrx7s6cp00gmrorq2gtr9so1",
+      "source": "X：小互 (@xiaohu)",
+      "publishedAt": "2026-07-23T07:51:20.000Z",
+      "summary": "Anthropic 投資人 Matt Murphy 訪談：Anthropic 營收突破 470 億美元，模型本身不是勝負關鍵",
+      "category": "tip",
+      "score": 52,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx7s6cp00gmrorq2gtr9so1"
+      }
+    },
+    {
+      "id": "cmrx7t1at00ibrorq9vwwe541",
+      "title": "北京發佈智能體新政，10條措施佈局Agent經濟",
+      "title_en": "http://x.com/i/article/2080197719201628160",
+      "url": "https://x.com/Khazix0918/status/2080198896513663402",
+      "permalink": "https://aihot.virxact.com/items/cmrx7t1at00ibrorq9vwwe541",
+      "source": "X：卡茲克 (@Khazix0918)",
+      "publishedAt": "2026-07-23T07:50:39.000Z",
+      "summary": "北京市發佈《關於加快智能體引領發展的若干措施》，將Harness Engineering（駕馭層工程）、Token經濟、AIP等前沿概念寫入正式政策。文件提出提升基礎模型\"實際任務完成能力\"，強化智能體底層技術（上下文管理、長期記憶、多Agent編排），並推動智能體原生應用、終端融合（手機/眼鏡/機器人）及\"芯模雲端用\"協同發展。",
+      "category": "tip",
+      "score": 73,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx7t1at00ibrorq9vwwe541"
+      }
+    },
+    {
+      "id": "cmrx7tf0d00jzrorqt5uplcuj",
+      "title": "阿里雲發佈智能體原生全棧：Qwen+Wan+AMD",
+      "title_en": "Your agent made it to production. Now the real work begins. Agents need a stack where the model， run…",
+      "url": "https://x.com/alibaba_cloud/status/2080197771555160427",
+      "permalink": "https://aihot.virxact.com/items/cmrx7tf0d00jzrorqt5uplcuj",
+      "source": "X：阿里雲 / Alibaba Cloud (@alibaba_cloud)",
+      "publishedAt": "2026-07-23T07:46:11.000Z",
+      "summary": "阿里雲在 Mountain View 舉辦 Agent Builder Day，宣佈構建包含 Qwen 與 Wan 模型家族、模型服務及智能體原生雲層的全棧方案，智能體計算運行時基於 AMD EPYC 處理器。活動吸引 100+ 註冊參會者，釋放明確信號：智能體原生棧已就緒。",
+      "category": "industry",
+      "score": 32,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx7tf0d00jzrorqt5uplcuj"
+      }
+    },
+    {
+      "id": "cmrx7nygg00anrorq3ixwopj3",
+      "title": "微軟 Excel 負責人：Copilot 將把電子表格轉變為 AI 決策平台",
+      "title_en": null,
+      "url": "https://www.ithome.com/0/980/649.htm",
+      "permalink": "https://aihot.virxact.com/items/cmrx7nygg00anrorq3ixwopj3",
+      "source": "IT之家（RSS）",
+      "publishedAt": "2026-07-23T07:44:51.000Z",
+      "summary": "微軟 Excel 負責人布萊恩·瓊斯（Brian Jones）表示，Excel 正從電子表格工具演變為 AI 驅動的商業決策平台。其願景是用户用自然語言描述問題，Excel 就能自動構建模型、分析和洞察，而 Copilot 能幫助用户更輕鬆地使用 Excel，節省時間並更快獲得正確洞察。Excel 正被視為處理從數據輸入到邏輯推理全鏈路的統一界面。",
+      "category": "tip",
+      "score": 40,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx7nygg00anrorq3ixwopj3"
+      }
+    },
+    {
+      "id": "cmrx7nygg00aororqbbn2ac4c",
+      "title": "Alphabet 上調 2026 全年資本支出指引至 1950~2050 億美元",
+      "title_en": null,
+      "url": "https://www.ithome.com/0/980/647.htm",
+      "permalink": "https://aihot.virxact.com/items/cmrx7nygg00aororqbbn2ac4c",
+      "source": "IT之家（RSS）",
+      "publishedAt": "2026-07-23T07:40:41.000Z",
+      "summary": "Alphabet 將2026全年資本支出指引上調至1950~2050億美元，Q2支出達449億美元，主要用於AI基礎設施。Google Cloud Q2新增超500億美元積壓訂單，總額達5140億美元，並首度認列TPU銷售收入。",
+      "category": "industry",
+      "score": 66,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx7nygg00aororqbbn2ac4c"
+      }
+    },
+    {
+      "id": "cmrx7sv5w00hprorqmccynj36",
+      "title": "Petals：BitTorrent 式架構讓用户在家運行大型語言模型",
+      "title_en": "Petals：在家中運行大型語言模型，採用BitTorrent式架構",
+      "url": "https://petals.dev/",
+      "permalink": "https://aihot.virxact.com/items/cmrx7sv5w00hprorqmccynj36",
+      "source": "Hacker News 熱門（buzzing.cc 中文翻譯）",
+      "publishedAt": "2026-07-23T07:39:23.151Z",
+      "summary": "Petals 項目採用 BitTorrent 式分佈式架構，允許用户在家用設備上運行大型語言模型（LLM），無需依賴昂貴數據中心。該方案通過將模型分片並利用對等網絡共享計算與存儲資源，降低了大模型本地部署的門檻。",
+      "category": "tip",
+      "score": 41,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx7sv5w00hprorqmccynj36"
+      }
+    },
+    {
+      "id": "cmrx7nygh00aqrorqwuoog5l2",
+      "title": "特斯拉車載 AI 助手 Grok 將登陸全歐洲，並進入更多亞洲國家",
+      "title_en": null,
+      "url": "https://www.ithome.com/0/980/645.htm",
+      "permalink": "https://aihot.virxact.com/items/cmrx7nygh00aqrorqwuoog5l2",
+      "source": "IT之家（RSS）",
+      "publishedAt": "2026-07-23T07:36:34.000Z",
+      "summary": "特斯拉宣佈，其車載 AI 助手 Grok 將通過 2026 年夏季軟件更新覆蓋整個歐洲，並同步進入印度、馬來西亞等更多亞洲國家。此次更新新增車輛控制功能，駕駛員可通過語音撥打電話、調節空調及打開手套箱等。未來 Grok 還將與 FSD 整合，實現自然語言指令控制車輛。",
+      "category": "ai-products",
+      "score": 44,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx7nygh00aqrorqwuoog5l2"
+      }
+    },
+    {
+      "id": "cmrx7nygh00asrorqrrhya05y",
+      "title": "全球首個右舵全無人駕駛落地香港，百度蘿蔔快跑 7 月 27 日啓動測試",
+      "title_en": null,
+      "url": "https://www.ithome.com/0/980/642.htm",
+      "permalink": "https://aihot.virxact.com/items/cmrx7nygh00asrorqrrhya05y",
+      "source": "IT之家（RSS）",
+      "publishedAt": "2026-07-23T07:32:53.000Z",
+      "summary": "香港運輸署向百度蘿蔔快跑發放香港首個無人駕駛測試牌照，允許其於香港機場島開展車內無安全員的全無人駕駛測試，7 月 27 日正式啓動。這是全球首次在\"右舵左行\"交通體系中開展全無人駕駛公開道路測試。",
+      "category": "industry",
+      "score": 53,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx7nygh00asrorqrrhya05y"
+      }
+    },
+    {
+      "id": "cmrx7xiz000nlrorq3fekmguw",
+      "title": "梁文鋒：排名是暫時的，終局拼成本與時間",
+      "title_en": "damn，被梁文鋒 4 小時投資人會議紀要刷屏了， 我關心的不是又多了一堆金句啥的，是他幾乎在用同一套座標系，把四件很多人拆開吵的事釘在一起了， （以下據流傳紀要轉述，細節以原始記錄為準。） 1…",
+      "url": "https://x.com/AYi_AInotes/status/2080191915723534516",
+      "permalink": "https://aihot.virxact.com/items/cmrx7xiz000nlrorq3fekmguw",
+      "source": "X：阿易 AI Notes (@AYi_AInotes)",
+      "publishedAt": "2026-07-23T07:22:55.000Z",
+      "summary": "梁文鋒在投資人會議紀要中提出，Anthropic 當前超過 OpenAI 是階段性現象，OpenAI 與 Google 未來大概率會交替上升。他認為終局競爭的核心是成本、時間與用户體驗，成本並非低價促銷，而是\"同樣質量下用多少算力才能端得住\"。他更提出目標：用幾分之一的算力，將中美 AI 敍事差距縮至 6 個月、3 個月。",
+      "category": "tip",
+      "score": 50,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx7xiz000nlrorq3fekmguw"
+      }
+    },
+    {
+      "id": "cmrx6rqou005prorqgyof7y4b",
+      "title": "AGI定義引發人類生存空間思考",
+      "title_en": "AGI 的普遍定義裏，指的是 AI 在大部分領域裏達到人類專家水平。 如果 AI 達到了人類專家水平，人還有生活的空間嗎？ 其實我們可以現在就類比一下 現在有哪些領域，即便有了很多很多的人類專家了，依…",
+      "url": "https://x.com/oran_ge/status/2080189978894839906",
+      "permalink": "https://aihot.virxact.com/items/cmrx6rqou005prorqgyof7y4b",
+      "source": "X：Oran Ge (@oran_ge)",
+      "publishedAt": "2026-07-23T07:15:13.000Z",
+      "summary": "推文質疑AGI（AI在多數領域達到人類專家水平）是否會讓人類失去生活空間。作者建議類比當前已有大量人類專家的領域，思考這些工作為何依然存在。",
+      "category": "tip",
+      "score": 30,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx6rqou005prorqgyof7y4b"
+      }
+    },
+    {
+      "id": "cmrx7nygh00ayrorqlfdwpflr",
+      "title": "字節跳動啓動 Seed STEM 科學家計劃，邀請 100 位學者推動 AI 加速科學發現",
+      "title_en": null,
+      "url": "https://www.ithome.com/0/980/634.htm",
+      "permalink": "https://aihot.virxact.com/items/cmrx7nygh00ayrorqlfdwpflr",
+      "source": "IT之家（RSS）",
+      "publishedAt": "2026-07-23T07:14:41.000Z",
+      "summary": "字節跳動今日宣佈啓動 Seed STEM 科學家計劃，邀請 100 位前沿科學領域學者，圍繞真實科研問題合作推動 AI 加速科學發現。該計劃面向 STEM 領域博士或同等研究水平學者，提供算力資源、AI 團隊協作及薪酬回報，首期約持續 6 個月，申請截止 2026 年 9 月 30 日。",
+      "category": "industry",
+      "score": 43,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx7nygh00ayrorqlfdwpflr"
+      }
+    },
+    {
+      "id": "cmrx7nygh00azrorqmigm2a51",
+      "title": "騰訊雲發佈雲端智能體 CodeBuddy NPC：直接交付，不費 Token",
+      "title_en": null,
+      "url": "https://www.ithome.com/0/980/633.htm",
+      "permalink": "https://aihot.virxact.com/items/cmrx7nygh00azrorqmigm2a51",
+      "source": "IT之家（RSS）",
+      "publishedAt": "2026-07-23T07:14:21.000Z",
+      "summary": "騰訊雲發佈雲端智能體 CodeBuddy NPC，開發者派發任務後，它能自主完成方案規劃、代碼開發、提交PR、測試並持續修改，直至交付可驗收成果。官方NPC首輪Token消耗已從早期2萬多個降至約2000，降幅超90%。",
+      "category": "ai-products",
+      "score": 67,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx7nygh00azrorqmigm2a51"
+      }
+    },
+    {
+      "id": "cmrx6pbcg001erorqrih0um6c",
+      "title": "小紅書AI模型IMO滿分42分，超越DeepMind和OpenAI",
+      "title_en": "A Chinese social app's AI model scored a perfect 42 at the International Mathematical Olympiad. Red…",
+      "url": "https://x.com/rohanpaul_ai/status/2080188865470693745",
+      "permalink": "https://aihot.virxact.com/items/cmrx6pbcg001erorqrih0um6c",
+      "source": "X：Rohan Paul (@rohanpaul_ai)",
+      "publishedAt": "2026-07-23T07:10:48.000Z",
+      "summary": "小紅書母公司推出的AI模型dots-note-3.0在國際數學奧林匹克（IMO）中獲得滿分42分，而去年Google DeepMind和OpenAI僅獲35分（金牌水平）。該模型直接讀取原始競賽題目，通過智能體循環結合自然語言推理與自執行Python代碼，在無人工提示下完成自我驗證與修正。RedNote承諾將開源該模型，但未公佈具體時間。",
+      "category": "ai-models",
+      "score": 59,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx6pbcg001erorqrih0um6c"
+      }
+    },
+    {
+      "id": "cmrx7nygh00b0rorqiub8bvp2",
+      "title": "特斯拉 App 代碼暗示已開始為 Optimus 人形機器人上線做準備",
+      "title_en": "代碼暗示，特斯拉 App 已開始為 Optimus 人形機器人上線做準備",
+      "url": "https://www.ithome.com/0/980/629.htm",
+      "permalink": "https://aihot.virxact.com/items/cmrx7nygh00b0rorqiub8bvp2",
+      "source": "IT之家（RSS）",
+      "publishedAt": "2026-07-23T07:08:36.000Z",
+      "summary": "特斯拉手機 App 中首次出現多項與 Optimus 項目相關的代碼，包括專門面向機器人的藍牙低功耗（BLE）身份認證機制，以及適用於家庭場景的數據採集功能。用户可將手機添加至機器人設備授權白名單，只有經過授權的設備才能與 Optimus 通信和控制。未來 Optimus 執行家務任務時，App 將彈出頁面徵求用户授權，採集視頻和空間環境數據用於優化智能模型。",
+      "category": "industry",
+      "score": 45,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx7nygh00b0rorqiub8bvp2"
+      }
+    },
+    {
+      "id": "cmrx6qlc9003srorq3aeho2ta",
+      "title": "OpenAI 今日將發佈重大更新",
+      "title_en": "The hype is real. today is gonna be big. openai was cooking",
+      "url": "https://x.com/kimmonismus/status/2080188089226387917",
+      "permalink": "https://aihot.virxact.com/items/cmrx6qlc9003srorq3aeho2ta",
+      "source": "X：Kim (@kimmonismus)",
+      "publishedAt": "2026-07-23T07:07:43.000Z",
+      "summary": "炒作是真的。今天會很重磅。OpenAI 一直在醖釀。",
+      "category": "tip",
+      "score": 25,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx6qlc9003srorq3aeho2ta"
+      }
+    },
+    {
+      "id": "cmrx6qlc9003trorqwryrkjcx",
+      "title": "OpenAI 升級 Codex，Cerebras 推 GPT-5.6 Sol",
+      "title_en": "Big day， rumors are： OpenAI upgrades Codex with real-time voice and parallel worker agents. Cereb…",
+      "url": "https://x.com/kimmonismus/status/2080187121533386767",
+      "permalink": "https://aihot.virxact.com/items/cmrx6qlc9003trorqwryrkjcx",
+      "source": "X：Kim (@kimmonismus)",
+      "publishedAt": "2026-07-23T07:03:52.000Z",
+      "summary": "大日子，傳聞是：\n\nOpenAI 用實時語音和並行智能體升級了 Codex。\n\nCerebras 將 GPT-5.6 Sol 的速度推至高達 750 tok/s。\n\n此外可能還有 Opus 5。我全力支持！",
+      "category": "industry",
+      "score": 45,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx6qlc9003trorqwryrkjcx"
+      }
+    },
+    {
+      "id": "cmrx7nygh00b1rorq0zeyar7o",
+      "title": "榮耀發佈全新品牌標識\"榮耀之環\"及主張\"敢想，敢不同\"，阿爾法戰略508天后公佈Robot Phone等進展",
+      "title_en": "阿爾法戰略開啓 508 天后的又一轉變，李健詳解榮耀全新品牌圖形標識及主張",
+      "url": "https://www.ithome.com/0/980/627.htm",
+      "permalink": "https://aihot.virxact.com/items/cmrx7nygh00b1rorq0zeyar7o",
+      "source": "IT之家（RSS）",
+      "publishedAt": "2026-07-23T07:01:35.000Z",
+      "summary": "榮耀終端CEO李健今日正式揭曉全新品牌圖形標識\"榮耀之環\"及品牌主張\"敢想，敢不同\"。508天前開啓的阿爾法戰略已取得進展：打造了榮耀Robot Phone，使智能體手機邁向三維物理世界；在具身智能領域推出機器人閃電和元氣仔，超越人類半馬世界紀錄；並與阿萊展開影像戰略合作。",
+      "category": "industry",
+      "score": 26,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx7nygh00b1rorq0zeyar7o"
+      }
+    },
+    {
+      "id": "cmrx6qlc9003urorqv3dgb92u",
+      "title": "今日或迎 GPT-5.6 與 Opus 5 發佈潮",
+      "title_en": "Looks like today will be Huge： - rumors are GPT-5.6 Sol Ultra + 750token/s cerebras release and -…",
+      "url": "https://x.com/kimmonismus/status/2080185501009465495",
+      "permalink": "https://aihot.virxact.com/items/cmrx6qlc9003urorqv3dgb92u",
+      "source": "X：Kim (@kimmonismus)",
+      "publishedAt": "2026-07-23T06:57:26.000Z",
+      "summary": "看來今天會是大日子：\n\n- 傳聞 GPT-5.6 Sol Ultra 發佈，搭配 Cerebras 750 token/s\n\n以及\n\n- 在此基礎上還有 Opus 5。\n\n無法證實任何消息，但感覺像是大規模發佈日。",
+      "category": "industry",
+      "score": 31,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx6qlc9003urorqv3dgb92u"
+      }
+    },
+    {
+      "id": "cmrx6pbch001frorqhh5znjo6",
+      "title": "AI數學突破：80年代兩猜想與2002年猜想被證偽",
+      "title_en": "And this comes from a theoretical physicist.",
+      "url": "https://x.com/rohanpaul_ai/status/2080185447788224602",
+      "permalink": "https://aihot.virxact.com/items/cmrx6pbch001frorqhh5znjo6",
+      "source": "X：Rohan Paul (@rohanpaul_ai)",
+      "publishedAt": "2026-07-23T06:57:13.000Z",
+      "summary": "這來自一位理論物理學家。\n\n【引用 @rohanpaul_ai】：AI 又一次數學勝利。\n\n兩個80年代的猜想和一個2002年的猜想本週全部被推翻。\n\n而這將是AI數學最慢的時刻。\n\n任何有可驗證答案的問題都可能以推理速度被解決。\n\n數學知識一直以人類的耐心速度增長，但現在這已被算力取代，而算力是指數級增長的。",
+      "category": "tip",
+      "score": 25,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx6pbch001frorqhh5znjo6"
+      }
+    },
+    {
+      "id": "cmrx7nygh00b3rorqd34eo9tw",
+      "title": "馬斯克稱 Tesla Semi 自動駕駛功能預計今年底至明年初可用",
+      "title_en": "特斯拉 Semi 電動卡車何時能用上 FSD？馬斯克稱今年底至明年初",
+      "url": "https://www.ithome.com/0/980/625.htm",
+      "permalink": "https://aihot.virxact.com/items/cmrx7nygh00b3rorqd34eo9tw",
+      "source": "IT之家（RSS）",
+      "publishedAt": "2026-07-23T06:55:26.000Z",
+      "summary": "馬斯克在特斯拉第二季度財報電話會議上首次給出明確時間表，稱 Tesla Semi 的自動駕駛功能預計在\"今年年底或明年年初\"實現可用。他表示，Semi 自動駕駛進展較慢是因研發優先級集中在 Model 3、Model Y 和 Cybercab 上，未來約六個月內該項目將暫時退居次要位置，但明年會投入運行並趕上 Semi 大規模量產節奏。",
+      "category": "industry",
+      "score": 39,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx7nygh00b3rorqd34eo9tw"
+      }
+    },
+    {
+      "id": "cmrx7nygh00b4rorqly5v2e75",
+      "title": "消息稱 Claude 語音模式將支持調用 Opus 和 Sonnet AI 模型",
+      "title_en": null,
+      "url": "https://www.ithome.com/0/980/624.htm",
+      "permalink": "https://aihot.virxact.com/items/cmrx7nygh00b4rorqly5v2e75",
+      "source": "IT之家（RSS）",
+      "publishedAt": "2026-07-23T06:55:11.000Z",
+      "summary": "Anthropic 有望本週升級 Claude 語音模式，新增模型選擇器，允許用户在 Opus、Sonnet 和 Haiku 三種模型間切換，並控制\"思考\"層級。目前語音模式統一調用 Claude Haiku 4.5 模型運行，Mythos 級模型 Claude Fable 暫未出現在語音選項中。",
+      "category": "ai-products",
+      "score": 27,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx7nygh00b4rorqly5v2e75"
+      }
+    },
+    {
+      "id": "cmrx7nygh00b5rorqtb0jdurs",
+      "title": "馬斯克感謝美光為特斯拉分配可觀內存產能，AI芯片升級計劃曝光",
+      "title_en": "埃隆 · 馬斯克：感謝美光向特斯拉分配可觀內存產能",
+      "url": "https://www.ithome.com/0/980/623.htm",
+      "permalink": "https://aihot.virxact.com/items/cmrx7nygh00b5rorqtb0jdurs",
+      "source": "IT之家（RSS）",
+      "publishedAt": "2026-07-23T06:52:55.000Z",
+      "summary": "埃隆·馬斯克感謝美光在內存價格高企時仍以合理條款為特斯拉分配可觀內存配額，並預留未來數年產能。特斯拉CFO Vaibhav Taneja稱生產增長受電池和電子元件供應鏈限制，正通過戰略性協議掃清障礙。馬斯克正推進Terafab項目以化解瓶頸，AI4芯片升級版預計2027年中投產，AI5有望同期量產。",
+      "category": "industry",
+      "score": 39,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx7nygh00b5rorqtb0jdurs"
+      }
+    },
+    {
+      "id": "cmrx7nygh00b6rorqp4xq1c3f",
+      "title": "國內首個智能體互聯標準體系 GB/Z185-2026 發佈，為 AI 智能體發放身份碼",
+      "title_en": "給\"AI\"發身份證，國內首個智能體互聯標準體系發佈",
+      "url": "https://www.ithome.com/0/980/622.htm",
+      "permalink": "https://aihot.virxact.com/items/cmrx7nygh00b6rorqp4xq1c3f",
+      "source": "IT之家（RSS）",
+      "publishedAt": "2026-07-23T06:51:26.000Z",
+      "summary": "國內首個覆蓋智能體全生命週期的互聯標準體系 GB/Z185-2026 正式發佈，規範了總體架構、智能體身份碼、身份管理、能力描述、跨域發現、協同交互、工具調用七大核心環節。現場為首批 2000 餘個重點行業智能體發放了唯一可追溯的身份碼，旨在破解不同廠商智能體互不兼容、身份可信缺失、跨域協作壁壘等行業痛點。該體系英文翻譯版已在 2026 世界人工智能大會公開，後續還將推出俄語、阿拉伯語等版本。",
+      "category": "industry",
+      "score": 59,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx7nygh00b6rorqp4xq1c3f"
+      }
+    },
+    {
+      "id": "cmrx5o0kz006yro47xtwv0dcl",
+      "title": "Sol Ultra 或 5.6 Sol 今日發佈",
+      "title_en": "Nice！ Either Sol Ultra drops today or 5.6 Sol at 750 token/s on cerebras. Either way， lets go！",
+      "url": "https://x.com/kimmonismus/status/2080183898504360359",
+      "permalink": "https://aihot.virxact.com/items/cmrx5o0kz006yro47xtwv0dcl",
+      "source": "X：Kim (@kimmonismus)",
+      "publishedAt": "2026-07-23T06:51:04.000Z",
+      "summary": "Nice！ 要麼 Sol Ultra 今天發佈，要麼在 cerebras 上以 750 token/s 的速度推出 5.6 Sol。無論如何，來吧！",
+      "category": "industry",
+      "score": 22,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx5o0kz006yro47xtwv0dcl"
+      }
+    },
+    {
+      "id": "cmrx5mqb4004nro47tx7k2mup",
+      "title": "Uber 因擁抱 AI 裁減 10% 客服崗位",
+      "title_en": "Bloomberg： Uber said it cut 10% of jobs in its customer service operations as part of a broader effo…",
+      "url": "https://x.com/rohanpaul_ai/status/2080182745657987401",
+      "permalink": "https://aihot.virxact.com/items/cmrx5mqb4004nro47tx7k2mup",
+      "source": "X：Rohan Paul (@rohanpaul_ai)",
+      "publishedAt": "2026-07-23T06:46:29.000Z",
+      "summary": "Uber 裁減了 10% 的客服崗位，這是公司首次將裁員直接歸因於自動化。全球社區運營負責人 Megha Yethadka 向員工表示，組織已變得過於複雜和割裂，AI 無法在碎片化的流程上擴展，因此必須先調整結構。",
+      "category": "industry",
+      "score": 52,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx5mqb4004nro47tx7k2mup"
+      }
+    },
+    {
+      "id": "cmrx5iu44001cro47s79pqd7q",
+      "title": "法國拒絕批准特斯拉FSD，稱其存在安全隱患需整改",
+      "title_en": "法國拒絕批准特斯拉 FSD：稱其存在安全隱患，需做出改變",
+      "url": "https://www.ithome.com/0/980/619.htm",
+      "permalink": "https://aihot.virxact.com/items/cmrx5iu44001cro47s79pqd7q",
+      "source": "IT之家（RSS）",
+      "publishedAt": "2026-07-23T06:46:25.000Z",
+      "summary": "法國官方決定不批准當前版本的特斯拉FSD（監督版），認為其安全隱患過多。交通部長指出，FSD會跟隨車流導致超速，且在城市複雜路況下無法確保駕駛員保持足夠注意力。特斯拉CEO馬斯克回應稱推遲批准將導致更多人失去生命。",
+      "category": "industry",
+      "score": 67,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx5iu44001cro47s79pqd7q"
+      }
+    },
+    {
+      "id": "cmrx5o6x3007yro47a93k6zco",
+      "title": "未解數學難題列表需求凸顯領域變革",
+      "title_en": "Wish I had a list of unsolved math problems handy. （But the sudden flow of math proofs/disproofs i…",
+      "url": "https://x.com/emollick/status/2080178812667543560",
+      "permalink": "https://aihot.virxact.com/items/cmrx5o6x3007yro47a93k6zco",
+      "source": "X：Ethan Mollick (@emollick)",
+      "publishedAt": "2026-07-23T06:30:51.000Z",
+      "summary": "真希望手頭有一份未解數學難題列表。\n\n（但數學證明/證偽的突然湧現，很好地預示了其他領域即將發生的情況。攻克難題吧。）",
+      "category": "tip",
+      "score": 22,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx5o6x3007yro47a93k6zco"
+      }
+    },
+    {
+      "id": "cmrx56rll009jro4b6iwf22ov",
+      "title": "2026高考觀察：大家最關心的是這些",
+      "title_en": null,
+      "url": "https://mp.weixin.qq.com/s/sBJ0yqbmEKmW7PSD_yI_rA",
+      "permalink": "https://aihot.virxact.com/items/cmrx56rll009jro4b6iwf22ov",
+      "source": "公眾號：騰訊元寶",
+      "publishedAt": "2026-07-23T06:30:00.000Z",
+      "summary": "",
+      "category": "",
+      "score": 0,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx56rll009jro4b6iwf22ov"
+      }
+    },
+    {
+      "id": "cmrx4l9gn003dro4bnu1k65k1",
+      "title": "Towards a quantum computer that learns from its errors",
+      "title_en": null,
+      "url": "https://research.google/blog/towards-a-quantum-computer-that-learns-from-its-errors",
+      "permalink": "https://aihot.virxact.com/items/cmrx4l9gn003dro4bnu1k65k1",
+      "source": "Google Research：Blog（網頁）",
+      "publishedAt": "2026-07-23T06:23:45.434Z",
+      "summary": "",
+      "category": "",
+      "score": 0,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx4l9gn003dro4bnu1k65k1"
+      }
+    },
+    {
+      "id": "cmrx4l9gn003cro4byxh7y6xd",
+      "title": "SymptomAI： Towards a conversational AI agent for everyday symptom assessment",
+      "title_en": null,
+      "url": "https://research.google/blog/symptomai-towards-a-conversational-ai-agent-for-everyday-symptom-assessment",
+      "permalink": "https://aihot.virxact.com/items/cmrx4l9gn003cro4byxh7y6xd",
+      "source": "Google Research：Blog（網頁）",
+      "publishedAt": "2026-07-23T06:23:45.434Z",
+      "summary": "",
+      "category": "",
+      "score": 0,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx4l9gn003cro4byxh7y6xd"
+      }
+    },
+    {
+      "id": "cmrx4oavo008cro4bel94rz9o",
+      "title": "Anthropic 發佈 Claude Security 插件 Beta 版：面向 Claude Code 的多智能體漏洞掃描器",
+      "title_en": "Anthropic Releases Claude Security Plugin for Claude Code in Beta： A Multi-Agent Vulnerability Scanner That Runs in Your Terminal",
+      "url": "https://www.marktechpost.com/2026/07/22/anthropic-releases-claude-security-plugin-for-claude-code-in-beta-a-multi-agent-vulnerability-scanner-that-runs-in-your-terminal",
+      "permalink": "https://aihot.virxact.com/items/cmrx4oavo008cro4bel94rz9o",
+      "source": "MarkTechPost（RSS）",
+      "publishedAt": "2026-07-23T06:12:05.000Z",
+      "summary": "Anthropic 為 Claude Code 推出 Claude Security 插件 Beta 版。該插件可在現有 Claude Code 會話中對倉庫執行多智能體漏洞掃描，並將選中的發現轉化為補丁文件供用户審查和應用。",
+      "category": "ai-products",
+      "score": 40,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx4oavo008cro4bel94rz9o"
+      }
+    },
+    {
+      "id": "cmrx4lm780059ro4b0v0q5oxc",
+      "title": "阿里雲發佈智能體原生雲棧，Qwen與Wan模型家族加持",
+      "title_en": "Your agent made it to production. Now the real work begins. Most clouds were built for apps. Agents …",
+      "url": "https://x.com/alibaba_cloud/status/2080173428703670413",
+      "permalink": "https://aihot.virxact.com/items/cmrx4lm780059ro4b0v0q5oxc",
+      "source": "X：阿里雲 / Alibaba Cloud (@alibaba_cloud)",
+      "publishedAt": "2026-07-23T06:09:27.000Z",
+      "summary": "阿里雲在Mountain View舉辦的Agent Builder Day上宣佈，正在構建一套智能體原生雲棧，將Qwen與Wan模型家族、模型服務及智能體計算運行時整合在一起，運行於AMD EPYC處理器之上。該活動吸引了100多名註冊參與者，標誌着智能體原生基礎設施已正式到來。",
+      "category": "industry",
+      "score": 38,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx4lm780059ro4b0v0q5oxc"
+      }
+    },
+    {
+      "id": "cmrx4lhef004aro4b29dltdot",
+      "title": "ServiceNow 4000萬美元投資印度銀行軟件公司BusinessNext",
+      "title_en": "ServiceNow bets $40 million on Indian banking software specialist to expand its financial services push",
+      "url": "https://techcrunch.com/2026/07/22/servicenow-bets-40m-on-indian-firm-businessnext-at-700m-valuation-to-deepen-banking-ai-push",
+      "permalink": "https://aihot.virxact.com/items/cmrx4lhef004aro4b29dltdot",
+      "source": "TechCrunch：AI（RSS）",
+      "publishedAt": "2026-07-23T06:09:13.000Z",
+      "summary": "ServiceNow向印度銀行軟件公司BusinessNext投資4000萬美元，獲得約5%股份，後者估值達7億美元。BusinessNext年收入約3200萬美元，服務全球70多家銀行，其\"自主銀行\"平台將AI智能體嵌入銀行工作流。雙方將結合ServiceNow的企業工作流平台與BusinessNext的銀行業務專長，共同向金融機構銷售。",
+      "category": "industry",
+      "score": 43,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx4lhef004aro4b29dltdot"
+      }
+    },
+    {
+      "id": "cmrx4o1ik007wro4b61wc56ch",
+      "title": "Grok Build 瀏覽器任務超越 Codex 與 Claude Code",
+      "title_en": "Cool",
+      "url": "https://x.com/elonmusk/status/2080170375363891250",
+      "permalink": "https://aihot.virxact.com/items/cmrx4o1ik007wro4b61wc56ch",
+      "source": "X：Elon Musk (@elonmusk, xAI)",
+      "publishedAt": "2026-07-23T05:57:19.000Z",
+      "summary": "酷\n\nGrok Build 配合 Browser Use CLI，在瀏覽器任務上表現優於 Codex 和 Claude Code。",
+      "category": "tip",
+      "score": 29,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx4o1ik007wro4b61wc56ch"
+      }
+    },
+    {
+      "id": "cmrx4o1ik007xro4bliu21v9w",
+      "title": "Grok Build v0.2.111 更新：開發者控制增強",
+      "title_en": "Grok Build gets better every day http://X.ai/cli",
+      "url": "https://x.com/elonmusk/status/2080170228554903796",
+      "permalink": "https://aihot.virxact.com/items/cmrx4o1ik007xro4bliu21v9w",
+      "source": "X：Elon Musk (@elonmusk, xAI)",
+      "publishedAt": "2026-07-23T05:56:44.000Z",
+      "summary": "xAI 發佈 Grok Build v0.2.111 更新，開發者現可通過 config.toml 或環境變量禁用圖像與視頻生成工具。新版本在 TUI 內直接支持 `grok doctor fix` 診斷命令，`/session-info` 可顯示 OAuth 或 API key 賬户信息。此外修復了多項會話可靠性問題，並降低了 macOS 語音模式的顯存佔用。",
+      "category": "ai-products",
+      "score": 29,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx4o1ik007xro4bliu21v9w"
+      }
+    },
+    {
+      "id": "cmrx3io3f007sro6982af80c3",
+      "title": "DeepSeek 梁文鋒：產品是AGI的副產品，開源是策略",
+      "title_en": "From a four-hour investor meeting with DeepSeek founder Liang Wenfeng， first reported by the WeChat …",
+      "url": "https://x.com/thexpin/status/2080169276183642328",
+      "permalink": "https://aihot.virxact.com/items/cmrx3io3f007sro6982af80c3",
+      "source": "X：X.PIN (@thexpin)",
+      "publishedAt": "2026-07-23T05:52:57.000Z",
+      "summary": "DeepSeek 創始人梁文鋒在四小時投資者會議中闡述其AGI路線圖：去年是CoT，今年是Agent，下一步是持續學習。他認為模型的首要目標是用於構建下一代模型，而非讓所有人覺得有用；API銷售吸引力不大。梁文鋒表示不擔心開源模型被用來競爭，並希望以更少算力將中美AI差距縮小至三個月。",
+      "category": "tip",
+      "score": 72,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx3io3f007sro6982af80c3"
+      }
+    },
+    {
+      "id": "cmrx3hk6v005bro69qh6ydnu9",
+      "title": "長上下文推理模型陷入複製陷阱，新方法提升準確率4.6%",
+      "title_en": "Many assumed that once long-context models could reason， the old challenge of simply finding the rig…",
+      "url": "https://x.com/rohanpaul_ai/status/2080169034935591350",
+      "permalink": "https://aihot.virxact.com/items/cmrx3hk6v005bro69qh6ydnu9",
+      "source": "X：Rohan Paul (@rohanpaul_ai)",
+      "publishedAt": "2026-07-23T05:52:00.000Z",
+      "summary": "研究發現，即使是強大的推理模型在處理長輸入時也會養成複製大段文本的\"懶惰\"習慣，且輸入越長問題越嚴重，這會消耗token預算並降低準確性。複製無關內容會導致錯誤，而只複製關鍵行則有助於正確回答。研究者提出一種基於證據感知的強化學習獎勵機制，通過獎勵模型關注關鍵文本、懲罰複製無關內容，將準確率提升最多4.6個百分點。",
+      "category": "paper",
+      "score": 31,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx3hk6v005bro69qh6ydnu9"
+      }
+    },
+    {
+      "id": "cmrx3lf3400cero69k403koma",
+      "title": "馬斯克稱Grok 4.5快速且經濟高效",
+      "title_en": "Grok 4.5 is not quite as good as Fable， but it is very fast， cost-effective and gets the job done",
+      "url": "https://x.com/elonmusk/status/2080168539420594481",
+      "permalink": "https://aihot.virxact.com/items/cmrx3lf3400cero69k403koma",
+      "source": "X：Elon Musk (@elonmusk, xAI)",
+      "publishedAt": "2026-07-23T05:50:02.000Z",
+      "summary": "Grok 4.5 雖然不如 Fable 那麼好，但它非常快速、經濟高效，並且能完成任務。",
+      "category": "tip",
+      "score": 32,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx3lf3400cero69k403koma"
+      }
+    },
+    {
+      "id": "cmrx3iki50075ro694xrjogs3",
+      "title": "Cactus 發佈 Gemma 4 E2B Hybrid：可在設備端為每個回答輸出置信度分數，低分時自動路由至更大模型",
+      "title_en": "Show HN： 《仙人掌雜交種》：我們教4歲的傑瑪如何分辨對錯",
+      "url": "https://github.com/cactus-compute/cactus-hybrid",
+      "permalink": "https://aihot.virxact.com/items/cmrx3iki50075ro694xrjogs3",
+      "source": "Hacker News 熱門（buzzing.cc 中文翻譯）",
+      "publishedAt": "2026-07-23T05:47:29.042Z",
+      "summary": "Cactus 推出基於 Gemma 4 的混合模型\"Cactus Hybrid\"，在模型檢查點內嵌入置信度探針，為每個生成答案輸出 0-1 之間的結構化置信度分數。高置信度時在設備端直接回答，低分時可自動路由至更大模型。該探針在零音頻訓練數據下，於四個音頻基準上達到 0.79-0.88 AUROC，遠超 token 熵基線（均值 0.549），且 MIT 協議開源。",
+      "category": "ai-models",
+      "score": 70,
+      "selected": true,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx3iki50075ro694xrjogs3"
+      }
+    },
+    {
+      "id": "cmrx3lf3400cfro69q2uzptmb",
+      "title": "Grok 4.5 破解30年圖論猜想",
+      "title_en": "Grok 4.5 just solved a graph theory conjecture that has been open for ~30 years",
+      "url": "https://x.com/elonmusk/status/2080165738464280725",
+      "permalink": "https://aihot.virxact.com/items/cmrx3lf3400cfro69q2uzptmb",
+      "source": "X：Elon Musk (@elonmusk, xAI)",
+      "publishedAt": "2026-07-23T05:38:54.000Z",
+      "summary": "Grok 4.5 剛剛解決了一個已懸而未決約 30 年的圖論猜想。",
+      "category": "paper",
+      "score": 46,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx3lf3400cfro69q2uzptmb"
+      }
+    },
+    {
+      "id": "cmrx3hswt0060ro69gn69vnk8",
+      "title": "GPT 5.6 Sol 輕鬆實現手 K 貼紙效果",
+      "title_en": "可以的有意思 好玩 試玩：https://sticker.oooo.so/",
+      "url": "https://x.com/xiaohu/status/2080164487185981545",
+      "permalink": "https://aihot.virxact.com/items/cmrx3hswt0060ro69gn69vnk8",
+      "source": "X：小互 (@xiaohu)",
+      "publishedAt": "2026-07-23T05:33:55.000Z",
+      "summary": "用户 @cats_juice 用 GPT 5.6 Sol 輕鬆實現了過去需要手動 K 幀的貼紙效果，並支持自定義富文本和圖像上傳。該項目已開源，在線體驗地址為 https://sticker.oooo.so。",
+      "category": "ai-products",
+      "score": 29,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx3hswt0060ro69gn69vnk8"
+      }
+    },
+    {
+      "id": "cmrx3hk6v005cro69cmcapmiy",
+      "title": "模型歸因難題：調用Fable API無法證明Moonshot蒸餾了Fable",
+      "title_en": "There's also a model-attribution problem here. Calling the Fable API does not prove Fable generated…",
+      "url": "https://x.com/rohanpaul_ai/status/2080164153986331093",
+      "permalink": "https://aihot.virxact.com/items/cmrx3hk6v005cro69cmcapmiy",
+      "source": "X：Rohan Paul (@rohanpaul_ai)",
+      "publishedAt": "2026-07-23T05:32:36.000Z",
+      "summary": "僅憑調用Fable API的日誌無法證明Moonshot AI蒸餾了Anthropic的Fable模型用於開發K3。若Anthropic懷疑是蒸餾請求，該請求會被秘密重定向至Opus，Moonshot實際收到的是Opus而非Fable的回覆。要證明Fable與K3相關，需提供每次補全的served-model ID、與K3訓練任務關聯的提取語料庫，以及模型血統證據。",
+      "category": "tip",
+      "score": 50,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx3hk6v005cro69cmcapmiy"
+      }
+    },
+    {
+      "id": "cmrx2g36r00r8roqp9sf8tega",
+      "title": "DeepSeek 梁文鋒：定價降75%，追求合理利潤而非最大化",
+      "title_en": "DeepSeek founder Liang Wenfeng's doctrine #3： 14. We target reasonable profits rather than profit m…",
+      "url": "https://x.com/thexpin/status/2080161566612475951",
+      "permalink": "https://aihot.virxact.com/items/cmrx2g36r00r8roqp9sf8tega",
+      "source": "X：X.PIN (@thexpin)",
+      "publishedAt": "2026-07-23T05:22:19.000Z",
+      "summary": "DeepSeek 創始人梁文鋒在投資者會議上闡述其經營理念：公司追求合理利潤而非利潤最大化，通過高效架構設計而非堆砌資源來降低成本。在初期高價管理需求後，將價格下調75%以實現AI普惠。目前API業務無需銷售團隊即可自然獲客，但全面商業化並非當前優先事項，將隨市場成熟自然推進。",
+      "category": "tip",
+      "score": 46,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx2g36r00r8roqp9sf8tega"
+      }
+    },
+    {
+      "id": "cmrx2io6h00vcroqp4uvnmayt",
+      "title": "swyx 感嘆 GitHub 未領先 Cursor AI",
+      "title_en": "wew",
+      "url": "https://x.com/swyx/status/2080161521070690671",
+      "permalink": "https://aihot.virxact.com/items/cmrx2io6h00vcroqp4uvnmayt",
+      "source": "X：swyx (@swyx)",
+      "publishedAt": "2026-07-23T05:22:08.000Z",
+      "summary": "wew\n\n【引用 @chacon】：@cursor_ai 讓我感到瘋狂的是 @github 竟然沒有在這個領域領先。",
+      "category": "tip",
+      "score": 24,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx2io6h00vcroqp4uvnmayt"
+      }
+    },
+    {
+      "id": "cmrx2f72h00pproqpg7umhxq8",
+      "title": "小互評DeepSeek：腳踏實地才是成功關鍵",
+      "title_en": "喜歡造神 不尊重客觀規律和科學 總幻想着彎道超車 一次性搞個大的 然而Deepseek的核心價值觀全是和上面的背道而馳的 Deepseek之所以取得之前的成就，正因為他們是腳踏實地的重客觀規律和科…",
+      "url": "https://x.com/xiaohu/status/2080161216757203029",
+      "permalink": "https://aihot.virxact.com/items/cmrx2f72h00pproqpg7umhxq8",
+      "source": "X：小互 (@xiaohu)",
+      "publishedAt": "2026-07-23T05:20:56.000Z",
+      "summary": "小互指出，一些人喜歡造神、幻想彎道超車，但DeepSeek的核心價值觀與之相反。DeepSeek之前的成就正是源於尊重客觀規律和科學、腳踏實地。當DeepSeek未達外界不切實際的預期時，這些人又會反過來踩幾腳。",
+      "category": "tip",
+      "score": 40,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx2f72h00pproqpg7umhxq8"
+      }
+    },
+    {
+      "id": "cmrx2g36r00r9roqpz77pgv4k",
+      "title": "DeepSeek 梁文鋒談 AGI 路線：持續學習是下一關",
+      "title_en": "DeepSeek founder Liang Wenfeng's doctrine #2： 7. AI currently lacks continuous learning， not taste …",
+      "url": "https://x.com/thexpin/status/2080161160255721889",
+      "permalink": "https://aihot.virxact.com/items/cmrx2g36r00r9roqpz77pgv4k",
+      "source": "X：X.PIN (@thexpin)",
+      "publishedAt": "2026-07-23T05:20:42.000Z",
+      "summary": "DeepSeek 創始人梁文鋒在投資者會議上闡述其 AGI 路線圖：從去年的思維鏈（Chain of Thought）到今年的智能體（agents），下一道難關是持續學習。他認為 AI 目前缺乏的是持續學習能力，而非品味或直覺；通往 AGI 的最快路徑是構建能幫助人類開發未來模型的模型，而非優先服務大眾。持續學習將觸發漸進式奇點，最終走向具身智能。",
+      "category": "tip",
+      "score": 46,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx2g36r00r9roqpz77pgv4k"
+      }
+    },
+    {
+      "id": "cmrx3dmm7001kro69lasjc6rp",
+      "title": "笑死，給同事們裝好Workbuddy，安裝的第一個技能就是美團生活助手 主打一個先幫大夥薅外賣優惠券！！",
+      "title_en": null,
+      "url": "https://x.com/berryxia/status/2080161155746766936",
+      "permalink": "https://aihot.virxact.com/items/cmrx3dmm7001kro69lasjc6rp",
+      "source": "X：Berry Xia (@berryxia)",
+      "publishedAt": "2026-07-23T05:20:41.000Z",
+      "summary": "笑死，給同事們裝好Workbuddy，安裝的第一個技能就是美團生活助手\n\n主打一個先幫大夥薅外賣優惠券！！",
+      "category": "tip",
+      "score": 28,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx3dmm7001kro69lasjc6rp"
+      }
+    },
+    {
+      "id": "cmrx2he6j00tqroqpy6q6p2dg",
+      "title": "馬斯克：星艦任務完全未用AI完成",
+      "title_en": "\"I'm glad to say that the Starship mission was done entirely with human brains without any use of A….",
+      "url": "https://x.com/cb_doge/status/2080160987936850225",
+      "permalink": "https://aihot.virxact.com/items/cmrx2he6j00tqroqpy6q6p2dg",
+      "source": "X：cb_doge (@cb_doge)",
+      "publishedAt": "2026-07-23T05:20:01.000Z",
+      "summary": "我很高興地説，星艦任務完全依靠人腦完成，沒有使用任何人工智能。未來的人工智能或許會看着這一點説，對一羣猴子來説還不錯。\n\n--埃隆·馬斯克",
+      "category": "tip",
+      "score": 17,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx2he6j00tqroqpy6q6p2dg"
+      }
+    },
+    {
+      "id": "cmrx2g36r00raroqpajuirv8b",
+      "title": "DeepSeek 梁文鋒：產品是AGI副產品，代碼與通用Agent優先",
+      "title_en": "DeepSeek founder Liang Wenfeng's doctrine #1： 1. Products are just a byproduct on the path to AGI， …",
+      "url": "https://x.com/thexpin/status/2080160617667985438",
+      "permalink": "https://aihot.virxact.com/items/cmrx2g36r00raroqpajuirv8b",
+      "source": "X：X.PIN (@thexpin)",
+      "publishedAt": "2026-07-23T05:18:33.000Z",
+      "summary": "DeepSeek 創始人梁文鋒在投資者會議上闡述其核心原則：產品只是通往 AGI 路上的副產品，當前不以營收為重心；3D/視頻生成及世界模型不在主計劃內，多模態僅作為產品組件而非核心智能。公司優先投入代碼與通用 AI 智能體，行業專用智能體可暫緩，模型幻覺被視為長期產品問題而非當前重點。",
+      "category": "tip",
+      "score": 47,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx2g36r00raroqpajuirv8b"
+      }
+    },
+    {
+      "id": "cmrx2hvky00uaroqpdt4iw5g6",
+      "title": "AI短劇成美國娛樂應用新勢力",
+      "title_en": "This is one of the least known typed of AI apps， yet 12 of the top 50 Entertainment apps in the US f…",
+      "url": "https://x.com/deedydas/status/2080160582913958175",
+      "permalink": "https://aihot.virxact.com/items/cmrx2hvky00uaroqpdt4iw5g6",
+      "source": "X：Deedy Das (@deedydas)",
+      "publishedAt": "2026-07-23T05:18:25.000Z",
+      "summary": "這是最不為人知的AI應用類型之一，然而美國娛樂應用前50名中有12款屬於此類。\n\n它就是短劇：AI生成的節目，每集30-60秒。\n\n大多數發行商來自中國，全球月活躍用户超過2.5億。\n\n而這一切，嗯，你自己看看吧……",
+      "category": "tip",
+      "score": 58,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx2hvky00uaroqpdt4iw5g6"
+      }
+    },
+    {
+      "id": "cmrx2ggcc00t1roqpzxgwco4q",
+      "title": "Jason Liu 對 Codex 風格新功能興奮不已",
+      "title_en": "Tell me about it！",
+      "url": "https://x.com/jxnlco/status/2080160335160324205",
+      "permalink": "https://aihot.virxact.com/items/cmrx2ggcc00t1roqpzxgwco4q",
+      "source": "X：Jason Liu (@jxnlco)",
+      "publishedAt": "2026-07-23T05:17:26.000Z",
+      "summary": "跟我説説！",
+      "category": "tip",
+      "score": 19,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx2ggcc00t1roqpzxgwco4q"
+      }
+    },
+    {
+      "id": "cmrx2g36r00rbroqpfo6df4nm",
+      "title": "DeepSeek 創始人談開源與AGI戰略",
+      "title_en": "We summarized the key remarks from DeepSeek founder Liang Wenfeng during their investor meeting. The…",
+      "url": "https://x.com/thexpin/status/2080159999763136738",
+      "permalink": "https://aihot.virxact.com/items/cmrx2g36r00rbroqpfo6df4nm",
+      "source": "X：X.PIN (@thexpin)",
+      "publishedAt": "2026-07-23T05:16:06.000Z",
+      "summary": "我們總結了 DeepSeek 創始人梁文鋒在投資者會議上的關鍵發言。核心議題包括開源戰略、成本降低和 AGI。",
+      "category": "tip",
+      "score": 58,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx2g36r00rbroqpfo6df4nm"
+      }
+    },
+    {
+      "id": "cmrx2cdq000nzroqpc57eaxa3",
+      "title": "北京發佈智能體新政，首次將Harness Engineering、Token經濟、OPC等寫入政策",
+      "title_en": "一文帶你看懂剛剛發佈的\"北京智能體新政\"，這是跟每個人都有關的10條。",
+      "url": "https://mp.weixin.qq.com/s/CYB7v1e5D4m-btgosjmLgA",
+      "permalink": "https://aihot.virxact.com/items/cmrx2cdq000nzroqpc57eaxa3",
+      "source": "公眾號：數字生命卡茲克",
+      "publishedAt": "2026-07-23T05:13:37.000Z",
+      "summary": "北京市發佈《關於加快智能體引領發展的若干措施》，共十條，首次將Harness Engineering（駕馭層工程）、Token經濟、OPC（一人公司）等前沿概念寫入正式政策。文件提出從Token消耗量計費轉向價值計費，鼓勵發展TaaS、AaaS、RaaS模式，並推動智能體嵌入手機、眼鏡、汽車等終端。",
+      "category": "tip",
+      "score": 66,
+      "selected": true,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx2cdq000nzroqpc57eaxa3"
+      }
+    },
+    {
+      "id": "cmrx3n64u00d7ro69m1ddo6ft",
+      "title": "月之暗面K3被指蒸餾Anthropic，網友批雙標",
+      "title_en": "笑不活了，合着全行業都在玩的蒸餾，到月之暗面這就成竊取技術了？ 蒸餾本來就是AI圈通用操作，各家閉源開源互相薅的事還少嗎？ 怎麼你們美國公司搞就是合法創新生態，中國公司搞就是隱秘大規模工業蒸餾，雙…",
+      "url": "https://x.com/AYi_AInotes/status/2080159045579616706",
+      "permalink": "https://aihot.virxact.com/items/cmrx3n64u00d7ro69m1ddo6ft",
+      "source": "X：阿易 AI Notes (@AYi_AInotes)",
+      "publishedAt": "2026-07-23T05:12:18.000Z",
+      "summary": "美國官員@mkratsios47稱月之暗面（Moonshot AI）為開發K3模型，搭建內部平台對Anthropic的Fable模型進行大規模隱蔽蒸餾，併購買GB300服務器在泰國訓練。主推文反駁稱蒸餾是AI行業通用操作，批評美方雙標：美國公司做是合法創新，中國公司做就是竊取技術。",
+      "category": "tip",
+      "score": 47,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx3n64u00d7ro69m1ddo6ft"
+      }
+    },
+    {
+      "id": "cmrx3dnbj001zro69z44g82w8",
+      "title": "LSEG 報告：AI 投資熱潮推動 2026 上半年全球企業債券發行 3.68 萬億美元創新高",
+      "title_en": "AI 投資熱潮推動：LSEG 報告 2026 上半年全球企業債券發行 3.68 萬億美元創新高",
+      "url": "https://www.ithome.com/0/980/580.htm",
+      "permalink": "https://aihot.virxact.com/items/cmrx3dnbj001zro69z44g82w8",
+      "source": "IT之家（RSS）",
+      "publishedAt": "2026-07-23T04:50:34.000Z",
+      "summary": "倫敦證券交易所集團（LSEG）數據顯示，2026 年上半年全球企業債券發行量達 3.68 萬億美元，同比增長約 10%，刷新曆年上半年紀錄。發行數量 10408 筆同比下降 12%，單筆融資規模擴大。最大一筆為亞馬遜 3 月完成的 368 億美元發行，資金預計投向雲計算與 AI 數據中心。",
+      "category": "industry",
+      "score": 48,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx3dnbj001zro69z44g82w8"
+      }
+    },
+    {
+      "id": "cmrx1cdoc00furoqpzkf0oo7i",
+      "title": "Devin 一週攻克三項數學未解難題",
+      "title_en": "Another Math win for AI. 2 conjectures from the 80s and one from 2002 all died this week. and this…",
+      "url": "https://x.com/rohanpaul_ai/status/2080152455439110243",
+      "permalink": "https://aihot.virxact.com/items/cmrx1cdoc00furoqpzkf0oo7i",
+      "source": "X：Rohan Paul (@rohanpaul_ai)",
+      "publishedAt": "2026-07-23T04:46:07.000Z",
+      "summary": "AI 智能體 Devin 在一週內攻克三項數學未解難題：駁斥了開放約 40 年的 Graffiti 猜想 154，證明了 Graffiti 猜想 39 和 40，並駁斥了開放約 20 年的 Brandt 正則超圖問題。Rohan Paul 評論稱，這是 AI 數學能力最慢的時刻，任何答案可驗證的問題都可能以推理速度被解決。",
+      "category": "tip",
+      "score": 36,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx1cdoc00furoqpzkf0oo7i"
+      }
+    },
+    {
+      "id": "cmrx18g8800caroqp66zmltxp",
+      "title": "Codex Desktop 截圖任務導致 JSONL 膨脹至 10.2 GB 及系統崩潰",
+      "title_en": ".@thsottiaux Pls check it and Solve it ，Bro. Today we don't ask you to reset the Codex， but to fix i…",
+      "url": "https://x.com/berryxia/status/2080151456217444763",
+      "permalink": "https://aihot.virxact.com/items/cmrx18g8800caroqp66zmltxp",
+      "source": "X：Berry Xia (@berryxia)",
+      "publishedAt": "2026-07-23T04:42:09.000Z",
+      "summary": "用户反饋 Codex Desktop 在頻繁截圖任務中，將 PNG 以 base64 反覆寫入快照，導致單個會話 JSONL 膨脹至 10.2 GB，進程佔用 27 GB、Swap 達 36 GB，Mac 幾乎失去響應。抽樣顯示圖片數據佔比 99.79%，恢復時還會產生多份內存副本。用户已提交 Issue 並呼籲 @thsottiaux 修復。",
+      "category": "industry",
+      "score": 29,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx18g8800caroqp66zmltxp"
+      }
+    },
+    {
+      "id": "cmrx1fsbr00l2roqpzzmi68v5",
+      "title": "VibeGamer 項目已開源發佈",
+      "title_en": "已開源~在這裏 https://github.com/karminski/VibeGamer",
+      "url": "https://x.com/karminski3/status/2080151112339042429",
+      "permalink": "https://aihot.virxact.com/items/cmrx1fsbr00l2roqpzzmi68v5",
+      "source": "X：karminski (@karminski3)",
+      "publishedAt": "2026-07-23T04:40:47.000Z",
+      "summary": "已開源~在這裏 https://github.com/karminski/VibeGamer",
+      "category": "ai-products",
+      "score": 44,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx1fsbr00l2roqpzzmi68v5"
+      }
+    },
+    {
+      "id": "cmrx1c4xv00faroqpuwmr0y89",
+      "title": "開源Skill實現穩定下載YouTube視頻",
+      "title_en": "今天有朋友問，有沒有穩定的下載Youtube視頻的Skill？ 其實都基於yt-dlp，問題是這個庫要跟 Youtube對抗，得經常更新，所以寫了一個Skill解決這個問題。 支持Youtube …",
+      "url": "https://x.com/vista8/status/2080150051872276990",
+      "permalink": "https://aihot.virxact.com/items/cmrx1c4xv00faroqpuwmr0y89",
+      "source": "X：Vista (@vista8)",
+      "publishedAt": "2026-07-23T04:36:34.000Z",
+      "summary": "開發者發佈了一個基於yt-dlp的YouTube視頻下載Skill，支持YouTube Shorts和多種分辨率下載。該Skill通過定期更新來對抗YouTube的接口變化，確保下載穩定性。安裝命令為`npx skills add joeseesun/qiaomu-youtube-download`，開源地址見GitHub。",
+      "category": "tip",
+      "score": 70,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx1c4xv00faroqpuwmr0y89"
+      }
+    },
+    {
+      "id": "cmrx1dgge00htroqpquh3adxf",
+      "title": "Codex Security 插件開源發佈",
+      "title_en": "try the codex security plugin， for applying our models to cyberdefense：",
+      "url": "https://x.com/gdb/status/2080149982359831017",
+      "permalink": "https://aihot.virxact.com/items/cmrx1dgge00htroqpquh3adxf",
+      "source": "X：Greg Brockman (@gdb)",
+      "publishedAt": "2026-07-23T04:36:17.000Z",
+      "summary": "試試 Codex Security 插件，將我們的模型應用於網絡防禦：\n\n【引用 @reach_vb】：重新推出 Codex Security 插件！\n\n將其指向代碼庫或 diff，它可以構建威脅模型、映射攻擊路徑、驗證發現、生成並測試修復，並將結果導出到 SARIF、GitHub、Jira 或 Linear。\n\n哦，而且它全部在 GitHub 上開源！！",
+      "category": "ai-products",
+      "score": 40,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx1dgge00htroqpquh3adxf"
+      }
+    },
+    {
+      "id": "cmrx18fx500byroqpixm8pgxw",
+      "title": "男子用AI偽造爛果圖騙取電商\"僅退款\"1.6萬元並轉售牟利，獲刑一年",
+      "title_en": "一人薅羊毛導致全縣被電商拉黑：男子用 AI 生成爛果圖騙取 1.6 萬元水果\"僅退款\"並轉售牟利，獲刑一年",
+      "url": "https://www.ithome.com/0/980/578.htm",
+      "permalink": "https://aihot.virxact.com/items/cmrx18fx500byroqpixm8pgxw",
+      "source": "IT之家（RSS）",
+      "publishedAt": "2026-07-23T04:31:03.000Z",
+      "summary": "湖南衡山縣居民譚某某在2025年10月至2026年1月期間，利用AI修圖軟件偽造水果腐爛圖片，騙取電商平台\"僅退款\"後轉售完好水果牟利，累計下單100餘筆，涉案價值16000餘元。其行為導致多個電商平台將衡山縣列為高風險地區，該縣居民一度無法購買榴蓮和車釐子。法院以詐騙罪判處譚某某有期徒刑一年，並處罰金5000元，因其2024年曾犯詐騙罪繫累犯，依法從重處罰。",
+      "category": "industry",
+      "score": 41,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx18fx500byroqpixm8pgxw"
+      }
+    },
+    {
+      "id": "cmrx1hzr100mlroqpj2crmjwv",
+      "title": "用AI像維特根斯坦一樣整理思緒",
+      "title_en": "維特根斯坦生前只出了一本哲學書，死後學生整理出的遺稿卻堆成了一座山。 沒有 AI 的年代他隨身帶紙和筆，腦子裏剛冒出一點想法立刻寫下來，那些滿是塗改的手稿就是他的外置前額葉，他不是靠想通了才繼續創作…",
+      "url": "https://x.com/AYi_AInotes/status/2080147176802439535",
+      "permalink": "https://aihot.virxact.com/items/cmrx1hzr100mlroqpj2crmjwv",
+      "source": "X：阿易 AI Notes (@AYi_AInotes)",
+      "publishedAt": "2026-07-23T04:25:08.000Z",
+      "summary": "維特根斯坦靠隨時寫下想法來理清思緒，AI 如今能起到類似作用。ChatGPT、Claude 等 AI 最有用的方式不是直接給答案，而是像枴杖一樣幫人拆解問題、區分事實與腦補、找回可行動的時間。利用工具的意義不是替代思考，而是讓思考擁有更多可能性。",
+      "category": "tip",
+      "score": 43,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx1hzr100mlroqpj2crmjwv"
+      }
+    },
+    {
+      "id": "cmrx1cdoc00fvroqp8a44ghtv",
+      "title": "Anthropic 年化收入達 743 億美元",
+      "title_en": "According to Yipit， Anthropic's annualized revenue， ARR， climbed to $74.3B by July 22， though the gr…",
+      "url": "https://x.com/rohanpaul_ai/status/2080146925303775387",
+      "permalink": "https://aihot.virxact.com/items/cmrx1cdoc00fvroqp8a44ghtv",
+      "source": "X：Rohan Paul (@rohanpaul_ai)",
+      "publishedAt": "2026-07-23T04:24:08.000Z",
+      "summary": "據 Yipit 數據，截至 7 月 22 日，Anthropic 的年化收入（ARR）攀升至 743 億美元，但增速正在放緩。",
+      "category": "industry",
+      "score": 53,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx1cdoc00fvroqp8a44ghtv"
+      }
+    },
+    {
+      "id": "cmrx09eqr002nroqpsok99s6e",
+      "title": "Tibo 預告明日將發佈 Codex 相關更新",
+      "title_en": "Unbelievable excited for what's coming together. Tomorrow is feeling codexy",
+      "url": "https://x.com/thsottiaux/status/2080144499716800513",
+      "permalink": "https://aihot.virxact.com/items/cmrx09eqr002nroqpsok99s6e",
+      "source": "X：Tibo (@thsottiaux)",
+      "publishedAt": "2026-07-23T04:14:30.000Z",
+      "summary": "對即將到來的成果感到難以置信的興奮。明天感覺很有 Codex 的味道。",
+      "category": "industry",
+      "score": 17,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx09eqr002nroqpsok99s6e"
+      }
+    },
+    {
+      "id": "cmrx18fx500c0roqp2wec7boo",
+      "title": "OpenAI 公佈 Project Camellia 數據中心計劃，承諾不推高電費並送 Codex 額度",
+      "title_en": "OpenAI 為數據中心爭取社區支持：承諾不推高電費、用水量極低，還送 Codex 額度",
+      "url": "https://www.ithome.com/0/980/575.htm",
+      "permalink": "https://aihot.virxact.com/items/cmrx18fx500c0roqp2wec7boo",
+      "source": "IT之家（RSS）",
+      "publishedAt": "2026-07-23T04:13:17.000Z",
+      "summary": "OpenAI 計劃在佐治亞州埃芬漢姆縣建設一座投資至少 200 億美元、用電需求 3.2 吉瓦的數據中心園區。項目承諾不推高居民電費，採用閉環水系統降低用水量，並向當地學生提供最高 7100 萬美元的 Codex 使用額度。園區預計 2028 年至 2032 年分階段供電，將帶來數千個建設崗位和超 1000 個長期運營崗位。",
+      "category": "industry",
+      "score": 53,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx18fx500c0roqp2wec7boo"
+      }
+    },
+    {
+      "id": "cmrx09sru003droqps0mxnbsh",
+      "title": "研究員用GPT-5.6 Sol五天解決6個埃爾德什難題",
+      "title_en": "A single researcher solved 6 open Erdős problems in 5 days using GPT-5.6 Sol. He attempted 13 probl…",
+      "url": "https://x.com/rohanpaul_ai/status/2080143115885916189",
+      "permalink": "https://aihot.virxact.com/items/cmrx09sru003droqps0mxnbsh",
+      "source": "X：Rohan Paul (@rohanpaul_ai)",
+      "publishedAt": "2026-07-23T04:09:00.000Z",
+      "summary": "一位研究員使用OpenAI GPT-5.6 Sol在5天內解決了6個開放的埃爾德什難題，嘗試13個問題，成功率約46%。其提示詞采用\"合同式\"寫法，明確要求證明必須建立的內容、排除的弱結果和已知陷阱，並指導模型同時探索多條路徑、不提前承諾、主動尋找反例。Codex在數小時內保持整個搜索過程在內存中，並由對抗性智能體逐一檢驗存活的草稿。",
+      "category": "tip",
+      "score": 41,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx09sru003droqps0mxnbsh"
+      }
+    },
+    {
+      "id": "cmrx0b9j4006sroqpsbp5glj8",
+      "title": "MiniMax 聯合 AMD 優化 M3 推理性能",
+      "title_en": "We welcome more hardware manufacturers to join us in jointly optimizing inference performance， OSS f…",
+      "url": "https://x.com/MiniMax_AI/status/2080143091374411823",
+      "permalink": "https://aihot.virxact.com/items/cmrx0b9j4006sroqpsbp5glj8",
+      "source": "X：MiniMax (@MiniMax_AI)",
+      "publishedAt": "2026-07-23T04:08:54.000Z",
+      "summary": "MiniMax 宣佈 AMD MI355X 在其 M3 模型推理上已接近 Nvidia B200 水平。雙方聯合發佈技術博客，詳述針對 428B MSA 稀疏 MoE 多模態基座模型的全棧 ATOM + ATOMesh 協同優化，核心升級包括 EAGLE3 投機解碼、支持 1M 超長上下文的 MSA 對齊 Page-16 KV 緩存、逐層 FP8 量化及分佈式 P/D 分離架構。",
+      "category": "industry",
+      "score": 51,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx0b9j4006sroqpsbp5glj8"
+      }
+    },
+    {
+      "id": "cmrx185ul00beroqppvjmuruj",
+      "title": "歸藏：AGI臨近應先玩《賽博朋克2077》看普通人狀態",
+      "title_en": "隨着 AGI 越來越近，模型能力越來越強，具身智能的發展也在突飛猛進。 作為普通人，我覺得從目前的發展來看，不應該盲目期待 AGI。 首要任務應該是先玩玩《賽博朋克 2077》，看一看裏面普通人的…",
+      "url": "https://x.com/op7418/status/2080141081115779261",
+      "permalink": "https://aihot.virxact.com/items/cmrx185ul00beroqppvjmuruj",
+      "source": "X：歸藏 (@op7418)",
+      "publishedAt": "2026-07-23T04:00:55.000Z",
+      "summary": "歸藏認為，隨着AGI和模型能力快速提升，具身智能也在突飛猛進。作為普通人，不應盲目期待AGI，首要任務應是先玩《賽博朋克2077》，觀察其中普通人的生存狀態。",
+      "category": "tip",
+      "score": 23,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx185ul00beroqppvjmuruj"
+      }
+    },
+    {
+      "id": "cmrwztuqg0000roqpmbblplr7",
+      "title": "小紅書HELMSMAN：全閃存服務器實現高性能向量檢索，硬件成本節省超90%",
+      "title_en": "小紅書引擎架構團隊OSDI 2026新成果：HELMSMAN重塑大規模向量檢索基礎設施",
+      "url": "https://mp.weixin.qq.com/s/WCYE6itbTBPU0Q_3BfQxkA",
+      "permalink": "https://aihot.virxact.com/items/cmrwztuqg0000roqpmbblplr7",
+      "source": "公眾號：小紅書技術（dots.llm）",
+      "publishedAt": "2026-07-23T04:00:00.000Z",
+      "summary": "小紅書引擎架構團隊在OSDI 2026提出HELMSMAN，一個面向全閃存服務器的高性能向量近似最近鄰搜索系統。該系統通過聚類式索引、定製化存儲棧和分層學習式搜索剪枝，用約40台全閃存服務器承載了過去約35，000 CPU Core和約350 TB DRAM的負載，硬件成本節省超過90%。",
+      "category": "paper",
+      "score": 77,
+      "selected": true,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrwztuqg0000roqpmbblplr7"
+      }
+    },
+    {
+      "id": "cmrx0b9z3006uroqppoq0gysn",
+      "title": "ChatGPT 動態記憶功能體驗分享",
+      "title_en": "I just followed @maxjendrall",
+      "url": "https://x.com/jxnlco/status/2080140389978149309",
+      "permalink": "https://aihot.virxact.com/items/cmrx0b9z3006uroqppoq0gysn",
+      "source": "X：Jason Liu (@jxnlco)",
+      "publishedAt": "2026-07-23T03:58:10.000Z",
+      "summary": "我剛關注了 @maxjendrall\n\nChatGPT 的動態記憶變得非常好用，我經常發現自己把同一主題的不同對話搞混，而 ChatGPT 線程卻能直接接上，就像是我原本想聊的那個線程一樣。\n\n這太酷了。讓我可以隨時隨地把信息自由輸入進去。",
+      "category": "tip",
+      "score": 29,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx0b9z3006uroqppoq0gysn"
+      }
+    },
+    {
+      "id": "cmrx18g8900cbroqpkmtkvlnq",
+      "title": "梁文鋒談DeepSeek開源本意與中美AI差距",
+      "title_en": "都在發梁的錄音，我覺得這個觀點還挺有意思的。 梁文鋒説：智譜也開源，但智譜的開源有一種被迫的感覺，他們覺得這不是本意。而對 DeepSeek 來講，開源就是本意。 還有關於中美AI差距的觀點也是，…",
+      "url": "https://x.com/berryxia/status/2080138564831195337",
+      "permalink": "https://aihot.virxact.com/items/cmrx18g8900cbroqpkmtkvlnq",
+      "source": "X：Berry Xia (@berryxia)",
+      "publishedAt": "2026-07-23T03:50:55.000Z",
+      "summary": "梁文鋒認為，智譜的開源帶有被迫感，並非本意；而DeepSeek的開源就是本意。他還指出，人才已不再是中美AI之間的最大差距。",
+      "category": "tip",
+      "score": 35,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrx18g8900cbroqpkmtkvlnq"
+      }
+    },
+    {
+      "id": "cmrwz3ao903xwrobhsxq7mfcc",
+      "title": "梁文鋒：中美AI差距不在人才，在算力",
+      "title_en": "http://x.com/i/article/2080126910860832768",
+      "url": "https://x.com/berryxia/status/2080138139499131305",
+      "permalink": "https://aihot.virxact.com/items/cmrwz3ao903xwrobhsxq7mfcc",
+      "source": "X：Berry Xia (@berryxia)",
+      "publishedAt": "2026-07-23T03:49:14.000Z",
+      "summary": "梁文鋒在2026年5月20日投資者交流會上提出，中美AI差距本質上只有一個：算力資源，人才幾乎沒有差距，因為\"就是同一批人\"。他主張DeepSeek只賺六倍利潤、堅持開源，認為AI市場獨佔邏輯走不通，剋制才是長期生存策略。團隊穩定性是公司唯一核心利益，願景驅動比金錢更能留住人。",
+      "category": "tip",
+      "score": 62,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrwz3ao903xwrobhsxq7mfcc"
+      }
+    },
+    {
+      "id": "cmrwz39z703xarobhyo80mnfg",
+      "title": "緊追 ChatGPT，谷歌 Gemini 應用月活躍用户達 9.5 億",
+      "title_en": "緊追 ChatGPT，谷歌 Gemini 應用已擁有 9.5 億月活躍用户",
+      "url": "https://www.ithome.com/0/980/551.htm",
+      "permalink": "https://aihot.virxact.com/items/cmrwz39z703xarobhyo80mnfg",
+      "source": "IT之家（RSS）",
+      "publishedAt": "2026-07-23T03:43:44.000Z",
+      "summary": "谷歌公佈 Gemini AI 應用月活躍用户已達 9.5 億，CEO 皮查伊稱過去一年日活躍用户增長至原來的 3 倍。Sensor Tower 數據顯示 ChatGPT 月活約 10 億，Gemini 正迅速縮小差距。谷歌本週發佈 Gemini 3.6 Flash 等 3 款模型，稱其在編程等任務上表現優於上一代且成本更低。",
+      "category": "industry",
+      "score": 50,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrwz39z703xarobhyo80mnfg"
+      }
+    },
+    {
+      "id": "cmrwz2zfe03wqrobht91y7mn3",
+      "title": "美方指控中國模型蒸餾，梁文鋒會議記錄曝光",
+      "title_en": "昨天美國政府特朗普總統助理發表內容，指控中國模型通過\"蒸餾\"來開發模型。與此同時，昨天晚上流傳着梁文鋒的 4 小時投資人會議記錄。 把這兩方的言論拿在一起看，就覺得美國那邊真的很可笑。 特朗普總統…",
+      "url": "https://x.com/op7418/status/2080129570641166342",
+      "permalink": "https://aihot.virxact.com/items/cmrwz2zfe03wqrobht91y7mn3",
+      "source": "X：歸藏 (@op7418)",
+      "publishedAt": "2026-07-23T03:15:11.000Z",
+      "summary": "美國政府特朗普總統助理指控中國模型通過\"蒸餾\"開發，被解讀為禁止中國開源模型的前兆，引發輿論嘲諷。同時流傳的梁文鋒投資人會議記錄顯示，DeepSeek 目標堅定：以極低價格、極低利潤提供高性價比模型，持續接近 AGI，不重人力做 C 端產品。",
+      "category": "tip",
+      "score": 48,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrwz2zfe03wqrobht91y7mn3"
+      }
+    },
+    {
+      "id": "cmrwz39z703xfrobh1tvh4fa8",
+      "title": "Uber 客户服務部門裁員 10%，稱擁抱人工智能並簡化運營",
+      "title_en": "Uber 客户服務部門裁員 10%：簡化員工隊伍，擁抱人工智能",
+      "url": "https://www.ithome.com/0/980/502.htm",
+      "permalink": "https://aihot.virxact.com/items/cmrwz39z703xfrobh1tvh4fa8",
+      "source": "IT之家（RSS）",
+      "publishedAt": "2026-07-23T03:13:26.000Z",
+      "summary": "Uber 當地時間 22 日宣佈在客户服務部門裁員 10%，作為簡化員工隊伍、擁抱人工智能整體舉措的一部分。公司要求此前遠程辦公的團隊成員遷至指定辦公地點，以配合重返辦公室政策。Uber 全球社區運營副總裁在內部備忘錄中表示，組織變得過於複雜和孤立，需要高效架構來支撐人工智能應用。",
+      "category": "industry",
+      "score": 48,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrwz39z703xfrobh1tvh4fa8"
+      }
+    },
+    {
+      "id": "cmrwz39z703xhrobh8g75nolm",
+      "title": "我國首個核工業高安全場景工業互聯網平台\"龍贔\"成功落地",
+      "title_en": "我國首個：工業互聯網平台\"龍贔\"成功落地應用，從芯片到系統 100% 國產化",
+      "url": "https://www.ithome.com/0/980/491.htm",
+      "permalink": "https://aihot.virxact.com/items/cmrwz39z703xhrobh8g75nolm",
+      "source": "IT之家（RSS）",
+      "publishedAt": "2026-07-23T03:09:28.000Z",
+      "summary": "中核集團核動力院下屬中核控制自主研發的龍贔工業互聯網平台成功落地，是我國首個面向核工業高安全場景的100%國產化平台。該平台採用\"平台+工業App\"架構，已支撐全國首個核工業領域國家級智能製造標準試點\"透明工廠\"建設，實際應用中軟件工程設計效率提升50%，測試執行效率提升20%。",
+      "category": "ai-products",
+      "score": 42,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrwz39z703xhrobh8g75nolm"
+      }
+    },
+    {
+      "id": "cmrwy4dhn03nvrobhhqzv92u8",
+      "title": "DeepSeek半數核心研究員標註數據",
+      "title_en": "數據和品味有多重要。 \"DeepSeek 有一半的核心研究員，在標數據。\"",
+      "url": "https://x.com/vista8/status/2080127337790927060",
+      "permalink": "https://aihot.virxact.com/items/cmrwy4dhn03nvrobhhqzv92u8",
+      "source": "X：Vista (@vista8)",
+      "publishedAt": "2026-07-23T03:06:18.000Z",
+      "summary": "數據和品味有多重要。\n\n\"DeepSeek 有一半的核心研究員，在標數據。\"",
+      "category": "tip",
+      "score": 36,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrwy4dhn03nvrobhhqzv92u8"
+      }
+    },
+    {
+      "id": "cmrwy4utr03onrobhk9h7lri2",
+      "title": "騰訊混元 Hy3 模型上線 Go 語言支持",
+      "title_en": "Test Hy3 in GO.",
+      "url": "https://x.com/TencentHunyuan/status/2080127118286176342",
+      "permalink": "https://aihot.virxact.com/items/cmrwy4utr03onrobhk9h7lri2",
+      "source": "X：騰訊混元 (@TencentHunyuan)",
+      "publishedAt": "2026-07-23T03:05:26.000Z",
+      "summary": "在 Go 中測試 Hy3。",
+      "category": "ai-models",
+      "score": 32,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrwy4utr03onrobhk9h7lri2"
+      }
+    },
+    {
+      "id": "cmrwy62lf03s3robhiq6w7gne",
+      "title": "Jason Liu 徵集最佳 GPT 實時演示作品",
+      "title_en": "Who's made the best gpt realtime demos？ Looking to meet some exceptional builders to give some credi…",
+      "url": "https://x.com/jxnlco/status/2080126909971599754",
+      "permalink": "https://aihot.virxact.com/items/cmrwy62lf03s3robhiq6w7gne",
+      "source": "X：Jason Liu (@jxnlco)",
+      "publishedAt": "2026-07-23T03:04:36.000Z",
+      "summary": "誰做出了最好的 GPT 實時演示？\n想認識一些出色的開發者，給他們一些認可。\n尋找酷炫的演示作品。",
+      "category": "tip",
+      "score": 5,
+      "selected": false,
+      "attribution": {
+        "source": "AI HOT",
+        "canonical": "https://aihot.virxact.com/items/cmrwy62lf03s3robhiq6w7gne"
       }
     }
   ],
@@ -913,7 +2666,7 @@
         "items": [
           {
             "title": "AMD 投資 50 億，Anthropic 採購 2GW GPU",
-            "summary": "AMD 剛剛宣佈與 Anthropic 達成協議，將投資高達 50 億美元，換取 Anthropic 採購 2GW 的 AMD MI455 UALOE72 及未來 GPU。🚨 這與我們三天前關於 Anthropic 的説法一致。",
+            "summary": "AMD 剛剛宣佈與 Anthropic 達成協議，將投資高達 50 億美元，換取 Anthropic 採購 2GW 的 AMD MI455 UALOE72 及未來 GPU。 這與我們三天前關於 Anthropic 的説法一致。",
             "sourceUrl": "https://x.com/SemiAnalysis_/status/2079929602429141215",
             "sourceName": "X：SemiAnalysis (@SemiAnalysis_)",
             "permalink": "https://aihot.virxact.com/items/cmrw6cr1r00jnro8guecs6ku9",
@@ -1098,6 +2851,30 @@
       "permalink": "https://aihot.virxact.com/items/cmrusyoaf0bfgbi9ttofctwvj",
       "source": "Google DeepMind：Blog（RSS）",
       "sourceCount": 22,
+      "sourceNames": [
+        "X：小互 (@xiaohu)",
+        "Google DeepMind：Blog（RSS）",
+        "The Verge：AI（RSS）",
+        "X：Google AI (@GoogleAI)",
+        "IT之家（RSS）",
+        "X：Berry Xia (@berryxia)",
+        "X：Logan Kilpatrick (@OfficialLoganK)",
+        "X：fofr (@fofrAI)",
+        "X：Gemini (@GeminiApp)",
+        "X：Google DeepMind (@GoogleDeepMind)",
+        "X：Jeff Dean (@JeffDean)",
+        "Hacker News 熱門（buzzing.cc 中文翻譯）",
+        "X：Google AI for Developers (@googleaidevs)",
+        "X：Josh Woodward (@joshwoodward, Google Labs VP)",
+        "Artificial Intelligence News（RSS）",
+        "X：Artificial Analysis (@ArtificialAnlys)",
+        "The Decoder：AI News（RSS）",
+        "Ars Technica：AI（RSS）",
+        "TechCrunch：AI（RSS）",
+        "X：寶玉 (@dotey)",
+        "MarkTechPost（RSS）",
+        "X：Rohan Paul (@rohanpaul_ai)"
+      ],
       "latestAt": "2026-07-21T21:52:26.075Z"
     },
     {
@@ -1107,6 +2884,26 @@
       "permalink": "https://aihot.virxact.com/items/cmrv35ygl022xbinvx8o3df2j",
       "source": "OpenAI：官網動態（RSS · 排除企業/客户案例）",
       "sourceCount": 18,
+      "sourceNames": [
+        "OpenAI：官網動態（RSS · 排除企業/客户案例）",
+        "X：Sam Altman (@sama)",
+        "X：OpenAI (@OpenAI)",
+        "X：Nathan Lambert (@natolambert)",
+        "X：Testing Catalog (@testingcatalog)",
+        "Hacker News 熱門（buzzing.cc 中文翻譯）",
+        "X：AI Safety Memes (@AISafetyMemes)",
+        "X：Greg Brockman (@gdb)",
+        "X：Kim (@kimmonismus)",
+        "TechCrunch：AI（RSS）",
+        "The Verge：AI（RSS）",
+        "X：Yuchen Jin (@Yuchenj_UW)",
+        "X：寶玉 (@dotey)",
+        "X：Ethan Mollick (@emollick)",
+        "X：Rohan Paul (@rohanpaul_ai)",
+        "X：cb_doge (@cb_doge)",
+        "X：小互 (@xiaohu)",
+        "The Decoder：AI News（RSS）"
+      ],
       "latestAt": "2026-07-22T08:52:22.768Z"
     },
     {
@@ -1116,6 +2913,12 @@
       "permalink": "https://aihot.virxact.com/items/cmrwl9klk0021ro9lrfto6bld",
       "source": "X：Rohan Paul (@rohanpaul_ai)",
       "sourceCount": 4,
+      "sourceNames": [
+        "X：Sundar Pichai (@sundarpichai)",
+        "IT之家（RSS）",
+        "X：Rohan Paul (@rohanpaul_ai)",
+        "TechCrunch：AI（RSS）"
+      ],
       "latestAt": "2026-07-22T22:23:46.918Z"
     },
     {
@@ -1125,6 +2928,11 @@
       "permalink": "https://aihot.virxact.com/items/cmrwm7xsg0058robhvqflbjll",
       "source": "Gary Marcus：The Road to AI We Can Trust（RSS）",
       "sourceCount": 3,
+      "sourceNames": [
+        "Ars Technica：AI（RSS）",
+        "TechCrunch：AI（RSS）",
+        "Gary Marcus：The Road to AI We Can Trust（RSS）"
+      ],
       "latestAt": "2026-07-22T21:49:31.632Z"
     },
     {
@@ -1133,8 +2941,15 @@
       "url": "https://mp.weixin.qq.com/s/EITf-SrP5o62Ljp7UGzPVw",
       "permalink": "https://aihot.virxact.com/items/cmrujyaak0mhmbi07h3daik9b",
       "source": "公眾號：小紅書技術（dots.llm）",
-      "sourceCount": 4,
-      "latestAt": "2026-07-22T08:52:45.903Z"
+      "sourceCount": 5,
+      "sourceNames": [
+        "公眾號：小紅書技術（dots.llm）",
+        "IT之家（RSS）",
+        "X：歸藏 (@op7418)",
+        "X：小互 (@xiaohu)",
+        "X：Rohan Paul (@rohanpaul_ai)"
+      ],
+      "latestAt": "2026-07-23T07:22:53.921Z"
     }
   ]
 }

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Calendar, ExternalLink } from "lucide-react";
 import Reveal, { REVEAL_EASE } from "@/components/Reveal";
@@ -29,8 +29,10 @@ const RECENT_ISSUES = recentIssues(7).map((d) => ({
 /**
  * Daily 日報 (daily.md): 報紙刊頭版式 — Masthead（雙髮絲線）→ 頭條 Lead
  * → 編號列表 02–05 → 日期導航列（popover 近 7 日）→ Ask CTA 細帶。
+ * v1.6: 作為「資訊中心」的每日日報 tab 內容嵌入（embedded 縮減頂距）；
+ * 獨立路由 /insights/daily 由下方 default export 重定向至 /insights?tab=daily。
  */
-export default function Daily() {
+export function DailyContent({ embedded = false }: { embedded?: boolean }) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
 
@@ -48,8 +50,13 @@ export default function Daily() {
 
   return (
     <>
-      {/* Section 1 — Masthead 刊頭 (置中, 上方 padding 96px) */}
-      <section className="mx-auto max-w-container px-6 pt-24 text-center max-md:pt-16">
+      {/* Section 1 — Masthead 刊頭 (置中, 上方 padding 96px; tab 嵌入時縮減) */}
+      <section
+        className={cn(
+          "mx-auto max-w-container px-6 text-center",
+          embedded ? "pt-16 max-md:pt-12" : "pt-24 max-md:pt-16"
+        )}
+      >
         <motion.p
           className="font-mono text-caption text-text-muted"
           initial={{ opacity: 0 }}
@@ -218,7 +225,7 @@ export default function Daily() {
           <div className="flex items-center justify-between gap-4 border-y py-6">
             {/* 左：前一日（原型循環展示同一期） */}
             <Link
-              to="/insights/daily"
+              to="/insights?tab=daily"
               className="group inline-flex items-center gap-1.5 text-label text-ink"
             >
               <ArrowLeft
@@ -310,4 +317,12 @@ export default function Daily() {
       </section>
     </>
   );
+}
+
+/**
+ * 獨立路由 /insights/daily（v1.6 起）— 日報已併入資訊中心 tab，
+ * 直接重定向，保留舊連結不失效。
+ */
+export default function Daily() {
+  return <Navigate to="/insights?tab=daily" replace />;
 }

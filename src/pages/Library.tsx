@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Navigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, Check, Copy, Languages } from "lucide-react";
 import CategoryChip from "@/components/CategoryChip";
@@ -15,46 +16,6 @@ import { cn } from "@/lib/utils";
 
 type TabKey = "tools" | "templates";
 type CategoryFilter = ToolCategory | "全部";
-
-/* ================= Section 1 — Page Header ================= */
-
-function PageHeader() {
-  return (
-    <section className="mx-auto max-w-container px-6 pt-24 max-md:pt-16">
-      <motion.p
-        className="flex items-center gap-3 text-overline font-sans uppercase text-ink"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3, ease: REVEAL_EASE }}
-      >
-        <span className="inline-block h-[1.5px] w-6 bg-ink" aria-hidden="true" />
-        Tools & Playbooks
-      </motion.p>
-
-      <span className="mt-6 block overflow-hidden">
-        <motion.h1
-          className="font-display text-display text-text-primary"
-          initial={{ y: 24, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.45, delay: 0.1, ease: REVEAL_EASE }}
-        >
-          資源庫 Library
-        </motion.h1>
-      </span>
-      <span className="block overflow-hidden">
-        <motion.p
-          className="mt-4 max-w-[640px] text-body-lg text-text-secondary"
-          initial={{ y: 24, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.45, delay: 0.2, ease: REVEAL_EASE }}
-        >
-          工具評測以香港團隊視角實測 —
-          繁體中文支援、價格、私隱合規逐項評分。模板全部來自案例庫實戰，可直接複製使用。
-        </motion.p>
-      </span>
-    </section>
-  );
-}
 
 /* ================= Section 3A — 工具評測卡 ================= */
 
@@ -422,12 +383,38 @@ function MethodologyBand() {
 
 /* ================= Page ================= */
 
-export default function Library() {
+/**
+ * 資源庫嵌入內容（v1.6）— 作為「資訊中心」的資源庫 tab：
+ * 精簡引言 + 工具評測/模板 sub-toggle（沿用原 LibraryContent）+ 評測方法帶。
+ */
+export function LibraryEmbed() {
   return (
     <>
-      <PageHeader />
+      <section className="mx-auto max-w-container px-6 pt-16 max-md:pt-12">
+        <Reveal y={16} duration={0.4}>
+          <p className="flex items-center gap-3 text-overline font-sans uppercase text-ink">
+            <span className="inline-block h-[1.5px] w-6 bg-ink" aria-hidden="true" />
+            Tools & Playbooks
+          </p>
+          <h2 className="mt-4 font-display text-h2 text-text-primary">
+            資源庫 Library
+          </h2>
+          <p className="mt-3 max-w-[640px] text-body-sm text-text-secondary">
+            工具評測以香港團隊視角實測 —
+            繁體中文支援、價格、私隱合規逐項評分。模板全部來自案例庫實戰，可直接複製使用。
+          </p>
+        </Reveal>
+      </section>
       <LibraryContent />
       <MethodologyBand />
     </>
   );
+}
+
+/**
+ * 獨立路由 /library（v1.6 起）— 資源庫已併入資訊中心 tab，
+ * 直接重定向，保留舊連結不失效。
+ */
+export default function Library() {
+  return <Navigate to="/insights?tab=library" replace />;
 }

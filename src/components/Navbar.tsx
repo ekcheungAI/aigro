@@ -9,7 +9,6 @@ import { REVEAL_EASE } from "@/components/Reveal";
 export const NAV_LINKS = [
   { to: "/insights", en: "Insights", zh: "情報" },
   { to: "/cases", en: "Cases", zh: "案例" },
-  { to: "/library", en: "Library", zh: "資源庫" },
   { to: "/experts", en: "Experts", zh: "專家" },
   { to: "/ask", en: "Ask", zh: "問答" },
   { to: "/pricing", en: "Pricing", zh: "方案" },
@@ -180,7 +179,7 @@ export default function Navbar() {
               <motion.div
                 initial={{ opacity: 0, transform: "translateX(-16px)" }}
                 animate={{ opacity: 1, transform: "translateX(0px)" }}
-                transition={{ duration: 0.3, delay: 7 * 0.08, ease: REVEAL_EASE }}
+                transition={{ duration: 0.3, delay: 6 * 0.08, ease: REVEAL_EASE }}
                 className="pt-4"
               >
                 <Link

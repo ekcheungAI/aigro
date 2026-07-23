@@ -32,9 +32,9 @@ export default function Footer() {
             <p className="text-overline font-sans uppercase text-band-text-muted">內容</p>
             <ul className="mt-4 space-y-3 text-label">
               <li><Link className="text-band-text-secondary transition-colors duration-150 hover:text-band-ink" to="/insights">Insights 情報</Link></li>
-              <li><Link className="text-band-text-secondary transition-colors duration-150 hover:text-band-ink" to="/insights/daily">Daily 日報</Link></li>
+              <li><Link className="text-band-text-secondary transition-colors duration-150 hover:text-band-ink" to="/insights?tab=daily">Daily 日報</Link></li>
               <li><Link className="text-band-text-secondary transition-colors duration-150 hover:text-band-ink" to="/cases">Cases 案例</Link></li>
-              <li><Link className="text-band-text-secondary transition-colors duration-150 hover:text-band-ink" to="/library">Library 資源庫</Link></li>
+              <li><Link className="text-band-text-secondary transition-colors duration-150 hover:text-band-ink" to="/insights?tab=library">Library 資源庫</Link></li>
             </ul>
           </nav>
 

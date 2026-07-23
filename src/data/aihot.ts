@@ -40,6 +40,7 @@ export interface AihotRawItem {
   summary: string;
   category: string;
   score: number;
+  selected: boolean;
   attribution: AihotAttribution | null;
 }
 
@@ -64,12 +65,15 @@ export interface AihotRawHotTopic {
   permalink: string;
   source: string;
   sourceCount: number;
+  sourceNames?: string[];
   latestAt: string | null;
 }
 
 interface AihotSnapshot {
   fetchedAt: string;
   items: AihotRawItem[];
+  /** mode=all&take=100 — 全部動態（含未入選精選的條目）；舊 snapshot 可能缺失 */
+  allItems?: AihotRawItem[];
   daily: {
     date: string | null;
     attribution: AihotAttribution | null;
@@ -155,6 +159,8 @@ export interface AihotInsight extends Insight {
   originalUrl: string | null;
   /** 英文標題（如有） */
   titleEn: string | null;
+  /** 是否入選 AIHOT 精選（mode=selected）；全部動態中未入選者為 false */
+  selected: boolean;
   /** 標記為外部內容（無站內詳情長文） */
   external: true;
 }
@@ -176,13 +182,38 @@ function toAihotInsight(raw: AihotRawItem): AihotInsight {
     canonical: raw.attribution?.canonical ?? raw.permalink,
     originalUrl: raw.url,
     titleEn: raw.title_en ? clean(raw.title_en) : null,
+    selected: raw.selected,
     external: true,
   };
 }
 
-/** 全部 AIHOT 精選情報（API 原序，最新在前） */
+/** 全部 AIHOT 精選情報（mode=selected，API 原序，最新在前） */
 export const aihotInsights: AihotInsight[] =
   snapshot.items.map(toAihotInsight);
+
+/**
+ * 全部動態（mode=all&take=100）— 以 allItems 為主，補上 selected 精選中
+ * 未出現在 allItems 的條目（API 窗口差異），按發佈時間倒序。
+ */
+export const aihotAllInsights: AihotInsight[] = (() => {
+  const selectedIds = new Set(snapshot.items.map((i) => i.id));
+  const merged = new Map<string, AihotRawItem>();
+  for (const raw of snapshot.allItems ?? []) {
+    merged.set(raw.id, {
+      ...raw,
+      selected: raw.selected || selectedIds.has(raw.id),
+    });
+  }
+  for (const raw of snapshot.items) {
+    if (!merged.has(raw.id)) merged.set(raw.id, { ...raw, selected: true });
+  }
+  return [...merged.values()]
+    .sort(
+      (a, b) =>
+        new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
+    )
+    .map(toAihotInsight);
+})();
 
 /** 按 slug 查找 AIHOT 情報 */
 export function findAihotInsight(slug: string): AihotInsight | undefined {
@@ -293,14 +324,41 @@ export interface AihotHotTopic {
   permalink: string;
   source: string;
   sourceCount: number;
+  sourceNames: string[];
   latestAt: string | null;
+  /** 以標題關鍵詞比對出的相關情報（全部動態中，最多 3 條） */
+  related: AihotInsight[];
 }
 
-export const aihotHotTopics: AihotHotTopic[] = snapshot.hotTopics.map((t) => ({
-  id: t.id,
-  title: clean(t.title),
-  permalink: t.permalink,
-  source: clean(t.source),
-  sourceCount: t.sourceCount,
-  latestAt: t.latestAt,
-}));
+/** 由標題抽取比對關鍵詞：Latin 詞（≥4 字母），用於話題 ↔ 情報配對 */
+function topicKeywords(title: string): string[] {
+  const words = title.match(/[A-Za-z][A-Za-z0-9.+-]{2,}/g) ?? [];
+  return [...new Set(words.map((w) => w.toLowerCase()))].filter(
+    (w) => w.length >= 4
+  );
+}
+
+export const aihotHotTopics: AihotHotTopic[] = snapshot.hotTopics.map((t) => {
+  const title = clean(t.title);
+  const keywords = topicKeywords(title);
+  const related =
+    keywords.length === 0
+      ? []
+      : aihotAllInsights
+          .filter((i) => {
+            if (i.slug === t.id) return false;
+            const haystack = `${i.title} ${i.titleEn ?? ""}`.toLowerCase();
+            return keywords.some((k) => haystack.includes(k));
+          })
+          .slice(0, 3);
+  return {
+    id: t.id,
+    title,
+    permalink: t.permalink,
+    source: clean(t.source),
+    sourceCount: t.sourceCount,
+    sourceNames: (t.sourceNames ?? []).map(clean),
+    latestAt: t.latestAt,
+    related,
+  };
+});

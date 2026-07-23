@@ -44,13 +44,14 @@ async function get(path) {
   return res.json();
 }
 
-const [itemsRes, daily, hotTopics] = await Promise.all([
+const [itemsRes, allItemsRes, daily, hotTopics] = await Promise.all([
   get("/items?mode=selected&take=50"),
+  get("/items?mode=all&take=100"),
   get("/daily"),
   get("/hot-topics"),
 ]);
 
-const items = (itemsRes.items ?? []).map((it) => ({
+const mapItem = (it) => ({
   id: it.id,
   title: tc(it.title ?? ""),
   title_en: it.title_en ? tc(it.title_en) : null,
@@ -61,13 +62,23 @@ const items = (itemsRes.items ?? []).map((it) => ({
   summary: tc(it.summary ?? ""),
   category: it.category ?? "",
   score: typeof it.score === "number" ? it.score : 0,
+  selected: !!it.selected,
   attribution: it.attribution ?? null,
-}));
+});
+
+const items = (itemsRes.items ?? []).map(mapItem);
+const allItems = (allItemsRes.items ?? []).map(mapItem);
 
 const snapshot = {
   fetchedAt: new Date().toISOString(),
-  api: { base: BASE, itemsCount: items.length, hasNext: !!itemsRes.hasNext },
+  api: {
+    base: BASE,
+    itemsCount: items.length,
+    allItemsCount: allItems.length,
+    hasNext: !!itemsRes.hasNext,
+  },
   items,
+  allItems,
   daily: {
     date: daily.date ?? null,
     attribution: daily.attribution ?? null,
@@ -91,6 +102,9 @@ const snapshot = {
     permalink: t.permalink ?? "",
     source: tc(t.source ?? ""),
     sourceCount: t.sourceCount ?? 0,
+    sourceNames: Array.isArray(t.sourceNames)
+      ? t.sourceNames.map((n) => tc(String(n)))
+      : [],
     latestAt: t.latestAt ?? null,
   })),
 };
@@ -107,6 +121,7 @@ const dailyCount = snapshot.daily.sections.reduce(
 
 console.log("AIHOT snapshot written →", OUT);
 console.log(`  items:      ${items.length} (categories: ${JSON.stringify(cats)})`);
+console.log(`  all items:  ${allItems.length} (mode=all, feed 全部動態)`);
 console.log(
   `  daily:      ${snapshot.daily.date} — ${snapshot.daily.sections.length} sections, ${dailyCount} items`
 );
