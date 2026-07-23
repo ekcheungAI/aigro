@@ -424,9 +424,21 @@ export default function Developers() {
         </Reveal>
       </section>
 
-      {/* Club vision band — dark band */}
-      <section className="border-t border-band-border bg-band-bg">
-        <div className="mx-auto max-w-container px-6 py-20 max-md:py-16">
+      {/* Club vision band — dark band + salon 氛圍照低調背景層
+          (opacity 40% + 純色 band-bg overlay,無漸層;深淺色主題皆為 dark band) */}
+      <section className="relative overflow-hidden border-t border-band-border bg-band-bg">
+        <img
+          src="/club-salon.jpg"
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-40 saturate-[0.88]"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-band-bg/60"
+        />
+        <div className="relative mx-auto max-w-container px-6 py-20 max-md:py-16">
           <Reveal>
             <p className="flex items-center gap-3 text-overline font-sans uppercase text-band-text-muted">
               <span

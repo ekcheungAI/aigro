@@ -49,14 +49,17 @@ export interface Heuristic {
 export interface Expert {
   slug: string;
   nameEn: string;
+  /** 中文名(可留空 — 如 Elvin Cheung 只以英文名示人,用 expertFullName() 渲染) */
   nameZh: string;
   title: string;
   /**
-   * Ask.tsx 專家變體 header 使用(不可改 Ask.tsx)。
-   * 領航專家唔用生成人像 — 用 brand-color monogram SVG data URI;
-   * 頁面頭像統一用 MonogramAvatar 組件。
+   * 專家頭像:真實肖像用 public/ 路徑(如 `/experts/elvin-cheung.jpg`,
+   * 由 PhotoAvatar 渲染);未有肖像嘅專家用 brand-color monogram SVG data URI
+   * (由 MonogramAvatar 渲染)。以 `image.startsWith("/")` 判斷。
    */
   image: string;
+  /** 2:3 cinematic 直度肖像(僅 ExpertProfile verified hero;未有則渲染 monogram 面板) */
+  portrait?: string;
   verified: boolean;
   specialties: string[];
   /** 一句觀點(僅領航專家大卡) */
@@ -228,9 +231,10 @@ export const experts: Expert[] = [
   {
     slug: "elvin-cheung",
     nameEn: "Elvin Cheung",
-    nameZh: "張曉峰",
+    nameZh: "",
     title: "@ekcheungAI 創辦人 · SuperBash 主理人 · AIGRO 領航專家",
-    image: monogramUri("#8A5A44", "EC"),
+    image: "/experts/elvin-cheung.jpg",
+    portrait: "/experts/elvin-cheung-portrait.jpg",
     verified: true,
     specialties: ["AI 實戰拆解", "自動化 Workflow", "Vibe Coding"],
     quote:
@@ -405,4 +409,14 @@ export const pendingExperts = experts.filter((e) => !e.verified);
 /** 專家英文名首名(「與 Jimmy 的 AI 分身對話」) */
 export function expertFirstName(expert: Expert): string {
   return expert.nameEn.split(" ")[0] ?? expert.nameEn;
+}
+
+/** 顯示全名:「劉進 Jimmy Lau」;中文名留空嘅專家(Elvin Cheung)只顯示英文名 */
+export function expertFullName(expert: Expert): string {
+  return [expert.nameZh, expert.nameEn].filter(Boolean).join(" ");
+}
+
+/** 有真實肖像(public/ 路徑)而非 monogram data URI */
+export function expertHasPhoto(expert: Expert): boolean {
+  return expert.image.startsWith("/");
 }

@@ -13,7 +13,7 @@ import { todayInfo } from "@/lib/daily";
 import InsightCard from "@/components/InsightCard";
 import CaseCard from "@/components/CaseCard";
 import CategoryChip from "@/components/CategoryChip";
-import MonogramAvatar from "@/components/MonogramAvatar";
+import MonogramAvatar, { PhotoAvatar } from "@/components/MonogramAvatar";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import LiveStats from "@/components/home/LiveStats";
 import HotTopicsTicker from "@/components/home/HotTopicsTicker";
@@ -30,7 +30,7 @@ import {
   aihotInsights,
 } from "@/data/aihot";
 import { featuredCases } from "@/data/cases";
-import { experts } from "@/data/experts";
+import { expertFullName, expertHasPhoto, experts } from "@/data/experts";
 
 /* ================= Section 1 — Cinematic Dark Hero ================= */
 
@@ -487,17 +487,26 @@ function ExpertsWall() {
             >
               <Link
                 to={expert.verified ? `/experts/${expert.slug}` : "/experts"}
-                aria-label={`${expert.nameEn} ${expert.nameZh}`}
+                aria-label={expertFullName(expert)}
                 className="block transition-transform duration-150 nudge-y"
               >
                 {expert.verified ? (
                   <span className="relative block rounded-full border-2 border-surface">
-                    <MonogramAvatar
-                      initials={EXPERT_INITIALS[expert.slug] ?? "·"}
-                      color={expert.brandColor ?? "#466A5E"}
-                      size={64}
-                      verified
-                    />
+                    {expertHasPhoto(expert) ? (
+                      <PhotoAvatar
+                        src={expert.image}
+                        alt={expertFullName(expert)}
+                        size={64}
+                        verified
+                      />
+                    ) : (
+                      <MonogramAvatar
+                        initials={EXPERT_INITIALS[expert.slug] ?? "·"}
+                        color={expert.brandColor ?? "#466A5E"}
+                        size={64}
+                        verified
+                      />
+                    )}
                   </span>
                 ) : (
                   <span className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-surface bg-card opacity-60 shadow-[0_0_0_1px_hsl(var(--border))]">
@@ -520,7 +529,7 @@ function ExpertsWall() {
               {/* Tooltip */}
               <span className="pointer-events-none absolute left-1/2 top-full z-10 mt-3 w-max -translate-x-1/2 rounded-md border bg-surface px-3 py-2 opacity-0 shadow-card transition-opacity duration-150 group-hover:opacity-100 dark:shadow-none">
                 <span className="block text-label text-text-primary">
-                  {expert.nameEn} {expert.nameZh}
+                  {expertFullName(expert)}
                 </span>
                 <span className="block text-caption text-text-muted">
                   {expert.title}
@@ -547,7 +556,7 @@ function ExpertsWall() {
                 .map((e) => (
                   <p key={e.slug} className="text-caption">
                     <span className="font-medium text-text-primary">
-                      {e.nameEn} {e.nameZh}
+                      {expertFullName(e)}
                     </span>
                     <span className="text-text-muted">
                       {" "}

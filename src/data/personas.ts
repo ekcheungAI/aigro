@@ -6,7 +6,7 @@
 
 import type { AiReply } from "@/components/ask/AiMessage";
 import type { Expert } from "@/data/experts";
-import { experts } from "@/data/experts";
+import { expertFullName, experts } from "@/data/experts";
 
 export interface ScriptedReply {
   /** 命中關鍵字即用呢套回答(順序匹配,先中先用) */
@@ -52,11 +52,11 @@ const PLATFORM_REPLIES: ScriptedReply[] = [
   {
     // 「Who's Jimmy Lau」「Jimmy 係邊個」「你係邊個」→ 領航專家名錄卡
     keywords:
-      /jimmy|劉進|elvin|張曉峰|ekcheung|領航專家|兩位專家|邊位專家|你係邊個|你係咩人|你叫咩|邊個係你/i,
+      /jimmy|劉進|elvin|ekcheung|領航專家|兩位專家|邊位專家|你係邊個|你係咩人|你叫咩|邊個係你/i,
     reply: {
       text: `我係 AIGRO 平台編輯部 AI — 基於全站情報同案例庫回答,背後有兩位領航專家:
 **Jimmy Lau 劉進** — DotAI 創辦人、AIGRO 聯合發起人,主張實戰先行、邊做邊學,帶住成個 club 將 AI 落地變成增長日常。
-**Elvin Cheung 張曉峰** — @ekcheungAI 創辦人、Perskill 創辦人、AIGRO 聯合發起人,用廣東話 source-aware 拆解 AI 工具同 workflow,幫香港 builders 將 AI 真正落地。
+**Elvin Cheung** — @ekcheungAI 創辦人、Perskill 創辦人、AIGRO 聯合發起人,用廣東話 source-aware 拆解 AI 工具同 workflow,幫香港 builders 將 AI 真正落地。
 想同佢哋傾,可以喺左欄直接揀佢哋嘅 AI 分身;想睇完整背景同 10 個核心觀點,撳下面嘅專家頁連結。`,
       citations: [
         { title: "Jimmy Lau 專家頁", href: "/experts/jimmy-lau" },
@@ -216,10 +216,10 @@ const ELVIN_REPLIES: ScriptedReply[] = [
   {
     // 「Elvin 係咩人」「你係邊個」→ 分身自我介紹(謙遜第一人稱)
     keywords:
-      /elvin|張曉峰|ekcheung|superbash|perskill|你係邊|你叫咩|你係咩人|邊個係你|你嘅背景|介紹下你|介紹你/i,
+      /elvin|ekcheung|superbash|perskill|你係邊|你叫咩|你係咩人|邊個係你|你嘅背景|介紹下你|介紹你/i,
     reply: {
       text: `我係 Elvin 嘅 AI 分身 — 由佢嘅公開內容同授權材料蒸餾而成,知識庫經本人審核。
-Elvin Cheung 張曉峰係 **@ekcheungAI 創辦人、Perskill 創辦人、AIGRO 領航專家**,用廣東話 source-aware 拆解 AI 工具、Agent 架構同自動化 workflow — 實測先行,唔會將 demo 講到似 production。
+Elvin Cheung 係 **@ekcheungAI 創辦人、Perskill 創辦人、AIGRO 領航專家**,用廣東話 source-aware 拆解 AI 工具、Agent 架構同自動化 workflow — 實測先行,唔會將 demo 講到似 production。
 講明先:我嘅回答代表佢嘅方法論,唔係佢本人嘅即時意見。完整背景同 10 個核心觀點喺佢嘅專家頁。`,
       citations: [{ title: "Elvin 嘅 10 個核心觀點", href: "/experts/elvin-cheung" }],
       confidence: 0.9,
@@ -331,7 +331,7 @@ function expertPersona(
     key: expert.slug,
     kind: "expert",
     expert,
-    name: `${expert.nameZh} ${expert.nameEn}`,
+    name: expertFullName(expert),
     shortName: expert.nameEn.split(" ")[0] ?? expert.nameEn,
     domainCaption: expert.specialties.join("・"),
     accent: expert.brandColor ?? INK_ACCENT,

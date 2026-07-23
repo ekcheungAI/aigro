@@ -3,9 +3,15 @@ import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, Check, Code, Compass, ExternalLink } from "lucide-react";
 import Reveal, { REVEAL_EASE } from "@/components/Reveal";
-import MonogramAvatar from "@/components/MonogramAvatar";
+import MonogramAvatar, { PhotoAvatar } from "@/components/MonogramAvatar";
 import VerifiedBadge from "@/components/VerifiedBadge";
-import { pendingExperts, verifiedExperts, type Expert } from "@/data/experts";
+import {
+  expertFullName,
+  expertHasPhoto,
+  pendingExperts,
+  verifiedExperts,
+  type Expert,
+} from "@/data/experts";
 import { demoPersonas, type DemoPersona } from "@/data/demoPersonas";
 
 /** 領航專家 monogram 字母(data 無此欄位,由 slug 映射) */
@@ -116,14 +122,23 @@ function VerifiedExpertCard({
       transition={{ duration: 0.5, delay: index * 0.12, ease: REVEAL_EASE }}
     >
       <div className="flex gap-8 max-md:flex-col max-md:gap-6">
-        {/* 96px monogram 頭像:1.5px 金環 + Badge 24px 右上角 */}
+        {/* 96px 頭像(真實肖像或 monogram):1.5px 金環 + Badge 24px 右上角 */}
         <div className="relative shrink-0">
-          <MonogramAvatar
-            initials={EXPERT_INITIALS[expert.slug] ?? "·"}
-            color={expert.brandColor ?? "#466A5E"}
-            size={96}
-            verified
-          />
+          {expertHasPhoto(expert) ? (
+            <PhotoAvatar
+              src={expert.image}
+              alt={expertFullName(expert)}
+              size={96}
+              verified
+            />
+          ) : (
+            <MonogramAvatar
+              initials={EXPERT_INITIALS[expert.slug] ?? "·"}
+              color={expert.brandColor ?? "#466A5E"}
+              size={96}
+              verified
+            />
+          )}
           <VerifiedBadge
             size={24}
             ambient
@@ -135,7 +150,7 @@ function VerifiedExpertCard({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
             <h2 className="font-display text-h3 text-text-primary">
-              {expert.nameZh} {expert.nameEn}
+              {expertFullName(expert)}
             </h2>
             {/* 「領航專家認證 Leading Expert」— 首次出現頁面級一次即可 */}
             {showVerifiedCaption && (

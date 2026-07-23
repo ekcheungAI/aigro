@@ -3,10 +3,15 @@ import { Link, useParams } from "react-router-dom";
 import { AnimatePresence, motion, useInView } from "framer-motion";
 import { ArrowRight, AudioLines, CalendarClock, Check, Compass, ExternalLink, ShieldCheck } from "lucide-react";
 import Reveal, { REVEAL_EASE } from "@/components/Reveal";
-import MonogramAvatar from "@/components/MonogramAvatar";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import ExpertStyleSections from "@/components/expert/ExpertStyleSections";
-import { expertFirstName, experts, type Expert } from "@/data/experts";
+import {
+  expertFirstName,
+  expertFullName,
+  expertHasPhoto,
+  experts,
+  type Expert,
+} from "@/data/experts";
 
 /** 領航專家 monogram 字母(data 無此欄位,由 slug 映射) */
 const EXPERT_INITIALS: Record<string, string> = {
@@ -141,28 +146,54 @@ function VerifiedHero({ expert }: { expert: Expert }) {
         style={{ backgroundColor: `${accent}1A` }}
       />
       <div className="relative mx-auto max-w-container px-6 pb-16 pt-24 max-md:pt-16">
-        <div className="flex items-start gap-10 max-md:flex-col max-md:gap-8">
-          {/* 120px monogram 頭像：1.5px 金環 + Badge A 40px 右下角 */}
+        <div className="flex items-center gap-12 max-md:flex-col max-md:items-start max-md:gap-8">
+          {/* 2:3 cinematic 肖像卡：真實肖像(rounded-md hairline,subtle saturate)
+              或 brand-color monogram 面板(未有肖像嘅專家);Badge A 40px 右下角 */}
           <motion.div
-            className="relative shrink-0"
-            initial={{ opacity: 0, scale: 0.92 }}
-            animate={{ opacity: 1, scale: 1 }}
+            className="relative w-[264px] shrink-0 max-md:w-[208px]"
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: REVEAL_EASE }}
           >
-            <MonogramAvatar
-              initials={EXPERT_INITIALS[expert.slug] ?? "·"}
-              color={accent}
-              size={120}
-              verified
-            />
+            {expertHasPhoto(expert) ? (
+              <div className="group aspect-[2/3] overflow-hidden rounded-md border shadow-card dark:shadow-none">
+                <img
+                  src={expert.portrait ?? expert.image}
+                  alt={expertFullName(expert)}
+                  className="h-full w-full object-cover saturate-[0.85] transition-[filter] duration-250 group-hover:saturate-100"
+                />
+              </div>
+            ) : (
+              <div
+                className="flex aspect-[2/3] items-center justify-center rounded-md border"
+                style={{
+                  backgroundColor: `${accent}2E` /* brand tint 18% */,
+                  borderColor: `${accent}66` /* brand hairline 40% */,
+                }}
+              >
+                <span
+                  aria-hidden="true"
+                  className="font-display select-none"
+                  style={{
+                    color: `color-mix(in srgb, ${accent} 62%, hsl(var(--text-primary)))`,
+                    fontSize: 96,
+                    fontWeight: 550,
+                    letterSpacing: "0.02em",
+                    lineHeight: 1,
+                  }}
+                >
+                  {EXPERT_INITIALS[expert.slug] ?? "·"}
+                </span>
+              </div>
+            )}
             <VerifiedBadge
               size={40}
               ambient
-              className="absolute -bottom-1 -right-1"
+              className="absolute -bottom-2 -right-2"
             />
           </motion.div>
 
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <motion.p
               className="text-overline font-sans uppercase text-text-muted"
               initial={{ opacity: 0, y: 24 }}
@@ -177,7 +208,7 @@ function VerifiedHero({ expert }: { expert: Expert }) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2, ease: REVEAL_EASE }}
             >
-              {expert.nameZh} {expert.nameEn}
+              {expertFullName(expert)}
             </motion.h1>
             {/* 姓名下劃線：2px × 64px 專家色，scaleX 0→1 由左 300ms */}
             <motion.span
@@ -470,7 +501,7 @@ function PendingProfile({ expert }: { expert: Expert }) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2, ease: REVEAL_EASE }}
             >
-              {expert.nameZh} {expert.nameEn}
+              {expertFullName(expert)}
             </motion.h1>
             <motion.p
               className="mt-3 text-caption text-text-muted"

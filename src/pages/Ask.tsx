@@ -7,7 +7,7 @@ import PersonaPanel from "@/components/ask/PersonaPanel";
 import ContextPanel from "@/components/ask/ContextPanel";
 import QuotaMeter from "@/components/ask/QuotaMeter";
 import VerifiedBadge from "@/components/VerifiedBadge";
-import MonogramAvatar from "@/components/MonogramAvatar";
+import MonogramAvatar, { PhotoAvatar } from "@/components/MonogramAvatar";
 import {
   appendRound,
   collectCitations,
@@ -17,6 +17,7 @@ import {
 } from "@/components/ask/sessions";
 import type { SessionStore } from "@/components/ask/sessions";
 import { getPersona, personas, personaInitials, pickPersonaReply } from "@/data/personas";
+import { expertHasPhoto } from "@/data/experts";
 import { cn } from "@/lib/utils";
 
 const DAILY_QUOTA = 5;
@@ -199,11 +200,19 @@ export default function Ask() {
           {persona.kind === "expert" && persona.expert ? (
             <div className="flex min-w-0 items-center gap-3">
               <span className="relative shrink-0">
-                <MonogramAvatar
-                  initials={personaInitials(persona)}
-                  color={persona.accent}
-                  size={32}
-                />
+                {persona.expert && expertHasPhoto(persona.expert) ? (
+                  <PhotoAvatar
+                    src={persona.expert.image}
+                    alt={persona.name}
+                    size={32}
+                  />
+                ) : (
+                  <MonogramAvatar
+                    initials={personaInitials(persona)}
+                    color={persona.accent}
+                    size={32}
+                  />
+                )}
                 <span className="absolute -bottom-0.5 -right-0.5">
                   <VerifiedBadge size={16} />
                 </span>
@@ -267,6 +276,8 @@ export default function Ask() {
               >
                 {p.kind === "platform" ? (
                   <Sparkles className="h-3.5 w-3.5 text-ink" strokeWidth={1.5} aria-hidden="true" />
+                ) : p.expert && expertHasPhoto(p.expert) ? (
+                  <PhotoAvatar src={p.expert.image} alt={p.name} size={16} />
                 ) : (
                   <MonogramAvatar initials={personaInitials(p)} color={p.accent} size={16} />
                 )}

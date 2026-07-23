@@ -1,11 +1,12 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, ArrowUpRight, Quote, Sparkles } from "lucide-react";
-import MonogramAvatar from "@/components/MonogramAvatar";
+import MonogramAvatar, { PhotoAvatar } from "@/components/MonogramAvatar";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import type { Citation } from "@/components/ask/AiMessage";
 import { citationDomain } from "@/components/ask/sessions";
 import { aihotAllInsights, aihotFetchedAt } from "@/data/aihot";
 import { cases } from "@/data/cases";
+import { expertHasPhoto } from "@/data/experts";
 import type { Persona } from "@/data/personas";
 import { personaInitials } from "@/data/personas";
 import { cn } from "@/lib/utils";
@@ -66,6 +67,12 @@ export default function ContextPanel({
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-ink-soft">
                 <Sparkles className="h-4 w-4 text-ink" strokeWidth={1.5} />
               </span>
+            ) : persona.expert && expertHasPhoto(persona.expert) ? (
+              <PhotoAvatar
+                src={persona.expert.image}
+                alt={persona.name}
+                size={32}
+              />
             ) : (
               <MonogramAvatar
                 initials={personaInitials(persona)}

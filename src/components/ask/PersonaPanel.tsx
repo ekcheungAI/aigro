@@ -1,8 +1,9 @@
 import { MessageSquarePlus, Sparkles } from "lucide-react";
-import MonogramAvatar from "@/components/MonogramAvatar";
+import MonogramAvatar, { PhotoAvatar } from "@/components/MonogramAvatar";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import QuotaMeter from "@/components/ask/QuotaMeter";
 import type { ChatSession } from "@/components/ask/sessions";
+import { expertHasPhoto } from "@/data/experts";
 import type { Persona } from "@/data/personas";
 import { personaInitials } from "@/data/personas";
 import { cn } from "@/lib/utils";
@@ -79,6 +80,8 @@ export default function PersonaPanel({
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-ink-soft">
                     <Sparkles className="h-3.5 w-3.5 text-ink" strokeWidth={1.5} />
                   </span>
+                ) : p.expert && expertHasPhoto(p.expert) ? (
+                  <PhotoAvatar src={p.expert.image} alt={p.name} size={28} />
                 ) : (
                   <MonogramAvatar
                     initials={personaInitials(p)}
