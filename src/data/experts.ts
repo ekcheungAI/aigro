@@ -14,6 +14,32 @@ export interface Viewpoint {
   summary: string;
 }
 
+/** 領航風格雷達單一維度(編輯部風格評估,非精確測量 — 頁面附免責 caption) */
+export interface RadarDimension {
+  /** 維度名,如「實戰導向」 */
+  label: string;
+  /** 0–100 編輯部評估分 */
+  score: number;
+  /** 一句描述 */
+  note: string;
+}
+
+/** 工作風格段落,如「決策方式」 */
+export interface WorkingStyleBlock {
+  title: string;
+  body: string;
+}
+
+/** 決策原則 — 一條 if-then 規則 + 使用時機 + 實例 */
+export interface Heuristic {
+  /** 規則名,如「真問題原則」 */
+  name: string;
+  /** 使用時機 When to use */
+  whenToUse: string;
+  /** 實例 Real case(唔好用虛構客戶名/數據) */
+  example: string;
+}
+
 export interface Expert {
   slug: string;
   nameEn: string;
@@ -51,6 +77,20 @@ export interface Expert {
   askIntro?: string;
   /** 待用態「知識庫籌備中」說明 */
   pendingNote?: string;
+
+  /* ---- perskill-grade 深度檔案(僅 verified 專家) ---- */
+  /** 分身 prompt 版本,如「v1.0」 */
+  promptVersion?: string;
+  /** 知識庫更新月份,如「2026-07」 */
+  kbUpdated?: string;
+  /** 領航風格雷達(5 維編輯部評估) */
+  radar?: RadarDimension[];
+  /** 核心特質 chips */
+  traits?: string[];
+  /** 工作風格段落(2–3 段) */
+  workingStyle?: WorkingStyleBlock[];
+  /** 決策原則(每條含使用時機 + 實例) */
+  heuristics?: Heuristic[];
 }
 
 /** Ask.tsx header 用嘅 monogram data URI(實心 brand 底 + 襯線白字,深淺色通用) */
@@ -126,6 +166,56 @@ export const experts: Expert[] = [
     ],
     askIntro:
       "基於授權知識庫回答,附觀點出處。問佢 AI 工具落地、團隊 AI 工作流、由識用工具到建立增長系統嘅問題。",
+    promptVersion: "v1.0",
+    kbUpdated: "2026-07",
+    radar: [
+      { label: "實戰導向", score: 92, note: "由真實業務問題出發,唔會為用 AI 而用 AI。" },
+      { label: "系統思維", score: 85, note: "將散亂工具整合成可複製嘅增長工作流。" },
+      { label: "教學拆解力", score: 88, note: "複雜概念拆到一步一步,跟住就做到。" },
+      { label: "工具廣度", score: 80, note: "主流 AI 工具上手快,但主張策略先於工具。" },
+      { label: "數據紀律", score: 74, note: "重視成效驗證,不過決策上更信實戰手感。" },
+    ],
+    traits: ["實戰先行", "邊做邊學", "化繁為簡", "長期主義"],
+    workingStyle: [
+      {
+        title: "決策方式",
+        body: "唔由工具開始,由真實業務問題開始。接到需求先問「呢件事值唔值得自動化」,再用最小成本試行 — 小步快跑,兩週內見唔到成效就調整方向,唔會為用而用。",
+      },
+      {
+        title: "教學與執行節奏",
+        body: "示範 → 陪做 → 放手:先做俾學員睇一次,再陪住做一次,最後放手俾佢自己跑。做過兩次嘅流程就沉澱成 SOP,等團隊可以自己複製,唔使次次問人。",
+      },
+      {
+        title: "溝通風格",
+        body: "直接、用例子、唔講術語。解釋 AI 概念時鍾意用香港中小企嘅日常做比喻,講到對方明為止 — 唔會用 buzzword 嚇人。",
+      },
+    ],
+    heuristics: [
+      {
+        name: "真問題原則",
+        whenToUse: "當有人問「邊個 AI 工具最好」嘅時候。",
+        example:
+          "先問返佢業務上最嘥時間嘅係邊一 part。多數情況,佢哋唔係需要新工具,係需要將現有流程裏面最嘥時間嗰步交俾 AI。",
+      },
+      {
+        name: "兩週見效規則",
+        whenToUse: "導入任何 AI 工具或工作流之後。",
+        example:
+          "兩週內要數到慳咗幾多時間 — 例如整理會議記錄由個半鐘縮到十五分鐘。見唔到數,就檢討係咪用錯咗地方,而唔係加碼買更多工具。",
+      },
+      {
+        name: "SOP 沉澱律",
+        whenToUse: "同一個 AI 流程成功跑過兩次之後。",
+        example:
+          "即刻將 prompt、步驟同檢查點寫成一份 SOP,放入團隊文件夾。下次新人照住做,半個鐘就上手,唔使次次重頭教。",
+      },
+      {
+        name: "示範先行法",
+        whenToUse: "教人用新工具或者新流程之前。",
+        example:
+          "唔好先講理論 — 開住螢幕由零做到出結果,做一次俾佢睇。睇完實際操作,學員嘅問題先至具體,教學先至到位。",
+      },
+    ],
   },
   {
     slug: "elvin-cheung",
@@ -193,6 +283,56 @@ export const experts: Expert[] = [
     ],
     askIntro:
       "基於授權知識庫回答,附觀點出處。問佢 growth hacking、社群增長、活動策劃與私域運營嘅問題。",
+    promptVersion: "v1.0",
+    kbUpdated: "2026-07",
+    radar: [
+      { label: "實驗速度", score: 94, note: "由諗法到落地試,以日計、唔以月計。" },
+      { label: "增長直覺", score: 87, note: "將海外 playbook 本地化嘅判斷快而準。" },
+      { label: "社群洞察力", score: 86, note: "睇得穿社群嘅真互動同假熱鬧。" },
+      { label: "數據先行", score: 90, note: "感覺唔準,實驗結果先係答案。" },
+      { label: "內容爆發力", score: 78, note: "識造記憶點,但更依賴系統化測試。" },
+    ],
+    traits: ["快速試錯", "數據說話", "社群驅動", "敢於出手"],
+    workingStyle: [
+      {
+        title: "決策方式",
+        body: "假設先行:任何增長諗法都寫成一條可以驗證嘅假設,然後搵最平嘅方法試。數據支持先加大投入 — 唔係靠感覺落注。",
+      },
+      {
+        title: "增長節奏",
+        body: "每星期一個假設、一個實驗、一個覆盤。數據唔好就停,唔會因為「都做咗一半」而繼續 — 停得快,先試得多。",
+      },
+      {
+        title: "社群經營",
+        body: "私域係長線關係,唔係廣播頻道。活動只係槓桿:用一次線下聚會換返嚟嘅信任,之後喺私域慢慢經營。",
+      },
+    ],
+    heuristics: [
+      {
+        name: "最小實驗律",
+        whenToUse: "任何增長諗法未驗證之前。",
+        example:
+          "想試新渠道?唔使即刻落廣告 — 先喺社群出個 post 試水溫,或者整一頁簡單 landing page 收 email。有反應,先加大投入。",
+      },
+      {
+        name: "數據否決權",
+        whenToUse: "團隊對某個方向各執一詞嘅時候。",
+        example:
+          "感覺唔準,數據先至準。兩個版本揀邊個?唔係開會投票,係做一星期 A/B test,由點擊率話事。",
+      },
+      {
+        name: "私域優先律",
+        whenToUse: "決定資源投放喺公域定私域嘅時候。",
+        example:
+          "流量係租返嚟,名單先係資產。廣告一停流量就停;但一個願意開你訊息嘅名單,可以陪你好多年。",
+      },
+      {
+        name: "覆盤不過夜",
+        whenToUse: "每個實驗或者活動結束之後。",
+        example:
+          "結果 24 小時內要覆盤:預期係咩、實際係咩、下次點改。拖過一週,細節就唔記得晒,實驗等於白做。",
+      },
+    ],
   },
   {
     slug: "invited-expert-1",
