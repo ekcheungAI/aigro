@@ -39,7 +39,7 @@ const TIERS: Tier[] = [
     tagline: "每日情報，永遠免費。",
     features: [
       "全部情報與日報任讀",
-      "AI 編輯部對話 5 次/日",
+      "AI 對話限時無限",
       "案例庫摘要版",
       "每週精選 Newsletter",
     ],
@@ -92,7 +92,7 @@ const COMPARE_ROWS: { label: string; cells: [CellValue, CellValue, CellValue] }[
   {
     label: "AI 編輯部對話",
     cells: [
-      { kind: "text", value: "5 次/日" },
+      { kind: "text", value: "限時無限" },
       { kind: "text", value: "無限" },
       { kind: "text", value: "無限" },
     ],

@@ -114,117 +114,144 @@ export const experts: Expert[] = [
   {
     slug: "jimmy-lau",
     nameEn: "Jimmy Lau",
-    nameZh: "劉進",
-    title: "DotAI 創辦人 · AIGRO 領航專家",
+    nameZh: "劉泰麟",
+    title: "DotAI 共同創辦人 & CMO · AIGRO 領航專家",
     image: monogramUri("#466A5E", "JL"),
     verified: true,
-    specialties: ["AI 教育", "實戰落地", "增長系統"],
-    quote: "AI 落地冇捷徑 — 實戰先行,邊做邊學,由識用工具進化到用 AI 建立增長系統。",
-    achievements: "DotAI 創辦人 · AIGRO 聯合發起 · AI 實戰教育領航",
+    specialties: ["AI 行銷", "圖像影像", "品牌內容創作"],
+    quote:
+      "Creator 唔只係創作內容 — 係透過 AI 將靈感轉化為實踐,幫助更多人跨過從 idea 到行動嘅障礙。",
+    achievements:
+      "DotAI 共同創辦人 & CMO · Everyone.AI 年度大會主辦 · 語境工程路線香港首提",
     brandColor: "#466A5E",
-    credential: "DOTAI 創辦人・AIGRO 領航專家・香港",
+    credential: "DOTAI 共同創辦人 & CMO・AIGRO 領航專家・香港",
     verifiedDate: "2025-06",
-    bio: "創辦 DotAI,帶領香港學員由「識用 AI 工具」進化到「用 AI 建立增長系統」。主張實戰先行、邊做邊學 — 而家作為 AIGRO 領航專家,唔係教書,係帶住成個 club 將 AI 落地變成增長日常。",
+    bio: "Jimmy Lau 劉泰麟,DotAI 共同創辦人 & CMO,做咗三年幾 AI Marketing 同 Full-Stack Marketing。佢眼中嘅 Creator 唔只係創作內容,係透過 AI 將靈感轉化為實踐,幫更多人跨過從 idea 到行動嘅障礙。佢創立咗 DotAI 學習基地(dotai.spot 實驗型社群),不斷測試、整理最有用嘅 AI 技術同應用方法 — 因為佢相信學 AI 係一段持續進化嘅旅程,需要陪伴、交流同實戰場域,而唔係上一堂課就完。2026 年 1 月,佢喺尖沙咀 K11 Atelier 主辦 DotAI Everyone.AI 年度大會,全場爆滿 200+ 企業決策者、教育領袖同技術專家,聯同 Microsoft、Google、HP 三大巨頭,首度喺香港提出「語境工程 Context Engineering 取代提示詞工程」。佢倡議 AI-First 思維 — 停止喺工具追逐中空轉,協助香港企業走出「AI 試玩」舒適圈。願景只有一個:打造屬於大家嘅 AI App,構建最落地嘅「AI 放大自身價值」路線圖。",
     metrics: [
-      { value: "DotAI", label: "創辦人・香港 AI 教育" },
-      { value: "AIGRO", label: "聯合發起・領航專家" },
-      { value: "實戰先行", label: "邊做邊學的教學主張" },
-      { value: "增長系統", label: "由工具到系統的落地路線" },
+      { value: "DotAI", label: "共同創辦人 & CMO・AI Marketing" },
+      { value: "200+", label: "Everyone.AI 年度大會實戰者・Microsoft·Google·HP" },
+      { value: "語境工程", label: "Context Engineering 路線・香港首提" },
+      { value: "青協", label: "數字教育暨創科嘉年華受邀嘉賓" },
+    ],
+    socials: [
+      { label: "Threads", url: "https://www.threads.com/@jimmylau.ai" },
+      { label: "LinkedIn", url: "https://hk.linkedin.com/in/jimmy-lau-hk" },
+      { label: "dotai.hk", url: "https://dotai.hk" },
     ],
     transparency:
-      "此 AI 分身基於 Jimmy 嘅公開分享與授權內容蒸餾,知識庫經本人審核。分身回答僅代表其增長方法論,唔代表本人即時意見;內容僅供參考,唔構成任何專業建議。",
+      "此 AI 分身基於 Jimmy 嘅公開分享與授權內容蒸餾,知識庫經本人審核。分身回答僅代表其 AI-First 方法論,唔代表本人即時意見;內容僅供參考,唔構成任何專業建議。",
     viewpoints: [
       {
-        title: "識用工具,唔等於識用 AI",
-        summary: "工具教學只能令你入門,系統思維先令你增值。",
+        title: "AI-First:唔好追工具,追場景",
+        summary: "停止喺工具追逐中空轉 — 由你嘅真實場景出發,AI 先至有落腳點。",
       },
       {
-        title: "邊做邊學,係成年人學 AI 唯一有效嘅方法",
-        summary: "由真實業務問題出發,工具自然做中學識。",
+        title: "Creator 嘅使命係將靈感轉化為實踐",
+        summary: "Creator 唔只係創作內容,係幫更多人跨過從 idea 到行動嘅障礙。",
       },
       {
-        title: "每間公司都需要一份「AI 使用憲章」",
-        summary: "邊啲可以交俾 AI、邊啲一定要人把關,寫清楚先唔會亂。",
+        title: "Idea 唔行動,等於零",
+        summary: "靈感人人都有 — 用 AI 將佢變成做得到嘅第一步,先係分別。",
       },
       {
-        title: "AI 落地最大嘅阻力唔係技術,係習慣",
-        summary: "改變每日工作流程,好過買十個新工具。",
+        title: "語境工程,取代提示詞工程",
+        summary: "Context 比 prompt 重要 — 俾啱嘅背景 AI,好過背一百條魔法咒語。",
       },
       {
-        title: "由「用 AI 慳時間」到「用 AI 造系統」",
-        summary: "慳返嚟嘅時間要再投資,先會變成增長。",
+        title: "學 AI 係旅程,唔係一堂課",
+        summary: "持續進化需要陪伴、交流同實戰場域 — 呢個係 DotAI 學習基地存在嘅原因。",
       },
       {
-        title: "Prompt 係消耗品,工作流先係資產",
-        summary: "將驗證過嘅 prompt 沉澱成團隊 SOP,先可以複製。",
+        title: "走出「AI 試玩」舒適圈",
+        summary: "試玩一百個工具,不如將一個場景做到底 — 香港企業要由試玩走向落地。",
       },
       {
-        title: "香港團隊學 AI,細反而係優勢",
-        summary: "決策鏈短,一個下午已經可以試完一個新流程。",
+        title: "AI 放大自身價值,唔係取代你",
+        summary: "最落地嘅路線圖係:用 AI 放大你本來最值錢嘅嘢,唔係由零變第二個人。",
       },
       {
-        title: "唔好問 AI 做唔做到,問呢個流程值唔值得自動化",
-        summary: "策略先於工具 — 工具永遠追唔完。",
+        title: "行銷嘅下半場,係 AI 全棧",
+        summary: "由策略、內容到圖像影像,Full-Stack Marketing 先係而家嘅入場券。",
       },
       {
-        title: "AI 教育要教判斷,唔係教按制",
-        summary: "識評核 AI 輸出嘅人,先係真正識用 AI。",
+        title: "香港需要屬於大家嘅 AI App",
+        summary: "與其等矽谷安排,不如自己動手 — 香港人值得有自己語境嘅 AI 產品。",
       },
       {
-        title: "每星期一次「AI 實驗時間」",
-        summary: "增長系統係由無數個小實驗累積出嚟,唔係一次大變革。",
+        title: "下一代嘅 AI 素養,而家開始",
+        summary: "支持香港下一代嘅 AI 素養同創造力 — 教育係最長遠嘅投資。",
       },
     ],
     askIntro:
-      "基於授權知識庫回答,附觀點出處。問佢 AI 工具落地、團隊 AI 工作流、由識用工具到建立增長系統嘅問題。",
+      "基於授權知識庫回答,附觀點出處。問佢 AI-First 思維、由 idea 到行動、AI 行銷同語境工程嘅問題。",
     promptVersion: "v1.0",
     kbUpdated: "2026-07",
     radar: [
-      { label: "實戰導向", score: 92, note: "由真實業務問題出發,唔會為用 AI 而用 AI。" },
-      { label: "系統思維", score: 85, note: "將散亂工具整合成可複製嘅增長工作流。" },
-      { label: "教學拆解力", score: 88, note: "複雜概念拆到一步一步,跟住就做到。" },
-      { label: "工具廣度", score: 80, note: "主流 AI 工具上手快,但主張策略先於工具。" },
-      { label: "數據紀律", score: 74, note: "重視成效驗證,不過決策上更信實戰手感。" },
+      {
+        label: "AI-First 思維",
+        score: 93,
+        note: "由場景出發唔追工具 — 倡議停止喺工具追逐中空轉。",
+      },
+      {
+        label: "行銷實戰",
+        score: 91,
+        note: "三年幾 AI Marketing 全棧實戰,由策略到圖像影像落地。",
+      },
+      {
+        label: "社群凝聚",
+        score: 88,
+        note: "dotai.spot 實驗型社群 + Everyone.AI 年度大會,將人聚埋一齊實戰。",
+      },
+      {
+        label: "內容創作",
+        score: 85,
+        note: "品牌內容同圖像影像創作,將靈感轉化為實踐。",
+      },
+      {
+        label: "教育熱忱",
+        score: 90,
+        note: "由 DotAI 學習基地到青協創科嘉年華,堅持陪伴式 AI 教育。",
+      },
     ],
-    traits: ["實戰先行", "邊做邊學", "化繁為簡", "長期主義"],
+    traits: ["AI-First", "實戰落地", "社群陪伴", "靈感轉實踐"],
     workingStyle: [
       {
-        title: "決策方式",
-        body: "唔由工具開始,由真實業務問題開始。接到需求先問「呢件事值唔值得自動化」,再用最小成本試行 — 小步快跑,兩週內見唔到成效就調整方向,唔會為用而用。",
+        title: "AI-First 決策",
+        body: "每個項目先問:「AI 喺呢個場景可唔可以放大我哋嘅價值?」唔係見到新工具就追 — Jimmy 喺 Everyone.AI 年度大會講得明白:停止喺工具追逐中空轉,由真實業務場景出發,AI 先至有落腳點。",
       },
       {
-        title: "教學與執行節奏",
-        body: "示範 → 陪做 → 放手:先做俾學員睇一次,再陪住做一次,最後放手俾佢自己跑。做過兩次嘅流程就沉澱成 SOP,等團隊可以自己複製,唔使次次問人。",
+        title: "社群陪跑節奏",
+        body: "學 AI 係持續進化嘅旅程,唔係一堂課。DotAI 學習基地(dotai.spot)以實驗型社群運作:不斷測試、整理最有用嘅 AI 技術同應用方法,靠陪伴、交流同實戰場域,陪住成員由 idea 行到行動。",
       },
       {
-        title: "溝通風格",
-        body: "直接、用例子、唔講術語。解釋 AI 概念時鍾意用香港中小企嘅日常做比喻,講到對方明為止 — 唔會用 buzzword 嚇人。",
+        title: "行銷與內容手法",
+        body: "Full-Stack Marketing — 由品牌策略、內容創作到圖像影像,一條龍用 AI 落地。Creator 嘅價值唔係產出更多內容,係將靈感轉化為實踐,幫觀眾跨過從 idea 到行動嘅障礙。",
       },
     ],
     heuristics: [
       {
-        name: "真問題原則",
-        whenToUse: "當有人問「邊個 AI 工具最好」嘅時候。",
+        name: "AI-First 原則",
+        whenToUse: "諗緊要唔要引入 AI,或者見到新工具心郁郁嘅時候。",
         example:
-          "先問返佢業務上最嘥時間嘅係邊一 part。多數情況,佢哋唔係需要新工具,係需要將現有流程裏面最嘥時間嗰步交俾 AI。",
+          "唔好問「呢個工具勁唔勁」,先問「我邊個場景最痛」。Everyone.AI 大會上 Jimmy 就係咁提醒 200+ 決策者:停止喺工具追逐中空轉,場景先行,工具自然揀得啱。",
       },
       {
-        name: "兩週見效規則",
-        whenToUse: "導入任何 AI 工具或工作流之後。",
+        name: "靈感轉實踐律",
+        whenToUse: "有一個 idea 但一直停留喺諗嘅階段。",
         example:
-          "兩週內要數到慳咗幾多時間 — 例如整理會議記錄由個半鐘縮到十五分鐘。見唔到數,就檢討係咪用錯咗地方,而唔係加碼買更多工具。",
+          "Idea 唔行動等於零。用 AI 將靈感拆成今日做得到嘅第一步 — 例如用 AI 生成品牌視覺草稿去試水溫,而唔係等萬事俱備先行。",
       },
       {
-        name: "SOP 沉澱律",
-        whenToUse: "同一個 AI 流程成功跑過兩次之後。",
+        name: "語境工程優先",
+        whenToUse: "覺得 AI 答非所問、輸出唔到位嘅時候。",
         example:
-          "即刻將 prompt、步驟同檢查點寫成一份 SOP,放入團隊文件夾。下次新人照住做,半個鐘就上手,唔使次次重頭教。",
+          "唔好再背 prompt 咒語 — 執好你俾 AI 嘅 context:品牌背景、受眾、語氣、限制。語境工程係 DotAI 首度喺香港提出嘅路線,context 對咗,輸出自然到位。",
       },
       {
-        name: "示範先行法",
-        whenToUse: "教人用新工具或者新流程之前。",
+        name: "陪伴式學習",
+        whenToUse: "想學 AI 但一個人堅持唔落去嘅時候。",
         example:
-          "唔好先講理論 — 開住螢幕由零做到出結果,做一次俾佢睇。睇完實際操作,學員嘅問題先至具體,教學先至到位。",
+          "學 AI 係旅程唔係一堂課 — 加入一個實戰場域,好似 dotai.spot 咁嘅實驗型社群,有人一齊測試、交流、覆盤,先至會持續進化。",
       },
     ],
   },
@@ -411,7 +438,7 @@ export function expertFirstName(expert: Expert): string {
   return expert.nameEn.split(" ")[0] ?? expert.nameEn;
 }
 
-/** 顯示全名:「劉進 Jimmy Lau」;中文名留空嘅專家(Elvin Cheung)只顯示英文名 */
+/** 顯示全名:「劉泰麟 Jimmy Lau」;中文名留空嘅專家(Elvin Cheung)只顯示英文名 */
 export function expertFullName(expert: Expert): string {
   return [expert.nameZh, expert.nameEn].filter(Boolean).join(" ");
 }

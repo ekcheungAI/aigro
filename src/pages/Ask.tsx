@@ -20,20 +20,6 @@ import { getPersona, personas, personaInitials, pickPersonaReply } from "@/data/
 import { expertHasPhoto } from "@/data/experts";
 import { cn } from "@/lib/utils";
 
-const DAILY_QUOTA = 5;
-const QUOTA_STORAGE_KEY = "aigro-ask-quota-used";
-
-function readInitialUsed(): number {
-  try {
-    const raw = window.localStorage.getItem(QUOTA_STORAGE_KEY);
-    const n = raw === null ? NaN : Number.parseInt(raw, 10);
-    if (Number.isNaN(n)) return 2; // 預設演示態:今日剩餘 3/5 次
-    return Math.min(DAILY_QUOTA, Math.max(0, n));
-  } catch {
-    return 2;
-  }
-}
-
 /**
  * Ask `/ask` — AI 分身對話工作區(v1.6 三欄版)。
  * 左欄(≥lg):分身選擇 + 對話紀錄(sessions)+ 額度 meter;
@@ -46,7 +32,6 @@ export default function Ask() {
   const persona = getPersona(searchParams.get("expert"));
 
   const reduced = useReducedMotion();
-  const [used, setUsed] = useState<number>(readInitialUsed);
   const [store, setStore] = useState<SessionStore>(loadSessionStore);
   /**
    * 得呢個 message id 行打字機 — 只喺 send 嗰刻設置;切換 session/分身即清除。
@@ -59,23 +44,14 @@ export default function Ask() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const remaining = Math.max(0, DAILY_QUOTA - used);
-  const exhausted = remaining <= 0;
+  // 限時開放:對話額度無限 — 額度用盡升級態暫時 unreachable(保留程式碼)
+  const exhausted = false;
 
   const sessions = store.sessions[persona.key] ?? [];
   const activeSessionId = store.active[persona.key] ?? null;
   const activeSession = sessions.find((s) => s.id === activeSessionId) ?? null;
   const messages = useMemo(() => activeSession?.messages ?? [], [activeSession]);
   const citations = useMemo(() => collectCitations(messages), [messages]);
-
-  // 額度計數遞減(localStorage mock,ask.md 互動備註)
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(QUOTA_STORAGE_KEY, String(used));
-    } catch {
-      /* localStorage unavailable — mock state only */
-    }
-  }, [used]);
 
   // Sessions 持久化 — refresh / 離開後返嚟都仲喺度
   useEffect(() => {
@@ -146,7 +122,6 @@ export default function Ask() {
       );
       setStore(next);
       setAnimatingId(aiMessageId); // 淨係呢條新回答行打字機
-      setUsed((u) => Math.min(DAILY_QUOTA, u + 1));
       setInput("");
       if (textareaRef.current) textareaRef.current.style.height = "auto";
     },
@@ -183,8 +158,6 @@ export default function Ask() {
           activeSessionId={activeSessionId}
           onSelectSession={selectSession}
           onNewSession={newSession}
-          quotaUsed={used}
-          quotaTotal={DAILY_QUOTA}
         />
       </div>
 
@@ -238,9 +211,9 @@ export default function Ask() {
             </div>
           )}
 
-          {/* 免費額度條 */}
+          {/* 對話額度(限時無限開放) */}
           <div className="ml-auto flex items-center gap-3 sm:gap-4">
-            <QuotaMeter used={used} total={DAILY_QUOTA} />
+            <QuotaMeter />
             <Link
               to="/pricing"
               className="group inline-flex items-center gap-1 text-label text-ink"
@@ -459,7 +432,7 @@ export default function Ask() {
                     </button>
                   </div>
                   <p className="mt-2 text-caption text-text-muted">
-                    Shift+Enter 換行・AI 回答僅供參考・免費會員每日 5 次
+                    Shift+Enter 換行・AI 回答僅供參考・免費無限對話 · 限時開放
                   </p>
                 </motion.div>
               )}

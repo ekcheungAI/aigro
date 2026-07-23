@@ -42,7 +42,7 @@ export default function AskPreview() {
               />
             </Link>
             <p className="mt-4 text-caption text-text-muted">
-              免費每日 5 次・無需信用卡
+              免費無限對話 · 限時開放
             </p>
           </div>
         </Reveal>

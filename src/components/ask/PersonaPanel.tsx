@@ -16,8 +16,6 @@ interface PersonaPanelProps {
   activeSessionId: string | null;
   onSelectSession: (id: string) => void;
   onNewSession: () => void;
-  quotaUsed: number;
-  quotaTotal: number;
 }
 
 function formatTimestamp(ts: number): string {
@@ -44,8 +42,6 @@ export default function PersonaPanel({
   activeSessionId,
   onSelectSession,
   onNewSession,
-  quotaUsed,
-  quotaTotal,
 }: PersonaPanelProps) {
   return (
     <aside className="flex h-full w-[260px] shrink-0 flex-col border-r border-border bg-surface">
@@ -177,7 +173,7 @@ export default function PersonaPanel({
 
       {/* 額度 meter */}
       <div className="shrink-0 border-t border-border px-4 py-3">
-        <QuotaMeter used={quotaUsed} total={quotaTotal} variant="panel" />
+        <QuotaMeter variant="panel" />
       </div>
     </aside>
   );

@@ -37,7 +37,7 @@ export default function ContextPanel({
     : `公開分享 + 授權內容 · ${persona.expert?.viewpoints?.length ?? 10} 個核心觀點 · Prompt v1.0`;
   const updatedDate = isPlatform ? aihotFetchedAt.slice(0, 10) : "2026-07";
   const usageLimits = [
-    "免費每日 5 次對話",
+    "免費無限對話 · 限時開放",
     isPlatform
       ? "回答僅代表編輯整理,唔係即時意見"
       : "回答僅代表方法論,唔係即時意見",
