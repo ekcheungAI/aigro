@@ -58,7 +58,7 @@ export default function Navbar() {
             <span
               className={cn(
                 "hidden text-caption sm:inline",
-                overHero ? "text-band-text-muted" : "text-text-muted"
+                overHero ? "text-band-text-secondary" : "text-text-muted"
               )}
             >
               香港 AI・增長情報
@@ -75,7 +75,7 @@ export default function Navbar() {
                   cn(
                     "text-label transition-colors duration-150",
                     overHero
-                      ? "text-band-text-secondary hover:text-band-text"
+                      ? "text-band-text/85 hover:text-band-text"
                       : "text-text-secondary hover:text-ink",
                     isActive &&
                       (overHero
