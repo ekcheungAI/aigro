@@ -26,7 +26,7 @@ export default function InsightCard({ insight, className }: InsightCardProps) {
         className
       )}
     >
-      {/* Hairline gold corner tick — editor's pick (score ≥ 90) */}
+      {/* Hairline lime corner tick — editor's pick (score ≥ 90) */}
       {editorPick && (
         <span aria-hidden="true" className="pointer-events-none absolute right-3 top-3">
           <span className="absolute right-0 top-0 h-px w-4 bg-gold" />

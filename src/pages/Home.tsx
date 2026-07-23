@@ -57,11 +57,15 @@ function Hero() {
         <span className="absolute inset-x-0 top-[68px] h-px bg-band-border/60" />
         {/* Broadsheet column rule — right margin only, clear of the measure */}
         <span className="absolute inset-y-0 right-[18%] hidden w-px bg-band-border/40 lg:block" />
+        {/* Brand motif — vertical 45° stripe panel on the right edge
+            (business-card reference: stripe square). Hard-stop pattern,
+            quiet lime alpha, dark-canvas variant. */}
+        <span className="stripe-block-dark absolute inset-y-0 right-0 hidden w-[120px] border-l border-band-border/60 lg:block" />
       </div>
 
       <div className="mx-auto max-w-container px-6 pb-24 pt-24 max-md:pb-16 max-md:pt-16 md:pt-32 lg:pb-32">
         <div className="max-w-[920px]">
-          {/* Overline — muted-gold hairline rule + letterspaced eyebrow */}
+          {/* Overline — lime hairline rule + letterspaced eyebrow */}
           <motion.p
             className="flex items-center gap-3 text-overline font-sans uppercase tracking-[0.2em] text-band-text-muted"
             initial={show ?? { opacity: 0 }}
@@ -111,7 +115,7 @@ function Hero() {
             <div className="mt-10 flex flex-wrap items-center gap-6">
               <Link
                 to="/insights"
-                className="inline-flex h-12 items-center rounded-md bg-band-ink-solid px-8 text-label text-white press hover:bg-band-ink-hover"
+                className="inline-flex h-12 items-center rounded-md bg-band-ink-solid px-8 text-label text-on-accent press hover:bg-band-ink-hover"
               >
                 閱讀今日情報
               </Link>
@@ -239,7 +243,7 @@ function McpNetworkBand() {
           </p>
           {/* Vertical status chips */}
           <div className="mt-6 flex flex-wrap gap-2">
-            <span className="inline-flex items-center rounded-sm bg-band-ink-solid px-3 py-1.5 text-overline font-sans uppercase text-white">
+            <span className="inline-flex items-center rounded-sm bg-band-ink-solid px-3 py-1.5 text-overline font-sans uppercase text-on-accent">
               AI — 優先名單開放中
             </span>
             <span className="inline-flex items-center rounded-sm border border-band-border-strong px-3 py-1.5 text-overline font-sans uppercase text-band-text-secondary">
@@ -249,7 +253,7 @@ function McpNetworkBand() {
           <div className="mt-8 flex flex-wrap items-center gap-6">
             <Link
               to="/developers"
-              className="inline-flex h-12 items-center rounded-md bg-band-ink-solid px-8 text-label text-white press hover:bg-band-ink-hover"
+              className="inline-flex h-12 items-center rounded-md bg-band-ink-solid px-8 text-label text-on-accent press hover:bg-band-ink-hover"
             >
               登記優先名單
             </Link>
@@ -416,7 +420,7 @@ function CasesFeatured() {
   );
 }
 
-/* ============ Muted-gold hairline ornament — max 1 per page ============ */
+/* ============ Brand motif divider — chevron strip, max 1 per page ============ */
 
 function SectionOrnament() {
   return (
@@ -424,9 +428,9 @@ function SectionOrnament() {
       className="mx-auto flex max-w-container items-center justify-center gap-4 px-6"
       aria-hidden="true"
     >
-      <span className="h-px w-20 bg-gold/40" />
+      <span className="chevron-strip h-2 w-24" />
       <span className="inline-block h-1.5 w-1.5 rotate-45 bg-gold/60" />
-      <span className="h-px w-20 bg-gold/40" />
+      <span className="chevron-strip h-2 w-24" />
     </div>
   );
 }

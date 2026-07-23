@@ -8,9 +8,9 @@ interface CategoryChipProps {
 }
 
 /**
- * Category chip (design.md §6.7):
- * overline type, ink-soft bg + ink text, radius-sm, 6px 12px padding.
- * Active: solid ink bg + white text. Hover (non-active): ink border.
+ * Category chip (design.md §6.7, rebranded):
+ * overline type, lime-soft bg + lime-text, radius-sm, 6px 12px padding.
+ * Active: solid lime bg + near-black text. Hover (non-active): lime border.
  */
 export default function CategoryChip({
   label,
@@ -26,7 +26,7 @@ export default function CategoryChip({
       className={cn(
         "press inline-flex items-center rounded-sm border px-3 py-1.5 text-overline font-sans uppercase",
         active
-          ? "border-transparent bg-ink-solid text-white dark:text-white"
+          ? "border-transparent bg-ink-solid text-on-accent"
           : "border-transparent bg-ink-soft text-ink hover:border-ink",
         className
       )}

@@ -12,8 +12,8 @@ interface VerifiedBadgeProps {
 }
 
 /**
- * Verified Badge「金印」Direction A (design.md §6.4):
- * 1.5px gold ring + solid ink disc + negative-space check (surface color).
+ * Verified Badge「認證印」Direction A (design.md §6.4, rebranded):
+ * 1.5px electric-lime ring + near-black disc + negative-space check (paper).
  * Sizes: 16 (inline list) / 24 (avatar corner) / 40 (expert hero).
  * Sheen: 30° highlight sweep, 900ms, hover or 8s ambient loop — stays
  * inside the ring via border-radius mask.
@@ -38,13 +38,13 @@ export default function VerifiedBadge({
         {
           width: px,
           height: px,
-          boxShadow: `inset 0 0 0 1.5px hsl(var(--gold))`,
-          backgroundColor: "hsl(var(--ink-solid))",
+          boxShadow: `inset 0 0 0 1.5px hsl(var(--lime))`,
+          backgroundColor: "hsl(var(--on-accent))",
           "--sheen-delay": `${2 + sheenDelaySec}s`,
         } as React.CSSProperties
       }
     >
-      {/* negative-space check, surface color, ~6×6 at 24px */}
+      {/* negative-space check, warm paper on the near-black disc, ~6×6 at 24px */}
       <svg
         width={px * 0.5}
         height={px * 0.5}
@@ -54,7 +54,7 @@ export default function VerifiedBadge({
       >
         <path
           d="M2.5 6.2 5 8.7 9.5 3.5"
-          stroke="hsl(var(--surface))"
+          stroke="hsl(45 29% 97%)"
           strokeWidth="1.8"
           strokeLinecap="round"
           strokeLinejoin="round"

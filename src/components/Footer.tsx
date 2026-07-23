@@ -4,9 +4,9 @@ import { Moon, Sun } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 
 /**
- * Footer (elevated §6.2): inverted dark warm-charcoal band in BOTH themes —
- * cinematic, premium closing act. 1px muted-gold hairline top accent,
- * band text tokens (AA+ on #171512), 64px vertical padding,
+ * Footer (elevated §6.2): inverted near-black band in BOTH themes —
+ * cinematic, premium closing act. Thin lime stripe band + 1px lime hairline
+ * top accent, band text tokens (AA+ on #0D0D0C), 64px vertical padding,
  * 4 columns (AIGRO / 內容 / 平台 / Developers) + bottom bar with theme toggle.
  */
 export default function Footer() {
@@ -15,12 +15,14 @@ export default function Footer() {
 
   return (
     <footer className="border-t border-band-gold/40 bg-band-bg">
+      {/* Lime stripe band — hard-stop 45° pattern (brand motif, footer top) */}
+      <div aria-hidden="true" className="stripe-block-dark h-1.5 w-full" />
       <div className="mx-auto max-w-container px-6 py-16">
         <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}
           <div>
             <p className="font-display text-[20px] font-medium uppercase tracking-[0.04em] text-band-text">
-              AIGRO
+              AIGRO<span className="text-band-ink">.</span>
             </p>
             <p className="mt-3 max-w-[240px] text-body-sm text-band-text-secondary">
               可信賴的 AI・增長・商業情報，香港視角。
