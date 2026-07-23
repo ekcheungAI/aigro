@@ -329,7 +329,11 @@ export default function Pricing() {
       {/* ---------- Section 1 — Page Header ---------- */}
       <section className="mx-auto max-w-container px-6 pt-24 text-center">
         <Reveal>
-          <p className="text-overline uppercase text-text-muted">Pricing 方案</p>
+          <p className="flex items-center justify-center gap-3 text-overline uppercase text-text-muted">
+            <span className="inline-block h-px w-6 bg-border-strong" aria-hidden="true" />
+            Pricing 方案
+            <span className="inline-block h-px w-6 bg-border-strong" aria-hidden="true" />
+          </p>
         </Reveal>
         <Reveal delay={0.1}>
           <h1 className="mt-4 font-display text-display text-text-primary">
@@ -338,7 +342,8 @@ export default function Pricing() {
         </Reveal>
         <Reveal delay={0.2}>
           <p className="mx-auto mt-4 max-w-xl text-body-lg text-text-secondary">
-            由免費開始。用過 AI 編輯部，再決定要不要更多。
+            每日情報同 AI 對話免費任你用；進階解鎖專家分身、完整案例拆解 —
+            用過先決定，隨時取消。
           </p>
         </Reveal>
         <Reveal delay={0.3}>

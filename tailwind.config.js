@@ -35,6 +35,7 @@ module.exports = {
           "ink-hover": "hsl(var(--band-ink-hover) / <alpha-value>)",
           "ink-soft": "hsl(var(--band-ink-soft) / <alpha-value>)",
           gold: "hsl(var(--band-gold) / <alpha-value>)",
+          warning: "hsl(var(--band-warning) / <alpha-value>)",
         },
         success: "hsl(var(--success) / <alpha-value>)",
         warning: "hsl(var(--warning) / <alpha-value>)",

@@ -14,12 +14,12 @@ function PageHeader() {
   return (
     <section className="mx-auto max-w-container px-6 pt-24 max-md:pt-16">
       <motion.p
-        className="flex items-center gap-3 text-overline font-sans uppercase text-ink"
+        className="flex items-center gap-3 text-overline font-sans uppercase text-text-muted"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3, ease: REVEAL_EASE }}
       >
-        <span className="inline-block h-[1.5px] w-6 bg-ink" aria-hidden="true" />
+        <span className="inline-block h-px w-6 bg-border-strong" aria-hidden="true" />
         Field-Tested in Hong Kong
       </motion.p>
 
@@ -41,8 +41,8 @@ function PageHeader() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.45, delay: 0.2, ease: REVEAL_EASE }}
         >
-          香港企業用 AI 的真實成果 —
-          每個案例附量化數據、所用工具與可複製拆解。無數據，不上架。
+          香港企業用 AI 嘅真實成果 —
+          每個案例附量化數據、工具清單同可複製步驟。無數據，不上架。
         </motion.p>
       </span>
     </section>

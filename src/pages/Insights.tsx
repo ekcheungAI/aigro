@@ -170,11 +170,23 @@ function EditorPickCard({
 function FeedRow({ insight }: { insight: AihotInsight }) {
   return (
     <article className="flex gap-6 py-6">
-      {/* 左：mono rail ~110px（分類 / 時間 / 分數） */}
+      {/* 左：mono rail ~110px（分類 / 時間 / 分數 + 髮絲線分數條） */}
       <div className="hidden w-[110px] shrink-0 flex-col gap-1.5 pt-1 font-mono text-caption sm:flex">
         <span className="text-text-secondary">{insight.category}</span>
         <span className="text-text-muted">{hkTime(insight.publishedAt)}</span>
         <span className="text-ink">{insight.score} 分</span>
+        {/* 分數快讀條 — 髮絲線比例條(0–100 分制),純視覺輔助 */}
+        <span
+          className="relative mt-0.5 block h-px w-full bg-border"
+          aria-hidden="true"
+        >
+          <span
+            className="absolute left-0 top-[-0.5px] h-[2px] bg-ink"
+            style={{
+              width: `${Math.max(6, Math.min(100, insight.score))}%`,
+            }}
+          />
+        </span>
       </div>
 
       {/* 右：標題 + 摘要 + 來源行 */}
@@ -537,18 +549,22 @@ export default function Insights() {
       {/* Page Header */}
       <section className="mx-auto max-w-container px-6 pt-24 max-md:pt-16">
         <Reveal y={24}>
-          <p className="text-overline font-sans uppercase text-text-muted">
+          <p className="flex items-center gap-3 text-overline font-sans uppercase text-text-muted">
+            <span
+              className="inline-block h-px w-6 bg-border-strong"
+              aria-hidden="true"
+            />
             Intelligence
           </p>
         </Reveal>
         <Reveal y={24} delay={0.1}>
-          <h1 className="mt-2 font-display text-display text-text-primary">
+          <h1 className="mt-4 font-display text-display text-text-primary">
             資訊中心
           </h1>
         </Reveal>
         <Reveal y={24} delay={0.2}>
           <p className="mt-4 max-w-[640px] text-body-lg text-text-secondary">
-            全球 AI 動態，AI 摘要即日更新 — 即時動態、每日日報、主題地圖與資源庫，一頁掌握。
+            每日精選全球 AI 動態，AI 摘要附來源 — 即時動態、每日日報、主題地圖同資源庫，一頁掌握。
           </p>
           <p className="mt-3 text-caption text-text-muted">
             <a

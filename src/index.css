@@ -83,6 +83,7 @@
     --band-ink-hover: 212 45% 24%;    /* darker hover on band */
     --band-ink-soft: 209 28% 19%;     /* #22303D chip bg on band */
     --band-gold: 42 54% 54%;          /* #C9A44C — hairline accents only */
+    --band-warning: 38 67% 54%;       /* #D9A03C — amber LIVE dot (NOT gold; gold = Verified only) */
   }
 
   .dark {

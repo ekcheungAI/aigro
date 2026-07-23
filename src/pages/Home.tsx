@@ -15,6 +15,11 @@ import CaseCard from "@/components/CaseCard";
 import CategoryChip from "@/components/CategoryChip";
 import MonogramAvatar from "@/components/MonogramAvatar";
 import VerifiedBadge from "@/components/VerifiedBadge";
+import LiveStats from "@/components/home/LiveStats";
+import HotTopicsTicker from "@/components/home/HotTopicsTicker";
+import HowToUse from "@/components/home/HowToUse";
+import AskPreview from "@/components/home/AskPreview";
+import { personas } from "@/data/personas";
 import {
   INSIGHT_CATEGORIES,
   type InsightCategory,
@@ -100,8 +105,8 @@ function Hero() {
             transition={{ duration: 0.5, delay: 0.4, ease: REVEAL_EASE }}
           >
             <p className="mt-8 max-w-[560px] text-body-lg text-band-text-secondary">
-              每一篇內容經過編輯審核，每一位領航專家經過認證。為香港 marketer 與
-              founder，過濾全球 AI 噪音。
+              每日精選全球 AI 情報，由領航專家嘅 AI 分身陪你落地 —
+              香港 marketer 與 founder 嘅增長情報平台。
             </p>
             <div className="mt-10 flex flex-wrap items-center gap-6">
               <Link
@@ -121,6 +126,19 @@ function Hero() {
                   aria-hidden="true"
                 />
               </Link>
+            </div>
+          </motion.div>
+
+          {/* Live intelligence layer — 真實數據統計 + 熱門話題輪轉 (delay 500ms) */}
+          <motion.div
+            className="mt-12"
+            initial={show ?? { opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.5, ease: REVEAL_EASE }}
+          >
+            <LiveStats />
+            <div className="mt-5 max-w-[640px] border-t border-band-border pt-4">
+              <HotTopicsTicker />
             </div>
           </motion.div>
 
@@ -366,6 +384,13 @@ const EXPERT_INITIALS: Record<string, string> = {
   "elvin-cheung": "EC",
 };
 
+/** 領航專家一句 persona signature(來自 Ask 分身定義,單一來源) */
+const EXPERT_SIGNATURES: Record<string, string> = Object.fromEntries(
+  personas
+    .filter((p) => p.kind === "expert")
+    .map((p) => [p.key, p.signature])
+);
+
 function ExpertsWall() {
   return (
     <section className="mx-auto max-w-container px-6 py-24 max-md:py-16">
@@ -393,8 +418,9 @@ function ExpertsWall() {
       </Reveal>
 
       <div className="mt-8 flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
-        {/* Overlapping avatar row */}
-        <div className="flex items-center">
+        <div>
+          {/* Overlapping avatar row */}
+          <div className="flex items-center">
           {experts.map((expert, i) => (
             <motion.div
               key={expert.slug}
@@ -444,6 +470,11 @@ function ExpertsWall() {
                 <span className="block text-caption text-text-muted">
                   {expert.title}
                 </span>
+                {EXPERT_SIGNATURES[expert.slug] && (
+                  <span className="block text-caption text-ink">
+                    {EXPERT_SIGNATURES[expert.slug]}
+                  </span>
+                )}
               </span>
             </motion.div>
           ))}
@@ -451,6 +482,26 @@ function ExpertsWall() {
           <span className="ml-3 inline-flex h-8 items-center rounded-md bg-card px-3 text-label text-text-secondary">
             邀請中
           </span>
+          </div>
+
+          {/* Persona signatures — 一眼睇到邊個係邊個 */}
+          <Reveal delay={0.3}>
+            <div className="mt-5 flex flex-wrap gap-x-6 gap-y-1.5">
+              {experts
+                .filter((e) => e.verified && EXPERT_SIGNATURES[e.slug])
+                .map((e) => (
+                  <p key={e.slug} className="text-caption">
+                    <span className="font-medium text-text-primary">
+                      {e.nameEn} {e.nameZh}
+                    </span>
+                    <span className="text-text-muted">
+                      {" "}
+                      — {EXPERT_SIGNATURES[e.slug]}
+                    </span>
+                  </p>
+                ))}
+            </div>
+          </Reveal>
         </div>
 
         {/* Description */}
@@ -469,56 +520,18 @@ function ExpertsWall() {
   );
 }
 
-/* ================= Section 5 — Ask CTA Band ================= */
-
-function AskCta() {
-  return (
-    <section className="border-y bg-surface">
-      <Reveal className="mx-auto max-w-container px-6 py-20 text-center">
-        <p className="flex items-center justify-center gap-3 text-overline font-sans uppercase text-text-muted">
-          <span className="inline-block h-px w-6 bg-border-strong" aria-hidden="true" />
-          Ask 問答
-          <span className="inline-block h-px w-6 bg-border-strong" aria-hidden="true" />
-        </p>
-        <h3 className="mt-4 font-display text-h2 text-text-primary">
-          有咩 AI 問題？問我哋嘅 AI 編輯部。
-        </h3>
-        <p className="mx-auto mt-4 max-w-[520px] text-body-sm text-text-secondary">
-          基於全站情報與案例庫回答，每個論點附來源引用 — 無引用，不下結論。
-        </p>
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.2 }}
-          transition={{ duration: 0.5, delay: 0.15, ease: REVEAL_EASE }}
-        >
-          <Link
-            to="/ask"
-            className="mt-8 inline-flex h-12 items-center rounded-md bg-ink-solid px-8 text-label text-white press hover:bg-ink-hover"
-          >
-            開始對話
-            <ArrowRight className="ml-1 h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-          </Link>
-        </motion.div>
-        <p className="mt-4 text-caption text-text-muted">
-          免費會員每日 5 次・無需信用卡
-        </p>
-      </Reveal>
-    </section>
-  );
-}
-
 /* ================= Page ================= */
 
 export default function Home() {
   return (
     <>
       <Hero />
+      <HowToUse />
       <InsightsWall />
       <CasesFeatured />
       <SectionOrnament />
       <ExpertsWall />
-      <AskCta />
+      <AskPreview />
     </>
   );
 }

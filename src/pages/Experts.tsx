@@ -51,12 +51,14 @@ function PageHeader() {
   return (
     <section className="mx-auto max-w-container px-6 pt-24 text-center max-md:pt-16">
       <motion.p
-        className="text-overline font-sans uppercase text-ink"
+        className="flex items-center justify-center gap-3 text-overline font-sans uppercase text-text-muted"
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, ease: REVEAL_EASE }}
       >
+        <span className="inline-block h-px w-6 bg-border-strong" aria-hidden="true" />
         Leading Experts
+        <span className="inline-block h-px w-6 bg-border-strong" aria-hidden="true" />
       </motion.p>
       <motion.h1
         className="mt-4 font-display text-display text-text-primary"
@@ -72,10 +74,8 @@ function PageHeader() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, delay: 0.2, ease: REVEAL_EASE }}
       >
-        成長係一班人嘅事。AIGRO 唔係導師 marketplace,係一個 growth hacking
-        club — 由 Jimmy 同 Elvin 兩位實戰者領航,帶住成個 club
-        向前行。佢哋嘅 AI 分身唔係課程,係蒸餾咗嘅增長方法論,等會員跟住
-        playbook 做實驗。
+        AIGRO 係一個 growth hacking club — 兩位認證領航專家嘅 AI
+        分身基於授權內容蒸餾,隨時等你問,等會員跟住 playbook 做實驗。
       </motion.p>
       <motion.p
         className="mt-5 text-caption text-text-muted"
