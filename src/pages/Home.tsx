@@ -15,10 +15,13 @@ import CategoryChip from "@/components/CategoryChip";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import {
   INSIGHT_CATEGORIES,
-  dailyPicks,
-  insights,
   type InsightCategory,
 } from "@/data/insights";
+import {
+  AIHOT_CREDIT,
+  aihotDailyPicks,
+  aihotInsights,
+} from "@/data/aihot";
 import { featuredCases } from "@/data/cases";
 import { experts } from "@/data/experts";
 
@@ -130,10 +133,12 @@ function Hero() {
                 className="overflow-hidden"
               >
                 <ol className="border-t">
-                  {dailyPicks.map((pick, i) => (
+                  {aihotDailyPicks.map((pick, i) => (
                     <li key={pick.slug}>
-                      <Link
-                        to={`/insights/${pick.slug}`}
+                      <a
+                        href={pick.permalink}
+                        target="_blank"
+                        rel="noreferrer"
                         className="group flex items-baseline gap-4 px-6 py-3 transition-colors duration-150 hover:bg-card"
                       >
                         <span className="font-mono text-caption text-ink">
@@ -145,10 +150,20 @@ function Hero() {
                         <span className="ml-auto shrink-0 text-caption text-text-muted">
                           {pick.source}
                         </span>
-                      </Link>
+                      </a>
                     </li>
                   ))}
                 </ol>
+                <p className="border-t px-6 py-3 text-caption text-text-muted">
+                  <a
+                    href="https://aihot.virxact.com"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="transition-colors duration-150 hover:text-ink"
+                  >
+                    {AIHOT_CREDIT}
+                  </a>
+                </p>
               </motion.div>
             )}
           </AnimatePresence>
@@ -166,8 +181,8 @@ function InsightsWall() {
 
   const filtered =
     category === "全部"
-      ? insights
-      : insights.filter((i) => i.category === category);
+      ? aihotInsights
+      : aihotInsights.filter((i) => i.category === category);
 
   const scrollWall = (dir: 1 | -1) => {
     wallRef.current?.scrollBy({ left: dir * 360, behavior: "smooth" });
@@ -226,7 +241,7 @@ function InsightsWall() {
           ))}
         </div>
         {/* Arrow controls */}
-        <div className="mt-6 flex gap-2">
+        <div className="mt-6 flex items-center gap-2">
           <button
             type="button"
             onClick={() => scrollWall(-1)}
@@ -243,6 +258,14 @@ function InsightsWall() {
           >
             <ChevronRight className="h-5 w-5" strokeWidth={1.5} />
           </button>
+          <a
+            href="https://aihot.virxact.com"
+            target="_blank"
+            rel="noreferrer"
+            className="ml-auto text-caption text-text-muted transition-colors duration-150 hover:text-ink"
+          >
+            {AIHOT_CREDIT}
+          </a>
         </div>
       </div>
     </section>

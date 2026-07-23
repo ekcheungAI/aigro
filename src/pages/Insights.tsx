@@ -1,16 +1,20 @@
 import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ExternalLink } from "lucide-react";
 import CategoryChip from "@/components/CategoryChip";
-import InsightCard from "@/components/InsightCard";
 import Reveal from "@/components/Reveal";
 import {
   INSIGHT_CATEGORIES,
   INSIGHT_CATEGORY_SLUGS,
   INSIGHT_SLUG_CATEGORIES,
-  insights,
+  INSIGHT_CATEGORY_ICONS,
   type InsightCategory,
 } from "@/data/insights";
+import {
+  AIHOT_CREDIT,
+  aihotInsights,
+  type AihotInsight,
+} from "@/data/aihot";
 import { cn } from "@/lib/utils";
 import { todayInfo } from "@/lib/daily";
 
@@ -22,6 +26,68 @@ const SORT_OPTIONS: { key: SortMode; label: string }[] = [
 ];
 
 const PAGE_SIZE = 6;
+
+/**
+ * AIHOT 情報卡 — 與 InsightCard 同版式，但：
+ * 1. 整卡外鏈至 AIHOT permalink（不虛構站內詳情頁）
+ * 2. 香港視角為誠實 placeholder，視覺上收斂（text-muted）
+ */
+function AihotInsightCard({ insight }: { insight: AihotInsight }) {
+  const CategoryIcon = INSIGHT_CATEGORY_ICONS[insight.category];
+  return (
+    <a
+      href={insight.permalink}
+      target="_blank"
+      rel="noreferrer"
+      className="card-hover group flex h-full flex-col rounded-md border bg-surface p-6 shadow-card dark:shadow-none"
+    >
+      {/* Overline row */}
+      <div className="flex items-center gap-2">
+        <span className="rounded-sm bg-ink-soft px-3 py-1.5 text-overline font-sans uppercase text-ink">
+          {insight.category}
+        </span>
+        <CategoryIcon className="h-4 w-4 text-text-muted" strokeWidth={1.5} aria-hidden="true" />
+        <span className="ml-auto inline-flex items-center gap-1 text-caption text-text-muted">
+          AI HOT
+          <ExternalLink className="h-3 w-3" strokeWidth={1.5} aria-hidden="true" />
+        </span>
+      </div>
+
+      {/* Title */}
+      <h4 className="mt-4 line-clamp-2 font-display text-h4 text-text-primary transition-colors duration-150 group-hover:text-ink">
+        {insight.title}
+      </h4>
+
+      {/* AI summary */}
+      <p className="mt-2 line-clamp-3 text-body-sm text-text-secondary">
+        {insight.summary}
+      </p>
+
+      {/* 香港視角 — placeholder（AIHOT 暫無 HK 短評，視覺收斂） */}
+      <div className="mt-4 border-l-2 border-border pl-3">
+        <p className="text-overline font-sans uppercase text-text-muted">
+          香港視角 HK Angle
+        </p>
+        <p className="mt-1 line-clamp-2 text-body-sm text-text-muted">
+          {insight.hkAngle}
+        </p>
+      </div>
+
+      {/* Footer row */}
+      <div className="mt-auto flex items-center gap-2 pt-4 text-caption text-text-muted">
+        <span className="inline-flex items-center gap-1">
+          {insight.source}
+          <ExternalLink className="h-3 w-3" strokeWidth={1.5} aria-hidden="true" />
+        </span>
+        <span aria-hidden="true">·</span>
+        <span>{insight.timeAgo}</span>
+        <span className="ml-auto font-mono text-caption text-ink">
+          {insight.score}
+        </span>
+      </div>
+    </a>
+  );
+}
 
 /**
  * Insights 情報列表頁 (insights.md):
@@ -40,8 +106,8 @@ export default function Insights() {
 
   const filtered = useMemo(() => {
     const list = activeCategory
-      ? insights.filter((i) => i.category === activeCategory)
-      : [...insights];
+      ? aihotInsights.filter((i) => i.category === activeCategory)
+      : [...aihotInsights];
     list.sort((a, b) =>
       sort === "score"
         ? b.score - a.score
@@ -83,8 +149,17 @@ export default function Insights() {
         </Reveal>
         <Reveal y={24} delay={0.2}>
           <p className="mt-4 max-w-[640px] text-body-lg text-text-secondary">
-            全球 AI 動態，經編輯審核與 AI 摘要，附上對香港 marketer 與 founder
-            的實際影響。
+            全球 AI 動態，AI 摘要即日更新；香港視角短評由編輯部每日跟進。
+          </p>
+          <p className="mt-3 text-caption text-text-muted">
+            <a
+              href="https://aihot.virxact.com"
+              target="_blank"
+              rel="noreferrer"
+              className="transition-colors duration-150 hover:text-ink"
+            >
+              {AIHOT_CREDIT}
+            </a>
           </p>
         </Reveal>
       </section>
@@ -180,7 +255,7 @@ export default function Insights() {
         >
           {visible.map((insight, i) => (
             <Reveal key={insight.slug} delay={(i % 8) * 0.08}>
-              <InsightCard insight={insight} />
+              <AihotInsightCard insight={insight} />
             </Reveal>
           ))}
         </div>

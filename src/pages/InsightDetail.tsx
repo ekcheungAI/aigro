@@ -9,6 +9,7 @@ import {
   type Insight,
   type InsightArticle,
 } from "@/data/insights";
+import { AIHOT_CREDIT, findAihotInsight } from "@/data/aihot";
 
 /** 設計稿中的原型路由別名 (daily.md / insight-detail.md 使用 openai-gpt-5-launch) */
 const SLUG_ALIASES: Record<string, string> = {
@@ -65,6 +66,75 @@ export default function InsightDetail() {
   );
 
   if (!insight || !article) {
+    /* AIHOT 外部情報：無站內長文，展示摘要卡 + 閱讀原文（不虛構詳情） */
+    const aihot = rawSlug ? findAihotInsight(rawSlug) : undefined;
+    if (aihot) {
+      return (
+        <section className="mx-auto max-w-[720px] px-6 py-24 max-md:py-16">
+          <Reveal>
+            <nav aria-label="麵包屑" className="text-caption text-text-muted">
+              <Link
+                to="/insights"
+                className="transition-colors duration-150 hover:text-ink"
+              >
+                情報 Insights
+              </Link>
+              <span aria-hidden="true"> / </span>
+              <span>{aihot.category}</span>
+            </nav>
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              <span className="rounded-sm bg-ink-soft px-3 py-1.5 text-overline font-sans uppercase text-ink">
+                {aihot.category}
+              </span>
+              <span className="font-mono text-caption text-ink">
+                {aihot.score}
+              </span>
+              <span className="text-caption text-text-muted">
+                {aihot.timeAgo}
+              </span>
+            </div>
+            <h1 className="mt-4 font-display text-display text-text-primary">
+              {aihot.title}
+            </h1>
+            <div className="mt-8 rounded-md bg-card p-8 max-md:p-6">
+              <p className="text-overline font-sans uppercase text-text-muted">
+                本文由 AI HOT 提供
+              </p>
+              <p className="mt-3 text-body-lg text-text-secondary">
+                {aihot.summary}
+              </p>
+            </div>
+            <p className="mt-6 text-caption text-text-muted">
+              {AIHOT_CREDIT}・原始來源：{aihot.source}
+            </p>
+            <div className="mt-8 flex flex-wrap items-center gap-4">
+              <a
+                href={aihot.permalink}
+                target="_blank"
+                rel="noreferrer"
+                className="group inline-flex h-11 items-center gap-2 rounded-md bg-ink-solid px-6 text-label text-white transition-colors duration-120 hover:bg-ink-hover active:scale-[0.98]"
+              >
+                閱讀原文
+                <ExternalLink
+                  className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-1"
+                  strokeWidth={1.5}
+                  aria-hidden="true"
+                />
+              </a>
+              <a
+                href={aihot.canonical}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex h-11 items-center gap-2 rounded-md border border-border-strong px-6 text-label text-ink transition-colors duration-150 hover:bg-ink-soft"
+              >
+                AI HOT 出處
+                <ExternalLink className="h-3 w-3" strokeWidth={1.5} aria-hidden="true" />
+              </a>
+            </div>
+          </Reveal>
+        </section>
+      );
+    }
     return (
       <section className="mx-auto max-w-container px-6 py-24 max-md:py-16">
         <Reveal>

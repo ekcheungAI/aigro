@@ -4,75 +4,24 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Calendar, ExternalLink } from "lucide-react";
 import Reveal, { REVEAL_EASE } from "@/components/Reveal";
 import { todayInfo, recentIssues } from "@/lib/daily";
-import type { InsightCategory } from "@/data/insights";
+import {
+  AIHOT_CREDIT,
+  HK_ANGLE_PLACEHOLDER,
+  aihotDaily,
+} from "@/data/aihot";
 import { cn } from "@/lib/utils";
 
-/** 日報 — 日期、星期、期號按今日動態生成 (src/lib/daily.ts) */
+/** 日報 — 日期、星期、期號按今日動態生成 (src/lib/daily.ts)；內容來自 AIHOT 真實日報 */
+const LIST_COUNT = 8;
+const DAILY_LIST = aihotDaily.items.slice(0, LIST_COUNT);
+
 const ISSUE = {
   ...todayInfo(),
-  sources: 23,
-  picks: 5,
+  sources: aihotDaily.itemCount,
+  picks: (aihotDaily.lead ? 1 : 0) + DAILY_LIST.length,
 };
 
-const LEAD = {
-  slug: "openai-gpt-5-launch",
-  category: "模型發布" as InsightCategory,
-  title: "OpenAI 發佈 GPT-5：統一推理與生成，API 價格下調 40%",
-  summary:
-    "OpenAI 正式發佈 GPT-5，將 o 系列推理能力與 GPT 系列生成能力合併為單一系統，根據任務自動調節思考深度。基準測試全面超越前代：SWE-bench 74.9%、GPQA 88.4%。API 定價較 GPT-4o 下調 40%，並開放三檔推理強度供開發者按成本取捨。",
-  hkAngle:
-    "API 降價四成，意味香港中小企過去因成本卻步的客服自動化、文案生成場景，回本週期由數月縮短至數週。三檔推理強度讓企業可按場景精細控制開支 — 簡單查詢用最低檔，合約分析才動用深度推理。建議本週內重新測算現有 AI 專案的單次成本。",
-  source: "OpenAI Blog",
-  time: "今日 06:30",
-  score: 96,
-};
-
-interface DailyItem {
-  slug: string;
-  num: string;
-  category: InsightCategory;
-  title: string;
-  summary: string;
-  source: string;
-}
-
-const DAILY_ITEMS: DailyItem[] = [
-  {
-    slug: "minimax-m2-open-source",
-    num: "02",
-    category: "模型發布",
-    title: "MiniMax M2 開源：2,300 億參數 MoE，推理成本僅及 Claude 8%",
-    summary:
-      "主打 Agent 場景與極低成本，支援本地部署，繁中表現在同級開源模型中領先。",
-    source: "MiniMax",
-  },
-  {
-    slug: "hkma-genai-sandbox-2",
-    num: "03",
-    category: "行業動態",
-    title: "香港金管局生成式 AI 沙盒 2.0 啟動，20 家機構參與",
-    summary:
-      "聚焦風險管理與反詐騙，監管明朗化為金融業 AI 導入掃除不確定性。",
-    source: "HKMA",
-  },
-  {
-    slug: "cursor-2-multi-agent",
-    num: "04",
-    category: "產品發布",
-    title: "Cursor 2.0：多 Agent 並行開發成標配",
-    summary:
-      "最多 8 個 agent 並行作業，內建瀏覽器自動測試，一人團隊產能倍增。",
-    source: "Cursor Blog",
-  },
-  {
-    slug: "traditional-chinese-rag-guide",
-    num: "05",
-    category: "觀點與技巧",
-    title: "善用繁體中文 RAG：香港企業知識庫落地的三個關鍵",
-    summary: "分詞、embedding 選型、混合檢索 — 繁中 RAG 的成敗細節全拆解。",
-    source: "AIGRO 編輯部",
-  },
-];
+const LEAD = aihotDaily.lead;
 
 /** 近 7 日（原型：全部導向同一期 mock） */
 const RECENT_ISSUES = recentIssues(7).map((d) => ({
@@ -127,8 +76,24 @@ export default function Daily() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2, ease: REVEAL_EASE }}
         >
-          編輯部從 {ISSUE.sources} 個來源選出今日 {ISSUE.picks} 條必讀 — 3
-          分鐘，掌握全球 AI 脈搏的香港意義。
+          編輯部從 {ISSUE.sources} 條即日情報選出 {ISSUE.picks} 條必讀 — 3
+          分鐘，掌握全球 AI 脈搏。
+        </motion.p>
+        <motion.p
+          className="mx-auto mt-3 text-caption text-text-muted"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4, delay: 0.3, ease: REVEAL_EASE }}
+        >
+          <a
+            href={aihotDaily.canonical}
+            target="_blank"
+            rel="noreferrer"
+            className="transition-colors duration-150 hover:text-ink"
+          >
+            {AIHOT_CREDIT}
+          </a>
+          {aihotDaily.date ? `・日報日期 ${aihotDaily.date}` : ""}
         </motion.p>
 
         {/* 雙髮絲線分隔：1px border-strong + 3px 間隙 + 1px border，由中心展開 */}
@@ -145,84 +110,96 @@ export default function Daily() {
       </section>
 
       {/* Section 2 — Lead Story 頭條 (全寬 surface 卡片, padding 48px) */}
-      <section className="mx-auto max-w-container px-6 pt-16">
-        <Reveal y={24} duration={0.5}>
-          <article className="rounded-md border bg-surface p-12 max-md:p-6">
-            <Reveal y={16} duration={0.4} delay={0.08}>
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="rounded-sm bg-ink-soft px-3 py-1.5 text-overline font-sans uppercase text-ink">
-                  {LEAD.category}
-                </span>
-                <span className="text-overline font-sans uppercase text-ink">
-                  頭條 Lead
-                </span>
-              </div>
-            </Reveal>
-            <Reveal y={16} duration={0.4} delay={0.16}>
-              <h2 className="mt-4 font-display text-h2 text-text-primary">
-                {LEAD.title}
-              </h2>
-            </Reveal>
-            <Reveal y={16} duration={0.4} delay={0.24}>
-              <p className="mt-4 max-w-prose text-body-lg text-text-secondary">
-                {LEAD.summary}
-              </p>
-            </Reveal>
-            <Reveal y={16} duration={0.4} delay={0.32}>
-              <div className="mt-6 border-l-2 border-ink pl-4">
-                <p className="text-overline font-sans uppercase text-ink">
-                  香港視角 HK Angle
+      {LEAD && (
+        <section className="mx-auto max-w-container px-6 pt-16">
+          <Reveal y={24} duration={0.5}>
+            <article className="rounded-md border bg-surface p-12 max-md:p-6">
+              <Reveal y={16} duration={0.4} delay={0.08}>
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="rounded-sm bg-ink-soft px-3 py-1.5 text-overline font-sans uppercase text-ink">
+                    {LEAD.category}
+                  </span>
+                  <span className="text-overline font-sans uppercase text-ink">
+                    頭條 Lead
+                  </span>
+                </div>
+              </Reveal>
+              <Reveal y={16} duration={0.4} delay={0.16}>
+                <h2 className="mt-4 font-display text-h2 text-text-primary">
+                  {LEAD.title}
+                </h2>
+              </Reveal>
+              <Reveal y={16} duration={0.4} delay={0.24}>
+                <p className="mt-4 max-w-prose text-body-lg text-text-secondary">
+                  {LEAD.summary}
                 </p>
-                <p className="mt-2 max-w-prose text-body text-text-secondary">
-                  {LEAD.hkAngle}
-                </p>
-              </div>
-            </Reveal>
-            <Reveal y={16} duration={0.4} delay={0.4}>
-              <div className="mt-8 flex flex-wrap items-center gap-x-3 gap-y-3 text-caption text-text-muted">
-                <a
-                  href="#"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1 transition-colors duration-150 hover:text-ink"
-                >
-                  {LEAD.source}
-                  <ExternalLink className="h-3 w-3" strokeWidth={1.5} aria-hidden="true" />
-                </a>
-                <span aria-hidden="true">·</span>
-                <span>{LEAD.time}</span>
-                <span className="font-mono text-ink">{LEAD.score}</span>
-                <Link
-                  to={`/insights/${LEAD.slug}`}
-                  className="group ml-auto inline-flex items-center gap-1.5 text-label text-ink"
-                >
-                  閱讀完整分析
-                  <ArrowRight
-                    className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-1"
-                    strokeWidth={1.5}
-                    aria-hidden="true"
-                  />
-                </Link>
-              </div>
-            </Reveal>
-          </article>
-        </Reveal>
-      </section>
+              </Reveal>
+              <Reveal y={16} duration={0.4} delay={0.32}>
+                <div className="mt-6 border-l-2 border-border pl-4">
+                  <p className="text-overline font-sans uppercase text-text-muted">
+                    香港視角 HK Angle
+                  </p>
+                  <p className="mt-2 max-w-prose text-body text-text-muted">
+                    {HK_ANGLE_PLACEHOLDER}
+                  </p>
+                </div>
+              </Reveal>
+              <Reveal y={16} duration={0.4} delay={0.4}>
+                <div className="mt-8 flex flex-wrap items-center gap-x-3 gap-y-3 text-caption text-text-muted">
+                  <a
+                    href={LEAD.permalink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 transition-colors duration-150 hover:text-ink"
+                  >
+                    {LEAD.source}
+                    <ExternalLink className="h-3 w-3" strokeWidth={1.5} aria-hidden="true" />
+                  </a>
+                  {aihotDaily.date && (
+                    <>
+                      <span aria-hidden="true">·</span>
+                      <span>{aihotDaily.date}</span>
+                    </>
+                  )}
+                  {LEAD.score !== null && (
+                    <span className="font-mono text-ink">{LEAD.score}</span>
+                  )}
+                  <a
+                    href={LEAD.permalink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="group ml-auto inline-flex items-center gap-1.5 text-label text-ink"
+                  >
+                    閱讀原文
+                    <ArrowRight
+                      className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-1"
+                      strokeWidth={1.5}
+                      aria-hidden="true"
+                    />
+                  </a>
+                </div>
+              </Reveal>
+            </article>
+          </Reveal>
+        </section>
+      )}
 
-      {/* Section 3 — 編號列表 02–05 (2 欄 ≥1024px / 單欄 mobile) */}
+      {/* Section 3 — 編號列表 (2 欄 ≥1024px / 單欄 mobile)，每條外鏈至 AIHOT permalink */}
       <section className="mx-auto max-w-container px-6 pt-12">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          {DAILY_ITEMS.map((item, i) => (
-            <Reveal key={item.num} y={20} duration={0.4} delay={i * 0.1}>
-              <Link
-                to={`/insights/${item.slug}`}
+          {DAILY_LIST.map((item, i) => (
+            <Reveal key={item.permalink} y={20} duration={0.4} delay={i * 0.1}>
+              <a
+                href={item.permalink}
+                target="_blank"
+                rel="noreferrer"
                 className="card-hover group flex h-full gap-6 rounded-md border bg-surface p-6"
               >
                 <span
                   className="font-mono text-[28px] leading-none text-ink"
                   aria-hidden="true"
                 >
-                  {item.num}
+                  {String(i + 2).padStart(2, "0")}
                 </span>
                 <div className="min-w-0">
                   <span className="inline-block rounded-sm bg-ink-soft px-3 py-1.5 text-overline font-sans uppercase text-ink">
@@ -243,7 +220,7 @@ export default function Daily() {
                     <ExternalLink className="h-3 w-3" strokeWidth={1.5} aria-hidden="true" />
                   </span>
                 </div>
-              </Link>
+              </a>
             </Reveal>
           ))}
         </div>
