@@ -49,12 +49,18 @@ export default function Footer() {
             </ul>
           </nav>
 
-          {/* Developers — MCP/API 即將開放 */}
+          {/* Developers — AIGRO MCP Network */}
           <div>
-            <p className="text-overline font-sans uppercase text-band-text-muted">Developers</p>
+            <p className="text-overline font-sans uppercase text-band-text-muted">AIGRO MCP Network</p>
             <p className="mt-4 text-body-sm text-band-text-secondary">
               MCP / API 即將開放 — 將 AIGRO 情報接入你的 AI 工作流。
             </p>
+            <Link
+              to="/developers"
+              className="mt-3 inline-block text-label text-band-ink transition-colors duration-150 hover:text-band-text"
+            >
+              MCP Network 優先名單
+            </Link>
             <form
               className="mt-4 flex gap-2"
               onSubmit={(e) => {

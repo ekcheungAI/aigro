@@ -216,6 +216,61 @@ function Hero() {
   );
 }
 
+/* ================= Section 1.5 — MCP Network band ================= */
+
+function McpNetworkBand() {
+  return (
+    <section className="border-y border-band-border bg-band-bg">
+      <div className="mx-auto max-w-container px-6 py-20 max-md:py-16">
+        <Reveal>
+          <p className="flex items-center gap-3 text-overline font-sans uppercase text-band-text-muted">
+            <span
+              className="inline-block h-px w-6 bg-band-border-strong"
+              aria-hidden="true"
+            />
+            MCP Network
+          </p>
+          <h2 className="mt-4 font-display text-h2 text-band-text">
+            你嘅 AI,值得擁有行業雷達
+          </h2>
+          <p className="mt-4 max-w-[600px] text-body-sm text-band-text-secondary">
+            AIGRO 將各行業即時情報蒸餾成 MCP server — Claude Code / Cursor /
+            任何 agent 一連接,即刻有行業雷達。
+          </p>
+          {/* Vertical status chips */}
+          <div className="mt-6 flex flex-wrap gap-2">
+            <span className="inline-flex items-center rounded-sm bg-band-ink-solid px-3 py-1.5 text-overline font-sans uppercase text-white">
+              AI — 優先名單開放中
+            </span>
+            <span className="inline-flex items-center rounded-sm border border-band-border-strong px-3 py-1.5 text-overline font-sans uppercase text-band-text-secondary">
+              Beauty・Technology — 規劃中
+            </span>
+          </div>
+          <div className="mt-8 flex flex-wrap items-center gap-6">
+            <Link
+              to="/developers"
+              className="inline-flex h-12 items-center rounded-md bg-band-ink-solid px-8 text-label text-white press hover:bg-band-ink-hover"
+            >
+              登記優先名單
+            </Link>
+            <Link
+              to="/developers#endpoints"
+              className="group inline-flex items-center gap-1 text-label text-band-ink"
+            >
+              睇 endpoints
+              <ArrowRight
+                className="h-4 w-4 transition-transform duration-150 nudge-x"
+                strokeWidth={1.5}
+                aria-hidden="true"
+              />
+            </Link>
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
 /* ================= Section 2 — Insights 情報牆 ================= */
 
 function InsightsWall() {
@@ -527,6 +582,7 @@ export default function Home() {
     <>
       <Hero />
       <HowToUse />
+      <McpNetworkBand />
       <InsightsWall />
       <CasesFeatured />
       <SectionOrnament />
