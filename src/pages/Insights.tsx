@@ -12,6 +12,7 @@ import {
   type InsightCategory,
 } from "@/data/insights";
 import { cn } from "@/lib/utils";
+import { todayInfo } from "@/lib/daily";
 
 type SortMode = "score" | "latest";
 
@@ -94,7 +95,7 @@ export default function Insights() {
           <div className="card-hover flex flex-col gap-6 rounded-md border bg-surface px-8 py-6 max-md:px-6 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="font-mono text-caption text-text-muted">
-                2025-01-15・星期三・第 042 期
+                {`${todayInfo().date}・${todayInfo().weekday}・第 ${todayInfo().number} 期`}
               </p>
               <h3 className="mt-2 font-display text-h3 text-text-primary">
                 每日精選日報
