@@ -1,10 +1,17 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Link, useParams } from "react-router-dom";
 import { AnimatePresence, motion, useInView } from "framer-motion";
-import { ArrowRight, AudioLines, Check, ExternalLink, ShieldCheck } from "lucide-react";
+import { ArrowRight, AudioLines, CalendarClock, Check, Compass, ExternalLink, ShieldCheck } from "lucide-react";
 import Reveal, { REVEAL_EASE } from "@/components/Reveal";
+import MonogramAvatar from "@/components/MonogramAvatar";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { expertFirstName, experts, type Expert } from "@/data/experts";
+
+/** 領航專家 monogram 字母(data 無此欄位,由 slug 映射) */
+const EXPERT_INITIALS: Record<string, string> = {
+  "jimmy-lau": "JL",
+  "elvin-cheung": "EC",
+};
 
 /* ================= Local toast（頁面級原型提示） ================= */
 
@@ -134,25 +141,19 @@ function VerifiedHero({ expert }: { expert: Expert }) {
       />
       <div className="relative mx-auto max-w-container px-6 pb-16 pt-24 max-md:pt-16">
         <div className="flex items-start gap-10 max-md:flex-col max-md:gap-8">
-          {/* 120px 頭像：1.5px 金環 + Badge A 40px 右下角 */}
+          {/* 120px monogram 頭像：1.5px 金環 + Badge A 40px 右下角 */}
           <motion.div
             className="relative shrink-0"
             initial={{ opacity: 0, scale: 0.92 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, ease: REVEAL_EASE }}
           >
-            <div
-              className="h-[120px] w-[120px] overflow-hidden rounded-full"
-              style={{ boxShadow: "inset 0 0 0 1.5px hsl(var(--gold))" }}
-            >
-              <img
-                src={expert.image}
-                alt={`${expert.nameZh} ${expert.nameEn} 人像`}
-                width={120}
-                height={120}
-                className="h-full w-full object-cover"
-              />
-            </div>
+            <MonogramAvatar
+              initials={EXPERT_INITIALS[expert.slug] ?? "·"}
+              color={accent}
+              size={120}
+              verified
+            />
             <VerifiedBadge
               size={40}
               ambient
@@ -193,7 +194,9 @@ function VerifiedHero({ expert }: { expert: Expert }) {
               transition={{ duration: 0.5, delay: 0.3, ease: REVEAL_EASE }}
             >
               <VerifiedBadge size={16} />
-              <span className="text-caption text-gold">已認證 Verified Mentor</span>
+              <span className="text-caption text-gold">
+                領航專家認證 Leading Expert
+              </span>
               <span className="text-caption text-text-muted">
                 認證日期 {expert.verifiedDate}
               </span>
@@ -267,7 +270,7 @@ function VerifiedProfile({ expert }: { expert: Expert }) {
             <h2 className="font-display text-h3 text-text-primary">
               {viewpoints.length} 個核心觀點
             </h2>
-            <p className="text-caption text-text-muted">蒸餾自原創訪談與著作</p>
+            <p className="text-caption text-text-muted">蒸餾自公開分享與授權內容</p>
           </div>
         </Reveal>
         <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -357,10 +360,23 @@ function VerifiedProfile({ expert }: { expert: Expert }) {
               語音對話
               <span className="text-caption text-gold">VIP</span>
             </button>
+            {/* Ghost 鎖定態 — 真人預約隨 Club 會員制開放(Phase 4,唔承諾而家) */}
+            <button
+              type="button"
+              aria-disabled="true"
+              onClick={() =>
+                toast.show("Club 優先預約將隨會員制開放,敬請期待")
+              }
+              className="inline-flex h-11 items-center gap-2 rounded-md px-4 text-label text-ink opacity-60 transition-opacity duration-150 hover:opacity-80"
+            >
+              <CalendarClock className="h-5 w-5" strokeWidth={1.5} aria-hidden="true" />
+              Club 優先預約
+              <span className="text-caption text-text-muted">即將開放</span>
+            </button>
           </motion.div>
           <Reveal delay={0.2}>
             <p className="mt-6 text-caption text-text-muted">
-              免費 3 次體驗・會員無限對話
+              免費 3 次體驗・Club 會員無限對話
             </p>
           </Reveal>
         </div>
@@ -388,13 +404,11 @@ function PendingProfile({ expert }: { expert: Expert }) {
             animate={{ opacity: 0.6, scale: 1 }}
             transition={{ duration: 0.5, ease: REVEAL_EASE }}
           >
-            <div className="h-[120px] w-[120px] overflow-hidden rounded-full border-2 border-dashed border-border-strong">
-              <img
-                src={expert.image}
-                alt={`${expert.nameZh} ${expert.nameEn} 人像`}
-                width={120}
-                height={120}
-                className="h-full w-full object-cover grayscale"
+            <div className="flex h-[120px] w-[120px] items-center justify-center rounded-full border-2 border-dashed border-border-strong">
+              <Compass
+                className="h-10 w-10 text-text-muted"
+                strokeWidth={1.5}
+                aria-hidden="true"
               />
             </div>
           </motion.div>
@@ -422,7 +436,7 @@ function PendingProfile({ expert }: { expert: Expert }) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.3, ease: REVEAL_EASE }}
             >
-              認證進行中・敬請期待
+              由 Jimmy 與 Elvin 親自邀請中・敬請期待
             </motion.p>
             <motion.div
               className="mt-5 flex flex-wrap gap-2"
@@ -449,7 +463,7 @@ function PendingProfile({ expert }: { expert: Expert }) {
           <div className="rounded-md bg-card p-8">
             <p className="flex items-center gap-2 text-overline font-sans uppercase text-text-muted">
               <ShieldCheck className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-              知識庫籌備中 In Preparation
+              領航認證進行中 In Preparation
             </p>
             <p className="mt-4 text-body-sm text-text-secondary">
               {expert.pendingNote}
@@ -463,12 +477,12 @@ function PendingProfile({ expert }: { expert: Expert }) {
         <div className="mx-auto max-w-container px-6 py-16 text-center">
           <Reveal>
             <h2 className="font-display text-h3 text-text-primary">
-              {expertFirstName(expert)} 的 AI 分身上線通知
+              新領航專家上線通知
             </h2>
           </Reveal>
           <Reveal delay={0.08}>
             <p className="mx-auto mt-4 max-w-[520px] text-body-sm text-text-secondary">
-              完成認證與授權審核後，第一時間通知你。
+              完成領航認證與授權審核後，第一時間通知你。
             </p>
           </Reveal>
           <Reveal delay={0.15}>
@@ -525,16 +539,16 @@ export default function ExpertProfile() {
       <section className="mx-auto max-w-container px-6 py-24 text-center">
         <p className="text-overline font-sans uppercase text-ink">Expert Profile</p>
         <h1 className="mt-4 font-display text-display text-text-primary">
-          找不到這位導師
+          找不到這位領航專家
         </h1>
         <p className="mx-auto mt-6 max-w-[480px] text-body-lg text-text-secondary">
-          此導師檔案不存在或已移除。
+          此領航檔案不存在或已移除。
         </p>
         <Link
           to="/experts"
           className="mt-8 inline-flex h-11 items-center rounded-md bg-ink-solid px-6 text-label text-white transition-colors duration-120 hover:bg-ink-hover active:scale-[0.98]"
         >
-          返回導師總覽
+          返回領航專家總覽
         </Link>
       </section>
     );

@@ -1,12 +1,19 @@
 import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check, Compass } from "lucide-react";
 import Reveal, { REVEAL_EASE } from "@/components/Reveal";
+import MonogramAvatar from "@/components/MonogramAvatar";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { pendingExperts, verifiedExperts, type Expert } from "@/data/experts";
 
-/* ================= Local toast（頁面級原型提示） ================= */
+/** 領航專家 monogram 字母(data 無此欄位,由 slug 映射) */
+const EXPERT_INITIALS: Record<string, string> = {
+  "jimmy-lau": "JL",
+  "elvin-cheung": "EC",
+};
+
+/* ================= Local toast(頁面級原型提示) ================= */
 
 function useMiniToast() {
   const [msg, setMsg] = useState<string | null>(null);
@@ -38,7 +45,7 @@ function MiniToast({ msg }: { msg: string | null }) {
   );
 }
 
-/* ================= Section 1 — Page Header ================= */
+/* ================= Section 1 — Page Header(Club framing) ================= */
 
 function PageHeader() {
   return (
@@ -49,7 +56,7 @@ function PageHeader() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, ease: REVEAL_EASE }}
       >
-        Verified Experts
+        Leading Experts
       </motion.p>
       <motion.h1
         className="mt-4 font-display text-display text-text-primary"
@@ -57,7 +64,7 @@ function PageHeader() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, delay: 0.1, ease: REVEAL_EASE }}
       >
-        認證導師 Experts
+        領航專家 Leading Experts
       </motion.h1>
       <motion.p
         className="mx-auto mt-6 max-w-[640px] text-body-lg text-text-secondary"
@@ -65,14 +72,30 @@ function PageHeader() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, delay: 0.2, ease: REVEAL_EASE }}
       >
-        每一位導師均經實績查證、面談與知識庫授權三重認證。與他們的 AI
-        分身對話 — 基於原創訪談與公開著作蒸餾，本人書面授權。
+        成長係一班人嘅事。AIGRO 唔係導師 marketplace,係一個 growth hacking
+        club — 由 Jimmy 同 Elvin 兩位實戰者領航,帶住成個 club
+        向前行。佢哋嘅 AI 分身唔係課程,係蒸餾咗嘅增長方法論,等會員跟住
+        playbook 做實驗。
+      </motion.p>
+      <motion.p
+        className="mt-5 text-caption text-text-muted"
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, delay: 0.28, ease: REVEAL_EASE }}
+      >
+        Club 會員制即將開放 —{" "}
+        <Link
+          to="/pricing"
+          className="text-ink underline-offset-2 transition-colors duration-150 hover:underline"
+        >
+          了解會員方案
+        </Link>
       </motion.p>
     </section>
   );
 }
 
-/* ================= Section 2 — Verified 導師大卡 ================= */
+/* ================= Section 2 — 領航專家大卡 ================= */
 
 function VerifiedExpertCard({
   expert,
@@ -92,21 +115,14 @@ function VerifiedExpertCard({
       transition={{ duration: 0.5, delay: index * 0.12, ease: REVEAL_EASE }}
     >
       <div className="flex gap-8 max-md:flex-col max-md:gap-6">
-        {/* 96px 圓形頭像：灰階預設 → hover 彩色；1.5px 金環 + Badge 24px 右上角 */}
+        {/* 96px monogram 頭像:1.5px 金環 + Badge 24px 右上角 */}
         <div className="relative shrink-0">
-          <div
-            className="h-24 w-24 overflow-hidden rounded-full"
-            style={{ boxShadow: "inset 0 0 0 1.5px hsl(var(--gold))" }}
-          >
-            <img
-              src={expert.image}
-              alt={`${expert.nameZh} ${expert.nameEn} 人像`}
-              width={96}
-              height={96}
-              loading="lazy"
-              className="h-full w-full object-cover grayscale transition-[filter] duration-250 group-hover:grayscale-0"
-            />
-          </div>
+          <MonogramAvatar
+            initials={EXPERT_INITIALS[expert.slug] ?? "·"}
+            color={expert.brandColor ?? "#466A5E"}
+            size={96}
+            verified
+          />
           <VerifiedBadge
             size={24}
             ambient
@@ -120,9 +136,11 @@ function VerifiedExpertCard({
             <h2 className="font-display text-h3 text-text-primary">
               {expert.nameZh} {expert.nameEn}
             </h2>
-            {/* 「已認證 Verified Mentor」— 首次出現頁面級一次即可 */}
+            {/* 「領航專家認證 Leading Expert」— 首次出現頁面級一次即可 */}
             {showVerifiedCaption && (
-              <span className="text-caption text-gold">已認證 Verified Mentor</span>
+              <span className="text-caption text-gold">
+                領航專家認證 Leading Expert
+              </span>
             )}
           </div>
           <p className="mt-1 text-overline font-sans text-text-muted">
@@ -152,7 +170,7 @@ function VerifiedExpertCard({
               to={`/experts/${expert.slug}`}
               className="group/btn ml-auto inline-flex h-11 items-center gap-1.5 rounded-md bg-ink-solid px-6 text-label text-white transition-colors duration-120 hover:bg-ink-hover active:scale-[0.98]"
             >
-              查看導師檔案
+              查看領航檔案
               <ArrowRight
                 className="h-4 w-4 transition-transform duration-150 group-hover/btn:translate-x-1"
                 strokeWidth={1.5}
@@ -166,7 +184,7 @@ function VerifiedExpertCard({
   );
 }
 
-/* ================= Section 3 — 敬請期待（待用導師） ================= */
+/* ================= Section 3 — 敬請期待(通用領航席,無虛構人名/相片) ================= */
 
 function PendingExpertCard({ expert, index }: { expert: Expert; index: number }) {
   const [formOpen, setFormOpen] = useState(false);
@@ -181,20 +199,17 @@ function PendingExpertCard({ expert, index }: { expert: Expert; index: number })
       viewport={{ once: true, amount: 0.2 }}
       transition={{ duration: 0.45, delay: index * 0.1, ease: REVEAL_EASE }}
     >
-      {/* 待用內容 60% 不透明度，唯 CTA 正常 */}
+      {/* 待用內容 60% 不透明度,唯 CTA 正常 */}
       <div className="opacity-60">
-        <div className="h-[72px] w-[72px] overflow-hidden rounded-full border border-dashed border-border-strong">
-          <img
-            src={expert.image}
-            alt={`${expert.nameZh} ${expert.nameEn} 人像`}
-            width={72}
-            height={72}
-            loading="lazy"
-            className="h-full w-full object-cover grayscale"
+        <div className="flex h-[72px] w-[72px] items-center justify-center rounded-full border border-dashed border-border-strong">
+          <Compass
+            className="h-6 w-6 text-text-muted"
+            strokeWidth={1.5}
+            aria-hidden="true"
           />
         </div>
         <h3 className="mt-4 text-h4 font-sans text-text-primary">
-          {expert.nameZh} {expert.nameEn}
+          {expert.nameZh}
         </h3>
         <p className="mt-1 text-caption text-text-muted">{expert.title}</p>
         <div className="mt-4 flex flex-wrap gap-2">
@@ -217,7 +232,7 @@ function PendingExpertCard({ expert, index }: { expert: Expert; index: number })
         {subscribed ? (
           <p className="flex items-center gap-2 text-label text-success">
             <Check className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-            已登記，上線即通知你
+            已登記,上線即通知你
           </p>
         ) : (
           <>
@@ -274,16 +289,16 @@ function PendingExpertCard({ expert, index }: { expert: Expert; index: number })
   );
 }
 
-/* ================= Section 4 — 導師申請區（本頁唯一金色區塊） ================= */
+/* ================= Section 4 — 領航專家邀請制(本頁唯一金色區塊) ================= */
 
-/** Badge Direction C — 細線金色月桂環繞 Badge A（僅此處，40px） */
+/** Badge Direction C — 細線金色月桂環繞 Badge A(僅此處,40px) */
 function LaurelBadge() {
-  // 月桂葉沿左右兩弧排列（下方開口），每側 7 葉
+  // 月桂葉沿左右兩弧排列(下方開口),每側 7 葉
   const leaves: { cx: number; cy: number; rotate: number }[] = [];
   const R = 27;
   for (let side = 0; side < 2; side++) {
     for (let i = 0; i < 7; i++) {
-      // 角度：左弧 215°→325°（由下往上），右弧鏡像
+      // 角度:左弧 215°→325°(由下往上),右弧鏡像
       const t = i / 6;
       const deg = side === 0 ? 215 + t * 110 : 325 - t * 110;
       const rad = (deg * Math.PI) / 180;
@@ -322,7 +337,7 @@ function LaurelBadge() {
   );
 }
 
-function ApplySection({ onApply }: { onApply: () => void }) {
+function InviteSection({ onApply }: { onApply: () => void }) {
   return (
     <section className="mx-auto max-w-container px-6 py-24 max-md:py-16">
       <div className="rounded-lg bg-gold-soft p-12 text-center max-md:p-8">
@@ -337,18 +352,19 @@ function ApplySection({ onApply }: { onApply: () => void }) {
         </motion.div>
         <Reveal delay={0.08}>
           <p className="mt-6 text-overline font-sans uppercase text-gold">
-            Invite-Only・審核制
+            Invite-Only・邀請制
           </p>
         </Reveal>
         <Reveal delay={0.16}>
           <h2 className="mt-3 font-display text-h3 text-text-primary">
-            成為 AIGRO 認證導師
+            領航專家邀請制
           </h2>
         </Reveal>
         <Reveal delay={0.24}>
           <p className="mx-auto mt-4 max-w-[520px] text-body-sm text-text-secondary">
-            我們尋找有可查證實績、願意授權知識庫的香港 AI
-            與增長實戰者。導師可獲分身對話收益分成與真人預約收入。
+            AIGRO 領航專家不設公開申請 — 由 Jimmy 與 Elvin
+            親自邀請有可查證實績、願意授權知識庫嘅香港 AI ×
+            增長實戰者,一齊帶住個 club 向前行。下一席,敬請期待。
           </p>
         </Reveal>
         <Reveal delay={0.32}>
@@ -357,7 +373,7 @@ function ApplySection({ onApply }: { onApply: () => void }) {
             onClick={onApply}
             className="group mt-8 inline-flex h-11 items-center gap-1.5 rounded-md bg-ink-solid px-6 text-label text-white transition-colors duration-120 hover:bg-ink-hover active:scale-[0.98]"
           >
-            申請成為導師
+            邀請制・暫不開放申請
             <ArrowRight
               className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-1"
               strokeWidth={1.5}
@@ -379,7 +395,7 @@ export default function Experts() {
     <div>
       <PageHeader />
 
-      {/* Section 2 — Verified 導師大卡 */}
+      {/* Section 2 — 領航專家大卡 */}
       <section className="mx-auto max-w-container px-6 pt-16 max-md:pt-12">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {verifiedExperts.map((expert, i) => (
@@ -400,7 +416,9 @@ export default function Experts() {
             <h2 className="font-display text-h3 text-text-primary">
               邀請中・敬請期待
             </h2>
-            <p className="text-caption text-text-muted">認證進行中的導師</p>
+            <p className="text-caption text-text-muted">
+              下一席領航專家,由 Jimmy 與 Elvin 親自邀請
+            </p>
           </div>
         </Reveal>
         <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -410,7 +428,11 @@ export default function Experts() {
         </div>
       </section>
 
-      <ApplySection onApply={() => toast.show("申請通道即將開放")} />
+      <InviteSection
+        onApply={() =>
+          toast.show("領航專家採邀請制,由 Jimmy 與 Elvin 親自邀請")
+        }
+      />
 
       <MiniToast msg={toast.msg} />
     </div>

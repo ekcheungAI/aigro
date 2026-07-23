@@ -6,12 +6,14 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Compass,
 } from "lucide-react";
 import Reveal, { REVEAL_EASE } from "@/components/Reveal";
 import { todayInfo } from "@/lib/daily";
 import InsightCard from "@/components/InsightCard";
 import CaseCard from "@/components/CaseCard";
 import CategoryChip from "@/components/CategoryChip";
+import MonogramAvatar from "@/components/MonogramAvatar";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import {
   INSIGHT_CATEGORIES,
@@ -354,7 +356,13 @@ function SectionOrnament() {
   );
 }
 
-/* ================= Section 4 — Experts 導師頭像牆 ================= */
+/* ================= Section 4 — Experts 領航專家牆 ================= */
+
+/** 領航專家 monogram 字母(data 無此欄位,由 slug 映射) */
+const EXPERT_INITIALS: Record<string, string> = {
+  "jimmy-lau": "JL",
+  "elvin-cheung": "EC",
+};
 
 function ExpertsWall() {
   return (
@@ -362,17 +370,17 @@ function ExpertsWall() {
       <Reveal>
         <p className="flex items-center gap-3 text-overline font-sans uppercase text-text-muted">
           <span className="inline-block h-px w-6 bg-border-strong" aria-hidden="true" />
-          Verified Experts
+          Leading Experts
         </p>
         <div className="mt-3 flex items-end justify-between gap-4">
           <h2 className="font-display text-h2 text-text-primary">
-            認證導師 Experts
+            領航專家 Leading Experts
           </h2>
           <Link
             to="/experts"
             className="group hidden shrink-0 items-center gap-1 text-label text-ink sm:inline-flex"
           >
-            認識所有導師
+            認識領航專家
             <ArrowRight
               className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-1"
               strokeWidth={1.5}
@@ -399,22 +407,24 @@ function ExpertsWall() {
                 aria-label={`${expert.nameEn} ${expert.nameZh}`}
                 className="block transition-transform duration-150 group-hover:-translate-y-0.5"
               >
-                <span
-                  className={`relative block h-16 w-16 overflow-hidden rounded-full border-2 border-surface ${
-                    expert.verified
-                      ? "shadow-[0_0_0_1.5px_hsl(var(--gold))]"
-                      : "opacity-60 shadow-[0_0_0_1px_hsl(var(--border))]"
-                  }`}
-                >
-                  <img
-                    src={expert.image}
-                    alt={`${expert.nameEn} ${expert.nameZh}`}
-                    width={64}
-                    height={64}
-                    loading="lazy"
-                    className="h-full w-full object-cover grayscale transition-[filter] duration-250 group-hover:grayscale-0"
-                  />
-                </span>
+                {expert.verified ? (
+                  <span className="relative block rounded-full border-2 border-surface">
+                    <MonogramAvatar
+                      initials={EXPERT_INITIALS[expert.slug] ?? "·"}
+                      color={expert.brandColor ?? "#466A5E"}
+                      size={64}
+                      verified
+                    />
+                  </span>
+                ) : (
+                  <span className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-surface bg-card opacity-60 shadow-[0_0_0_1px_hsl(var(--border))]">
+                    <Compass
+                      className="h-5 w-5 text-text-muted"
+                      strokeWidth={1.5}
+                      aria-hidden="true"
+                    />
+                  </span>
+                )}
                 {expert.verified && (
                   <VerifiedBadge
                     size={24}
@@ -437,18 +447,19 @@ function ExpertsWall() {
           ))}
           {/* Counter chip */}
           <span className="ml-3 inline-flex h-8 items-center rounded-md bg-card px-3 text-label text-text-secondary">
-            +3
+            邀請中
           </span>
         </div>
 
         {/* Description */}
         <Reveal delay={0.2} className="max-w-md">
           <p className="text-body text-text-secondary">
-            每一位 AIGRO 導師均經實績查證與面談認證。他們的 AI
-            分身基於原創訪談與公開著作蒸餾，並獲本人書面授權。
+            AIGRO 係一個 growth hacking club — Jimmy 同 Elvin
+            唔係導師,係帶住成個 club 向前行嘅領航者。佢哋嘅 AI
+            分身基於公開分享與授權內容蒸餾,係俾會員跟住做實驗嘅增長方法論。
           </p>
           <p className="mt-2 text-caption text-text-muted">
-            首批導師邀請中・敬請期待
+            Club 會員制即將開放・領航專家採邀請制
           </p>
         </Reveal>
       </div>

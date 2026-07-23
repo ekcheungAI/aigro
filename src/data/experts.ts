@@ -1,11 +1,11 @@
-/** 認證導師 mock data — experts.md Sections 2–3, expert-profile.md Sections 1–6, design.md §2.5 */
+/** 領航專家 mock data — AIGRO growth hacking club 領航主理人(非導師 marketplace) */
 
 export interface AchievementMetric {
-  /** Plex Mono 數字（可含前後綴，如「US$40M」「40+」） */
+  /** Plex Mono 數字或一般稱謂(避免虛構數據,用事實性身份 chips) */
   value: string;
   /** caption 標籤 */
   label: string;
-  /** 媒體報導類 chip 附 external-link 圖標（原型 → #） */
+  /** 媒體報導類 chip 附 external-link 圖標(原型 → #) */
   isMedia?: boolean;
 }
 
@@ -19,211 +19,209 @@ export interface Expert {
   nameEn: string;
   nameZh: string;
   title: string;
+  /**
+   * Ask.tsx 專家變體 header 使用(不可改 Ask.tsx)。
+   * 領航專家唔用生成人像 — 用 brand-color monogram SVG data URI;
+   * 頁面頭像統一用 MonogramAvatar 組件。
+   */
   image: string;
   verified: boolean;
   specialties: string[];
-  /** 一句觀點（僅 Verified 導師大卡） */
+  /** 一句觀點(僅領航專家大卡) */
   quote?: string;
-  /** 成就 metric 行（僅 Verified） */
+  /** 成就 metric 行(僅領航專家) */
   achievements?: string;
-  /** 專家專屬色（design.md §2.5，僅 Expert Profile 頁使用；金色禁用） */
+  /** 專家專屬色(design.md §2.5,僅 Expert Profile 頁使用;金色禁用) */
   brandColor?: string;
 
-  /* ---- Expert Profile 頁專用（expert-profile.md） ---- */
-  /** Credential overline，如「前 GOOGLE 香港增長負責人・香港」 */
+  /* ---- Expert Profile 頁專用 ---- */
+  /** Credential overline,如「DOTAI 創辦人・AIGRO 領航專家・香港」 */
   credential?: string;
-  /** 認證日期，如「2024-11」 */
+  /** 領航認證日期,如「2025-06」 */
   verifiedDate?: string;
-  /** 簡介（body-lg，max-width 560px） */
+  /** 簡介(body-lg,max-width 560px) */
   bio?: string;
-  /** 成就佐證 chips（expert-profile.md §2） */
+  /** 成就佐證 chips(一般事實性身份,不虛構數字/獎項) */
   metrics?: AchievementMetric[];
-  /** 授權透明度區塊文案（expert-profile.md §3） */
+  /** 授權透明度區塊文案 */
   transparency?: string;
-  /** 10 個核心觀點（§4 — 頁面展示首 6 個，餘下收尾卡「+ N 個觀點」） */
+  /** 10 個核心觀點(頁面展示首 6 個,餘下收尾卡「+ N 個觀點」) */
   viewpoints?: Viewpoint[];
-  /** AI 分身入口說明（§5 body-sm） */
+  /** AI 分身入口說明(body-sm) */
   askIntro?: string;
-  /** 待用態「知識庫籌備中」說明（§6） */
+  /** 待用態「知識庫籌備中」說明 */
   pendingNote?: string;
 }
 
+/** Ask.tsx header 用嘅 monogram data URI(實心 brand 底 + 襯線白字,深淺色通用) */
+const monogramUri = (hex: string, initials: string) =>
+  `data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20fill='%23${hex.slice(
+    1
+  )}'/%3E%3Ctext%20x='32'%20y='41'%20font-family='Georgia,serif'%20font-size='24'%20fill='%23FAF9F6'%20text-anchor='middle'%3E${initials}%3C/text%3E%3C/svg%3E`;
+
 export const experts: Expert[] = [
   {
-    slug: "marcus-chan",
-    nameEn: "Marcus Chan",
-    nameZh: "陳奕朗",
-    title: "前 Google 香港增長負責人",
-    image: "/expert-marcus-chan.jpg",
+    slug: "jimmy-lau",
+    nameEn: "Jimmy Lau",
+    nameZh: "劉進",
+    title: "DotAI 創辦人 · AIGRO 領航專家",
+    image: monogramUri("#466A5E", "JL"),
     verified: true,
-    specialties: ["B2B 增長", "付費廣告", "出海策略"],
-    quote: "香港企業最大的增長槓桿不是預算，是決策速度。",
-    achievements: "12 年增長經驗 · US$40M 廣告預算管理 · 2 間初創退出",
+    specialties: ["AI 教育", "實戰落地", "增長系統"],
+    quote: "AI 落地冇捷徑 — 實戰先行,邊做邊學,由識用工具進化到用 AI 建立增長系統。",
+    achievements: "DotAI 創辦人 · AIGRO 聯合發起 · AI 實戰教育領航",
     brandColor: "#466A5E",
-    credential: "前 GOOGLE 香港增長負責人・香港",
-    verifiedDate: "2024-11",
-    bio: "12 年增長實戰，主導過 US$40M 規模的付費增長體系。現在只關心一個問題：香港中小企如何用大公司的增長方法，而不用大公司的預算。",
+    credential: "DOTAI 創辦人・AIGRO 領航專家・香港",
+    verifiedDate: "2025-06",
+    bio: "創辦 DotAI,帶領香港學員由「識用 AI 工具」進化到「用 AI 建立增長系統」。主張實戰先行、邊做邊學 — 而家作為 AIGRO 領航專家,唔係教書,係帶住成個 club 將 AI 落地變成增長日常。",
     metrics: [
-      { value: "12", label: "年增長經驗" },
-      { value: "US$40M", label: "管理廣告預算" },
-      { value: "2", label: "間初創成功退出" },
-      { value: "40+", label: "場企業內訓" },
-      { value: "媒體報導", label: "HK01・經濟日報", isMedia: true },
+      { value: "DotAI", label: "創辦人・香港 AI 教育" },
+      { value: "AIGRO", label: "聯合發起・領航專家" },
+      { value: "實戰先行", label: "邊做邊學的教學主張" },
+      { value: "增長系統", label: "由工具到系統的落地路線" },
     ],
     transparency:
-      "本 AI 分身基於 6 小時原創訪談、42 篇公開文章與 3 場付費課程內容蒸餾，知識庫已獲陳奕朗本人書面授權並親自審核（2025-01）。分身回答不代表本人即時意見；對話收益與本人分成。真人 1:1 預約為獨立服務。",
+      "此 AI 分身基於 Jimmy 嘅公開分享與授權內容蒸餾,知識庫經本人審核。分身回答僅代表其增長方法論,唔代表本人即時意見;內容僅供參考,唔構成任何專業建議。",
     viewpoints: [
       {
-        title: "增長不是渠道技巧，是決策系統",
-        summary: "大多數團隊缺的不是新方法，而是每週檢視數據的紀律。",
+        title: "識用工具,唔等於識用 AI",
+        summary: "工具教學只能令你入門,系統思維先令你增值。",
       },
       {
-        title: "香港市場太細？那是你最好的實驗室",
-        summary: "小市場容錯快、反饋快，驗證後直接複製到大灣區。",
+        title: "邊做邊學,係成年人學 AI 唯一有效嘅方法",
+        summary: "由真實業務問題出發,工具自然做中學識。",
       },
       {
-        title: "付費廣告的第一性原理：訊息匹配",
-        summary: "受眾、訊息、著陸頁三者匹配度決定 80% 的成效。",
+        title: "每間公司都需要一份「AI 使用憲章」",
+        summary: "邊啲可以交俾 AI、邊啲一定要人把關,寫清楚先唔會亂。",
       },
       {
-        title: "AI 不會取代 marketer，會取代沒有觀點的 marketer",
-        summary: "執行自動化後，策略與品味成為唯一壁壘。",
+        title: "AI 落地最大嘅阻力唔係技術,係習慣",
+        summary: "改變每日工作流程,好過買十個新工具。",
       },
       {
-        title: "每間公司都應該有一份「不做事項清單」",
-        summary: "增長的最大敵人是分散，而非資源不足。",
+        title: "由「用 AI 慳時間」到「用 AI 造系統」",
+        summary: "慳返嚟嘅時間要再投資,先會變成增長。",
       },
       {
-        title: "退出經驗教我的事：現金流敘事",
-        summary: "併購談判桌上，可預測的增長曲線比爆發故事值錢。",
+        title: "Prompt 係消耗品,工作流先係資產",
+        summary: "將驗證過嘅 prompt 沉澱成團隊 SOP,先可以複製。",
       },
       {
-        title: "AI 工具選型：先問工作流程，再問功能",
-        summary: "先畫出團隊每週的工作流，再決定哪一段值得自動化。",
+        title: "香港團隊學 AI,細反而係優勢",
+        summary: "決策鏈短,一個下午已經可以試完一個新流程。",
       },
       {
-        title: "預算少不是限制，是聚焦的藉口",
-        summary: "小預算迫使你只打最痛的一個受眾、一個訊息、一個渠道。",
+        title: "唔好問 AI 做唔做到,問呢個流程值唔值得自動化",
+        summary: "策略先於工具 — 工具永遠追唔完。",
       },
       {
-        title: "出海的真正門檻不是語言，是信任基礎",
-        summary: "在陌生市場，先建立可信的第三方佐證，再談投放。",
+        title: "AI 教育要教判斷,唔係教按制",
+        summary: "識評核 AI 輸出嘅人,先係真正識用 AI。",
       },
       {
-        title: "數據儀表板愈多，決策愈慢",
-        summary: "每週只看三個指標：獲客成本、轉化率、回收期。",
+        title: "每星期一次「AI 實驗時間」",
+        summary: "增長系統係由無數個小實驗累積出嚟,唔係一次大變革。",
       },
     ],
     askIntro:
-      "基於授權知識庫回答，附觀點出處。問佢香港 B2B 增長、廣告預算分配、出海策略嘅問題。",
+      "基於授權知識庫回答,附觀點出處。問佢 AI 工具落地、團隊 AI 工作流、由識用工具到建立增長系統嘅問題。",
   },
   {
-    slug: "karena-leung",
-    nameEn: "Karena Leung",
-    nameZh: "梁凱晴",
-    title: "AI 內容營銷顧問・前奧美數碼總監",
-    image: "/expert-karena-leung.jpg",
+    slug: "elvin-cheung",
+    nameEn: "Elvin Cheung",
+    nameZh: "張曉峰",
+    title: "SuperBash 主理人 · AIGRO 領航專家",
+    image: monogramUri("#8A5A44", "EC"),
     verified: true,
-    specialties: ["AI 內容", "品牌策略", "社交媒體"],
-    quote: "AI 令你做得更快，但只有觀點令你無可替代。",
-    achievements: "15 年品牌經驗 · 服務 40+ 香港品牌 · 3 項行業大獎",
+    specialties: ["Growth Hacking", "社群增長", "私域運營"],
+    quote: "增長唔係想出嚟,係試出嚟 — 數據說話,快速試錯。",
+    achievements: "SuperBash 主理人 · AIGRO 聯合發起 · 增長實驗策動者",
     brandColor: "#8A5A44",
-    credential: "AI 內容營銷顧問・前奧美數碼總監・香港",
-    verifiedDate: "2024-12",
-    bio: "15 年品牌與內容實戰，服務過 40+ 個香港品牌。現在只關心一個問題：AI 時代，香港品牌如何用一半人力，做出十倍有觀點的內容。",
+    credential: "SUPERBASH 主理人・AIGRO 領航專家・香港",
+    verifiedDate: "2025-06",
+    bio: "透過 SuperBash 策動增長實驗與社群,擅長將海外 growth playbook 本地化落地香港。主張數據說話、快速試錯 — 而家作為 AIGRO 領航專家,帶住成個 club 用實驗節奏做增長。",
     metrics: [
-      { value: "15", label: "年品牌經驗" },
-      { value: "40+", label: "服務香港品牌" },
-      { value: "3", label: "項行業大獎" },
-      { value: "120+", label: "場品牌工作坊" },
-      { value: "媒體報導", label: "明報・Marketing Interactive", isMedia: true },
+      { value: "SuperBash", label: "主理人・增長實驗社群" },
+      { value: "AIGRO", label: "聯合發起・領航專家" },
+      { value: "本地化", label: "海外 growth playbook 落地香港" },
+      { value: "快速試錯", label: "數據說話的實驗文化" },
     ],
     transparency:
-      "本 AI 分身基於 8 小時原創訪談、56 篇公開文章與 2 場付費工作坊內容蒸餾，知識庫已獲梁凱晴本人書面授權並親自審核（2025-01）。分身回答不代表本人即時意見；對話收益與本人分成。真人 1:1 預約為獨立服務。",
+      "此 AI 分身基於 Elvin 嘅公開分享與授權內容蒸餾,知識庫經本人審核。分身回答僅代表其增長方法論,唔代表本人即時意見;內容僅供參考,唔構成任何專業建議。",
     viewpoints: [
       {
-        title: "品牌不是 logo，是持續一致的觀點輸出",
-        summary: "香港消費者記住的不是視覺，而是你對世界的看法。",
+        title: "Growth hacking 唔係招數,係實驗節奏",
+        summary: "每星期一個假設、一個實驗、一個覆盤。",
       },
       {
-        title: "AI 內容的第一課：先有人味，才有流量",
-        summary: "演算法懲罰罐頭內容 — AI 起稿、人類定調。",
+        title: "海外 playbook 要本地化,唔係複製貼上",
+        summary: "香港用戶嘅信任路徑,同歐美完全唔同。",
       },
       {
-        title: "內容團隊縮編後，品味成為最貴的資產",
-        summary: "執行可以外判給 AI，判斷力不能。",
+        title: "社群先於流量",
+        summary: "一千個真會員,好過十萬個路人粉絲。",
       },
       {
-        title: "社交媒體的演算法，獎勵的是對話而非廣播",
-        summary: "與其追熱話，不如經營一個可辨識的立場。",
+        title: "活動唔係終點,係私域嘅起點",
+        summary: "活動後 48 小時嘅跟進,決定大部分留存。",
       },
       {
-        title: "香港品牌出海前，先答到「為什麼是你」",
-        summary: "差異化講不清楚，翻譯做得再好也沒用。",
+        title: "意見可以有好多個,實驗結果只有一個",
+        summary: "用最小成本,驗證最大嘅假設。",
       },
       {
-        title: "每月一次內容審計，好過每日盲目出 post",
-        summary: "停低、睇數據、刪走無效欄目，產出自然提升。",
+        title: "快速試錯嘅前提,係低成本試錯",
+        summary: "將實驗做到一星期內有結果,失敗都係賺咗數據。",
       },
       {
-        title: "AI 生成圖文的授權，要早過創意一步處理",
-        summary: "品牌資產的法律基礎，比一條爆款重要得多。",
+        title: "增長漏斗第一步,永遠係「被人記住」",
+        summary: "冇記憶點嘅曝光,等於冇發生過。",
       },
       {
-        title: "小團隊內容系統：一個核心敘事，十種切法",
-        summary: "一次深度訪談，可以蒸餾成一個月的內容。",
+        title: "私域運營嘅核心係「有來有往」",
+        summary: "單向廣播嘅群組,好快就會死。",
       },
       {
-        title: "客戶評價是最被低估的內容金礦",
-        summary: "真實用家的語言，比任何文案課都實用。",
+        title: "香港市場細,正好做高密度實驗",
+        summary: "小市場反饋快,驗證完先複製出海。",
       },
       {
-        title: "不要問 AI 識做什麼，問你的品牌需要什麼",
-        summary: "工具永遠追不完 — 策略先於工具。",
+        title: "口碑係唯一唔使續費嘅渠道",
+        summary: "設計「值得講」嘅體驗,好過加大廣告預算。",
       },
     ],
     askIntro:
-      "基於授權知識庫回答，附觀點出處。問佢 AI 內容流程、品牌定位、社交媒體策略嘅問題。",
+      "基於授權知識庫回答,附觀點出處。問佢 growth hacking、社群增長、活動策劃與私域運營嘅問題。",
   },
   {
-    slug: "kelvin-wong",
-    nameEn: "Kelvin Wong",
-    nameZh: "黃啟文",
-    title: "連續創業者・AI 自動化",
-    image: "/expert-kelvin-wong.jpg",
+    slug: "invited-expert-1",
+    nameEn: "Coming Soon",
+    nameZh: "領航專家席",
+    title: "領航專家邀請中",
+    image: "",
     verified: false,
-    specialties: ["自動化", "一人公司", "No-code"],
+    specialties: ["AI 實戰", "增長系統"],
     pendingNote:
-      "我們正與黃啟文進行深度訪談與知識庫整理 — 內容涵蓋一人公司自動化、No-code 工作流與 AI 代理實戰。完成認證與授權審核後，即開放 AI 分身對話。",
+      "下一席領航專家正由 Jimmy 與 Elvin 親自邀請。完成領航認證與知識庫授權審核後,即開放 AI 分身對話 — 敬請期待。",
   },
   {
-    slug: "jocelyn-ng",
-    nameEn: "Jocelyn Ng",
-    nameZh: "吳卓琳",
-    title: "零售科技數據總監",
-    image: "/expert-jocelyn-ng.jpg",
+    slug: "invited-expert-2",
+    nameEn: "Coming Soon",
+    nameZh: "領航專家席",
+    title: "領航專家邀請中",
+    image: "",
     verified: false,
-    specialties: ["數據分析", "零售", "會員營銷"],
+    specialties: ["社群增長", "私域運營"],
     pendingNote:
-      "我們正與吳卓琳進行深度訪談與知識庫整理 — 內容涵蓋零售數據分析、會員營銷與 AI 需求預測。完成認證與授權審核後，即開放 AI 分身對話。",
-  },
-  {
-    slug: "eric-cheng",
-    nameEn: "Eric Cheng",
-    nameZh: "鄭浩然",
-    title: "金融科技產品負責人",
-    image: "/expert-eric-cheng.jpg",
-    verified: false,
-    specialties: ["FinTech", "產品策略", "合規"],
-    pendingNote:
-      "我們正與鄭浩然進行深度訪談與知識庫整理 — 內容涵蓋金融科技產品策略、合規框架與 AI 風控應用。完成認證與授權審核後，即開放 AI 分身對話。",
+      "下一席領航專家正由 Jimmy 與 Elvin 親自邀請。完成領航認證與知識庫授權審核後,即開放 AI 分身對話 — 敬請期待。",
   },
 ];
 
 export const verifiedExperts = experts.filter((e) => e.verified);
 export const pendingExperts = experts.filter((e) => !e.verified);
 
-/** 專家英文名首名（「與 Marcus 的 AI 分身對話」） */
+/** 專家英文名首名(「與 Jimmy 的 AI 分身對話」) */
 export function expertFirstName(expert: Expert): string {
   return expert.nameEn.split(" ")[0] ?? expert.nameEn;
 }
