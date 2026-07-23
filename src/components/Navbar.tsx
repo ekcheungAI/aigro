@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu, Moon, Sun, X } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
@@ -16,23 +16,51 @@ export const NAV_LINKS = [
 ] as const;
 
 /**
- * Navbar (design.md §6.1): sticky top-0 z-50 in normal flow, 64px,
- * surface bg + 1px border bottom, no glass/no shrink on scroll.
+ * Navbar (design.md §6.1, elevated): sticky top-0 z-50, 64px.
+ * Transparent over the Home cinematic hero at page top (band colors);
+ * solid surface + 1px border after 24px scroll (200ms transition).
  */
 export default function Navbar() {
   const { isDark, toggleTheme } = useTheme();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Transparent-over-hero only on Home, only at the very top
+  const overHero = pathname === "/" && !scrolled;
 
   return (
     <>
-      <header className="sticky top-0 z-50 h-16 border-b bg-surface">
+      <header
+        className={cn(
+          "sticky top-0 z-50 h-16 border-b transition-[background-color,border-color] duration-200",
+          overHero ? "border-transparent bg-transparent" : "bg-surface"
+        )}
+      >
         <div className="mx-auto flex h-full max-w-container items-center gap-6 px-6">
           {/* Wordmark — wordmark IS the logo (design.md §1.2) */}
           <Link to="/" className="flex items-baseline gap-2" aria-label="AIGRO 首頁">
-            <span className="font-display text-[20px] font-medium uppercase tracking-[0.04em] text-text-primary">
+            <span
+              className={cn(
+                "font-display text-[20px] font-medium uppercase tracking-[0.04em]",
+                overHero ? "text-band-text" : "text-text-primary"
+              )}
+            >
               AIGRO
             </span>
-            <span className="hidden text-caption text-text-muted sm:inline">
+            <span
+              className={cn(
+                "hidden text-caption sm:inline",
+                overHero ? "text-band-text-muted" : "text-text-muted"
+              )}
+            >
               香港 AI・增長情報
             </span>
           </Link>
@@ -45,9 +73,14 @@ export default function Navbar() {
                 to={link.to}
                 className={({ isActive }) =>
                   cn(
-                    "text-label text-text-secondary transition-colors duration-150 hover:text-ink",
+                    "text-label transition-colors duration-150",
+                    overHero
+                      ? "text-band-text-secondary hover:text-band-text"
+                      : "text-text-secondary hover:text-ink",
                     isActive &&
-                      "text-ink underline decoration-ink decoration-2 underline-offset-[6px]"
+                      (overHero
+                        ? "text-band-text underline decoration-band-text decoration-2 underline-offset-[6px]"
+                        : "text-ink underline decoration-ink decoration-2 underline-offset-[6px]")
                   )
                 }
               >
@@ -62,7 +95,12 @@ export default function Navbar() {
               type="button"
               onClick={toggleTheme}
               aria-label={isDark ? "切換至淺色模式" : "切換至深色模式"}
-              className="flex h-10 w-10 items-center justify-center rounded-md text-text-secondary transition-colors duration-150 hover:bg-ink-soft hover:text-ink"
+              className={cn(
+                "flex h-10 w-10 items-center justify-center rounded-md transition-colors duration-150",
+                overHero
+                  ? "text-band-text-secondary hover:bg-band-ink-soft hover:text-band-text"
+                  : "text-text-secondary hover:bg-ink-soft hover:text-ink"
+              )}
             >
               {isDark ? (
                 <Sun className="h-5 w-5 transition-transform duration-200" strokeWidth={1.5} />
@@ -81,7 +119,10 @@ export default function Navbar() {
               type="button"
               onClick={() => setDrawerOpen(true)}
               aria-label="開啟選單"
-              className="flex h-10 w-10 items-center justify-center rounded-md text-text-primary md:hidden"
+              className={cn(
+                "flex h-10 w-10 items-center justify-center rounded-md md:hidden",
+                overHero ? "text-band-text" : "text-text-primary"
+              )}
             >
               <Menu className="h-5 w-5" strokeWidth={1.5} />
             </button>

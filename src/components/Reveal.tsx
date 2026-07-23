@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import type { ReactNode } from "react";
 
 const EASE: [number, number, number, number] = [0.4, 0, 0.2, 1];
@@ -20,8 +20,7 @@ interface RevealProps {
  * Scroll reveal wrapper (design.md §5.1):
  * opacity 0→1 + translateY(24px)→0, 450ms, cubic-bezier(0.4,0,0.2,1),
  * triggers once when element is 20% into the viewport.
- * Reduced motion is handled by framer-motion's useReducedMotion internally
- * for users who disable animation at OS level (MotionConfig).
+ * Reduced motion (§5.4): renders statically — no transform, no fade.
  */
 export default function Reveal({
   children,
@@ -30,6 +29,12 @@ export default function Reveal({
   duration = 0.45,
   className,
 }: RevealProps) {
+  const reduceMotion = useReducedMotion();
+
+  if (reduceMotion) {
+    return <div className={className}>{children}</div>;
+  }
+
   return (
     <motion.div
       className={className}

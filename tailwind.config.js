@@ -20,6 +20,22 @@ module.exports = {
           DEFAULT: "hsl(var(--gold) / <alpha-value>)",
           soft: "hsl(var(--gold-soft) / <alpha-value>)",
         },
+        /* Cinematic dark band (hero + inverted footer, theme-independent) */
+        band: {
+          bg: "hsl(var(--band-bg) / <alpha-value>)",
+          surface: "hsl(var(--band-surface) / <alpha-value>)",
+          card: "hsl(var(--band-card) / <alpha-value>)",
+          text: "hsl(var(--band-text) / <alpha-value>)",
+          "text-secondary": "hsl(var(--band-text-secondary) / <alpha-value>)",
+          "text-muted": "hsl(var(--band-text-muted) / <alpha-value>)",
+          border: "hsl(var(--band-border) / <alpha-value>)",
+          "border-strong": "hsl(var(--band-border-strong) / <alpha-value>)",
+          ink: "hsl(var(--band-ink) / <alpha-value>)",
+          "ink-solid": "hsl(var(--band-ink-solid) / <alpha-value>)",
+          "ink-hover": "hsl(var(--band-ink-hover) / <alpha-value>)",
+          "ink-soft": "hsl(var(--band-ink-soft) / <alpha-value>)",
+          gold: "hsl(var(--band-gold) / <alpha-value>)",
+        },
         success: "hsl(var(--success) / <alpha-value>)",
         warning: "hsl(var(--warning) / <alpha-value>)",
         error: "hsl(var(--error) / <alpha-value>)",
@@ -76,6 +92,8 @@ module.exports = {
       },
       /* Type scale (design.md §3.2, 1.25 modular tuned for CJK) */
       fontSize: {
+        /* Cinematic hero display — MasterClass-scale editorial headline */
+        "display-hero": ["84px", { lineHeight: "1.06", letterSpacing: "-0.01em", fontWeight: "550" }],
         "display-xl": ["64px", { lineHeight: "1.1", letterSpacing: "-0.01em", fontWeight: "550" }],
         "display-lg": ["48px", { lineHeight: "1.15", letterSpacing: "-0.01em", fontWeight: "550" }],
         display: ["40px", { lineHeight: "1.2", letterSpacing: "-0.005em", fontWeight: "550" }],

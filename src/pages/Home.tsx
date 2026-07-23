@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   ArrowRight,
   ChevronDown,
@@ -25,149 +25,170 @@ import {
 import { featuredCases } from "@/data/cases";
 import { experts } from "@/data/experts";
 
-/* ================= Section 1 — Hero ================= */
+/* ================= Section 1 — Cinematic Dark Hero ================= */
 
 function Hero() {
   const [picksOpen, setPicksOpen] = useState(true);
+  const reduceMotion = useReducedMotion();
+  const show = reduceMotion ? false : undefined;
 
   return (
-    <section className="mx-auto max-w-container px-6 pb-20 pt-[120px] max-md:pt-16">
-      <div className="max-w-[880px]">
-        {/* Overline — fade-in first (300ms) */}
-        <motion.p
-          className="flex items-center gap-3 text-overline font-sans uppercase text-ink"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3, ease: REVEAL_EASE }}
-        >
-          <span className="inline-block h-[1.5px] w-6 bg-ink" aria-hidden="true" />
-          香港視角・每日更新 Hong Kong, Daily
-        </motion.p>
+    <section className="relative isolate overflow-hidden border-b border-band-border bg-band-bg">
+      {/* Cinematic editorial photo layer — darkened via solid overlays only
+          (no decorative gradients, brand §1.3). Kept quiet: charcoal canvas
+          first, photograph second. */}
+      <img
+        src="/hero-cinematic.jpg"
+        alt=""
+        aria-hidden="true"
+        width={2048}
+        height={1082}
+        className="absolute inset-0 -z-10 h-full w-full object-cover opacity-45"
+      />
+      <div
+        className="absolute inset-0 -z-10 bg-band-bg/65"
+        aria-hidden="true"
+      />
 
-        {/* H1 — line-level reveal, 32px + opacity, 100ms stagger, 600ms */}
-        <h1 className="mt-6 font-display text-display-xl text-text-primary max-md:text-display">
-          {[
-            <>
-              <span className="text-ink">可信賴的</span> AI・增長・
-            </>,
-            <>商業情報平台</>,
-          ].map((line, i) => (
-            <span key={i} className="block overflow-hidden">
-              <motion.span
-                className="block"
-                initial={{ y: 32, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{
-                  duration: 0.6,
-                  delay: 0.1 + i * 0.1,
-                  ease: REVEAL_EASE,
-                }}
+      <div className="mx-auto max-w-container px-6 pb-24 pt-24 max-md:pb-16 max-md:pt-16 md:pt-32 lg:pb-32">
+        <div className="max-w-[920px]">
+          {/* Overline — muted-gold hairline rule + letterspaced eyebrow */}
+          <motion.p
+            className="flex items-center gap-3 text-overline font-sans uppercase tracking-[0.2em] text-band-text-muted"
+            initial={show ?? { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4, ease: REVEAL_EASE }}
+          >
+            <span className="inline-block h-px w-10 bg-band-gold" aria-hidden="true" />
+            香港視角・每日更新 Hong Kong, Daily
+          </motion.p>
+
+          {/* H1 — MasterClass-scale Fraunces, slower line reveal
+              (40px + opacity, 120ms stagger, 750ms — GPU transform only) */}
+          <h1 className="mt-8 font-display text-[44px] leading-[1.1] tracking-[-0.01em] text-band-text md:text-display-hero">
+            {[
+              <>
+                <span className="text-band-ink">可信賴的</span> AI・增長・
+              </>,
+              <>商業情報平台</>,
+            ].map((line, i) => (
+              <span key={i} className="block overflow-hidden pb-1">
+                <motion.span
+                  className="block"
+                  initial={show ?? { y: 40, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{
+                    duration: 0.75,
+                    delay: 0.15 + i * 0.12,
+                    ease: REVEAL_EASE,
+                  }}
+                >
+                  {line}
+                </motion.span>
+              </span>
+            ))}
+          </h1>
+
+          {/* Sub + CTAs — delay 400ms */}
+          <motion.div
+            initial={show ?? { opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4, ease: REVEAL_EASE }}
+          >
+            <p className="mt-8 max-w-[560px] text-body-lg text-band-text-secondary">
+              每一篇內容經過編輯審核，每一位導師經過認證。為香港 marketer 與
+              founder，過濾全球 AI 噪音。
+            </p>
+            <div className="mt-10 flex flex-wrap items-center gap-6">
+              <Link
+                to="/insights"
+                className="inline-flex h-12 items-center rounded-md bg-band-ink-solid px-8 text-label text-white transition-colors duration-120 hover:bg-band-ink-hover active:scale-[0.98]"
               >
-                {line}
-              </motion.span>
-            </span>
-          ))}
-        </h1>
+                閱讀今日情報
+              </Link>
+              <Link
+                to="/ask"
+                className="group inline-flex items-center gap-1 text-label text-band-ink"
+              >
+                試問 AI 編輯部
+                <ArrowRight
+                  className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-1"
+                  strokeWidth={1.5}
+                  aria-hidden="true"
+                />
+              </Link>
+            </div>
+          </motion.div>
 
-        {/* Sub + CTAs — delay 300ms */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, delay: 0.3, ease: REVEAL_EASE }}
-        >
-          <p className="mt-6 max-w-[560px] text-body-lg text-text-secondary">
-            每一篇內容經過編輯審核，每一位導師經過認證。為香港 marketer 與
-            founder，過濾全球 AI 噪音。
-          </p>
-          <div className="mt-8 flex flex-wrap items-center gap-6">
-            <Link
-              to="/insights"
-              className="inline-flex h-11 items-center rounded-md bg-ink-solid px-6 text-label text-white transition-colors duration-120 hover:bg-ink-hover active:scale-[0.98]"
+          {/* 今日 AI 精選速覽 — dark-band surface card, slides in last (delay 600ms) */}
+          <motion.div
+            className="mt-14 rounded-md border border-band-border bg-band-surface"
+            initial={show ?? { opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, delay: 0.6, ease: REVEAL_EASE }}
+          >
+            <button
+              type="button"
+              onClick={() => setPicksOpen((v) => !v)}
+              aria-expanded={picksOpen}
+              className="flex w-full items-center gap-2 px-6 py-4 text-left"
             >
-              閱讀今日情報
-            </Link>
-            <Link
-              to="/ask"
-              className="group inline-flex items-center gap-1 text-label text-ink"
-            >
-              試問 AI 編輯部
-              <ArrowRight
-                className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-1"
+              <span className="text-label text-band-text">今日 AI 精選速覽</span>
+              <ChevronDown
+                className={`h-4 w-4 text-band-text-muted transition-transform duration-200 ${picksOpen ? "rotate-180" : ""}`}
                 strokeWidth={1.5}
                 aria-hidden="true"
               />
-            </Link>
-          </div>
-        </motion.div>
-
-        {/* 今日 AI 精選速覽 — slides in last (delay 500ms) */}
-        <motion.div
-          className="mt-12 rounded-md border bg-surface shadow-card dark:shadow-none"
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.5, ease: REVEAL_EASE }}
-        >
-          <button
-            type="button"
-            onClick={() => setPicksOpen((v) => !v)}
-            aria-expanded={picksOpen}
-            className="flex w-full items-center gap-2 px-6 py-4 text-left"
-          >
-            <span className="text-label text-text-primary">今日 AI 精選速覽</span>
-            <ChevronDown
-              className={`h-4 w-4 text-text-muted transition-transform duration-200 ${picksOpen ? "rotate-180" : ""}`}
-              strokeWidth={1.5}
-              aria-hidden="true"
-            />
-            <span className="ml-auto text-caption text-text-muted">
-              {todayInfo().date}・5 條
-            </span>
-          </button>
-          <AnimatePresence initial={false}>
-            {picksOpen && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.25, ease: "easeOut" }}
-                className="overflow-hidden"
-              >
-                <ol className="border-t">
-                  {aihotDailyPicks.map((pick, i) => (
-                    <li key={pick.slug}>
-                      <a
-                        href={pick.permalink}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="group flex items-baseline gap-4 px-6 py-3 transition-colors duration-150 hover:bg-card"
-                      >
-                        <span className="font-mono text-caption text-ink">
-                          {String(i + 1).padStart(2, "0")}
-                        </span>
-                        <span className="line-clamp-1 text-h4 font-sans font-medium text-text-primary transition-colors duration-150 group-hover:text-ink">
-                          {pick.title}
-                        </span>
-                        <span className="ml-auto shrink-0 text-caption text-text-muted">
-                          {pick.source}
-                        </span>
-                      </a>
-                    </li>
-                  ))}
-                </ol>
-                <p className="border-t px-6 py-3 text-caption text-text-muted">
-                  <a
-                    href="https://aihot.virxact.com"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="transition-colors duration-150 hover:text-ink"
-                  >
-                    {AIHOT_CREDIT}
-                  </a>
-                </p>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
+              <span className="ml-auto text-caption text-band-text-muted">
+                {todayInfo().date}・5 條
+              </span>
+            </button>
+            <AnimatePresence initial={false}>
+              {picksOpen && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.25, ease: "easeOut" }}
+                  className="overflow-hidden"
+                >
+                  <ol className="border-t border-band-border">
+                    {aihotDailyPicks.map((pick, i) => (
+                      <li key={pick.slug}>
+                        <a
+                          href={pick.permalink}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="group flex items-baseline gap-4 px-6 py-3 transition-colors duration-150 hover:bg-band-card"
+                        >
+                          <span className="font-mono text-caption text-band-ink">
+                            {String(i + 1).padStart(2, "0")}
+                          </span>
+                          <span className="line-clamp-1 text-h4 font-sans font-medium text-band-text transition-colors duration-150 group-hover:text-band-ink">
+                            {pick.title}
+                          </span>
+                          <span className="ml-auto shrink-0 text-caption text-band-text-muted">
+                            {pick.source}
+                          </span>
+                        </a>
+                      </li>
+                    ))}
+                  </ol>
+                  <p className="border-t border-band-border px-6 py-3 text-caption text-band-text-muted">
+                    <a
+                      href="https://aihot.virxact.com"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="transition-colors duration-150 hover:text-band-ink"
+                    >
+                      {AIHOT_CREDIT}
+                    </a>
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        </div>
       </div>
     </section>
   );
@@ -190,12 +211,13 @@ function InsightsWall() {
 
   return (
     <section className="mx-auto max-w-container px-6 py-24 max-md:py-16">
-      {/* Header row */}
+      {/* Header row — eyebrow with hairline rule */}
       <Reveal>
-        <p className="text-overline font-sans uppercase text-text-muted">
+        <p className="flex items-center gap-3 text-overline font-sans uppercase text-text-muted">
+          <span className="inline-block h-px w-6 bg-border-strong" aria-hidden="true" />
           Daily Intelligence
         </p>
-        <div className="mt-2 flex items-end justify-between gap-4">
+        <div className="mt-3 flex items-end justify-between gap-4">
           <h2 className="font-display text-h2 text-text-primary">情報 Insights</h2>
           <Link
             to="/insights"
@@ -278,10 +300,11 @@ function CasesFeatured() {
   return (
     <section className="mx-auto max-w-container px-6 py-24 max-md:py-16">
       <Reveal>
-        <p className="text-overline font-sans uppercase text-text-muted">
+        <p className="flex items-center gap-3 text-overline font-sans uppercase text-text-muted">
+          <span className="inline-block h-px w-6 bg-border-strong" aria-hidden="true" />
           Field-Tested in Hong Kong
         </p>
-        <div className="mt-2 flex items-end justify-between gap-4">
+        <div className="mt-3 flex items-end justify-between gap-4">
           <h2 className="font-display text-h2 text-text-primary">
             實戰案例 Cases
           </h2>
@@ -316,16 +339,32 @@ function CasesFeatured() {
   );
 }
 
+/* ============ Muted-gold hairline ornament — max 1 per page ============ */
+
+function SectionOrnament() {
+  return (
+    <div
+      className="mx-auto flex max-w-container items-center justify-center gap-4 px-6"
+      aria-hidden="true"
+    >
+      <span className="h-px w-20 bg-gold/40" />
+      <span className="inline-block h-1.5 w-1.5 rotate-45 bg-gold/60" />
+      <span className="h-px w-20 bg-gold/40" />
+    </div>
+  );
+}
+
 /* ================= Section 4 — Experts 導師頭像牆 ================= */
 
 function ExpertsWall() {
   return (
     <section className="mx-auto max-w-container px-6 py-24 max-md:py-16">
       <Reveal>
-        <p className="text-overline font-sans uppercase text-text-muted">
+        <p className="flex items-center gap-3 text-overline font-sans uppercase text-text-muted">
+          <span className="inline-block h-px w-6 bg-border-strong" aria-hidden="true" />
           Verified Experts
         </p>
-        <div className="mt-2 flex items-end justify-between gap-4">
+        <div className="mt-3 flex items-end justify-between gap-4">
           <h2 className="font-display text-h2 text-text-primary">
             認證導師 Experts
           </h2>
@@ -423,13 +462,15 @@ function AskCta() {
   return (
     <section className="border-y bg-surface">
       <Reveal className="mx-auto max-w-container px-6 py-20 text-center">
-        <p className="text-overline font-sans uppercase text-text-muted">
+        <p className="flex items-center justify-center gap-3 text-overline font-sans uppercase text-text-muted">
+          <span className="inline-block h-px w-6 bg-border-strong" aria-hidden="true" />
           Ask 問答
+          <span className="inline-block h-px w-6 bg-border-strong" aria-hidden="true" />
         </p>
-        <h3 className="mt-3 font-display text-h3 text-text-primary">
+        <h3 className="mt-4 font-display text-h2 text-text-primary">
           有咩 AI 問題？問我哋嘅 AI 編輯部。
         </h3>
-        <p className="mx-auto mt-3 max-w-[520px] text-body-sm text-text-secondary">
+        <p className="mx-auto mt-4 max-w-[520px] text-body-sm text-text-secondary">
           基於全站情報與案例庫回答，每個論點附來源引用 — 無引用，不下結論。
         </p>
         <motion.div
@@ -462,6 +503,7 @@ export default function Home() {
       <Hero />
       <InsightsWall />
       <CasesFeatured />
+      <SectionOrnament />
       <ExpertsWall />
       <AskCta />
     </>
