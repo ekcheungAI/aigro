@@ -17,14 +17,24 @@ interface InsightCardProps {
  */
 export default function InsightCard({ insight, className }: InsightCardProps) {
   const CategoryIcon = INSIGHT_CATEGORY_ICONS[insight.category];
+  const editorPick = insight.score >= 90;
   return (
     <Link
       to={`/insights/${insight.slug}`}
       className={cn(
-        "card-hover group flex h-full flex-col rounded-md border bg-surface p-6 shadow-card dark:shadow-none",
+        "card-hover group relative flex h-full flex-col rounded-md border bg-surface p-6 shadow-card dark:shadow-none",
         className
       )}
     >
+      {/* Hairline gold corner tick — editor's pick (score ≥ 90) */}
+      {editorPick && (
+        <span aria-hidden="true" className="pointer-events-none absolute right-3 top-3">
+          <span className="absolute right-0 top-0 h-px w-4 bg-gold" />
+          <span className="absolute right-0 top-0 h-4 w-px bg-gold" />
+        </span>
+      )}
+      {editorPick && <span className="sr-only">編輯精選・高分情報</span>}
+
       {/* Overline row */}
       <div className="flex items-center gap-2">
         <span className="rounded-sm bg-ink-soft px-3 py-1.5 text-overline font-sans uppercase text-ink">

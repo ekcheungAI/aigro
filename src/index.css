@@ -61,6 +61,24 @@
 
     /* Verified badge sheen opacity (design.md §5.3: 22% light / 14% dark) */
     --sheen-opacity: 0.22;
+
+    /* ---- Cinematic dark band (hero + inverted footer) ----
+       Warm-charcoal tokens reused verbatim from dark theme (§2.2) so the
+       band reads identical in BOTH page themes — MasterClass-style dark
+       canvas without breaking dark-mode parity. */
+    --band-bg: 36 12% 8%;             /* #171512 */
+    --band-surface: 30 10% 11%;       /* #201D1A */
+    --band-card: 33 13% 14%;          /* #28241F */
+    --band-text: 40 24% 93%;          /* #F1EEE8 (AAA on band) */
+    --band-text-secondary: 39 11% 75%;/* #C6C1B8 (AAA) */
+    --band-text-muted: 38 7% 55%;     /* #938D83 (AA) */
+    --band-border: 33 12% 19%;        /* #35302A */
+    --band-border-strong: 36 11% 27%; /* #4C463D */
+    --band-ink: 210 49% 71%;          /* #8FB4D9 dark-mode ink */
+    --band-ink-solid: 212 45% 30%;    /* #2A4A6E solid button on band */
+    --band-ink-hover: 212 45% 24%;    /* darker hover on band */
+    --band-ink-soft: 209 28% 19%;     /* #22303D chip bg on band */
+    --band-gold: 42 54% 54%;          /* #C9A44C — hairline accents only */
   }
 
   .dark {
@@ -137,7 +155,7 @@
     @apply transition-[transform,border-color,box-shadow] duration-180 ease-out;
   }
   .card-hover:hover {
-    transform: translateY(-2px);
+    transform: translateY(-3px); /* deeper lift — luxury elevation */
     border-color: hsl(var(--border-strong));
   }
 
@@ -188,6 +206,13 @@
   }
   .text-balance {
     text-wrap: balance;
+  }
+}
+
+/* Reduced motion (§5.4): card lift → border change only */
+@media (prefers-reduced-motion: reduce) {
+  .card-hover:hover {
+    transform: none;
   }
 }
 
