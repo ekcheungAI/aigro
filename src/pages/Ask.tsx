@@ -47,6 +47,11 @@ export default function Ask() {
   const reduced = useReducedMotion();
   const [used, setUsed] = useState<number>(readInitialUsed);
   const [store, setStore] = useState<SessionStore>(loadSessionStore);
+  /**
+   * 得呢個 message id 行打字機 — 只喺 send 嗰刻設置;切換 session/分身即清除。
+   * 還原歷史(load / 揀返舊 session)永遠唔會命中 → 全部即刻渲染。
+   */
+  const [animatingId, setAnimatingId] = useState<number | null>(null);
   const [input, setInput] = useState("");
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef(0);
@@ -91,12 +96,25 @@ export default function Ask() {
     }
   }, [reduced]);
 
+  // 還原歷史(頁面載入 / 揀返舊 session / 切換分身)→ 即刻跳去最新訊息;
+  // 同一 session 內新訊息 → smooth。新鮮回答打字途中由 onTyped 逐字跟住捲。
+  const lastSessionRef = useRef<string | null | undefined>(undefined);
   useEffect(() => {
-    scrollToBottom();
-  }, [messages.length, scrollToBottom]);
+    const instant = lastSessionRef.current !== activeSessionId;
+    lastSessionRef.current = activeSessionId;
+    if (messages.length === 0) return;
+    const el = scrollRef.current;
+    if (!el) return;
+    if (instant || reduced) {
+      el.scrollTo({ top: el.scrollHeight, behavior: "auto" });
+    } else {
+      scrollToBottom();
+    }
+  }, [messages.length, activeSessionId, reduced, scrollToBottom]);
 
   const selectPersona = useCallback(
     (key: string) => {
+      setAnimatingId(null);
       setSearchParams(key === "platform" ? {} : { expert: key });
     },
     [setSearchParams]
@@ -104,12 +122,14 @@ export default function Ask() {
 
   const selectSession = useCallback(
     (id: string) => {
+      setAnimatingId(null);
       setStore((prev) => setActiveSession(prev, persona.key, id));
     },
     [persona.key]
   );
 
   const newSession = useCallback(() => {
+    setAnimatingId(null);
     setStore((prev) => setActiveSession(prev, persona.key, null));
   }, [persona.key]);
 
@@ -117,14 +137,19 @@ export default function Ask() {
     (raw: string) => {
       const question = raw.trim();
       if (!question || exhausted) return;
-      setStore((prev) =>
-        appendRound(prev, persona.key, question, pickPersonaReply(persona, question))
+      const { store: next, aiMessageId } = appendRound(
+        store,
+        persona.key,
+        question,
+        pickPersonaReply(persona, question)
       );
+      setStore(next);
+      setAnimatingId(aiMessageId); // 淨係呢條新回答行打字機
       setUsed((u) => Math.min(DAILY_QUOTA, u + 1));
       setInput("");
       if (textareaRef.current) textareaRef.current.style.height = "auto";
     },
-    [exhausted, persona]
+    [exhausted, persona, store]
   );
 
   const autoGrow = (el: HTMLTextAreaElement) => {
@@ -321,6 +346,10 @@ export default function Ask() {
                             reply={m.reply}
                             expertBorderColor={
                               persona.kind === "expert" ? persona.accent : undefined
+                            }
+                            animate={m.id === animatingId}
+                            onAnimationDone={() =>
+                              setAnimatingId((cur) => (cur === m.id ? null : cur))
                             }
                             lowConfidenceAction={lowConfidenceAction}
                             onTyped={scrollToBottom}

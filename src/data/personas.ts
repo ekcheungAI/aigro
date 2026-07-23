@@ -50,6 +50,23 @@ const INK_ACCENT = "hsl(var(--ink))";
 
 const PLATFORM_REPLIES: ScriptedReply[] = [
   {
+    // 「Who's Jimmy Lau」「Jimmy 係邊個」「你係邊個」→ 領航專家名錄卡
+    keywords:
+      /jimmy|劉進|elvin|張曉峰|領航專家|兩位專家|邊位專家|你係邊個|你係咩人|你叫咩|邊個係你/i,
+    reply: {
+      text: `我係 AIGRO 平台編輯部 AI — 基於全站情報同案例庫回答,背後有兩位領航專家:
+**Jimmy Lau 劉進** — DotAI 創辦人、AIGRO 聯合發起人,主張實戰先行、邊做邊學,帶住成個 club 將 AI 落地變成增長日常。
+**Elvin Cheung 張曉峰** — SuperBash 主理人、AIGRO 聯合發起人,主張數據說話、快速試錯,將海外 growth playbook 本地化落地香港。
+想同佢哋傾,可以喺左欄直接揀佢哋嘅 AI 分身;想睇完整背景同 10 個核心觀點,撳下面嘅專家頁連結。`,
+      citations: [
+        { title: "Jimmy Lau 專家頁", href: "/experts/jimmy-lau" },
+        { title: "Elvin Cheung 專家頁", href: "/experts/elvin-cheung" },
+        { title: "領航專家總覽", href: "/experts" },
+      ],
+      confidence: 0.9,
+    },
+  },
+  {
     keywords: /內容|營銷|content/i,
     reply: {
       text: `根據本平台案例庫同最新情報,香港團隊常見嘅做法係咁:
@@ -126,6 +143,18 @@ const PLATFORM_FALLBACK: AiReply = {
 
 const JIMMY_REPLIES: ScriptedReply[] = [
   {
+    // 「Jimmy 係邊個」「你係邊個」→ 分身自我介紹(謙遜第一人稱)
+    keywords:
+      /jimmy|劉進|dotai|你係邊|你叫咩|你係咩人|邊個係你|你嘅背景|介紹下你|介紹你/i,
+    reply: {
+      text: `我係 Jimmy 嘅 AI 分身 — 由佢嘅公開分享同授權內容蒸餾而成,知識庫經本人審核。
+Jimmy Lau 劉進係 **DotAI 創辦人、AIGRO 領航專家**,主張實戰先行、邊做邊學,帶香港學員由「識用 AI 工具」進化到「用 AI 建立增長系統」。
+講明先:我嘅回答代表佢嘅方法論,唔係佢本人嘅即時意見。想睇佢嘅完整背景同 10 個核心觀點,可以去佢嘅專家頁。`,
+      citations: [{ title: "Jimmy 嘅 10 個核心觀點", href: "/experts/jimmy-lau" }],
+      confidence: 0.9,
+    },
+  },
+  {
     keywords: /學|開始|入門|新手|點用/,
     reply: {
       text: `我成日同 DotAI 學員講:**唔好由「學工具」開始,先由一個真實業務問題開始**。
@@ -184,6 +213,18 @@ const JIMMY_FALLBACK: AiReply = {
 /* ---------------- Elvin Cheung(SuperBash — 數據先行實驗派) ---------------- */
 
 const ELVIN_REPLIES: ScriptedReply[] = [
+  {
+    // 「Elvin 係咩人」「你係邊個」→ 分身自我介紹(謙遜第一人稱)
+    keywords:
+      /elvin|張曉峰|superbash|你係邊|你叫咩|你係咩人|邊個係你|你嘅背景|介紹下你|介紹你/i,
+    reply: {
+      text: `我係 Elvin 嘅 AI 分身 — 由佢嘅公開分享同授權內容蒸餾而成,知識庫經本人審核。
+Elvin Cheung 張曉峰係 **SuperBash 主理人、AIGRO 領航專家**,主張增長係試出嚟嘅 — 數據說話、快速試錯,將海外 growth playbook 本地化落地香港。
+講明先:我嘅回答代表佢嘅方法論,唔係佢本人嘅即時意見。完整背景同 10 個核心觀點喺佢嘅專家頁。`,
+      citations: [{ title: "Elvin 嘅 10 個核心觀點", href: "/experts/elvin-cheung" }],
+      confidence: 0.9,
+    },
+  },
   {
     keywords: /增長|獲客|拉新|流量|growth|第一批|冷啟動/i,
     reply: {

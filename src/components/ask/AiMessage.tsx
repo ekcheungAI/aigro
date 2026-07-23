@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import TypewriterText from "./TypewriterText";
 import ThinkingBars from "./ThinkingBars";
+import { tokenizeTypewriter } from "./typewriter";
 import { cn } from "@/lib/utils";
 
 export interface Citation {
@@ -25,6 +26,13 @@ interface AiMessageProps {
   /** Auto-scroll callback while typing */
   onTyped?: () => void;
   /**
+   * false = 還原歷史訊息：跳過 thinking + 打字機，全文、引用、信心行即刻
+   * 完整渲染（無 cursor、無進場動畫）。只有新鮮回答先 animate。
+   */
+  animate?: boolean;
+  /** 打字機完成後觸發（parent 用嚟清除 animating 標記） */
+  onAnimationDone?: () => void;
+  /**
    * 專家分身：信心 <0.6 時改為「Club 優先預約 — 即將開放」按鈕，
    * 點擊觸發 toast（唔承諾即時真人預約）；未提供時保留預設 /experts 連結。
    */
@@ -32,6 +40,32 @@ interface AiMessageProps {
 }
 
 type Phase = "waiting" | "typing" | "done";
+
+/** 還原歷史訊息嘅靜態全文 — 同 TypewriterText 完成態一致嘅段落 + bold 渲染 */
+function StaticReplyText({ text }: { text: string }) {
+  const units = useMemo(() => tokenizeTypewriter(text), [text]);
+  const paragraphs: { text: string; bold: boolean }[][] = [];
+  for (const u of units) {
+    (paragraphs[u.paragraph] ??= []).push(u);
+  }
+  return (
+    <div aria-label={text}>
+      {paragraphs.map((pUnits, pi) => (
+        <p key={pi} className={cn(pi > 0 && "mt-4")}>
+          {pUnits.map((u, ui) =>
+            u.bold ? (
+              <strong key={ui} className="font-semibold">
+                {u.text}
+              </strong>
+            ) : (
+              <span key={ui}>{u.text}</span>
+            )
+          )}
+        </p>
+      ))}
+    </div>
+  );
+}
 
 /**
  * AI 回答群組：ink-soft 氣泡（design.md §2.3 唯一染色卡片例外）+
@@ -42,20 +76,27 @@ export default function AiMessage({
   reply,
   expertBorderColor,
   onTyped,
+  animate = true,
+  onAnimationDone,
   lowConfidenceAction,
 }: AiMessageProps) {
   const reduced = useReducedMotion();
-  const [phase, setPhase] = useState<Phase>("waiting");
+  const [phase, setPhase] = useState<Phase>(animate ? "waiting" : "done");
 
-  // Simulate waiting for the first token (ThinkingBars); reduced motion skips the wait
+  // Simulate waiting for the first token (ThinkingBars); reduced motion skips the wait.
+  // 還原歷史(animate=false)直接 done — 唔經 thinking / 打字機。
   useEffect(() => {
+    if (!animate) {
+      setPhase("done");
+      return;
+    }
     if (reduced) {
       setPhase("typing");
       return;
     }
     const t = window.setTimeout(() => setPhase("typing"), 900);
     return () => window.clearTimeout(t);
-  }, [reduced]);
+  }, [reduced, animate]);
 
   const lowConfidence = reply.confidence < 0.6;
 
@@ -69,23 +110,29 @@ export default function AiMessage({
         )}
         style={expertBorderColor ? { borderLeftColor: expertBorderColor } : undefined}
       >
-        {phase === "waiting" ? (
+        {!animate ? (
+          <StaticReplyText text={reply.text} />
+        ) : phase === "waiting" ? (
           <ThinkingBars />
         ) : (
           <TypewriterText
             text={reply.text}
             active
             onProgress={onTyped}
-            onComplete={() => setPhase("done")}
+            onComplete={() => {
+              setPhase("done");
+              onAnimationDone?.();
+            }}
           />
         )}
       </div>
 
-      {/* Citation chips — fade-in 120ms, stagger 60ms, only after text completes */}
+      {/* Citation chips — fade-in 120ms, stagger 60ms, only after text completes
+          (還原歷史 animate=false → initial={false} 即刻顯示,無進場動畫) */}
       {phase === "done" && reply.citations.length > 0 && (
         <motion.div
           className="mt-3 flex flex-wrap gap-2"
-          initial="hidden"
+          initial={animate ? "hidden" : false}
           animate="show"
           variants={{ hidden: {}, show: { transition: { staggerChildren: 0.06 } } }}
         >
@@ -115,7 +162,7 @@ export default function AiMessage({
       {/* 信心行 */}
       {phase === "done" && (
         <motion.p
-          initial={{ opacity: 0 }}
+          initial={animate ? { opacity: 0 } : false}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.12, delay: reply.citations.length * 0.06 }}
           className={cn(

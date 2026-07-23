@@ -125,17 +125,22 @@ export function saveSessionStore(store: SessionStore): void {
   }
 }
 
-/** 追加一輪問答;無 active session 時開新 session(第一條問題做標題) */
+/**
+ * 追加一輪問答;無 active session 時開新 session(第一條問題做標題)。
+ * 回傳新 store + 新 AI 訊息 id — 只有呢個 id 會行打字機;還原嘅歷史訊息即刻渲染。
+ */
 export function appendRound(
   store: SessionStore,
   personaKey: string,
   question: string,
   reply: AiReply
-): SessionStore {
+): { store: SessionStore; aiMessageId: number } {
+  const aiMessage: ChatMessage = { id: nextMessageId(), role: "ai", reply };
   const round: ChatMessage[] = [
     { id: nextMessageId(), role: "user", text: question },
-    { id: nextMessageId(), role: "ai", reply },
+    aiMessage,
   ];
+  const aiMessageId = aiMessage.id;
   const list = store.sessions[personaKey] ?? [];
   const activeId = store.active[personaKey];
   const now = Date.now();
@@ -149,8 +154,11 @@ export function appendRound(
     };
     const nextList = [updated, ...list.filter((_, i) => i !== idx)];
     return {
-      sessions: { ...store.sessions, [personaKey]: nextList },
-      active: { ...store.active, [personaKey]: updated.id },
+      aiMessageId,
+      store: {
+        sessions: { ...store.sessions, [personaKey]: nextList },
+        active: { ...store.active, [personaKey]: updated.id },
+      },
     };
   }
 
@@ -162,11 +170,14 @@ export function appendRound(
     messages: round,
   };
   return {
-    sessions: {
-      ...store.sessions,
-      [personaKey]: [created, ...list].slice(0, MAX_SESSIONS_PER_PERSONA),
+    aiMessageId,
+    store: {
+      sessions: {
+        ...store.sessions,
+        [personaKey]: [created, ...list].slice(0, MAX_SESSIONS_PER_PERSONA),
+      },
+      active: { ...store.active, [personaKey]: created.id },
     },
-    active: { ...store.active, [personaKey]: created.id },
   };
 }
 
