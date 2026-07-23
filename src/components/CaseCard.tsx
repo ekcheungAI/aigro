@@ -73,44 +73,56 @@ export default function CaseCard({ caseStudy, className }: CaseCardProps) {
     <Link
       to={`/cases/${caseStudy.slug}`}
       className={cn(
-        "card-hover group flex h-full flex-col rounded-md border bg-surface p-6 shadow-card dark:shadow-none",
+        "card-hover group flex h-full flex-col overflow-hidden rounded-md border bg-surface shadow-card dark:shadow-none",
         className
       )}
     >
-      {/* Tags */}
-      <div className="flex items-center gap-2">
-        <span className="rounded-sm bg-ink-soft px-3 py-1.5 text-overline font-sans text-ink">
-          {caseStudy.industry}
-        </span>
-        <span className="rounded-sm bg-card px-3 py-1.5 text-overline font-sans text-text-secondary">
-          {caseStudy.tag}
-        </span>
+      {/* 紀實照片 band — 3:2，靜止時微去飽和，hover 回升（§5.2 頭像灰階→彩色 250ms） */}
+      <div className="aspect-[3/2] max-h-[190px] w-full overflow-hidden">
+        <img
+          src={caseStudy.image}
+          alt={`${caseStudy.title} — 案例紀實照片`}
+          loading="lazy"
+          className="h-full w-full object-cover saturate-[0.72] transition-[filter] duration-250 group-hover:saturate-100"
+        />
       </div>
 
-      {/* Title — h4 卡片標題用無襯線 (design.md §3.2) */}
-      <h4 className="mt-4 font-sans text-h4 text-text-primary transition-colors duration-150 group-hover:text-ink">
-        {caseStudy.title}
-      </h4>
+      <div className="flex flex-1 flex-col p-6">
+        {/* Tags */}
+        <div className="flex items-center gap-2">
+          <span className="rounded-sm bg-ink-soft px-3 py-1.5 text-overline font-sans text-ink">
+            {caseStudy.industry}
+          </span>
+          <span className="rounded-sm bg-card px-3 py-1.5 text-overline font-sans text-text-secondary">
+            {caseStudy.tag}
+          </span>
+        </div>
 
-      {/* Metric strip — card-color inset well */}
-      <div className="mt-4 flex flex-wrap gap-x-8 gap-y-4 rounded-md bg-card p-4">
-        {caseStudy.metrics.map((metric) => (
-          <div key={metric.label} className="flex flex-col gap-1">
-            <CountUpMetric value={metric.value} />
-            <span className="text-caption text-text-muted">{metric.label}</span>
-          </div>
-        ))}
+        {/* Title — h4 卡片標題用無襯線 (design.md §3.2) */}
+        <h4 className="mt-4 font-sans text-h4 text-text-primary transition-colors duration-150 group-hover:text-ink">
+          {caseStudy.title}
+        </h4>
+
+        {/* Metric strip — card-color inset well */}
+        <div className="mt-4 flex flex-wrap gap-x-8 gap-y-4 rounded-md bg-card p-4">
+          {caseStudy.metrics.map((metric) => (
+            <div key={metric.label} className="flex flex-col gap-1">
+              <CountUpMetric value={metric.value} />
+              <span className="text-caption text-text-muted">{metric.label}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Method */}
+        <p className="mt-4 line-clamp-2 text-body-sm text-text-secondary">
+          {caseStudy.method}
+        </p>
+
+        {/* Source row */}
+        <p className="mt-auto pt-4 text-caption text-text-muted">
+          來源：{caseStudy.source}
+        </p>
       </div>
-
-      {/* Method */}
-      <p className="mt-4 line-clamp-2 text-body-sm text-text-secondary">
-        {caseStudy.method}
-      </p>
-
-      {/* Source row */}
-      <p className="mt-auto pt-4 text-caption text-text-muted">
-        來源：{caseStudy.source}
-      </p>
     </Link>
   );
 }

@@ -169,6 +169,24 @@ function CaseHeader({ caseStudy }: { caseStudy: CaseStudy }) {
   );
 }
 
+/* ================= Section 1b — 紀實照片 hero（header 之下，3:2） ================= */
+
+function CaseHeroImage({ caseStudy }: { caseStudy: CaseStudy }) {
+  return (
+    <section className="mx-auto max-w-container px-6 pt-12">
+      <Reveal y={20} duration={0.45}>
+        <div className="aspect-[3/2] max-h-[480px] w-full overflow-hidden rounded-md border">
+          <img
+            src={caseStudy.image}
+            alt={`${caseStudy.title} — 案例紀實照片`}
+            className="h-full w-full object-cover saturate-[0.85]"
+          />
+        </div>
+      </Reveal>
+    </section>
+  );
+}
+
 /* ================= Section 2 — 正文拆解（720px 容器，四章節） ================= */
 
 interface SectionBlockProps {
@@ -373,6 +391,7 @@ export default function CaseDetail() {
   return (
     <>
       <CaseHeader caseStudy={caseStudy} />
+      <CaseHeroImage caseStudy={caseStudy} />
       <CaseBody caseStudy={caseStudy} />
       <QuoteBlock caseStudy={caseStudy} />
       <AskCta />

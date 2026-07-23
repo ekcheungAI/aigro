@@ -53,6 +53,8 @@ export interface CaseStudy {
   /** 一行方法摘要 */
   method: string;
   source: string;
+  /** 案例紀實照片（public/cases/，3:2，muted editorial） */
+  image: string;
   detail: CaseStudyDetail;
 }
 
@@ -69,6 +71,7 @@ export const cases: CaseStudy[] = [
     ],
     method: "Claude + Make 串接 POS 數據，每日自動生成排班表與備貨建議",
     source: "AIGRO 學員成果",
+    image: "/cases/cha-chaan-teng.jpg",
     detail: {
       lede: "一間 8 店連鎖茶餐廳，用三個月時間將排班與備貨決策交給 AI 輔助 — 店長從每週 6 小時的 Excel 地獄解放，食材浪費同步下降。",
       scale: "8 間分店・120 名員工",
@@ -108,6 +111,7 @@ export const cases: CaseStudy[] = [
     ],
     method: "GPT-5 批改 DSE 英文作文 + 自動生成針對性練習卷",
     source: "Build in Public 社群",
+    image: "/cases/tutorial-centre.jpg",
     detail: {
       lede: "一間三分校補習社，導師曾經每週近三成工時花在批改與出卷。導入 AI 批改與個人化練習生成後，導師時間重新放回課堂與弱項面授。",
       scale: "3 間分校・18 名導師",
@@ -147,6 +151,7 @@ export const cases: CaseStudy[] = [
     method:
       "以樓盤資料庫驅動 Claude 生成中英雙語文案，WhatsApp 跟進訊息按客戶階段自動起草",
     source: "AIGRO 學員成果",
+    image: "/cases/real-estate.jpg",
     detail: {
       lede: "一間兩分行地產代理行，40 名前線代理各自為政寫文案。以樓盤資料庫驅動 AI 後，全行口吻統一，代理的時間回到睇樓與議價上。",
       scale: "2 間分行・40 名代理",
@@ -186,6 +191,7 @@ export const cases: CaseStudy[] = [
     ],
     method: "Shopify + AI 客服串接訂單系統，常見查詢全自動，複雜個案才轉人工",
     source: "當事人授權刊登",
+    image: "/cases/ecommerce.jpg",
     detail: {
       lede: "一人公司同時營運三個 Shopify 品牌。AI 客服分流系統處理八成查詢、訂單流程全自動，店主的時間放回選品與供應鏈。",
       scale: "1 人團隊・3 個品牌",
@@ -224,6 +230,7 @@ export const cases: CaseStudy[] = [
     ],
     method: "本地部署開源模型（MiniMax M2）處理敏感文件分類與初審，合規優先",
     source: "Build in Public 社群",
+    image: "/cases/accounting.jpg",
     detail: {
       lede: "一間中型會計師樓，每年核數季被海量敏感文件淹沒。以本地部署的開源模型做分類與初審 — 資料從不離開辦公室，合規與效率同時達標。",
       scale: "35 名專業人員",
