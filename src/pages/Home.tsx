@@ -98,7 +98,7 @@ function Hero() {
             transition={{ duration: 0.5, delay: 0.4, ease: REVEAL_EASE }}
           >
             <p className="mt-8 max-w-[560px] text-body-lg text-band-text-secondary">
-              每一篇內容經過編輯審核，每一位導師經過認證。為香港 marketer 與
+              每一篇內容經過編輯審核，每一位領航專家經過認證。為香港 marketer 與
               founder，過濾全球 AI 噪音。
             </p>
             <div className="mt-10 flex flex-wrap items-center gap-6">

@@ -25,10 +25,10 @@ function RouteMeta() {
     [/^\/cases\/[^/]+/, "案例深度拆解", "背景 → 工具/方法 → 成果數據 → 可複製步驟。"],
     [/^\/cases/, "實戰案例 Cases", "香港本地 AI 落地案例庫 — 數據化成果，可複製的做法拆解。"],
     [/^\/library/, "資源庫 Library", "AI 工具評測 + Prompt/工作流模板，附香港本地化（繁中）評估。"],
-    [/^\/experts\/[^/]+/, "專家檔案", "認證導師個人頁 — 成就佐證、授權透明度、AI 分身對話入口。"],
-    [/^\/experts/, "認證導師 Experts", "每一位導師均經實績查證與面談認證，AI 分身基於授權內容蒸餾。"],
+    [/^\/experts\/[^/]+/, "專家檔案", "領航專家個人頁 — 成就佐證、授權透明度、AI 分身對話入口。"],
+    [/^\/experts/, "領航專家 Experts", "由領航專家帶領嘅 growth hacking club — AI 分身基於授權內容蒸餾。"],
     [/^\/ask/, "Ask 問答", "問 AI 編輯部任何 AI、增長、營銷問題 — 每個論點附來源引用。"],
-    [/^\/pricing/, "方案 Pricing", "免費/進階/VIP 三層會員方案 — 解鎖無限 AI 對話與導師分身。"],
+    [/^\/pricing/, "方案 Pricing", "免費/進階/VIP 三層會員方案 — 解鎖無限 AI 對話與領航專家分身。"],
   ];
   const hit = map.find(([re]) => re.test(pathname));
   usePageMeta(hit?.[1] || undefined, hit?.[2] || undefined);

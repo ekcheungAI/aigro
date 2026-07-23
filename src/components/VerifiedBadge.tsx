@@ -28,7 +28,7 @@ export default function VerifiedBadge({
   return (
     <span
       role="img"
-      aria-label="已認證導師 Verified mentor"
+      aria-label="領航專家認證 Leading expert"
       className={cn(
         "badge-sheen inline-flex shrink-0 items-center justify-center rounded-full",
         ambient && "badge-sheen-ambient",
