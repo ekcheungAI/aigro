@@ -11,6 +11,7 @@ import Experts from "@/pages/Experts";
 import ExpertProfile from "@/pages/ExpertProfile";
 import Ask from "@/pages/Ask";
 import Pricing from "@/pages/Pricing";
+import Developers from "@/pages/Developers";
 import Placeholder from "@/pages/Placeholder";
 
 /** Per-page <title> + meta（v1.1 SEO 基建） */
@@ -27,6 +28,7 @@ function RouteMeta() {
     [/^\/experts/, "領航專家 Experts", "由領航專家帶領嘅 growth hacking club — AI 分身基於授權內容蒸餾。"],
     [/^\/ask/, "Ask 問答", "問 AI 編輯部任何 AI、增長、營銷問題 — 每個論點附來源引用。"],
     [/^\/pricing/, "方案 Pricing", "免費/進階/VIP 三層會員方案 — 解鎖無限 AI 對話與領航專家分身。"],
+    [/^\/developers/, "AIGRO MCP Network", "行業情報 MCP server — 你嘅 AI 工具一連接,即刻有行業雷達。AI 行業優先名單開放中。"],
   ];
   const hit = map.find(([re]) => re.test(pathname));
   usePageMeta(hit?.[1] || undefined, hit?.[2] || undefined);
@@ -58,6 +60,7 @@ export default function App() {
         <Route path="experts/:slug" element={<ExpertProfile />} />
         <Route path="ask" element={<Ask />} />
         <Route path="pricing" element={<Pricing />} />
+        <Route path="developers" element={<Developers />} />
         <Route
           path="*"
           element={
