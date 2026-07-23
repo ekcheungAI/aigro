@@ -1,11 +1,12 @@
 import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, Check, Compass } from "lucide-react";
+import { ArrowRight, Check, Code, Compass, ExternalLink } from "lucide-react";
 import Reveal, { REVEAL_EASE } from "@/components/Reveal";
 import MonogramAvatar from "@/components/MonogramAvatar";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { pendingExperts, verifiedExperts, type Expert } from "@/data/experts";
+import { demoPersonas, type DemoPersona } from "@/data/demoPersonas";
 
 /** 領航專家 monogram 字母(data 無此欄位,由 slug 映射) */
 const EXPERT_INITIALS: Record<string, string> = {
@@ -289,6 +290,99 @@ function PendingExpertCard({ expert, index }: { expert: Expert; index: number })
   );
 }
 
+/* ================= Section 3.5 — 示範分身 Perskill Demo(DEMO,唔係領航專家) ================= */
+
+/**
+ * Perskill 歷史人物示範分身 — muted treatment:
+ * 冇金、冇 VerifiedBadge、冇 brand color,hover 只加深 border(唔抬升),
+ * 視覺層級明確低過兩位真領航專家。
+ */
+function DemoPersonaCard({
+  persona,
+  index,
+}: {
+  persona: DemoPersona;
+  index: number;
+}) {
+  return (
+    <motion.article
+      className="rounded-lg border bg-surface p-6 transition-colors duration-150 hover:border-border-strong"
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{ duration: 0.45, delay: index * 0.08, ease: REVEAL_EASE }}
+    >
+      <div className="flex items-center gap-4">
+        <MonogramAvatar initials={persona.initials} size={48} muted />
+        <div className="min-w-0">
+          <h3 className="font-display text-h4 text-text-primary">
+            {persona.nameEn}
+          </h3>
+          <p className="text-caption text-text-muted">{persona.nameZh}</p>
+        </div>
+      </div>
+      <p className="mt-4 text-body-sm text-text-secondary">
+        {persona.essence}
+      </p>
+      <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 border-t pt-4">
+        <a
+          href={persona.perskillUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-caption text-ink transition-colors duration-150 hover:underline hover:underline-offset-2"
+        >
+          <ExternalLink className="h-3.5 w-3.5" strokeWidth={1.5} aria-hidden="true" />
+          Perskill 分身
+        </a>
+        <a
+          href={persona.githubUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-caption text-ink transition-colors duration-150 hover:underline hover:underline-offset-2"
+        >
+          <Code className="h-3.5 w-3.5" strokeWidth={1.5} aria-hidden="true" />
+          GitHub Skill
+        </a>
+      </div>
+    </motion.article>
+  );
+}
+
+function DemoPersonasSection() {
+  return (
+    <section className="mx-auto max-w-container px-6 pt-24 max-md:pt-16">
+      <Reveal>
+        <p className="flex items-center gap-3 text-overline font-sans uppercase text-text-muted">
+          <span className="inline-block h-px w-6 bg-border-strong" aria-hidden="true" />
+          Perskill Demo
+        </p>
+      </Reveal>
+      <Reveal delay={0.08}>
+        <h2 className="mt-3 font-display text-h3 text-text-primary">
+          示範分身 — 分身可以點玩?
+        </h2>
+      </Reveal>
+      <Reveal delay={0.16}>
+        <p className="mt-3 max-w-[640px] text-body-sm text-text-secondary">
+          以下係 Perskill(ekcheungAI 嘅歷史人物分身庫)嘅示範 —
+          同一套蒸餾方法,放喺歷史大師身上會係咁。AIGRO
+          領航專家分身都係用呢個標準整。
+        </p>
+      </Reveal>
+      <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {demoPersonas.map((persona, i) => (
+          <DemoPersonaCard key={persona.nameEn} persona={persona} index={i} />
+        ))}
+      </div>
+      <Reveal delay={0.1}>
+        <p className="mt-6 text-caption text-text-muted">
+          示範分身由 Perskill 提供 · 想睇點整一個分身?睇 GitHub 嘅 skill 檔案。
+        </p>
+      </Reveal>
+    </section>
+  );
+}
+
 /* ================= Section 4 — 領航專家邀請制(本頁唯一金色區塊) ================= */
 
 /** Badge Direction C — 細線金色月桂環繞 Badge A(僅此處,40px) */
@@ -427,6 +521,9 @@ export default function Experts() {
           ))}
         </div>
       </section>
+
+      {/* Section 3.5 — 示範分身 Perskill Demo */}
+      <DemoPersonasSection />
 
       <InviteSection
         onApply={() =>

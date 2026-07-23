@@ -3,12 +3,17 @@ import { cn } from "@/lib/utils";
 interface MonogramAvatarProps {
   /** Serif initials, e.g. "JL" / "EC" */
   initials: string;
-  /** Expert brand color (hex, desaturated per design.md §2.5) */
-  color: string;
+  /** Expert brand color (hex, desaturated per design.md §2.5). Ignored when `muted`. */
+  color?: string;
   /** Diameter in px */
   size?: number;
   /** Verified: 1.5px gold ring replaces the brand ring (pair with VerifiedBadge overlay) */
   verified?: boolean;
+  /**
+   * Muted demo variant (示範分身): neutral treatment — no brand color, no gold.
+   * ring = border-strong, bg = card, initials = text-secondary.
+   */
+  muted?: boolean;
   className?: string;
 }
 
@@ -25,8 +30,10 @@ export default function MonogramAvatar({
   color,
   size = 64,
   verified = false,
+  muted = false,
   className,
 }: MonogramAvatarProps) {
+  const brand = color ?? "#8A857C"; /* fallback: text-muted-ish neutral */
   return (
     <span
       aria-hidden="true"
@@ -37,11 +44,17 @@ export default function MonogramAvatar({
       style={{
         width: size,
         height: size,
-        backgroundColor: `${color}1F` /* brand tint 12% */,
+        backgroundColor: muted
+          ? "hsl(var(--card))"
+          : `${brand}1F` /* brand tint 12% */,
         boxShadow: verified
           ? "inset 0 0 0 1.5px hsl(var(--gold))"
-          : `inset 0 0 0 1.5px ${color}`,
-        color: `color-mix(in srgb, ${color} 62%, hsl(var(--text-primary)))`,
+          : muted
+            ? "inset 0 0 0 1.5px hsl(var(--border-strong))"
+            : `inset 0 0 0 1.5px ${brand}`,
+        color: muted
+          ? "hsl(var(--text-secondary))"
+          : `color-mix(in srgb, ${brand} 62%, hsl(var(--text-primary)))`,
         fontSize: Math.round(size * 0.36),
         fontWeight: 550,
         letterSpacing: "0.02em",
