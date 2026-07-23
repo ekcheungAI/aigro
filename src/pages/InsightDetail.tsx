@@ -112,11 +112,11 @@ export default function InsightDetail() {
                 href={aihot.permalink}
                 target="_blank"
                 rel="noreferrer"
-                className="group inline-flex h-11 items-center gap-2 rounded-md bg-ink-solid px-6 text-label text-white transition-colors duration-120 hover:bg-ink-hover active:scale-[0.98]"
+                className="group inline-flex h-11 items-center gap-2 rounded-md bg-ink-solid px-6 text-label text-white press hover:bg-ink-hover"
               >
                 閱讀原文
                 <ExternalLink
-                  className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-1"
+                  className="h-4 w-4 transition-transform duration-150 nudge-x"
                   strokeWidth={1.5}
                   aria-hidden="true"
                 />
@@ -125,7 +125,7 @@ export default function InsightDetail() {
                 href={aihot.canonical}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex h-11 items-center gap-2 rounded-md border border-border-strong px-6 text-label text-ink transition-colors duration-150 hover:bg-ink-soft"
+                className="inline-flex h-11 items-center gap-2 rounded-md border border-border-strong px-6 text-label text-ink press hover:bg-ink-soft"
               >
                 AI HOT 出處
                 <ExternalLink className="h-3 w-3" strokeWidth={1.5} aria-hidden="true" />
@@ -149,11 +149,11 @@ export default function InsightDetail() {
           </p>
           <Link
             to="/insights"
-            className="group mt-8 inline-flex h-11 items-center gap-2 rounded-md bg-ink-solid px-6 text-label text-white transition-colors duration-120 hover:bg-ink-hover active:scale-[0.98]"
+            className="group mt-8 inline-flex h-11 items-center gap-2 rounded-md bg-ink-solid px-6 text-label text-white press hover:bg-ink-hover"
           >
             返回情報列表
             <ArrowRight
-              className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-1"
+              className="h-4 w-4 transition-transform duration-150 nudge-x"
               strokeWidth={1.5}
               aria-hidden="true"
             />
@@ -272,7 +272,7 @@ export default function InsightDetail() {
                 href="#"
                 target="_blank"
                 rel="noreferrer"
-                className="mt-3 inline-flex h-9 items-center gap-1.5 rounded-md border border-border-strong px-4 text-caption text-ink transition-colors duration-150 hover:bg-ink-soft"
+                className="mt-3 inline-flex h-9 items-center gap-1.5 rounded-md border border-border-strong px-4 text-caption text-ink press hover:bg-ink-soft"
               >
                 閱讀原文
                 <ExternalLink className="h-3 w-3" strokeWidth={1.5} aria-hidden="true" />
@@ -303,11 +303,11 @@ export default function InsightDetail() {
             </p>
             <Link
               to="/ask"
-              className="group mt-6 inline-flex h-11 items-center gap-2 rounded-md bg-ink-solid px-6 text-label text-white transition-colors duration-120 hover:bg-ink-hover active:scale-[0.98]"
+              className="group mt-6 inline-flex h-11 items-center gap-2 rounded-md bg-ink-solid px-6 text-label text-white press hover:bg-ink-hover"
             >
               問 AI 編輯部
               <ArrowRight
-                className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-1"
+                className="h-4 w-4 transition-transform duration-150 nudge-x"
                 strokeWidth={1.5}
                 aria-hidden="true"
               />

@@ -90,8 +90,8 @@ function CaseGrid() {
           {filtered.map((c, i) => (
             <motion.div
               key={c.slug}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, transform: "translateY(24px)" }}
+              whileInView={{ opacity: 1, transform: "translateY(0px)" }}
               viewport={{ once: true, amount: 0.2 }}
               transition={{
                 duration: 0.45,
@@ -131,7 +131,7 @@ function SubmitBand() {
         <button
           type="button"
           onClick={() => setToastVisible(true)}
-          className="mt-6 inline-flex h-11 items-center gap-1 rounded-md border border-border-strong px-6 text-label text-ink transition-colors duration-150 hover:bg-ink-soft active:scale-[0.98]"
+          className="mt-6 inline-flex h-11 items-center gap-1 rounded-md border border-border-strong px-6 text-label text-ink press hover:bg-ink-soft"
         >
           提交案例
           <ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
@@ -144,9 +144,9 @@ function SubmitBand() {
           <motion.div
             role="status"
             className="fixed bottom-6 left-1/2 z-[70] -translate-x-1/2 rounded-md border bg-surface px-5 py-3 text-label text-text-primary shadow-card dark:shadow-none"
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 8 }}
+            initial={{ opacity: 0, transform: "translateX(-50%) translateY(16px)" }}
+            animate={{ opacity: 1, transform: "translateX(-50%) translateY(0px)" }}
+            exit={{ opacity: 0, transform: "translateX(-50%) translateY(8px)" }}
             transition={{ duration: 0.2, ease: REVEAL_EASE }}
           >
             投稿通道即將開放

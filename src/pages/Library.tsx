@@ -130,7 +130,7 @@ function ToolCard({ tool }: { tool: Tool }) {
         >
           完整評測
           <ArrowRight
-            className="h-3.5 w-3.5 transition-transform duration-150 group-hover:translate-x-1"
+            className="h-3.5 w-3.5 transition-transform duration-150 nudge-x"
             strokeWidth={1.5}
             aria-hidden="true"
           />
@@ -233,7 +233,7 @@ function TemplateCard({ template }: { template: Template }) {
           <ArrowRight
             className={cn(
               "h-3.5 w-3.5 transition-transform duration-150",
-              previewOpen ? "rotate-90" : "group-hover:translate-x-1"
+              previewOpen ? "rotate-90" : "nudge-x"
             )}
             strokeWidth={1.5}
             aria-hidden="true"
@@ -244,7 +244,7 @@ function TemplateCard({ template }: { template: Template }) {
           onClick={copyTemplate}
           aria-live="polite"
           className={cn(
-            "ml-auto inline-flex h-9 items-center gap-1.5 rounded-md border px-3 text-label transition-colors duration-150 active:scale-[0.98]",
+            "ml-auto inline-flex h-9 items-center gap-1.5 rounded-md border px-3 text-label press",
             copied
               ? "border-success text-success"
               : "border-border-strong text-ink hover:bg-ink-soft"

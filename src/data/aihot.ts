@@ -6,17 +6,21 @@
  * 使用規則：展示時保留 attribution 與 canonical 連結；摘要為 AI 生成。
  * 更新數據：npm run fetch:aihot
  */
-import { Converter } from "opencc-js/cn2t";
 import type { Insight, InsightCategory } from "./insights";
 import rawSnapshot from "./aihot-snapshot.json";
 
 /**
- * 簡體 → 繁體（香港 variant, s2hk）。
- * snapshot 生成時（scripts/fetch-aihot.mjs）已轉換；此處為 belt-and-braces，
- * 確保任何未轉換的舊 snapshot 亦不會在繁體產品中渲染簡體內容。
+ * snapshot 於生成時（scripts/fetch-aihot.mjs）已用 OpenCC 轉為繁體（s2hk），
+ * runtime 不再載入 opencc-js（bundle trim）。
+ * 此處僅剝除上游內容偶發的 emoji（taste 政策：可見 UI 文字不用 emoji）。
  */
-const toHK = Converter({ from: "cn", to: "hk" });
-const tc = (s: string): string => (s ? toHK(s) : s);
+const clean = (s: string): string =>
+  s
+    ? s
+        .replace(/[\u{1F000}-\u{1FAFF}\u2600-\u27BF\u2B00-\u2BFF\uFE0F]/gu, "")
+        .replace(/[ \t]+\n/g, "\n")
+        .trim()
+    : s;
 
 /* ============ Snapshot 原始型別 ============ */
 
@@ -159,11 +163,11 @@ function toAihotInsight(raw: AihotRawItem): AihotInsight {
   return {
     slug: raw.id,
     category: mapAihotCategory(raw.category),
-    title: tc(raw.title),
-    summary: tc(raw.summary),
+    title: clean(raw.title),
+    summary: clean(raw.summary),
     /** AIHOT 暫無香港視角短評 — 留空即不渲染該區塊（不虛構內容） */
     hkAngle: "",
-    source: tc(raw.source),
+    source: clean(raw.source),
     timeAgo: timeAgo(raw.publishedAt),
     publishedAt: raw.publishedAt,
     score: raw.score,
@@ -171,7 +175,7 @@ function toAihotInsight(raw: AihotRawItem): AihotInsight {
     permalink: raw.permalink,
     canonical: raw.attribution?.canonical ?? raw.permalink,
     originalUrl: raw.url,
-    titleEn: raw.title_en ? tc(raw.title_en) : null,
+    titleEn: raw.title_en ? clean(raw.title_en) : null,
     external: true,
   };
 }
@@ -250,11 +254,11 @@ function buildDaily(): AihotDaily {
         slug: matched ? matched.id : null,
         category: matched
           ? mapAihotCategory(matched.category)
-          : (DAILY_LABEL_MAP[tc(section.label)] ?? "行業動態"),
-        sectionLabel: tc(section.label),
-        title: tc(item.title),
-        summary: tc(item.summary),
-        source: tc(item.sourceName),
+          : (DAILY_LABEL_MAP[clean(section.label)] ?? "行業動態"),
+        sectionLabel: clean(section.label),
+        title: clean(item.title),
+        summary: clean(item.summary),
+        source: clean(item.sourceName),
         permalink: item.permalink,
         canonical: item.attribution?.canonical ?? item.permalink,
         score: matched ? matched.score : null,
@@ -268,7 +272,7 @@ function buildDaily(): AihotDaily {
     lead: flat[0] ?? null,
     items: flat.slice(1),
     sections: snapshot.daily.sections.map((s) => {
-      const label = tc(s.label);
+      const label = clean(s.label);
       return {
         label,
         category: DAILY_LABEL_MAP[label] ?? "行業動態",
@@ -294,9 +298,9 @@ export interface AihotHotTopic {
 
 export const aihotHotTopics: AihotHotTopic[] = snapshot.hotTopics.map((t) => ({
   id: t.id,
-  title: tc(t.title),
+  title: clean(t.title),
   permalink: t.permalink,
-  source: tc(t.source),
+  source: clean(t.source),
   sourceCount: t.sourceCount,
   latestAt: t.latestAt,
 }));

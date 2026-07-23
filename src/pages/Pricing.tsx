@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { AnimatePresence, motion, useInView, useReducedMotion } from "framer-motion";
-import { Check, Lock } from "lucide-react";
+import { ArrowRight, Check, Lock } from "lucide-react";
 import Reveal from "@/components/Reveal";
 import {
   Accordion,
@@ -61,7 +61,7 @@ const TIERS: Tier[] = [
       "Library 全部模板",
       "情報進階篩選與收藏",
     ],
-    ctaLabel: "升級進階 →",
+    ctaLabel: "升級進階",
     ctaTo: "/ask",
   },
   {
@@ -79,7 +79,7 @@ const TIERS: Tier[] = [
       "新功能優先體驗",
       "專屬會員活動邀請",
     ],
-    ctaLabel: "申請 VIP →",
+    ctaLabel: "申請 VIP",
     ctaTo: "/experts",
   },
 ];
@@ -219,9 +219,9 @@ function TierCard({ tier, billing, counted, onCounted }: TierCardProps) {
         <AnimatePresence mode="wait" initial={false}>
           <motion.span
             key={billing}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
+            initial={{ opacity: 0, transform: "translateY(8px)" }}
+            animate={{ opacity: 1, transform: "translateY(0px)" }}
+            exit={{ opacity: 0, transform: "translateY(-8px)" }}
             transition={{ duration: 0.2 }}
             className="font-display text-display text-text-primary"
           >
@@ -248,7 +248,7 @@ function TierCard({ tier, billing, counted, onCounted }: TierCardProps) {
       <Link
         to={tier.ctaTo}
         className={cn(
-          "mt-8 inline-flex h-11 w-full items-center justify-center gap-2 rounded-md text-label transition-[background-color,color,transform] duration-120 active:scale-[0.98]",
+          "group mt-8 inline-flex h-11 w-full items-center justify-center gap-2 rounded-md text-label press",
           isVip || isPro
             ? "bg-ink-solid text-white hover:bg-ink-hover"
             : "border border-border-strong text-ink hover:bg-ink-soft"
@@ -257,6 +257,13 @@ function TierCard({ tier, billing, counted, onCounted }: TierCardProps) {
         {/* VIP 標記（design.md §6.3）：墨藍實心 + 金色鎖定標籤 — 全站唯一 */}
         {isVip && <Lock className="h-3.5 w-3.5 text-gold" strokeWidth={1.5} />}
         {tier.ctaLabel}
+        {(isVip || isPro) && (
+          <ArrowRight
+            className="h-4 w-4 transition-transform duration-150 nudge-x"
+            strokeWidth={1.5}
+            aria-hidden="true"
+          />
+        )}
       </Link>
       {isVip && (
         <p className="mt-2 text-center text-caption text-gold">審核制・名額有限</p>
@@ -272,7 +279,7 @@ function TierCard({ tier, billing, counted, onCounted }: TierCardProps) {
         whileInView={{ borderColor: "hsl(var(--gold) / 1)" }}
         viewport={{ once: true, amount: 0.3 }}
         transition={{ delay: 0.3, duration: 0.5 }}
-        className="rounded-lg border-2 bg-surface p-8 transition-[transform] duration-180 ease-out hover:-translate-y-0.5"
+        className="rounded-lg border-2 bg-surface p-8 transition-[transform] duration-180 hover-lift-sm"
       >
         {cardInner}
       </motion.div>

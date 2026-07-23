@@ -51,7 +51,7 @@ export default function Newsletter() {
               />
               <button
                 type="submit"
-                className="h-12 shrink-0 rounded-md bg-ink-solid px-6 text-label text-white transition-colors duration-120 hover:bg-ink-hover active:scale-[0.98]"
+                className="h-12 shrink-0 rounded-md bg-ink-solid px-6 text-label text-white press hover:bg-ink-hover"
               >
                 訂閱
               </button>

@@ -308,7 +308,7 @@ function AskCta() {
           </p>
           <Link
             to="/ask"
-            className="mt-6 inline-flex h-11 items-center gap-1 rounded-md bg-ink-solid px-6 text-label text-white transition-colors duration-120 hover:bg-ink-hover active:scale-[0.98]"
+            className="mt-6 inline-flex h-11 items-center gap-1 rounded-md bg-ink-solid px-6 text-label text-white press hover:bg-ink-hover"
           >
             問 AI 編輯部
             <ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
@@ -361,7 +361,7 @@ export default function CaseDetail() {
         >
           返回案例庫
           <ArrowRight
-            className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-1"
+            className="h-4 w-4 transition-transform duration-150 nudge-x"
             strokeWidth={1.5}
             aria-hidden="true"
           />

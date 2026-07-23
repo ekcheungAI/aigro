@@ -18,7 +18,14 @@ import { Converter } from "opencc-js/cn2t";
 
 /** 簡體 → 繁體（香港 variant, s2hk）— AIGRO 全站繁體中文（香港用語） */
 const toHK = Converter({ from: "cn", to: "hk" });
-const tc = (s) => (typeof s === "string" && s ? toHK(s) : s);
+/** 轉繁體 + 剝除 emoji（taste 政策：可見 UI 文字不用 emoji） */
+const tc = (s) =>
+  typeof s === "string" && s
+    ? toHK(s)
+        .replace(/[\u{1F000}-\u{1FAFF}\u2600-\u27BF\u2B00-\u2BFF\uFE0F]/gu, "")
+        .replace(/[ \t]+\n/g, "\n")
+        .trim()
+    : s;
 
 const BASE = "https://aihot.virxact.com/api/public";
 const UA = "aihot-skill/0.3.6 (+https://aihot.virxact.com/aihot-skill/)";

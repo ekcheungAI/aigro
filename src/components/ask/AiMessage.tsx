@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowRight, ArrowUpRight } from "lucide-react";
 import TypewriterText from "./TypewriterText";
 import ThinkingBars from "./ThinkingBars";
 import { cn } from "@/lib/utils";
@@ -117,8 +117,16 @@ export default function AiMessage({ reply, expertBorderColor, onTyped }: AiMessa
           {lowConfidence && (
             <>
               {"・"}
-              <Link to="/experts" className="underline underline-offset-2 hover:text-ink">
-                建議預約真人導師 →
+              <Link
+                to="/experts"
+                className="group inline-flex items-center gap-0.5 underline underline-offset-2 hover:text-ink"
+              >
+                建議預約真人導師
+                <ArrowRight
+                  className="h-3 w-3 transition-transform duration-150 nudge-x"
+                  strokeWidth={1.5}
+                  aria-hidden="true"
+                />
               </Link>
             </>
           )}

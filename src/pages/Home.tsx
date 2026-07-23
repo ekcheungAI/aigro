@@ -106,7 +106,7 @@ function Hero() {
             <div className="mt-10 flex flex-wrap items-center gap-6">
               <Link
                 to="/insights"
-                className="inline-flex h-12 items-center rounded-md bg-band-ink-solid px-8 text-label text-white transition-colors duration-120 hover:bg-band-ink-hover active:scale-[0.98]"
+                className="inline-flex h-12 items-center rounded-md bg-band-ink-solid px-8 text-label text-white press hover:bg-band-ink-hover"
               >
                 閱讀今日情報
               </Link>
@@ -116,7 +116,7 @@ function Hero() {
               >
                 試問 AI 編輯部
                 <ArrowRight
-                  className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-1"
+                  className="h-4 w-4 transition-transform duration-150 nudge-x"
                   strokeWidth={1.5}
                   aria-hidden="true"
                 />
@@ -229,7 +229,7 @@ function InsightsWall() {
           >
             查看全部
             <ArrowRight
-              className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-1"
+              className="h-4 w-4 transition-transform duration-150 nudge-x"
               strokeWidth={1.5}
               aria-hidden="true"
             />
@@ -272,7 +272,7 @@ function InsightsWall() {
             type="button"
             onClick={() => scrollWall(-1)}
             aria-label="向左捲動"
-            className="flex h-10 w-10 items-center justify-center rounded-md border bg-surface text-text-secondary transition-colors duration-150 hover:bg-ink-soft hover:text-ink"
+            className="flex h-10 w-10 items-center justify-center rounded-md border bg-surface text-text-secondary press hover:bg-ink-soft hover:text-ink"
           >
             <ChevronLeft className="h-5 w-5" strokeWidth={1.5} />
           </button>
@@ -280,7 +280,7 @@ function InsightsWall() {
             type="button"
             onClick={() => scrollWall(1)}
             aria-label="向右捲動"
-            className="flex h-10 w-10 items-center justify-center rounded-md border bg-surface text-text-secondary transition-colors duration-150 hover:bg-ink-soft hover:text-ink"
+            className="flex h-10 w-10 items-center justify-center rounded-md border bg-surface text-text-secondary press hover:bg-ink-soft hover:text-ink"
           >
             <ChevronRight className="h-5 w-5" strokeWidth={1.5} />
           </button>
@@ -318,7 +318,7 @@ function CasesFeatured() {
           >
             全部案例
             <ArrowRight
-              className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-1"
+              className="h-4 w-4 transition-transform duration-150 nudge-x"
               strokeWidth={1.5}
               aria-hidden="true"
             />
@@ -384,7 +384,7 @@ function ExpertsWall() {
           >
             認識領航專家
             <ArrowRight
-              className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-1"
+              className="h-4 w-4 transition-transform duration-150 nudge-x"
               strokeWidth={1.5}
               aria-hidden="true"
             />
@@ -407,7 +407,7 @@ function ExpertsWall() {
               <Link
                 to={expert.verified ? `/experts/${expert.slug}` : "/experts"}
                 aria-label={`${expert.nameEn} ${expert.nameZh}`}
-                className="block transition-transform duration-150 group-hover:-translate-y-0.5"
+                className="block transition-transform duration-150 nudge-y"
               >
                 {expert.verified ? (
                   <span className="relative block rounded-full border-2 border-surface">
@@ -494,7 +494,7 @@ function AskCta() {
         >
           <Link
             to="/ask"
-            className="mt-8 inline-flex h-12 items-center rounded-md bg-ink-solid px-8 text-label text-white transition-colors duration-120 hover:bg-ink-hover active:scale-[0.98]"
+            className="mt-8 inline-flex h-12 items-center rounded-md bg-ink-solid px-8 text-label text-white press hover:bg-ink-hover"
           >
             開始對話
             <ArrowRight className="ml-1 h-4 w-4" strokeWidth={1.5} aria-hidden="true" />

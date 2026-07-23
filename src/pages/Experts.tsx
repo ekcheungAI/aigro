@@ -33,9 +33,9 @@ function MiniToast({ msg }: { msg: string | null }) {
         <motion.div
           role="status"
           className="fixed bottom-6 left-1/2 z-[70] rounded-md border bg-surface px-4 py-2.5 text-caption text-text-primary shadow-card dark:shadow-none"
-          initial={{ opacity: 0, y: 12, x: "-50%" }}
-          animate={{ opacity: 1, y: 0, x: "-50%" }}
-          exit={{ opacity: 0, y: 8, x: "-50%" }}
+          initial={{ opacity: 0, transform: "translateX(-50%) translateY(12px)" }}
+          animate={{ opacity: 1, transform: "translateX(-50%) translateY(0px)" }}
+          exit={{ opacity: 0, transform: "translateX(-50%) translateY(8px)" }}
           transition={{ duration: 0.2, ease: REVEAL_EASE }}
         >
           {msg}
@@ -168,7 +168,7 @@ function VerifiedExpertCard({
             </p>
             <Link
               to={`/experts/${expert.slug}`}
-              className="group/btn ml-auto inline-flex h-11 items-center gap-1.5 rounded-md bg-ink-solid px-6 text-label text-white transition-colors duration-120 hover:bg-ink-hover active:scale-[0.98]"
+              className="group/btn ml-auto inline-flex h-11 items-center gap-1.5 rounded-md bg-ink-solid px-6 text-label text-white press hover:bg-ink-hover"
             >
               查看領航檔案
               <ArrowRight
@@ -240,7 +240,7 @@ function PendingExpertCard({ expert, index }: { expert: Expert; index: number })
               type="button"
               onClick={() => setFormOpen((v) => !v)}
               aria-expanded={formOpen}
-              className="inline-flex h-11 items-center rounded-md border border-border-strong px-6 text-label text-ink transition-colors duration-150 hover:bg-ink-soft"
+              className="inline-flex h-11 items-center rounded-md border border-border-strong px-6 text-label text-ink press hover:bg-ink-soft"
             >
               上線通知我
             </button>
@@ -274,7 +274,7 @@ function PendingExpertCard({ expert, index }: { expert: Expert; index: number })
                     />
                     <button
                       type="submit"
-                      className="h-11 shrink-0 rounded-md bg-ink-solid px-4 text-label text-white transition-colors duration-120 hover:bg-ink-hover active:scale-[0.98]"
+                      className="h-11 shrink-0 rounded-md bg-ink-solid px-4 text-label text-white press hover:bg-ink-hover"
                     >
                       通知我
                     </button>
@@ -371,11 +371,11 @@ function InviteSection({ onApply }: { onApply: () => void }) {
           <button
             type="button"
             onClick={onApply}
-            className="group mt-8 inline-flex h-11 items-center gap-1.5 rounded-md bg-ink-solid px-6 text-label text-white transition-colors duration-120 hover:bg-ink-hover active:scale-[0.98]"
+            className="group mt-8 inline-flex h-11 items-center gap-1.5 rounded-md bg-ink-solid px-6 text-label text-white press hover:bg-ink-hover"
           >
             邀請制・暫不開放申請
             <ArrowRight
-              className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-1"
+              className="h-4 w-4 transition-transform duration-150 nudge-x"
               strokeWidth={1.5}
               aria-hidden="true"
             />

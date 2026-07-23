@@ -289,7 +289,7 @@ export default function Ask() {
           >
             升級
             <ArrowRight
-              className="h-3.5 w-3.5 transition-transform duration-150 group-hover:translate-x-1"
+              className="h-3.5 w-3.5 transition-transform duration-150 nudge-x"
               strokeWidth={1.5}
             />
           </Link>
@@ -328,7 +328,7 @@ export default function Ask() {
                     transition={{ duration: 0.35, delay: 0.16 + i * 0.08 }}
                     onClick={() => send(s)}
                     disabled={exhausted}
-                    className="rounded-sm border bg-surface px-4 py-2.5 text-body-sm text-text-secondary transition-colors duration-150 hover:border-ink hover:text-ink disabled:pointer-events-none disabled:opacity-40"
+                    className="press rounded-sm border bg-surface px-4 py-2.5 text-body-sm text-text-secondary hover:border-ink hover:text-ink disabled:pointer-events-none disabled:opacity-40"
                   >
                     {s}
                   </motion.button>
@@ -341,8 +341,8 @@ export default function Ask() {
                 m.role === "user" ? (
                   <motion.div
                     key={m.id}
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    initial={{ opacity: 0, transform: "translateY(12px)" }}
+                    animate={{ opacity: 1, transform: "translateY(0px)" }}
                     transition={{ duration: 0.25 }}
                     className="flex justify-end"
                   >
@@ -382,9 +382,9 @@ export default function Ask() {
             {exhausted ? (
               <motion.div
                 key="quota-exhausted"
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
+                initial={{ opacity: 0, transform: "translateY(8px)" }}
+                animate={{ opacity: 1, transform: "translateY(0px)" }}
+                exit={{ opacity: 0, transform: "translateY(-8px)" }}
                 transition={{ duration: 0.25 }}
                 className="rounded-lg border bg-surface p-8 text-center"
               >
@@ -397,9 +397,14 @@ export default function Ask() {
                 <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
                   <Link
                     to="/pricing"
-                    className="inline-flex h-11 items-center rounded-md bg-ink-solid px-6 text-label text-white transition-colors duration-120 hover:bg-ink-hover active:scale-[0.98]"
+                    className="group inline-flex h-11 items-center gap-1.5 rounded-md bg-ink-solid px-6 text-label text-white press hover:bg-ink-hover"
                   >
-                    升級會員 →
+                    升級會員
+                    <ArrowRight
+                      className="h-4 w-4 transition-transform duration-150 nudge-x"
+                      strokeWidth={1.5}
+                      aria-hidden="true"
+                    />
                   </Link>
                   <Link
                     to="/experts"
@@ -407,7 +412,7 @@ export default function Ask() {
                   >
                     了解真人導師預約
                     <ArrowRight
-                      className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-1"
+                      className="h-4 w-4 transition-transform duration-150 nudge-x"
                       strokeWidth={1.5}
                     />
                   </Link>
@@ -416,9 +421,9 @@ export default function Ask() {
             ) : (
               <motion.div
                 key="input-dock"
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
+                initial={{ opacity: 0, transform: "translateY(8px)" }}
+                animate={{ opacity: 1, transform: "translateY(0px)" }}
+                exit={{ opacity: 0, transform: "translateY(-8px)" }}
                 transition={{ duration: 0.25 }}
               >
                 <div className="flex items-end gap-3">
@@ -448,7 +453,7 @@ export default function Ask() {
                     onClick={() => send(input)}
                     disabled={!input.trim()}
                     aria-label="送出問題"
-                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-ink-solid text-white transition-[background-color,transform,opacity] duration-120 hover:bg-ink-hover active:scale-[0.94] disabled:pointer-events-none disabled:opacity-40"
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-ink-solid text-white press hover:bg-ink-hover disabled:pointer-events-none disabled:opacity-40"
                   >
                     <ArrowUp className="h-5 w-5" strokeWidth={1.5} />
                   </button>

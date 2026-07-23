@@ -24,7 +24,7 @@ export default function CategoryChip({
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        "inline-flex items-center rounded-sm border px-3 py-1.5 text-overline font-sans uppercase transition-colors duration-150",
+        "press inline-flex items-center rounded-sm border px-3 py-1.5 text-overline font-sans uppercase",
         active
           ? "border-transparent bg-ink-solid text-white dark:text-white"
           : "border-transparent bg-ink-soft text-ink hover:border-ink",

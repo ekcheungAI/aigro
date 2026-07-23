@@ -33,9 +33,9 @@ function MiniToast({ msg }: { msg: string | null }) {
         <motion.div
           role="status"
           className="fixed bottom-6 left-1/2 z-[70] rounded-md border bg-surface px-4 py-2.5 text-caption text-text-primary shadow-card dark:shadow-none"
-          initial={{ opacity: 0, y: 12, x: "-50%" }}
-          animate={{ opacity: 1, y: 0, x: "-50%" }}
-          exit={{ opacity: 0, y: 8, x: "-50%" }}
+          initial={{ opacity: 0, transform: "translateX(-50%) translateY(12px)" }}
+          animate={{ opacity: 1, transform: "translateX(-50%) translateY(0px)" }}
+          exit={{ opacity: 0, transform: "translateX(-50%) translateY(8px)" }}
           transition={{ duration: 0.2, ease: REVEAL_EASE }}
         >
           {msg}
@@ -308,7 +308,7 @@ function VerifiedProfile({ expert }: { expert: Expert }) {
                 <span className="inline-flex items-center gap-1.5 text-body-sm text-text-secondary transition-colors duration-150 group-hover:text-ink">
                   其餘 {remaining} 個觀點，在分身對話中探索
                   <ArrowRight
-                    className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-1"
+                    className="h-4 w-4 transition-transform duration-150 nudge-x"
                     strokeWidth={1.5}
                     aria-hidden="true"
                   />
@@ -343,7 +343,7 @@ function VerifiedProfile({ expert }: { expert: Expert }) {
                 姓名下劃線 / Ask 氣泡邊框三處 (§2.5) */}
             <Link
               to={askHref}
-              className="inline-flex h-11 items-center gap-1.5 rounded-md bg-ink-solid px-6 text-label text-white transition-colors duration-120 hover:bg-ink-hover active:scale-[0.98]"
+              className="inline-flex h-11 items-center gap-1.5 rounded-md bg-ink-solid px-6 text-label text-white press hover:bg-ink-hover"
             >
               與 AI 分身對話
               <ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
@@ -513,7 +513,7 @@ function PendingProfile({ expert }: { expert: Expert }) {
                   />
                   <button
                     type="submit"
-                    className="h-12 shrink-0 rounded-md bg-ink-solid px-6 text-label text-white transition-colors duration-120 hover:bg-ink-hover active:scale-[0.98]"
+                    className="h-12 shrink-0 rounded-md bg-ink-solid px-6 text-label text-white press hover:bg-ink-hover"
                   >
                     通知我
                   </button>
@@ -545,7 +545,7 @@ export default function ExpertProfile() {
         </p>
         <Link
           to="/experts"
-          className="mt-8 inline-flex h-11 items-center rounded-md bg-ink-solid px-6 text-label text-white transition-colors duration-120 hover:bg-ink-hover active:scale-[0.98]"
+          className="mt-8 inline-flex h-11 items-center rounded-md bg-ink-solid px-6 text-label text-white press hover:bg-ink-hover"
         >
           返回領航專家總覽
         </Link>

@@ -76,7 +76,7 @@ export default function Footer() {
               />
               <button
                 type="submit"
-                className="h-10 shrink-0 rounded-md border border-band-border-strong px-3 text-caption text-band-ink transition-colors duration-150 hover:bg-band-ink-soft"
+                className="h-10 shrink-0 rounded-md border border-band-border-strong px-3 text-caption text-band-ink press hover:bg-band-ink-soft"
               >
                 登記
               </button>
@@ -93,7 +93,7 @@ export default function Footer() {
             type="button"
             onClick={toggleTheme}
             aria-label={isDark ? "切換至淺色模式" : "切換至深色模式"}
-            className="flex h-9 w-9 items-center justify-center rounded-md text-band-text-muted transition-colors duration-150 hover:bg-band-ink-soft hover:text-band-ink"
+            className="flex h-9 w-9 items-center justify-center rounded-md text-band-text-muted press hover:bg-band-ink-soft hover:text-band-ink"
           >
             {isDark ? (
               <Sun className="h-4 w-4" strokeWidth={1.5} />

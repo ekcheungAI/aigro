@@ -158,7 +158,7 @@ export default function Daily() {
                   >
                     閱讀原文
                     <ArrowRight
-                      className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-1"
+                      className="h-4 w-4 transition-transform duration-150 nudge-x"
                       strokeWidth={1.5}
                       aria-hidden="true"
                     />
@@ -222,7 +222,7 @@ export default function Daily() {
               className="group inline-flex items-center gap-1.5 text-label text-ink"
             >
               <ArrowLeft
-                className="h-4 w-4 transition-transform duration-150 group-hover:-translate-x-1"
+                className="h-4 w-4 transition-transform duration-150 nudge-x-neg"
                 strokeWidth={1.5}
                 aria-hidden="true"
               />
@@ -239,7 +239,7 @@ export default function Daily() {
                 onClick={() => setPickerOpen((open) => !open)}
                 aria-expanded={pickerOpen}
                 aria-haspopup="listbox"
-                className="inline-flex h-11 items-center gap-2 rounded-md border border-border-strong px-4 text-ink transition-colors duration-150 hover:bg-ink-soft"
+                className="inline-flex h-11 items-center gap-2 rounded-md border border-border-strong px-4 text-ink press hover:bg-ink-soft"
               >
                 <Calendar className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
                 <span className="font-mono text-label">{ISSUE.date}</span>
@@ -250,9 +250,9 @@ export default function Daily() {
                     role="listbox"
                     aria-label="選擇日期"
                     className="absolute left-1/2 top-full z-50 mt-2 w-56 -translate-x-1/2 rounded-md border bg-surface p-1"
-                    initial={{ opacity: 0, scale: 0.96 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.96 }}
+                    initial={{ opacity: 0, transform: "translateX(-50%) scale(0.96)" }}
+                    animate={{ opacity: 1, transform: "translateX(-50%) scale(1)" }}
+                    exit={{ opacity: 0, transform: "translateX(-50%) scale(0.96)" }}
                     transition={{ duration: 0.15, ease: REVEAL_EASE }}
                   >
                     {RECENT_ISSUES.map((issue) => (
@@ -300,7 +300,7 @@ export default function Daily() {
             >
               問 AI 編輯部
               <ArrowRight
-                className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-1"
+                className="h-4 w-4 transition-transform duration-150 nudge-x"
                 strokeWidth={1.5}
                 aria-hidden="true"
               />

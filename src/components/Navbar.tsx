@@ -96,7 +96,7 @@ export default function Navbar() {
               onClick={toggleTheme}
               aria-label={isDark ? "切換至淺色模式" : "切換至深色模式"}
               className={cn(
-                "flex h-10 w-10 items-center justify-center rounded-md transition-colors duration-150",
+                "press flex h-10 w-10 items-center justify-center rounded-md",
                 overHero
                   ? "text-band-text-secondary hover:bg-band-ink-soft hover:text-band-text"
                   : "text-text-secondary hover:bg-ink-soft hover:text-ink"
@@ -110,7 +110,7 @@ export default function Navbar() {
             </button>
             <Link
               to="/pricing"
-              className="hidden h-10 items-center rounded-md bg-ink-solid px-4 text-label text-white transition-colors duration-120 hover:bg-ink-hover active:scale-[0.98] sm:inline-flex"
+              className="hidden h-10 items-center rounded-md bg-ink-solid px-4 text-label text-white press hover:bg-ink-hover sm:inline-flex"
             >
               訂閱
             </Link>
@@ -120,7 +120,7 @@ export default function Navbar() {
               onClick={() => setDrawerOpen(true)}
               aria-label="開啟選單"
               className={cn(
-                "flex h-10 w-10 items-center justify-center rounded-md md:hidden",
+                "press flex h-10 w-10 items-center justify-center rounded-md md:hidden",
                 overHero ? "text-band-text" : "text-text-primary"
               )}
             >
@@ -148,7 +148,7 @@ export default function Navbar() {
                 type="button"
                 onClick={() => setDrawerOpen(false)}
                 aria-label="關閉選單"
-                className="flex h-10 w-10 items-center justify-center rounded-md text-text-primary"
+                className="press flex h-10 w-10 items-center justify-center rounded-md text-text-primary"
               >
                 <X className="h-5 w-5" strokeWidth={1.5} />
               </button>
@@ -158,8 +158,8 @@ export default function Navbar() {
                 (link, i) => (
                   <motion.div
                     key={link.to}
-                    initial={{ opacity: 0, x: -16 }}
-                    animate={{ opacity: 1, x: 0 }}
+                    initial={{ opacity: 0, transform: "translateX(-16px)" }}
+                    animate={{ opacity: 1, transform: "translateX(0px)" }}
                     transition={{ duration: 0.3, delay: i * 0.08, ease: REVEAL_EASE }}
                   >
                     <NavLink
@@ -178,8 +178,8 @@ export default function Navbar() {
                 )
               )}
               <motion.div
-                initial={{ opacity: 0, x: -16 }}
-                animate={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, transform: "translateX(-16px)" }}
+                animate={{ opacity: 1, transform: "translateX(0px)" }}
                 transition={{ duration: 0.3, delay: 7 * 0.08, ease: REVEAL_EASE }}
                 className="pt-4"
               >

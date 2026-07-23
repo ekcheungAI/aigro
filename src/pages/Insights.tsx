@@ -143,7 +143,7 @@ function EditorPickCard({
       <span className="mt-auto inline-flex items-center gap-1 pt-5 text-label text-ink">
         閱讀全文
         <ArrowRight
-          className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-1"
+          className="h-4 w-4 transition-transform duration-150 nudge-x"
           strokeWidth={1.5}
           aria-hidden="true"
         />
@@ -265,11 +265,11 @@ export default function Insights() {
             </div>
             <Link
               to="/insights/daily"
-              className="group inline-flex h-11 shrink-0 items-center gap-2 rounded-md border border-border-strong px-6 text-label text-ink transition-colors duration-150 hover:bg-ink-soft"
+              className="group inline-flex h-11 shrink-0 items-center gap-2 rounded-md border border-border-strong px-6 text-label text-ink press hover:bg-ink-soft"
             >
               翻開今日日報
               <ArrowRight
-                className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-1"
+                className="h-4 w-4 transition-transform duration-150 nudge-x"
                 strokeWidth={1.5}
                 aria-hidden="true"
               />
@@ -317,7 +317,7 @@ export default function Insights() {
                   onClick={() => selectSort(option.key)}
                   aria-pressed={sort === option.key}
                   className={cn(
-                    "rounded-sm px-3 py-1.5 text-label transition-colors duration-150",
+                    "press rounded-sm px-3 py-1.5 text-label",
                     sort === option.key
                       ? "bg-ink-soft text-ink"
                       : "text-text-secondary hover:text-ink"
@@ -349,7 +349,7 @@ export default function Insights() {
             <button
               type="button"
               onClick={() => setVisibleCount(filtered.length)}
-              className="inline-flex h-11 items-center rounded-md border border-border-strong px-6 text-label text-ink transition-colors duration-150 hover:bg-ink-soft"
+              className="inline-flex h-11 items-center rounded-md border border-border-strong px-6 text-label text-ink press hover:bg-ink-soft"
             >
               載入更多
             </button>
