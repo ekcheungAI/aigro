@@ -5,6 +5,7 @@ import { ArrowRight, AudioLines, CalendarClock, Check, Compass, ExternalLink, Sh
 import Reveal, { REVEAL_EASE } from "@/components/Reveal";
 import MonogramAvatar from "@/components/MonogramAvatar";
 import VerifiedBadge from "@/components/VerifiedBadge";
+import ExpertStyleSections from "@/components/expert/ExpertStyleSections";
 import { expertFirstName, experts, type Expert } from "@/data/experts";
 
 /** 領航專家 monogram 字母(data 無此欄位,由 slug 映射) */
@@ -201,6 +202,18 @@ function VerifiedHero({ expert }: { expert: Expert }) {
                 認證日期 {expert.verifiedDate}
               </span>
             </motion.div>
+            {/* 分身檔案 meta(perskill 格式):mono caption,不喧賓奪主 */}
+            {expert.promptVersion && (
+              <motion.p
+                className="mt-3 font-mono text-caption text-text-muted"
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.38, ease: REVEAL_EASE }}
+              >
+                Prompt {expert.promptVersion} · 公開分享 + 授權內容 · 更新於{" "}
+                {expert.kbUpdated}
+              </motion.p>
+            )}
             <motion.p
               className="mt-5 max-w-[560px] text-body-lg text-text-secondary"
               initial={{ opacity: 0, y: 24 }}
@@ -246,6 +259,10 @@ function VerifiedProfile({ expert }: { expert: Expert }) {
           </div>
         </section>
       )}
+
+      {/* Sections B–E — 風格雷達 / 核心特質 / 工作風格 / 決策原則
+          （成就佐證之後、授權透明度之前；僅 verified 專家有數據） */}
+      <ExpertStyleSections expert={expert} />
 
       {/* Section 3 — 授權透明度（強制置於對話入口之上） */}
       <section className="mx-auto max-w-[720px] px-6 pt-16 max-md:pt-12">
