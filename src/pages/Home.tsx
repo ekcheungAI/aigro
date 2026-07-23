@@ -35,7 +35,7 @@ function Hero() {
   const show = reduceMotion ? false : undefined;
 
   return (
-    <section className="relative isolate overflow-hidden border-b border-band-border bg-band-bg">
+    <section className="relative isolate -mt-16 overflow-hidden border-b border-band-border bg-band-bg pt-16">
       {/* Cinematic editorial photo layer — darkened via solid overlays only
           (no decorative gradients, brand §1.3). Kept quiet: charcoal canvas
           first, photograph second. */}
@@ -45,7 +45,7 @@ function Hero() {
         aria-hidden="true"
         width={2048}
         height={1082}
-        className="absolute inset-0 -z-10 h-full w-full object-cover opacity-45"
+        className="absolute inset-0 -z-10 h-full w-full object-cover opacity-60"
       />
       <div
         className="absolute inset-0 -z-10 bg-band-bg/65"
