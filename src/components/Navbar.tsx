@@ -44,7 +44,8 @@ export default function Navbar() {
         )}
       >
         <div className="mx-auto flex h-full max-w-container items-center gap-6 px-6">
-          {/* Wordmark — wordmark IS the logo (design.md §1.2) */}
+          {/* Wordmark — wordmark IS the logo (design.md §1.2); lime period
+              per business-card reference (「brand name.」) */}
           <Link to="/" className="flex items-baseline gap-2" aria-label="AIGRO 首頁">
             <span
               className={cn(
@@ -53,6 +54,7 @@ export default function Navbar() {
               )}
             >
               AIGRO
+              <span className={overHero ? "text-band-ink" : "text-ink"}>.</span>
             </span>
             <span
               className={cn(
@@ -109,7 +111,7 @@ export default function Navbar() {
             </button>
             <Link
               to="/pricing"
-              className="hidden h-10 items-center rounded-md bg-ink-solid px-4 text-label text-white press hover:bg-ink-hover sm:inline-flex"
+              className="hidden h-10 items-center rounded-md bg-ink-solid px-4 text-label text-on-accent press hover:bg-ink-hover sm:inline-flex"
             >
               訂閱
             </Link>
@@ -141,7 +143,7 @@ export default function Navbar() {
           >
             <div className="flex h-16 items-center justify-between border-b px-6">
               <span className="font-display text-[20px] font-medium uppercase tracking-[0.04em]">
-                AIGRO
+                AIGRO<span className="text-ink">.</span>
               </span>
               <button
                 type="button"
@@ -185,7 +187,7 @@ export default function Navbar() {
                 <Link
                   to="/pricing"
                   onClick={() => setDrawerOpen(false)}
-                  className="inline-flex h-11 items-center rounded-md bg-ink-solid px-6 text-label text-white"
+                  className="inline-flex h-11 items-center rounded-md bg-ink-solid px-6 text-label text-on-accent"
                 >
                   訂閱
                 </Link>

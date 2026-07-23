@@ -20,6 +20,15 @@ module.exports = {
           DEFAULT: "hsl(var(--gold) / <alpha-value>)",
           soft: "hsl(var(--gold-soft) / <alpha-value>)",
         },
+        /* Electric lime accent (rebrand) — lime = the ONE accent */
+        lime: {
+          DEFAULT: "hsl(var(--lime) / <alpha-value>)",
+          hover: "hsl(var(--lime-hover) / <alpha-value>)",
+          text: "hsl(var(--lime-text) / <alpha-value>)",
+          soft: "hsl(var(--lime-soft) / <alpha-value>)",
+        },
+        /* Near-black text on lime fills (black-on-green, business-card ref) */
+        "on-accent": "hsl(var(--on-accent) / <alpha-value>)",
         /* Cinematic dark band (hero + inverted footer, theme-independent) */
         band: {
           bg: "hsl(var(--band-bg) / <alpha-value>)",

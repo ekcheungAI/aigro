@@ -32,7 +32,7 @@ export default function AskPreview() {
           <div className="mt-8">
             <Link
               to="/ask"
-              className="inline-flex h-12 items-center rounded-md bg-ink-solid px-8 text-label text-white press hover:bg-ink-hover"
+              className="inline-flex h-12 items-center rounded-md bg-ink-solid px-8 text-label text-on-accent press hover:bg-ink-hover"
             >
               開始對話
               <ArrowRight

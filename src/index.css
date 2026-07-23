@@ -15,12 +15,28 @@
     --text-muted: 39 6% 51%;     /* #8A857C */
     --border: 40 18% 87%;        /* #E4E0D8 */
     --border-strong: 39 14% 75%; /* #C9C3B8 */
-    --ink: 211 55% 23%;          /* #1B3A5C */
-    --ink-hover: 211 56% 18%;    /* #142C46 */
-    --ink-solid: 211 55% 23%;    /* light: solid button = ink */
-    --ink-soft: 210 28% 93%;     /* #E8EDF2 */
-    --gold: 43 58% 42%;          /* #A8842C */
-    --gold-soft: 42 49% 91%;     /* #F3ECDC */
+
+    /* ---- Electric lime accent system (rebrand: near-black + lime) ----
+       Lime is the ONE accent. Interactive fills = lime + near-black text.
+       Text/link on paper uses the deep green variant (neon fails AA on light). */
+    --lime: 106 92% 51%;         /* #43F50E electric lime (on dark) */
+    --lime-hover: 107 89% 45%;   /* #3AD60D dimmed lime (fill hover) */
+    --lime-text: 107 91% 25%;    /* #1F7A06 deep green — 5.2:1 on #FAF9F6 (AA) */
+    --lime-soft: 102 77% 92%;    /* #E3FAD9 tint — chips / AI bubble on light */
+    --on-accent: 60 4% 5%;       /* #0D0D0C near-black text on lime fills */
+
+    /* Legacy aliases — cascade the rebrand to every page without page edits.
+       `ink` now reads lime-green; `gold` (ex-Verified/VIP accent) reads lime. */
+    --ink: var(--lime-text);        /* text/link accent on light */
+    --ink-hover: var(--lime-hover); /* hover of solid lime fills */
+    --ink-solid: var(--lime);       /* solid primary button = lime */
+    --ink-soft: var(--lime-soft);   /* tinted chip / AI bubble bg */
+    --gold: var(--lime-text);       /* Verified/VIP accent → green (AA on paper) */
+    --gold-soft: var(--lime-soft);  /* premium wells → green tint */
+
+    /* Stripe motif color (hard-stop pattern, theme-aware) */
+    --stripe-color: hsl(107 91% 25% / 0.10); /* deep green @ 10% on paper */
+
     --success: 140 33% 36%;      /* #3E7A52 */
     --warning: 37 83% 35%;       /* #A36A0F */
     --error: 5 55% 42%;          /* #A63A30 */
@@ -43,7 +59,7 @@
     --popover: var(--surface);
     --popover-foreground: var(--text-primary);
     --primary: var(--ink);
-    --primary-foreground: 0 0% 100%;
+    --primary-foreground: var(--on-accent); /* near-black on lime/green fills */
     --secondary: var(--card);
     --secondary-foreground: var(--text-primary);
     --muted: var(--card);
@@ -67,42 +83,46 @@
     --sheen-opacity: 0.22;
 
     /* ---- Cinematic dark band (hero + inverted footer) ----
-       Warm-charcoal tokens reused verbatim from dark theme (§2.2) so the
-       band reads identical in BOTH page themes — MasterClass-style dark
-       canvas without breaking dark-mode parity. */
-    --band-bg: 36 12% 8%;             /* #171512 */
-    --band-surface: 30 10% 11%;       /* #201D1A */
-    --band-card: 33 13% 14%;          /* #28241F */
+       Near-black canvas (#0D0D0C family) reused verbatim from dark theme so
+       the band reads identical in BOTH page themes. Lime is the only accent
+       on the band — business-card reference: black + electric green. */
+    --band-bg: 60 4% 5%;              /* #0D0D0C near-black */
+    --band-surface: 60 8% 8%;         /* #151512 */
+    --band-card: 60 6% 10%;           /* #1C1C19 */
     --band-text: 40 24% 93%;          /* #F1EEE8 (AAA on band) */
     --band-text-secondary: 39 11% 75%;/* #C6C1B8 (AAA) */
     --band-text-muted: 38 7% 55%;     /* #938D83 (AA) */
     --band-border: 33 12% 19%;        /* #35302A */
     --band-border-strong: 36 11% 27%; /* #4C463D */
-    --band-ink: 210 49% 71%;          /* #8FB4D9 dark-mode ink */
-    --band-ink-solid: 212 45% 30%;    /* #2A4A6E solid button on band */
-    --band-ink-hover: 212 45% 24%;    /* darker hover on band */
-    --band-ink-soft: 209 28% 19%;     /* #22303D chip bg on band */
-    --band-gold: 42 54% 54%;          /* #C9A44C — hairline accents only */
-    --band-warning: 38 67% 54%;       /* #D9A03C — amber LIVE dot (NOT gold; gold = Verified only) */
+    --band-ink: var(--lime);          /* lime text/link on band (13:1) */
+    --band-ink-solid: var(--lime);    /* solid button on band = lime + black text */
+    --band-ink-hover: var(--lime-hover); /* dimmed lime hover on band */
+    --band-ink-soft: 102 44% 11%;     /* #16270F green-tint chip bg on band */
+    --band-gold: var(--lime);         /* ex-gold hairline accents → lime */
+    --band-warning: 38 67% 54%;       /* #D9A03C — amber LIVE dot (semantic status, not accent) */
   }
 
   .dark {
-    /* Dark mode — warm charcoal */
-    --bg: 36 12% 8%;             /* #171512 */
-    --surface: 30 10% 11%;       /* #201D1A */
-    --card: 33 13% 14%;          /* #28241F */
-    --overlay: 30 10% 11%;       /* #201D1A @ 92% */
+    /* Dark mode — near-black warm canvas (#0D0D0C family, still warm-neutral) */
+    --bg: 60 4% 5%;              /* #0D0D0C */
+    --surface: 60 8% 8%;         /* #151512 */
+    --card: 60 6% 10%;           /* #1C1C19 */
+    --overlay: 60 8% 8%;         /* #151512 @ 92% */
     --text-primary: 40 24% 93%;  /* #F1EEE8 */
     --text-secondary: 39 11% 75%;/* #C6C1B8 */
     --text-muted: 38 7% 55%;     /* #938D83 */
     --border: 33 12% 19%;        /* #35302A */
     --border-strong: 36 11% 27%; /* #4C463D */
-    --ink: 210 49% 71%;          /* #8FB4D9 */
-    --ink-hover: 210 49% 79%;    /* lighter hover in dark */
-    --ink-solid: 212 45% 30%;    /* #2A4A6E solid button */
-    --ink-soft: 209 28% 19%;     /* #22303D */
-    --gold: 42 54% 54%;          /* #C9A44C */
-    --gold-soft: 42 33% 14%;     /* #2E2717 */
+
+    /* Dark lime aliases — on near-black the full neon passes AAA (13.3:1),
+       so text accent = fills = pure lime; legacy tokens flip automatically. */
+    --lime-text: var(--lime);    /* text/link accent = electric lime */
+    --lime-soft: 102 44% 11%;    /* #16270F green tint — chips / AI bubble */
+    --gold: var(--lime);         /* Verified/VIP accent → lime */
+    --gold-soft: var(--lime-soft);
+
+    --stripe-color: hsl(106 92% 51% / 0.14); /* lime @ 14% on near-black */
+
     --success: 141 28% 56%;      /* #6FAE85 */
     --warning: 38 67% 54%;       /* #D9A03C */
     --error: 6 59% 63%;          /* #D9756A */
@@ -183,7 +203,37 @@
     background-size: 100% 1px;
   }
 
-  /* Verified badge sheen sweep — gold ring only, transform-only (design.md §5.3) */
+  /* ==== Geometric stripe/chevron motif system (rebrand) ====
+     Hard-stop PATTERNS, not gradients: repeating-linear-gradient with hard
+     color stops only — no blending, no soft fades. Restraint: max ~3 stripe
+     moments per page, quiet alphas. */
+  /* Theme-aware 45° diagonal stripes (deep green 10% on paper / lime 14% on near-black) */
+  .stripe-block {
+    background-image: repeating-linear-gradient(
+      45deg,
+      var(--stripe-color) 0 10px,
+      transparent 10px 22px
+    );
+  }
+  /* Fixed dark-canvas variant — for always-dark band surfaces (hero panel, footer band) */
+  .stripe-block-dark {
+    background-image: repeating-linear-gradient(
+      45deg,
+      hsl(var(--lime) / 0.14) 0 10px,
+      transparent 10px 22px
+    );
+  }
+  /* Chevron divider strip — mirrored 45° hard stops form a zigzag row */
+  .chevron-strip {
+    background-image:
+      repeating-linear-gradient(45deg, var(--stripe-color) 0 2px, transparent 2px 12px),
+      repeating-linear-gradient(-45deg, var(--stripe-color) 0 2px, transparent 2px 12px);
+    background-size: 100% 50%, 100% 50%;
+    background-position: 0 0, 0 100%;
+    background-repeat: repeat-x, repeat-x;
+  }
+
+  /* Verified badge sheen sweep — lime ring only, transform-only (design.md §5.3) */
   .badge-sheen {
     position: relative;
     overflow: hidden;
@@ -253,6 +303,15 @@
   .badge-sheen:hover::after {
     animation: badge-sheen 900ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
   }
+}
+
+/* Rebrand cascade bridge: lime fills ALWAYS carry near-black text (business-card
+   reference: black on green). Pages still pairing bg-ink-solid / bg-band-ink-solid
+   with text-white inherit the correct color without page edits. Unlayered on
+   purpose so it wins over the text-white utility. */
+.bg-ink-solid,
+.bg-band-ink-solid {
+  color: hsl(var(--on-accent));
 }
 
 /* Press feedback — after hover rules so :active wins during press on hover */
