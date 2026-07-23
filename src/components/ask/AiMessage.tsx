@@ -24,6 +24,11 @@ interface AiMessageProps {
   expertBorderColor?: string;
   /** Auto-scroll callback while typing */
   onTyped?: () => void;
+  /**
+   * 專家分身：信心 <0.6 時改為「Club 優先預約 — 即將開放」按鈕，
+   * 點擊觸發 toast（唔承諾即時真人預約）；未提供時保留預設 /experts 連結。
+   */
+  lowConfidenceAction?: { label: string; onClick: () => void };
 }
 
 type Phase = "waiting" | "typing" | "done";
@@ -33,7 +38,12 @@ type Phase = "waiting" | "typing" | "done";
  * 打字機 + citation chips（文字完成後 fade-in，stagger 60ms）+ 信心行。
  * Chips hover：文字 → ink + 下劃線 120ms，不位移（§5.2 — chips 必須穩定可信）。
  */
-export default function AiMessage({ reply, expertBorderColor, onTyped }: AiMessageProps) {
+export default function AiMessage({
+  reply,
+  expertBorderColor,
+  onTyped,
+  lowConfidenceAction,
+}: AiMessageProps) {
   const reduced = useReducedMotion();
   const [phase, setPhase] = useState<Phase>("waiting");
 
@@ -114,7 +124,19 @@ export default function AiMessage({ reply, expertBorderColor, onTyped }: AiMessa
           )}
         >
           信心分數 {reply.confidence.toFixed(2)}・回答僅供參考
-          {lowConfidence && (
+          {lowConfidence && lowConfidenceAction && (
+            <>
+              {"・"}
+              <button
+                type="button"
+                onClick={lowConfidenceAction.onClick}
+                className="press inline-flex items-center gap-0.5 underline underline-offset-2 hover:text-ink"
+              >
+                {lowConfidenceAction.label}
+              </button>
+            </>
+          )}
+          {lowConfidence && !lowConfidenceAction && (
             <>
               {"・"}
               <Link
