@@ -12,6 +12,16 @@ import ExpertProfile from "@/pages/ExpertProfile";
 import Ask from "@/pages/Ask";
 import Pricing from "@/pages/Pricing";
 import Developers from "@/pages/Developers";
+import Login from "@/pages/Login";
+import Join from "@/pages/Join";
+import Account from "@/pages/Account";
+import AdminLayout from "@/components/admin/AdminLayout";
+import Dashboard from "@/pages/admin/Dashboard";
+import AdminExperts from "@/pages/admin/AdminExperts";
+import AdminContent from "@/pages/admin/AdminContent";
+import AdminEngagement from "@/pages/admin/AdminEngagement";
+import AdminMembers from "@/pages/admin/AdminMembers";
+import AdminSettings from "@/pages/admin/AdminSettings";
 import Placeholder from "@/pages/Placeholder";
 
 /** Per-page <title> + meta（v1.1 SEO 基建） */
@@ -29,6 +39,10 @@ function RouteMeta() {
     [/^\/ask/, "Ask 問答", "問 AI 編輯部任何 AI、增長、營銷問題 — 每個論點附來源引用。"],
     [/^\/pricing/, "方案 Pricing", "免費/進階/VIP 三層會員方案 — 解鎖無限 AI 對話與領航專家分身。"],
     [/^\/developers/, "AIGRO MCP Network", "行業情報 MCP server — 你嘅 AI 工具一連接,即刻有行業雷達。AI 行業優先名單開放中。"],
+    [/^\/login/, "登入", "登入 AIGRO Club — 無限分身對話、完整案例拆解、MCP 優先接入。"],
+    [/^\/join/, "加入 Club", "加入 AIGRO Club — 三步成為會員,免費開始,隨時升級。"],
+    [/^\/account/, "會員專區", "你嘅 AIGRO 會員專區 — 層級、對話紀錄、MCP 名單與設定。"],
+    [/^\/admin/, "AIGRO Admin", "內部管理後台。"],
   ];
   const hit = map.find(([re]) => re.test(pathname));
   usePageMeta(hit?.[1] || undefined, hit?.[2] || undefined);
@@ -61,6 +75,9 @@ export default function App() {
         <Route path="ask" element={<Ask />} />
         <Route path="pricing" element={<Pricing />} />
         <Route path="developers" element={<Developers />} />
+        <Route path="login" element={<Login />} />
+        <Route path="join" element={<Join />} />
+        <Route path="account" element={<Account />} />
         <Route
           path="*"
           element={
@@ -71,6 +88,14 @@ export default function App() {
             />
           }
         />
+      </Route>
+      <Route path="admin" element={<AdminLayout />}>
+        <Route index element={<Dashboard />} />
+        <Route path="experts" element={<AdminExperts />} />
+        <Route path="content" element={<AdminContent />} />
+        <Route path="engagement" element={<AdminEngagement />} />
+        <Route path="members" element={<AdminMembers />} />
+        <Route path="settings" element={<AdminSettings />} />
       </Route>
       </Routes>
     </>
