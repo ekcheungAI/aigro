@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, ArrowUp, Sparkles } from "lucide-react";
+import { ArrowRight, ArrowUp, Check, Sparkles } from "lucide-react";
 import AiMessage from "@/components/ask/AiMessage";
 import PersonaPanel from "@/components/ask/PersonaPanel";
 import ContextPanel from "@/components/ask/ContextPanel";
@@ -18,8 +18,28 @@ import {
 import type { SessionStore } from "@/components/ask/sessions";
 import { getPersona, personas, personaInitials, pickPersonaReply } from "@/data/personas";
 import { expertHasPhoto } from "@/data/experts";
+import {
+  DEFAULT_NOTIFICATIONS,
+  loadMember,
+  saveMember,
+  validEmail,
+} from "@/components/auth/member";
+import type { AigroMember } from "@/components/auth/member";
 import { EASE_OUT_STRONG } from "@/components/Reveal";
 import { cn } from "@/lib/utils";
+
+/** 訪客第 3 條訊息後嘅註冊捕捉卡 — dismiss 後永不再顯示 */
+const CAPTURE_DISMISS_KEY = "aigro-ask-capture-dismissed";
+
+const CAPTURE_BENEFITS = ["無限對話", "歷史同步", "個人化分身推薦"] as const;
+
+function loadCaptureDismissed(): boolean {
+  try {
+    return window.localStorage.getItem(CAPTURE_DISMISS_KEY) !== null;
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Ask `/ask` — AI 分身對話工作區(v1.6 三欄版)。
@@ -45,6 +65,12 @@ export default function Ask() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // 訪客註冊捕捉:有 member record 就永遠唔顯示
+  const [member, setMember] = useState<AigroMember | null>(loadMember);
+  const [captureDismissed, setCaptureDismissed] = useState(loadCaptureDismissed);
+  const [captureEmail, setCaptureEmail] = useState("");
+  const [captureError, setCaptureError] = useState<string | null>(null);
+
   // 限時開放:對話額度無限 — 額度用盡升級態暫時 unreachable(保留程式碼)
   const exhausted = false;
 
@@ -53,6 +79,12 @@ export default function Ask() {
   const activeSession = sessions.find((s) => s.id === activeSessionId) ?? null;
   const messages = useMemo(() => activeSession?.messages ?? [], [activeSession]);
   const citations = useMemo(() => collectCitations(messages), [messages]);
+  const userMessageCount = useMemo(
+    () => messages.filter((m) => m.role === "user").length,
+    [messages]
+  );
+  // 訪客第 3 條訊息後,喺訊息流插入一張註冊捕捉卡(一次性,可 dismiss)
+  const showCapture = !member && !captureDismissed && userMessageCount >= 3;
 
   // Sessions 持久化 — refresh / 離開後返嚟都仲喺度
   useEffect(() => {
@@ -73,6 +105,39 @@ export default function Ask() {
       el.scrollTo({ top: el.scrollHeight, behavior: reduced ? "auto" : "smooth" });
     }
   }, [reduced]);
+
+  /** 「而家唔使」— 記低 dismissal,之後永不再顯示 */
+  const dismissCapture = useCallback(() => {
+    try {
+      window.localStorage.setItem(CAPTURE_DISMISS_KEY, "1");
+    } catch {
+      /* private mode — 靜默 */
+    }
+    setCaptureDismissed(true);
+  }, []);
+
+  /** 「免費加入」— 即場開 free 會員(record 經 member.ts,同 Join 同源) */
+  const captureSignup = useCallback(() => {
+    const email = captureEmail.trim();
+    if (!validEmail(email)) {
+      setCaptureError("請輸入有效嘅 Email 地址");
+      return;
+    }
+    const next: AigroMember = {
+      name: email.split("@")[0] || "會員",
+      email,
+      interests: [],
+      persona: null,
+      role: "free",
+      tier: "free",
+      joinedAt: Date.now(),
+      notifications: { ...DEFAULT_NOTIFICATIONS },
+    };
+    saveMember(next);
+    setMember(next);
+    setCaptureError(null);
+    showToast("已免費加入 — 對話紀錄會同步到你嘅帳號");
+  }, [captureEmail, showToast]);
 
   // 還原歷史(頁面載入 / 揀返舊 session / 切換分身)→ 即刻跳去最新訊息;
   // 同一 session 內新訊息 → smooth。新鮮回答打字途中由 onTyped 逐字跟住捲。
@@ -159,6 +224,7 @@ export default function Ask() {
           activeSessionId={activeSessionId}
           onSelectSession={selectSession}
           onNewSession={newSession}
+          anonymous={!member}
         />
       </div>
 
@@ -355,6 +421,89 @@ export default function Ask() {
                     </motion.div>
                   )
                 )}
+
+                {/* 訪客捕捉卡 — 第 3 條訊息後一次性 inline 出現(非 modal) */}
+                <AnimatePresence>
+                  {showCapture && (
+                    <motion.div
+                      key="signup-capture"
+                      initial={{ opacity: 0, transform: "translateY(12px)" }}
+                      animate={{ opacity: 1, transform: "translateY(0px)" }}
+                      exit={{ opacity: 0, transform: "translateY(8px)" }}
+                      transition={{ duration: 0.3 }}
+                      className="rounded-md border border-border-strong bg-surface p-6"
+                    >
+                      <p className="text-overline uppercase tracking-[0.12em] text-ink">
+                        AIGRO Club
+                      </p>
+                      <h4 className="mt-2 font-display text-h4 text-text-primary">
+                        想留住對話紀錄?
+                      </h4>
+                      <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5">
+                        {CAPTURE_BENEFITS.map((b) => (
+                          <li
+                            key={b}
+                            className="flex items-center gap-1.5 text-body-sm text-text-secondary"
+                          >
+                            <Check className="h-3.5 w-3.5 shrink-0 text-ink" strokeWidth={2} />
+                            {b}
+                          </li>
+                        ))}
+                      </ul>
+                      <p className="mt-2 text-caption text-text-muted">
+                        免費註冊即享 — 對話會自動同步返你嘅帳號。
+                      </p>
+                      <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                        <label htmlFor="capture-email" className="sr-only">
+                          Email
+                        </label>
+                        <input
+                          id="capture-email"
+                          type="email"
+                          autoComplete="email"
+                          placeholder="you@example.com"
+                          value={captureEmail}
+                          aria-invalid={captureError ? true : undefined}
+                          onChange={(e) => {
+                            setCaptureEmail(e.target.value);
+                            if (captureError) setCaptureError(null);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+                              e.preventDefault();
+                              captureSignup();
+                            }
+                          }}
+                          className={cn(
+                            "h-11 flex-1 rounded-md border bg-surface px-4 text-body-sm text-text-primary transition-[border-color,box-shadow] duration-150 placeholder:text-text-muted focus:outline-none focus:ring-2",
+                            captureError
+                              ? "border-error focus:border-error focus:ring-error/20"
+                              : "border-border-strong focus:border-ink focus:ring-ink-soft"
+                          )}
+                        />
+                        <button
+                          type="button"
+                          onClick={captureSignup}
+                          className="press inline-flex h-11 shrink-0 items-center justify-center rounded-md bg-lime px-5 text-label text-on-accent hover:bg-lime-hover"
+                        >
+                          免費加入
+                        </button>
+                      </div>
+                      {captureError && (
+                        <p role="alert" className="mt-2 text-caption text-error">
+                          {captureError}
+                        </p>
+                      )}
+                      <button
+                        type="button"
+                        onClick={dismissCapture}
+                        className="press mt-3 text-caption text-text-muted underline decoration-text-muted/60 underline-offset-4 hover:text-ink"
+                      >
+                        而家唔使
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             )}
           </div>

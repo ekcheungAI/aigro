@@ -13,6 +13,7 @@ import Field from "@/components/auth/Field";
 import Toast, { useToast } from "@/components/auth/Toast";
 import {
   DEFAULT_NOTIFICATIONS,
+  roleFromTier,
   saveMember,
   validEmail,
 } from "@/components/auth/member";
@@ -33,7 +34,7 @@ interface JoinTier {
 
 const JOIN_TIERS: JoinTier[] = [
   { id: "free", name: "免費", price: "HK$0", tagline: "每日情報,永遠免費。" },
-  { id: "pro", name: "進階", price: "HK$168/月", tagline: "無限分身對話 + 完整案例拆解。" },
+  { id: "pro", name: "創始會員", price: "HK$168/月", tagline: "首批 100 席 · 永久鎖定創始價。" },
   { id: "vip", name: "VIP", price: "HK$988/月", tagline: "真人導師,一對一。" },
 ];
 
@@ -76,7 +77,7 @@ function passwordStrength(pw: string): Strength {
  * Join `/join` — 3 步會員註冊(club funnel,示範模式)。
  * Step 1 建立帳號(name + email + password 強度髮絲 meter)→
  * Step 2 揀你嘅戰場(興趣多選 chips + 身份單選)→
- * Step 3 揀方案(免費/進階/VIP,進階預選;VIP 審核制 toast)→
+ * Step 3 揀方案(免費/創始會員/VIP,創始會員預選;VIP 審核制 toast)→
  * 成功畫面(lime check + 下一步建議)。
  * 完成時寫入 localStorage `aigro-member`;Supabase Auth 接入時
  * Step 1 換 supabase.auth.signUp,其餘作為 onboarding profile。
@@ -96,10 +97,10 @@ export default function Join() {
 
   // Step 2
   const [interests, setInterests] = useState<string[]>([]);
-  const [role, setRole] = useState<string | null>(null);
+  const [persona, setPersona] = useState<string | null>(null);
   const [interestError, setInterestError] = useState<string | null>(null);
 
-  // Step 3 — 進階預選
+  // Step 3 — 創始會員預選
   const [tier, setTier] = useState<MemberTier>("pro");
 
   const strength = useMemo(() => passwordStrength(password), [password]);
@@ -132,7 +133,9 @@ export default function Join() {
       name: name.trim(),
       email: email.trim(),
       interests,
-      role,
+      persona,
+      // 4 級制度:揀創始會員方案 → founding;免費 → free
+      role: roleFromTier(tier),
       tier,
       joinedAt: Date.now(),
       notifications: { ...DEFAULT_NOTIFICATIONS },
@@ -367,13 +370,13 @@ export default function Join() {
                   <legend className="text-label text-text-primary">你嘅身份(揀一個)</legend>
                   <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
                     {ROLES.map((r) => {
-                      const on = role === r;
+                      const on = persona === r;
                       return (
                         <button
                           key={r}
                           type="button"
                           aria-pressed={on}
-                          onClick={() => setRole(on ? null : r)}
+                          onClick={() => setPersona(on ? null : r)}
                           className={cn(
                             "press flex h-12 items-center justify-center rounded-md border text-label",
                             on

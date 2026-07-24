@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { MessageSquarePlus, Sparkles } from "lucide-react";
 import MonogramAvatar, { PhotoAvatar } from "@/components/MonogramAvatar";
 import VerifiedBadge from "@/components/VerifiedBadge";
@@ -16,6 +17,8 @@ interface PersonaPanelProps {
   activeSessionId: string | null;
   onSelectSession: (id: string) => void;
   onNewSession: () => void;
+  /** 訪客(無 member record)— panel 底部顯示「登入以同步紀錄」ghost link */
+  anonymous?: boolean;
 }
 
 function formatTimestamp(ts: number): string {
@@ -42,6 +45,7 @@ export default function PersonaPanel({
   activeSessionId,
   onSelectSession,
   onNewSession,
+  anonymous = false,
 }: PersonaPanelProps) {
   return (
     <aside className="flex h-full w-[260px] shrink-0 flex-col border-r border-border bg-surface">
@@ -179,6 +183,18 @@ export default function PersonaPanel({
       <div className="shrink-0 border-t border-border px-4 py-3">
         <QuotaMeter variant="panel" />
       </div>
+
+      {/* 訪客:登入以同步紀錄(ghost link) */}
+      {anonymous && (
+        <div className="shrink-0 border-t border-border px-4 py-2.5">
+          <Link
+            to="/login"
+            className="press text-caption text-text-muted underline decoration-text-muted/60 underline-offset-4 transition-colors duration-150 hover:text-ink"
+          >
+            登入以同步紀錄
+          </Link>
+        </div>
+      )}
     </aside>
   );
 }

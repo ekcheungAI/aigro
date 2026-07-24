@@ -8,10 +8,11 @@ import {
   greeting,
   loadMember,
   memberInitial,
+  ROLE_LABELS,
   saveMember,
   TIER_LABEL,
 } from "@/components/auth/member";
-import type { AigroMember } from "@/components/auth/member";
+import type { AigroMember, MemberRole } from "@/components/auth/member";
 import { loadSessionStore } from "@/components/ask/sessions";
 import { getPersona } from "@/data/personas";
 import { cn } from "@/lib/utils";
@@ -52,6 +53,39 @@ function formatTime(ts: number): string {
     month: "short",
     day: "numeric",
   });
+}
+
+/**
+ * 角色 chip(4 級制度)— founding = lime;expert = VerifiedBadge 同族
+ * (near-black disc + 1.5px lime ring);admin = 深色;free = 髮絲邊框。
+ */
+function RoleChip({ role }: { role: MemberRole }) {
+  if (role === "expert") {
+    return (
+      <span
+        className="inline-flex items-center rounded-full px-2.5 py-0.5 text-caption"
+        style={{
+          boxShadow: "inset 0 0 0 1.5px hsl(var(--lime))",
+          backgroundColor: "hsl(var(--on-accent))",
+          color: "hsl(45 29% 97%)",
+        }}
+      >
+        {ROLE_LABELS.expert}
+      </span>
+    );
+  }
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full px-2.5 py-0.5 text-caption",
+        role === "founding" && "bg-lime text-on-accent",
+        role === "admin" && "bg-ink-solid text-white",
+        role === "free" && "border border-border-strong text-text-muted"
+      )}
+    >
+      {ROLE_LABELS[role]}
+    </span>
+  );
 }
 
 /**
@@ -148,7 +182,10 @@ export default function Account() {
             <h1 className="font-display text-h2 text-text-primary">
               {member.name},{greeting()}
             </h1>
-            <p className="mt-1 text-body-sm text-text-muted">{member.email}</p>
+            <div className="mt-1.5 flex items-center gap-2">
+              <p className="text-body-sm text-text-muted">{member.email}</p>
+              <RoleChip role={member.role} />
+            </div>
           </div>
         </div>
 
@@ -163,9 +200,9 @@ export default function Account() {
             </p>
             <p className="mt-1 text-body-sm text-text-secondary">
               {member.tier === "free" &&
-                "每日情報任讀;升級進階解鎖無限分身對話與完整案例拆解。"}
+                "每日情報任讀;升級創始會員解鎖無限分身對話與完整案例拆解。"}
               {member.tier === "pro" &&
-                "無限 AI 編輯部對話、專家分身通行、案例庫完整拆解。"}
+                "無限分身對話、完整案例拆解、MCP 優先接入、專家活動優先席。"}
               {member.tier === "vip" && "真人導師一對一,新功能優先體驗。"}
             </p>
           </div>

@@ -7,6 +7,9 @@
 
 export type MemberTier = "free" | "pro" | "vip";
 
+/** 4 級用戶制度:免費 / 創始會員 / 領航專家 / 管理員 */
+export type MemberRole = "free" | "founding" | "expert" | "admin";
+
 export interface MemberNotifications {
   /** 每日情報摘要 */
   daily: boolean;
@@ -21,7 +24,10 @@ export interface AigroMember {
   email: string;
   interests: string[];
   /** Founder / Marketer / Developer / Creator;未揀 = null */
-  role: string | null;
+  persona: string | null;
+  /** 帳號級別(權限)— 預設 free */
+  role: MemberRole;
+  /** 收費方案 — 同 role 分開:VIP 都係 founding 級權限 */
   tier: MemberTier;
   joinedAt: number;
   notifications: MemberNotifications;
@@ -35,25 +41,52 @@ export const DEFAULT_NOTIFICATIONS: MemberNotifications = {
   product: false,
 };
 
+export const ROLE_LABELS: Record<MemberRole, string> = {
+  free: "免費會員",
+  founding: "創始會員",
+  expert: "領航專家",
+  admin: "管理員",
+};
+
+/** 級別排序(權限由低至高) */
+export const TIER_ORDER: MemberRole[] = ["free", "founding", "expert", "admin"];
+
 export const TIER_LABEL: Record<MemberTier, string> = {
   free: "免費會員",
-  pro: "進階會員",
+  pro: "創始會員",
   vip: "VIP 會員",
 };
 
+const MEMBER_ROLES: MemberRole[] = ["free", "founding", "expert", "admin"];
+
+function isMemberRole(v: unknown): v is MemberRole {
+  return typeof v === "string" && (MEMBER_ROLES as string[]).includes(v);
+}
+
+/** 由收費方案推斷預設級別(舊紀錄遷移用):pro/vip → founding */
+export function roleFromTier(tier: MemberTier): MemberRole {
+  return tier === "free" ? "free" : "founding";
+}
+
 function sanitize(raw: unknown): AigroMember | null {
   if (!raw || typeof raw !== "object") return null;
-  const m = raw as Partial<AigroMember>;
+  const m = raw as Partial<AigroMember> & { role?: unknown };
   if (typeof m.email !== "string" || !m.email) return null;
   const tier: MemberTier =
     m.tier === "pro" || m.tier === "vip" ? m.tier : "free";
+  // 舊紀錄遷移:v1.16 前 `role` 係身份字串(Founder/Marketer…),
+  // 而家 `role` 係帳號級別,身份搬去 `persona`。
+  const legacyPersona =
+    typeof m.role === "string" && !isMemberRole(m.role) ? m.role : null;
   return {
     name: typeof m.name === "string" && m.name ? m.name : m.email.split("@")[0] || "會員",
     email: m.email,
     interests: Array.isArray(m.interests)
       ? m.interests.filter((i): i is string => typeof i === "string")
       : [],
-    role: typeof m.role === "string" ? m.role : null,
+    persona:
+      typeof m.persona === "string" && m.persona ? m.persona : legacyPersona,
+    role: isMemberRole(m.role) ? m.role : roleFromTier(tier),
     tier,
     joinedAt: typeof m.joinedAt === "number" ? m.joinedAt : Date.now(),
     notifications: { ...DEFAULT_NOTIFICATIONS, ...(m.notifications ?? {}) },

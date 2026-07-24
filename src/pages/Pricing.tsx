@@ -48,20 +48,19 @@ const TIERS: Tier[] = [
   },
   {
     id: "pro",
-    overline: "PRO — 最受歡迎 MOST POPULAR",
-    name: "進階",
+    overline: "FOUNDING MEMBER — 最受歡迎 MOST POPULAR",
+    name: "創始會員",
     monthly: 168,
     yearly: 140,
     yearlyNote: "按年付 HK$1,680",
     tagline: "俾認真嘅 marketer 同 founder。",
     features: [
-      "無限 AI 編輯部對話",
-      "專家 AI 分身對話通行",
-      "案例庫完整拆解",
-      "Library 全部模板",
-      "情報進階篩選與收藏",
+      "無限分身對話",
+      "完整案例拆解",
+      "MCP 優先接入",
+      "專家活動優先席",
     ],
-    ctaLabel: "升級進階",
+    ctaLabel: "成為創始會員",
     ctaTo: "/ask",
   },
   {
@@ -73,7 +72,7 @@ const TIERS: Tier[] = [
     yearlyNote: "按年付 HK$9,880",
     tagline: "真人導師，一對一。",
     features: [
-      "進階版全部功能",
+      "創始會員全部功能",
       "每月 1 次真人導師 1:1（45 分鐘）",
       "語音對話",
       "新功能優先體驗",
@@ -213,6 +212,13 @@ function TierCard({ tier, billing, counted, onCounted }: TierCardProps) {
       </p>
       <h3 className="mt-2 font-display text-h3 text-text-primary">{tier.name}</h3>
 
+      {/* 創始會員限定徽章 — 首批 100 席,lime pill */}
+      {isPro && (
+        <p className="mt-3 inline-flex w-fit items-center rounded-full bg-lime-soft px-2.5 py-1 text-caption text-ink">
+          首批 100 席 · 永久鎖定創始價
+        </p>
+      )}
+
       {/* 價格行 — 切換時 cross-fade 200ms（舊值 -8px 出，新值 +8px 入） */}
       <div className="mt-6 flex items-baseline gap-1.5">
         <span className="font-display text-h4 text-text-primary">HK$</span>
@@ -290,7 +296,7 @@ function TierCard({ tier, billing, counted, onCounted }: TierCardProps) {
     <div
       className={cn(
         "card-hover rounded-md bg-surface p-8",
-        isPro ? "border-[1.5px] border-ink" : "border"
+        isPro ? "border-[1.5px] border-ink ring-2 ring-lime" : "border"
       )}
     >
       {cardInner}
@@ -342,7 +348,7 @@ export default function Pricing() {
         </Reveal>
         <Reveal delay={0.2}>
           <p className="mx-auto mt-4 max-w-xl text-body-lg text-text-secondary">
-            每日情報同 AI 對話免費任你用；進階解鎖專家分身、完整案例拆解 —
+            每日情報同 AI 對話免費任你用；創始會員解鎖專家分身、完整案例拆解 —
             用過先決定，隨時取消。
           </p>
         </Reveal>
@@ -406,7 +412,7 @@ export default function Pricing() {
                     免費
                   </th>
                   <th className="px-3 py-4 text-center text-label font-medium text-text-primary">
-                    進階
+                    創始會員
                   </th>
                   <th className="px-3 py-4 text-center text-label font-medium text-text-primary">
                     VIP

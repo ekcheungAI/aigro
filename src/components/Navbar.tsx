@@ -48,6 +48,15 @@ export default function Navbar() {
   // Transparent-over-hero only on Home, only at the very top
   const overHero = pathname === "/" && !scrolled;
 
+  // 4 級制度:expert chip → 專家平台;admin chip → 管理後台;其他 → 會員專區
+  const memberChipTo = member
+    ? member.role === "expert"
+      ? "/portal"
+      : member.role === "admin"
+        ? "/admin"
+        : "/account"
+    : "/account";
+
   return (
     <>
       <header
@@ -127,10 +136,17 @@ export default function Navbar() {
               )}
             </button>
             {member ? (
-              /* 已登入:頭像 chip → /account */
+              /* 已登入:頭像 chip — expert → /portal,admin → /admin,其他 → /account;
+                 創始會員喺名下面加「創始會員」caption */
               <Link
-                to="/account"
-                aria-label={`${member.name} 嘅會員專區`}
+                to={memberChipTo}
+                aria-label={
+                  member.role === "expert"
+                    ? `${member.name} 嘅專家平台`
+                    : member.role === "admin"
+                      ? `${member.name} 嘅管理後台`
+                      : `${member.name} 嘅會員專區`
+                }
                 className={cn(
                   "press hidden h-10 items-center gap-2 rounded-md border pl-1.5 pr-3 sm:inline-flex",
                   overHero
@@ -144,13 +160,20 @@ export default function Navbar() {
                 >
                   {memberInitial(member.name)}
                 </span>
-                <span
-                  className={cn(
-                    "max-w-[96px] truncate text-label",
-                    overHero ? "text-band-text" : "text-text-primary"
+                <span className="flex max-w-[96px] flex-col items-start">
+                  <span
+                    className={cn(
+                      "w-full truncate text-label leading-tight",
+                      overHero ? "text-band-text" : "text-text-primary"
+                    )}
+                  >
+                    {member.name}
+                  </span>
+                  {member.role === "founding" && (
+                    <span className="w-full truncate text-[10px] leading-tight text-ink">
+                      創始會員
+                    </span>
                   )}
-                >
-                  {member.name}
                 </span>
               </Link>
             ) : (
@@ -246,7 +269,7 @@ export default function Navbar() {
               >
                 {member ? (
                   <Link
-                    to="/account"
+                    to={memberChipTo}
                     onClick={() => setDrawerOpen(false)}
                     className="inline-flex h-11 items-center gap-2 rounded-md border border-border-strong pl-1.5 pr-4 text-label text-text-primary"
                   >
@@ -256,7 +279,11 @@ export default function Navbar() {
                     >
                       {memberInitial(member.name)}
                     </span>
-                    會員專區
+                    {member.role === "expert"
+                      ? "專家平台"
+                      : member.role === "admin"
+                        ? "管理後台"
+                        : "會員專區"}
                   </Link>
                 ) : (
                   <>
