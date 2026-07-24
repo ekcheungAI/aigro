@@ -1,0 +1,148 @@
+import { Link } from "react-router-dom";
+import { motion, useReducedMotion } from "framer-motion";
+import { ArrowRight, Quote, Sparkles } from "lucide-react";
+import MonogramAvatar, { PhotoAvatar } from "@/components/MonogramAvatar";
+import VerifiedBadge from "@/components/VerifiedBadge";
+import PresenceDot from "@/components/ask/PresenceDot";
+import { EASE_OUT_STRONG } from "@/components/Reveal";
+import { aihotAllInsights } from "@/data/aihot";
+import { cases } from "@/data/cases";
+import { expertHasPhoto, verifiedExperts } from "@/data/experts";
+import type { Persona } from "@/data/personas";
+import { personaInitials } from "@/data/personas";
+
+interface SpotlightCardProps {
+  persona: Persona;
+  /** 打開「關於佢」persona popup(MasterClass 式宣傳卡) */
+  onOpenProfile: () => void;
+}
+
+interface CredentialChip {
+  value: string;
+  label: string;
+}
+
+/**
+ * Speaker spotlight card — 對話開始前嘅「導師宣傳位」(empty state 主角)。
+ * 大頭像 + presence dot +「你而家同緊 X 傾計」+ signature quote +
+ * 3 個 credential chips(experts.ts metrics)+ 核心觀點連結 + 授權 trust note。
+ * 進場:fade + rise 300ms,children stagger 60ms(GPU-only;reduced-motion → 純 fade)。
+ */
+export default function SpotlightCard({
+  persona,
+  onOpenProfile,
+}: SpotlightCardProps) {
+  const reduced = useReducedMotion();
+  const expert = persona.kind === "expert" ? persona.expert : undefined;
+
+  // 3 個 credential chips:專家取 experts.ts metrics 頭 3 個;平台取真實內容庫 counts
+  const chips: CredentialChip[] = expert?.metrics
+    ? expert.metrics.slice(0, 3).map((m) => ({ value: m.value, label: m.label }))
+    : [
+        { value: `${aihotAllInsights.length} 則`, label: "全站情報庫・每日更新" },
+        { value: `${cases.length} 篇`, label: "香港落地案例庫" },
+        { value: `${verifiedExperts.length} 位`, label: "領航專家授權分身" },
+      ];
+
+  const quote = expert?.quote ?? persona.signature;
+  const trustNote = expert
+    ? `分身由 ${persona.shortName} 嘅授權內容蒸餾・知識庫經本人審核・回答僅代表方法論`
+    : "回答經編輯審核流程整理・每個論點附可檢索來源";
+
+  const rise = (delay: number) =>
+    reduced
+      ? {
+          initial: { opacity: 0 },
+          animate: { opacity: 1 },
+          transition: { duration: 0.2, delay },
+        }
+      : {
+          initial: { opacity: 0, transform: "translateY(16px)" },
+          animate: { opacity: 1, transform: "translateY(0px)" },
+          transition: { duration: 0.3, delay, ease: EASE_OUT_STRONG },
+        };
+
+  return (
+    <div className="w-full rounded-md border bg-surface p-6 text-left sm:p-8">
+      {/* 頭像 + 「你而家同緊 X 傾計」 */}
+      <motion.div {...rise(0)} className="flex items-center gap-4">
+        <span className="relative shrink-0">
+          {persona.kind === "platform" ? (
+            <span className="flex h-16 w-16 items-center justify-center rounded-md bg-ink-soft">
+              <Sparkles className="h-7 w-7 text-ink" strokeWidth={1.5} />
+            </span>
+          ) : expert && expertHasPhoto(expert) ? (
+            <PhotoAvatar src={expert.image} alt={persona.name} size={64} verified />
+          ) : (
+            <MonogramAvatar
+              initials={personaInitials(persona)}
+              color={persona.accent}
+              size={64}
+              verified={persona.kind === "expert"}
+            />
+          )}
+          <PresenceDot size={12} className="absolute -bottom-0.5 -right-0.5" />
+        </span>
+        <div className="min-w-0">
+          <p className="text-overline uppercase tracking-[0.12em] text-text-muted">
+            AI 分身 · 與你單對單
+          </p>
+          <h3 className="mt-1 flex items-center gap-1.5 font-display text-h3 text-text-primary">
+            <span className="truncate">你而家同緊 {persona.name} 傾計</span>
+            {persona.kind === "expert" && <VerifiedBadge size={24} />}
+          </h3>
+          <p className="mt-1 text-caption text-text-muted">{persona.domainCaption}</p>
+        </div>
+      </motion.div>
+
+      {/* Signature quote */}
+      <motion.blockquote {...rise(0.06)} className="mt-5 flex gap-2.5">
+        <Quote
+          className="mt-0.5 h-4 w-4 shrink-0"
+          strokeWidth={1.5}
+          style={{ color: persona.accent }}
+          aria-hidden="true"
+        />
+        <p className="font-display text-body-lg text-text-primary">{quote}</p>
+      </motion.blockquote>
+
+      {/* 3 credential chips */}
+      <motion.ul {...rise(0.12)} className="mt-5 grid gap-2 sm:grid-cols-3">
+        {chips.map((c) => (
+          <li key={c.value + c.label} className="rounded-sm border bg-bg px-3 py-2.5">
+            <p className="font-mono text-label text-text-primary">{c.value}</p>
+            <p className="mt-0.5 text-caption text-text-muted">{c.label}</p>
+          </li>
+        ))}
+      </motion.ul>
+
+      {/* 觀點連結 + trust note */}
+      <motion.div
+        {...rise(0.18)}
+        className="mt-5 flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <Link
+            to={persona.aboutLinkHref}
+            className="group inline-flex items-center gap-1 text-label text-ink"
+          >
+            {persona.aboutLinkLabel}
+            <ArrowRight
+              className="h-3.5 w-3.5 transition-transform duration-150 nudge-x"
+              strokeWidth={1.5}
+              aria-hidden="true"
+            />
+          </Link>
+          <button
+            type="button"
+            onClick={onOpenProfile}
+            className="press inline-flex items-center gap-1 text-label text-text-secondary underline decoration-text-muted/60 underline-offset-4 hover:text-ink"
+          >
+            關於{persona.kind === "expert" ? "佢" : "編輯部"}
+          </button>
+        </div>
+        <p className="text-caption text-text-muted">{trustNote}</p>
+      </motion.div>
+    </div>
+  );
+}

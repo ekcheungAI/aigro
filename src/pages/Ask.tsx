@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, ArrowUp, Check, Sparkles } from "lucide-react";
+import { ArrowRight, ArrowUp, Check, Info, Sparkles } from "lucide-react";
 import AiMessage from "@/components/ask/AiMessage";
 import PersonaPanel from "@/components/ask/PersonaPanel";
 import ContextPanel from "@/components/ask/ContextPanel";
 import QuotaMeter from "@/components/ask/QuotaMeter";
+import PresenceDot from "@/components/ask/PresenceDot";
+import SpotlightCard from "@/components/ask/SpotlightCard";
+import PersonaPopup from "@/components/ask/PersonaPopup";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import MonogramAvatar, { PhotoAvatar } from "@/components/MonogramAvatar";
 import {
@@ -41,6 +44,29 @@ function loadCaptureDismissed(): boolean {
   }
 }
 
+/** 「通話中」mono 計時器 — 每秒 tick,賣 private-call 感(唔係真通話)。
+ *  key 用 persona.key,切換分身即由 00:00 重新計起。 */
+function SessionTimer() {
+  const [seconds, setSeconds] = useState(0);
+  useEffect(() => {
+    const t = window.setInterval(() => setSeconds((s) => s + 1), 1000);
+    return () => window.clearInterval(t);
+  }, []);
+  const hh = Math.floor(seconds / 3600);
+  const mm = Math.floor((seconds % 3600) / 60);
+  const ss = seconds % 60;
+  const text =
+    hh > 0
+      ? `${hh}:${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`
+      : `${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
+  return (
+    <span className="flex items-center gap-1.5" aria-label={`對話開始咗 ${text}`}>
+      <PresenceDot size={8} />
+      <span className="font-mono text-caption text-text-muted">通話中 {text}</span>
+    </span>
+  );
+}
+
 /**
  * Ask `/ask` — AI 分身對話工作區(v1.6 三欄版)。
  * 左欄(≥lg):分身選擇 + 對話紀錄(sessions)+ 額度 meter;
@@ -61,6 +87,8 @@ export default function Ask() {
   const [animatingId, setAnimatingId] = useState<number | null>(null);
   const [input, setInput] = useState("");
   const [toast, setToast] = useState<string | null>(null);
+  // 「關於佢」persona popup(MasterClass 式導師宣傳卡)
+  const [popupOpen, setPopupOpen] = useState(false);
   const toastTimer = useRef(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -90,6 +118,11 @@ export default function Ask() {
   useEffect(() => {
     saveSessionStore(store);
   }, [store]);
+
+  // 切換分身 → 關 popup(避免舊分身內容殘留)
+  useEffect(() => {
+    setPopupOpen(false);
+  }, [persona.key]);
 
   // Toast 自動消失
   useEffect(() => () => window.clearTimeout(toastTimer.current), []);
@@ -222,8 +255,18 @@ export default function Ask() {
       className="flex h-[calc(100dvh-4rem)] bg-bg"
       style={{ "--ask-accent": persona.accent } as React.CSSProperties}
     >
-      {/* ---------- 左欄(≥lg):分身選擇 & 對話管理 ---------- */}
-      <div className="hidden h-full lg:block">
+      {/* ---------- 左欄(≥lg):分身選擇 & 對話管理 ----------
+          首次 mount slide-in(x -12px,250ms,一次性;reduced-motion → 純 fade) */}
+      <motion.div
+        initial={
+          reduced
+            ? { opacity: 0 }
+            : { opacity: 0, transform: "translateX(-12px)" }
+        }
+        animate={{ opacity: 1, transform: "translateX(0px)" }}
+        transition={{ duration: 0.25, ease: EASE_OUT_STRONG }}
+        className="hidden h-full lg:block"
+      >
         <PersonaPanel
           personas={personas}
           activePersona={persona}
@@ -234,7 +277,7 @@ export default function Ask() {
           onNewSession={newSession}
           anonymous={!member}
         />
-      </div>
+      </motion.div>
 
       {/* ---------- 中欄:chat stream ---------- */}
       <div className="flex min-w-0 flex-1 flex-col">
@@ -257,7 +300,13 @@ export default function Ask() {
           >
             {persona.kind === "expert" && persona.expert ? (
               <>
-                <span className="relative shrink-0">
+                {/* 頭像可點 → 「關於佢」popup;presence dot(lime 軟脈衝「在線」) */}
+                <button
+                  type="button"
+                  onClick={() => setPopupOpen(true)}
+                  aria-label={`關於${persona.name}`}
+                  className="press relative shrink-0 rounded-full"
+                >
                   {persona.expert && expertHasPhoto(persona.expert) ? (
                     <PhotoAvatar
                       src={persona.expert.image}
@@ -271,34 +320,61 @@ export default function Ask() {
                       size={32}
                     />
                   )}
-                  <span className="absolute -bottom-0.5 -right-0.5">
-                    <VerifiedBadge size={16} />
-                  </span>
-                </span>
+                  <PresenceDot
+                    size={10}
+                    className="absolute -bottom-0.5 -right-0.5"
+                  />
+                </button>
                 <div className="min-w-0">
-                  <p className="truncate text-label text-text-primary">{persona.name}</p>
+                  <p className="flex items-center gap-1 truncate text-label text-text-primary">
+                    <span className="truncate">{persona.name}</span>
+                    <VerifiedBadge size={16} />
+                  </p>
                   <p className="hidden text-caption text-text-muted sm:block">
-                    {persona.headerCaption}
+                    AI 分身 · 與你單對單
                   </p>
                 </div>
               </>
             ) : (
               <>
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-ink-soft">
-                  <Sparkles className="h-4 w-4 text-ink" strokeWidth={1.5} />
-                </span>
+                <button
+                  type="button"
+                  onClick={() => setPopupOpen(true)}
+                  aria-label="關於平台編輯部 AI"
+                  className="press relative shrink-0 rounded-md"
+                >
+                  <span className="flex h-8 w-8 items-center justify-center rounded-md bg-ink-soft">
+                    <Sparkles className="h-4 w-4 text-ink" strokeWidth={1.5} />
+                  </span>
+                  <PresenceDot
+                    size={10}
+                    className="absolute -bottom-0.5 -right-0.5"
+                  />
+                </button>
                 <div className="min-w-0">
                   <p className="text-label text-text-primary">平台編輯部 AI</p>
                   <p className="hidden text-caption text-text-muted sm:block">
-                    {persona.headerCaption}
+                    AI 分身 · 與你單對單
                   </p>
                 </div>
               </>
             )}
           </motion.div>
 
-          {/* 對話額度(限時無限開放) */}
+          {/* 通話中計時 + 關於佢 + 對話額度(限時無限開放) */}
           <div className="ml-auto flex items-center gap-3 sm:gap-4">
+            <span className="hidden sm:flex">
+              <SessionTimer key={persona.key} />
+            </span>
+            <button
+              type="button"
+              onClick={() => setPopupOpen(true)}
+              aria-label={`關於${persona.name}`}
+              title={`關於${persona.name}`}
+              className="press flex h-8 w-8 items-center justify-center rounded-sm border border-border-strong text-text-secondary hover:bg-card hover:text-ink"
+            >
+              <Info className="h-4 w-4" strokeWidth={1.5} />
+            </button>
             <QuotaMeter />
             <Link
               to="/pricing"
@@ -350,34 +426,39 @@ export default function Ask() {
         <div ref={scrollRef} data-lenis-prevent className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-[720px] px-6 pb-12">
             {messages.length === 0 ? (
-              /* Empty State — 分身專屬 greeting + 建議問題 */
-              <div className="flex flex-col items-center pt-24 text-center">
-                <motion.h3
-                  key={`${persona.key}-title`}
-                  initial={{ opacity: 0, transform: "translateY(24px)" }}
-                  animate={{ opacity: 1, transform: "translateY(0px)" }}
-                  transition={{ duration: 0.5 }}
-                  className="font-display text-h3 text-text-primary"
+              /* Empty State — 導師宣傳 spotlight card + 佢嘅 4 條建議問題,
+                 好似導師邀請你入嚟傾,而唔係一張空白表格 */
+              <div className="flex flex-col items-center pt-10 sm:pt-16">
+                <SpotlightCard
+                  key={`${persona.key}-spotlight`}
+                  persona={persona}
+                  onOpenProfile={() => setPopupOpen(true)}
+                />
+                <motion.p
+                  key={`${persona.key}-invite`}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.25, delay: reduced ? 0.1 : 0.24 }}
+                  className="mt-6 text-body-sm text-text-secondary"
                 >
                   {persona.greetingTitle}
-                </motion.h3>
-                <motion.p
-                  key={`${persona.key}-body`}
-                  initial={{ opacity: 0, transform: "translateY(24px)" }}
-                  animate={{ opacity: 1, transform: "translateY(0px)" }}
-                  transition={{ duration: 0.5, delay: 0.08 }}
-                  className="mt-3 max-w-md text-body-sm text-text-secondary"
-                >
-                  {persona.greetingBody}
                 </motion.p>
-                <div className="mt-8 flex max-w-lg flex-wrap justify-center gap-2">
+                <div className="mt-4 flex max-w-lg flex-wrap justify-center gap-2">
                   {persona.suggestions.map((s, i) => (
                     <motion.button
                       key={s}
                       type="button"
-                      initial={{ opacity: 0, transform: "translateY(12px)" }}
+                      initial={
+                        reduced
+                          ? { opacity: 0 }
+                          : { opacity: 0, transform: "translateY(12px)" }
+                      }
                       animate={{ opacity: 1, transform: "translateY(0px)" }}
-                      transition={{ duration: 0.35, delay: 0.16 + i * 0.08 }}
+                      transition={{
+                        duration: reduced ? 0.2 : 0.3,
+                        delay: 0.28 + i * 0.06,
+                        ease: EASE_OUT_STRONG,
+                      }}
                       onClick={() => send(s)}
                       disabled={exhausted}
                       className="press rounded-sm border bg-surface px-4 py-2.5 text-body-sm text-text-secondary transition-colors duration-150 hover:border-[var(--ask-accent)] hover:text-[var(--ask-accent)] disabled:pointer-events-none disabled:opacity-40"
@@ -391,23 +472,33 @@ export default function Ask() {
               <div className="flex flex-col gap-6 pt-6">
                 {messages.map((m) =>
                   m.role === "user" ? (
+                    /* 用戶氣泡 pop-in:scale 0.97 + fade,origin 右(對齊氣泡側) */
                     <motion.div
                       key={m.id}
-                      initial={{ opacity: 0, transform: "translateY(12px)" }}
-                      animate={{ opacity: 1, transform: "translateY(0px)" }}
-                      transition={{ duration: 0.25 }}
-                      className="flex justify-end"
+                      initial={
+                        reduced
+                          ? { opacity: 0 }
+                          : { opacity: 0, transform: "scale(0.97)" }
+                      }
+                      animate={{ opacity: 1, transform: "scale(1)" }}
+                      transition={{ duration: 0.25, ease: EASE_OUT_STRONG }}
+                      className="flex origin-right justify-end"
                     >
                       <div className="max-w-[80%] whitespace-pre-wrap rounded-lg bg-card px-5 py-4 text-body text-text-primary">
                         {m.text}
                       </div>
                     </motion.div>
                   ) : (
+                    /* AI 氣泡 rise-in:translateY 10px + fade */
                     <motion.div
                       key={m.id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.25 }}
+                      initial={
+                        reduced
+                          ? { opacity: 0 }
+                          : { opacity: 0, transform: "translateY(10px)" }
+                      }
+                      animate={{ opacity: 1, transform: "translateY(0px)" }}
+                      transition={{ duration: 0.25, ease: EASE_OUT_STRONG }}
                       className="flex justify-start"
                     >
                       <div className="w-full">
@@ -611,15 +702,32 @@ export default function Ask() {
         </div>
       </div>
 
-      {/* ---------- 右欄(≥lg):分身背景 & 引用 ---------- */}
-      <div className="hidden h-full lg:block">
+      {/* ---------- 右欄(≥lg):分身背景 & 引用 ----------
+          首次 mount slide-in(x +12px,250ms,一次性;reduced-motion → 純 fade) */}
+      <motion.div
+        initial={
+          reduced
+            ? { opacity: 0 }
+            : { opacity: 0, transform: "translateX(12px)" }
+        }
+        animate={{ opacity: 1, transform: "translateX(0px)" }}
+        transition={{ duration: 0.25, ease: EASE_OUT_STRONG }}
+        className="hidden h-full lg:block"
+      >
         <ContextPanel
           persona={persona}
           citations={citations}
           onSuggestion={send}
           suggestionsDisabled={exhausted}
         />
-      </div>
+      </motion.div>
+
+      {/* 「關於佢」persona popup — MasterClass 式導師宣傳卡(Esc / backdrop 關閉) */}
+      <PersonaPopup
+        open={popupOpen}
+        persona={persona}
+        onClose={() => setPopupOpen(false)}
+      />
 
       {/* Club 優先預約 toast */}
       <AnimatePresence>

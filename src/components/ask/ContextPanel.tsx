@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, ArrowUpRight, Quote, Sparkles } from "lucide-react";
 import MonogramAvatar, { PhotoAvatar } from "@/components/MonogramAvatar";
 import VerifiedBadge from "@/components/VerifiedBadge";
@@ -32,6 +33,7 @@ export default function ContextPanel({
   // 「分身資料與限制」— 按分身切換:平台用真實內容庫 counts + AIHOT snapshot 日期;
   // 專家用授權內容說明 + 觀點數 + Prompt 版本。
   const isPlatform = persona.kind === "platform";
+  const reduced = useReducedMotion();
   const knowledgeSource = isPlatform
     ? `全站情報庫 ${aihotAllInsights.length} 則 + 案例庫 ${cases.length} 篇 + 資源庫`
     : `公開分享 + 授權內容 · ${persona.expert?.viewpoints?.length ?? 10} 個核心觀點 · Prompt v1.0`;
@@ -51,6 +53,14 @@ export default function ContextPanel({
       data-lenis-prevent
       style={{ "--ask-accent": persona.accent } as React.CSSProperties}
     >
+      {/* 分身切換:panel 內容 cross-fade(200ms opacity,GPU-only) */}
+      <motion.div
+        key={persona.key}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: reduced ? 0.12 : 0.2 }}
+        className="flex flex-col gap-6"
+      >
       {/* 關於此分身 */}
       <section>
         <div className="flex items-center justify-between">
@@ -228,6 +238,7 @@ export default function ContextPanel({
           ))}
         </div>
       </section>
+      </motion.div>
     </aside>
   );
 }
