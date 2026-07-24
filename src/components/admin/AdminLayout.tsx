@@ -6,6 +6,7 @@ import {
   FileText,
   FlaskConical,
   LayoutDashboard,
+  Mail,
   Menu,
   MessagesSquare,
   Settings,
@@ -41,6 +42,7 @@ const NAV = [
     icon: MessagesSquare,
   },
   { to: "/admin/members", zh: "會員管理", en: "Members", icon: UserRound },
+  { to: "/admin/emails", zh: "郵件", en: "Emails", icon: Mail },
   { to: "/admin/settings", zh: "設定", en: "Settings", icon: Settings },
 ] as const;
 
