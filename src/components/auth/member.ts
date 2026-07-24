@@ -7,6 +7,13 @@
 
 export type MemberTier = "free" | "pro" | "vip";
 
+/**
+ * 入口角色(additive,v1.17 專家平台)— 與上面 persona `role`
+ * (Founder/Marketer/…)唔同:呢個係帳號級權限,用嚟 gate /portal 等區域。
+ * 未設定 = 一般會員("free")。
+ */
+export type MemberPortalRole = "free" | "founding" | "expert" | "admin";
+
 export interface MemberNotifications {
   /** 每日情報摘要 */
   daily: boolean;
@@ -22,6 +29,8 @@ export interface AigroMember {
   interests: string[];
   /** Founder / Marketer / Developer / Creator;未揀 = null */
   role: string | null;
+  /** 帳號級入口角色(v1.17 additive)— "expert"/"admin" 可進入 /portal */
+  portalRole?: MemberPortalRole;
   tier: MemberTier;
   joinedAt: number;
   notifications: MemberNotifications;
@@ -54,6 +63,13 @@ function sanitize(raw: unknown): AigroMember | null {
       ? m.interests.filter((i): i is string => typeof i === "string")
       : [],
     role: typeof m.role === "string" ? m.role : null,
+    portalRole:
+      m.portalRole === "founding" ||
+      m.portalRole === "expert" ||
+      m.portalRole === "admin" ||
+      m.portalRole === "free"
+        ? m.portalRole
+        : undefined,
     tier,
     joinedAt: typeof m.joinedAt === "number" ? m.joinedAt : Date.now(),
     notifications: { ...DEFAULT_NOTIFICATIONS, ...(m.notifications ?? {}) },
