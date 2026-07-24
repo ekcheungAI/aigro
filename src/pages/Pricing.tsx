@@ -279,7 +279,7 @@ function TierCard({ tier, billing, counted, onCounted }: TierCardProps) {
         whileInView={{ borderColor: "hsl(var(--gold) / 1)" }}
         viewport={{ once: true, amount: 0.3 }}
         transition={{ delay: 0.3, duration: 0.5 }}
-        className="rounded-lg border-2 bg-surface p-8 transition-[transform] duration-180 hover-lift-sm"
+        className="rounded-md border-2 bg-surface p-8 transition-[transform] duration-180 hover-lift-sm"
       >
         {cardInner}
       </motion.div>
@@ -289,7 +289,7 @@ function TierCard({ tier, billing, counted, onCounted }: TierCardProps) {
   return (
     <div
       className={cn(
-        "card-hover rounded-lg bg-surface p-8",
+        "card-hover rounded-md bg-surface p-8",
         isPro ? "border-[1.5px] border-ink" : "border"
       )}
     >

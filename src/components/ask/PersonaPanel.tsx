@@ -147,17 +147,21 @@ export default function PersonaPanel({
                       onClick={() => onSelectSession(s.id)}
                       aria-current={active}
                       className={cn(
-                        "press flex w-full flex-col gap-0.5 rounded-md border-l-2 px-2.5 py-2 text-left transition-colors duration-150",
-                        active ? "bg-card" : "border-transparent hover:bg-card"
-                      )}
-                      style={
+                        "press flex w-full flex-col gap-0.5 rounded-md border px-2.5 py-2 text-left transition-colors duration-150",
                         active
-                          ? { borderLeftColor: activePersona.accent }
-                          : undefined
-                      }
+                          ? "border-border-strong bg-card"
+                          : "border-transparent hover:bg-card"
+                      )}
                     >
-                      <span className="w-full truncate text-caption text-text-primary">
-                        {s.title}
+                      <span className="flex w-full items-center gap-1.5 text-caption text-text-primary">
+                        {active && (
+                          <span
+                            aria-hidden="true"
+                            className="h-1.5 w-1.5 shrink-0 rounded-full"
+                            style={{ backgroundColor: activePersona.accent }}
+                          />
+                        )}
+                        <span className="truncate">{s.title}</span>
                       </span>
                       <span className="text-caption text-text-muted">
                         {formatTimestamp(s.updatedAt)}・{s.messages.filter((m) => m.role === "user").length} 條問題

@@ -317,7 +317,7 @@ function AskCta() {
   return (
     <section className="mx-auto max-w-[720px] px-6 pt-16">
       <Reveal y={20} duration={0.45}>
-        <div className="rounded-lg bg-ink-soft p-8">
+        <div className="rounded-md bg-ink-soft p-8">
           <h4 className="font-display text-h4 text-text-primary">
             你嘅行業都做到？
           </h4>

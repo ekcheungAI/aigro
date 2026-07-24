@@ -308,7 +308,7 @@ export default function InsightDetail() {
       {/* Section 5 — Ask CTA 卡（ink-soft 底 well, radius-lg） */}
       <section className="mx-auto max-w-[720px] px-6 pt-12">
         <Reveal y={20} duration={0.45}>
-          <div className="rounded-lg bg-ink-soft p-8 max-md:p-6">
+          <div className="rounded-md bg-ink-soft p-8 max-md:p-6">
             <h4 className="font-display text-h4 text-text-primary">
               想知呢條新聞對你生意嘅具體影響？
             </h4>

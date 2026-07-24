@@ -14,15 +14,15 @@ export default function Footer() {
   const [devEmail, setDevEmail] = useState("");
 
   return (
-    <footer className="border-t border-band-gold/40 bg-band-bg">
-      {/* Lime hairline — 2px solid accent rule (footer top) */}
+    <footer className="bg-band-bg">
+      {/* Lime hairline — 2px solid accent rule (footer top, single rule only) */}
       <div aria-hidden="true" className="h-[2px] w-full bg-band-ink" />
       <div className="mx-auto max-w-container px-6 py-16">
         <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}
           <div>
             <p className="font-display text-[20px] font-medium uppercase tracking-[0.04em] text-band-text">
-              AIGRO<span className="text-band-ink">.</span>
+              AIGRO<span className="brand-period text-band-ink">.</span>
             </p>
             <p className="mt-3 max-w-[240px] text-body-sm text-band-text-secondary">
               可信賴的 AI・增長・商業情報，香港視角。

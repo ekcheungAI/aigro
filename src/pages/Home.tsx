@@ -51,8 +51,11 @@ function Hero() {
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 -z-10 select-none"
       >
-        <span className="absolute right-[-0.14em] top-1/2 -translate-y-1/2 whitespace-nowrap font-display text-[clamp(20rem,32vw,36rem)] leading-none tracking-[-0.03em] text-band-text/[0.05]">
+        <span className="absolute right-[0.04em] top-1/2 -translate-y-1/2 whitespace-nowrap font-display text-[clamp(20rem,32vw,36rem)] leading-none tracking-[-0.03em] text-band-text/[0.05]">
           AIGRO
+          {/* Brand period — the wordmark is「AIGRO.」with a lime dot; the
+              watermark echoes it one step brighter than the letters */}
+          <span className="-ml-[0.14em] text-band-ink/[0.10]">.</span>
         </span>
         {/* Masthead double rule, directly under the overlay nav */}
         <span className="absolute inset-x-0 top-16 h-px bg-band-border-strong/50" />

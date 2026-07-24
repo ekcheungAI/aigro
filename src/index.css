@@ -172,6 +172,15 @@
     outline: 2px solid hsl(var(--ink));
     outline-offset: 2px;
   }
+
+  /* Focus rings on always-dark band surfaces (hero / MCP band / page headers /
+     footer / login panel): --ink reads deep green on light theme, which is
+     ~1.6:1 on near-black — effectively invisible. Band contexts override to
+     lime (13.3:1 on #0D0D0C) so keyboard focus stays visible in both themes. */
+  .bg-band-bg :focus-visible,
+  .bg-band-bg:focus-visible {
+    outline-color: hsl(var(--band-ink));
+  }
 }
 
 @layer components {
@@ -364,6 +373,26 @@
   0% { transform: translateX(-120%); }
   12% { transform: translateX(120%); }
   100% { transform: translateX(120%); }
+}
+
+/* Brand period pulse — the lime 「.」in「AIGRO.」breathes like the Ask
+   typewriter caret (brand blink precedent, design.md §5.3). Opacity-only,
+   3.6s, low amplitude; reduced-motion → solid. Applied sparingly: navbar
+   wordmark, mobile drawer wordmark, footer wordmark. */
+@media (prefers-reduced-motion: no-preference) {
+  .brand-period {
+    animation: brand-period-pulse 3.6s ease-in-out 1.2s infinite;
+  }
+}
+
+@keyframes brand-period-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
 }
 
 /* caret-blink provided by tailwind config (530ms, design.md §5.3) */

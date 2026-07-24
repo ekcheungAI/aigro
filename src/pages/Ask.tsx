@@ -18,6 +18,7 @@ import {
 import type { SessionStore } from "@/components/ask/sessions";
 import { getPersona, personas, personaInitials, pickPersonaReply } from "@/data/personas";
 import { expertHasPhoto } from "@/data/experts";
+import { EASE_OUT_STRONG } from "@/components/Reveal";
 import { cn } from "@/lib/utils";
 
 /**
@@ -170,46 +171,57 @@ export default function Ask() {
           transition={{ duration: 0.3 }}
           className="flex h-16 shrink-0 items-center gap-3 border-b bg-surface px-4 sm:px-6"
         >
-          {persona.kind === "expert" && persona.expert ? (
-            <div className="flex min-w-0 items-center gap-3">
-              <span className="relative shrink-0">
-                {persona.expert && expertHasPhoto(persona.expert) ? (
-                  <PhotoAvatar
-                    src={persona.expert.image}
-                    alt={persona.name}
-                    size={32}
-                  />
-                ) : (
-                  <MonogramAvatar
-                    initials={personaInitials(persona)}
-                    color={persona.accent}
-                    size={32}
-                  />
-                )}
-                <span className="absolute -bottom-0.5 -right-0.5">
-                  <VerifiedBadge size={16} />
+          {/* 分身 signature transition — keyed on persona: 250ms rise +
+              cross-fade (GPU transform/opacity, strong ease-out; reduced-motion
+              → instant). 切換分身嘅一刻係 Ask 嘅品牌時刻。 */}
+          <motion.div
+            key={persona.key}
+            initial={reduced ? false : { opacity: 0, transform: "translateY(6px)" }}
+            animate={{ opacity: 1, transform: "translateY(0px)" }}
+            transition={{ duration: 0.25, ease: EASE_OUT_STRONG }}
+            className="flex min-w-0 items-center gap-3"
+          >
+            {persona.kind === "expert" && persona.expert ? (
+              <>
+                <span className="relative shrink-0">
+                  {persona.expert && expertHasPhoto(persona.expert) ? (
+                    <PhotoAvatar
+                      src={persona.expert.image}
+                      alt={persona.name}
+                      size={32}
+                    />
+                  ) : (
+                    <MonogramAvatar
+                      initials={personaInitials(persona)}
+                      color={persona.accent}
+                      size={32}
+                    />
+                  )}
+                  <span className="absolute -bottom-0.5 -right-0.5">
+                    <VerifiedBadge size={16} />
+                  </span>
                 </span>
-              </span>
-              <div className="min-w-0">
-                <p className="truncate text-label text-text-primary">{persona.name}</p>
-                <p className="hidden text-caption text-text-muted sm:block">
-                  {persona.headerCaption}
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="flex min-w-0 items-center gap-3">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-ink-soft">
-                <Sparkles className="h-4 w-4 text-ink" strokeWidth={1.5} />
-              </span>
-              <div className="min-w-0">
-                <p className="text-label text-text-primary">平台編輯部 AI</p>
-                <p className="hidden text-caption text-text-muted sm:block">
-                  {persona.headerCaption}
-                </p>
-              </div>
-            </div>
-          )}
+                <div className="min-w-0">
+                  <p className="truncate text-label text-text-primary">{persona.name}</p>
+                  <p className="hidden text-caption text-text-muted sm:block">
+                    {persona.headerCaption}
+                  </p>
+                </div>
+              </>
+            ) : (
+              <>
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-ink-soft">
+                  <Sparkles className="h-4 w-4 text-ink" strokeWidth={1.5} />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-label text-text-primary">平台編輯部 AI</p>
+                  <p className="hidden text-caption text-text-muted sm:block">
+                    {persona.headerCaption}
+                  </p>
+                </div>
+              </>
+            )}
+          </motion.div>
 
           {/* 對話額度(限時無限開放) */}
           <div className="ml-auto flex items-center gap-3 sm:gap-4">
@@ -359,7 +371,7 @@ export default function Ask() {
                   animate={{ opacity: 1, transform: "translateY(0px)" }}
                   exit={{ opacity: 0, transform: "translateY(-8px)" }}
                   transition={{ duration: 0.25 }}
-                  className="rounded-lg border bg-surface p-8 text-center"
+                  className="rounded-md border bg-surface p-8 text-center"
                 >
                   <h4 className="font-display text-h4 text-text-primary">
                     免費無限對話 · 限時開放

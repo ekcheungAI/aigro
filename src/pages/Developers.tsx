@@ -127,7 +127,7 @@ function SignupCard({ initialInterests = [] }: { initialInterests?: string[] }) 
   /* ---------- 成功態 ---------- */
   if (record) {
     return (
-      <div className="rounded-lg border bg-surface p-8 shadow-card dark:shadow-none">
+      <div className="rounded-md border bg-surface p-8 shadow-card dark:shadow-none">
         <span
           className="flex h-12 w-12 items-center justify-center rounded-full bg-ink-soft"
           aria-hidden="true"
@@ -165,7 +165,7 @@ function SignupCard({ initialInterests = [] }: { initialInterests?: string[] }) 
   /* ---------- Step 2:builder 類型(optional) ---------- */
   if (step === 2) {
     return (
-      <div className="rounded-lg border bg-surface p-8 shadow-card dark:shadow-none">
+      <div className="rounded-md border bg-surface p-8 shadow-card dark:shadow-none">
         <p className="font-mono text-caption text-text-muted">STEP 2 / 2</p>
         <h3 className="mt-3 font-display text-h3 text-text-primary">
           你係邊類 builder?
@@ -207,7 +207,7 @@ function SignupCard({ initialInterests = [] }: { initialInterests?: string[] }) 
   return (
     <form
       onSubmit={submitStep1}
-      className="rounded-lg border bg-surface p-8 shadow-card dark:shadow-none"
+      className="rounded-md border bg-surface p-8 shadow-card dark:shadow-none"
       noValidate
     >
       <p className="font-mono text-caption text-text-muted">STEP 1 / 2</p>
@@ -344,7 +344,9 @@ export default function Developers() {
               </ul>
               {/* Endpoints preview — mono block */}
               <div className="mt-5 rounded-md border bg-card p-4">
-                <p className="overflow-x-auto whitespace-nowrap font-mono text-caption leading-6 text-text-secondary">
+                {/* 12px mono so all three endpoints fit the narrow column —
+                    no clipped text, no native scrollbar */}
+                <p className="font-mono text-[12px] leading-6 text-text-secondary">
                   GET /api/public/items
                   <br />
                   GET /api/public/daily

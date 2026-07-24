@@ -130,7 +130,7 @@ function VerifiedExpertCard({
 }) {
   return (
     <motion.article
-      className="group card-hover rounded-lg border bg-surface p-10 shadow-card dark:shadow-none max-md:p-8"
+      className="group card-hover rounded-md border bg-surface p-10 shadow-card dark:shadow-none max-md:p-8"
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.2 }}
@@ -224,7 +224,7 @@ function PendingExpertCard({ expert, index }: { expert: Expert; index: number })
 
   return (
     <motion.article
-      className="rounded-lg border border-dashed border-border-strong bg-surface p-8"
+      className="rounded-md border border-dashed border-border-strong bg-surface p-8"
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.2 }}
@@ -336,7 +336,7 @@ function DemoPersonaCard({
 }) {
   return (
     <motion.article
-      className="rounded-lg border bg-surface p-6 transition-colors duration-150 hover:border-border-strong"
+      className="rounded-md border bg-surface p-6 transition-colors duration-150 hover:border-border-strong"
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.2 }}
@@ -464,7 +464,7 @@ function LaurelBadge() {
 function InviteSection({ onApply }: { onApply: () => void }) {
   return (
     <section className="mx-auto max-w-container px-6 py-24 max-md:py-16">
-      <div className="rounded-lg bg-gold-soft p-12 text-center max-md:p-8">
+      <div className="rounded-md bg-gold-soft p-12 text-center max-md:p-8">
         <motion.div
           className="flex justify-center"
           initial={{ opacity: 0, scale: 0.9 }}

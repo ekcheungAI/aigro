@@ -67,7 +67,11 @@ export default function Navbar() {
               )}
             >
               AIGRO
-              <span className={overHero ? "text-band-ink" : "text-ink"}>.</span>
+              <span
+                className={cn("brand-period", overHero ? "text-band-ink" : "text-ink")}
+              >
+                .
+              </span>
             </span>
             <span
               className={cn(
@@ -199,7 +203,7 @@ export default function Navbar() {
           >
             <div className="flex h-16 items-center justify-between border-b px-6">
               <span className="font-display text-[20px] font-medium uppercase tracking-[0.04em]">
-                AIGRO<span className="text-ink">.</span>
+                AIGRO<span className="brand-period text-ink">.</span>
               </span>
               <button
                 type="button"

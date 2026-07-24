@@ -52,7 +52,7 @@ export default function AskPreview() {
           <Link
             to="/ask"
             aria-label="去 Ask 問答開始對話"
-            className="card-hover group block rounded-lg border bg-surface p-6 shadow-card dark:shadow-none"
+            className="card-hover group block rounded-md border bg-surface p-6 shadow-card dark:shadow-none"
           >
             {/* 用戶氣泡(右)— card well,無色底規則內 */}
             <div className="flex justify-end">

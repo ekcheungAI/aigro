@@ -118,17 +118,9 @@ function MetricChip({
       viewport={{ once: true, amount: 0.2 }}
       transition={{ duration: 0.35, delay, ease: REVEAL_EASE }}
     >
-      {isMedia ? (
-        <a
-          href="#"
-          onClick={(e) => e.preventDefault()}
-          className="group block rounded-md border bg-surface px-5 py-4"
-        >
-          {inner}
-        </a>
-      ) : (
-        <div className="group rounded-md border bg-surface px-5 py-4">{inner}</div>
-      )}
+      {/* 媒體報道 chip 暫無公開連結 — 用 div 而非 dead anchor（href="#" 係
+          broken control）；有真實 URL 時先恢復 <a> */}
+      <div className="group rounded-md border bg-surface px-5 py-4">{inner}</div>
     </motion.div>
   );
 }
