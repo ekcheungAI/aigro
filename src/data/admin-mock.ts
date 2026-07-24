@@ -791,3 +791,549 @@ export const aihotSources: AihotSource[] = [
     ok: false,
   },
 ];
+
+/* ---------------- CRM 線索 ---------------- */
+
+export type CrmStage = "新線索" | "已接觸" | "跟進中" | "已轉化";
+export type CrmLeadType = "訪客" | "免費會員" | "進階會員";
+/** 意向訊號 — 公司導入/預約/價錢 = 高意向,課程 = 中,閒聊 = 低 */
+export type CrmSignal = "問公司導入" | "問預約" | "問價錢" | "問課程" | "閒聊";
+
+export interface CrmQuestion {
+  date: string;
+  text: string;
+  persona: string;
+}
+
+export interface CrmTimelineEntry {
+  date: string;
+  label: string;
+}
+
+export interface CrmMemberProfile {
+  email: string;
+  tier: string;
+  joinedAt: string;
+  mcpInterests: string[];
+}
+
+export interface CrmLead {
+  id: string;
+  /** 訪客匿名 ID */
+  anonId: string;
+  /** 註冊會員姓名,訪客為 null */
+  name: string | null;
+  type: CrmLeadType;
+  /** 主要接觸分身 */
+  persona: string;
+  /**
+   * 意向評分 0–100,由問題內容推算:
+   * 問公司導入/預約/價錢 = 高意向(70+),問課程 = 中(40–69),閒聊 = 低(<40)。
+   */
+  score: number;
+  signals: CrmSignal[];
+  lastActivity: string;
+  stage: CrmStage;
+  questions: CrmQuestion[];
+  /** 意向分析 — 偵測訊號摘要 + 建議切入角度 */
+  analysis: { detected: string[]; angle: string };
+  /** 註冊會員資料,訪客為 null */
+  member: CrmMemberProfile | null;
+  timeline: CrmTimelineEntry[];
+  /** 跟進 email 範本(按分身語氣預填) */
+  emailDraft: { subject: string; body: string };
+  /** 建議跟進動作(未接觸線索用) */
+  suggestedAction: string;
+}
+
+/** 全站 KPI(mock)— 列表樣本見 crmLeads */
+export const crmKpis = {
+  total: 342,
+  highIntent: 28,
+  newThisWeek: 41,
+  following: 15,
+} as const;
+
+export const crmLeads: CrmLead[] = [
+  {
+    id: "lead-001",
+    anonId: "#A4821",
+    name: null,
+    type: "訪客",
+    persona: "Jimmy Lau 分身",
+    score: 88,
+    signals: ["問公司導入", "問價錢"],
+    lastActivity: "今日 14:38",
+    stage: "新線索",
+    questions: [
+      { date: "今日 14:22", text: "我哋公司想做 AI 內容工場,第一步應該點行?", persona: "Jimmy Lau 分身" },
+      { date: "今日 14:25", text: "我哋主要係社交媒體 caption 同埋電子報,邊個先?", persona: "Jimmy Lau 分身" },
+      { date: "今日 14:31", text: "公司導入 AI 工具,預算大概要幾多先合理?", persona: "Jimmy Lau 分身" },
+      { date: "今日 14:38", text: "你哋 Club 有冇企業方案?", persona: "Jimmy Lau 分身" },
+    ],
+    analysis: {
+      detected: ["連續四問圍繞公司導入", "主動問預算範圍", "問及 Club 企業方案"],
+      angle: "對企業導入有明確預算意圖 — 建議 Club 優先預約角度",
+    },
+    member: null,
+    timeline: [
+      { date: "今日 14:22", label: "與 Jimmy Lau 分身對話發生(8 則訊息)" },
+      { date: "今日 14:40", label: "系統評分 88 — 歸類高意向線索" },
+    ],
+    emailDraft: {
+      subject: "你問嘅 AI 內容工場 — Jimmy 想同你傾 15 分鐘",
+      body: "你好,\n\n睇到你今日同 Jimmy 分身傾咗一輪 AI 內容工場嘅導入方向,由電子報做母體、再拆做多平台分發,呢條路線好適合香港細市場。\n\n既然你已經諗緊預算同團隊層面,想約你同 Jimmy 本人傾 15 分鐘,針對你哋公司嘅場景出一份落地第一步建議。Club 企業席位亦可以一次過解答。\n\nAIGRO 團隊",
+    },
+    suggestedAction: "發出 Club 企業方案 + 預約 15 分鐘顧問傾談",
+  },
+  {
+    id: "lead-002",
+    anonId: "#A4760",
+    name: "梁卓文",
+    type: "進階會員",
+    persona: "Jimmy Lau 分身",
+    score: 92,
+    signals: ["問公司導入", "問預約"],
+    lastActivity: "今日 11:12",
+    stage: "跟進中",
+    questions: [
+      { date: "昨日 16:05", text: "公司 20 人 marketing team 想導入 AI workflow,有冇顧問式支援?", persona: "Jimmy Lau 分身" },
+      { date: "昨日 16:20", text: "可唔可以預約 Jimmy 本人傾下企業培訓?", persona: "Jimmy Lau 分身" },
+      { date: "今日 11:12", text: "Club 企業席位係按人頭計定按公司計?", persona: "Jimmy Lau 分身" },
+    ],
+    analysis: {
+      detected: ["明確團隊規模(20 人)", "主動要求預約真人", "問席位計費模式"],
+      angle: "對企業導入有明確預算意圖 — 建議 Club 優先預約角度",
+    },
+    member: {
+      email: "cheukman.leung@yahoo.com.hk",
+      tier: "進階",
+      joinedAt: "2025-12-15",
+      mcpInterests: ["AI"],
+    },
+    timeline: [
+      { date: "昨日 16:05", label: "與 Jimmy Lau 分身對話發生(9 則訊息)" },
+      { date: "昨日 17:02", label: "已讀 — 開啟咗 Club 介紹頁兩次" },
+      { date: "今日 09:30", label: "發出跟進 email(Club 企業席位)" },
+      { date: "今日 11:15", label: "收到回覆 — 「想約下星期同 Jimmy 傾」" },
+    ],
+    emailDraft: {
+      subject: "約實你 — Jimmy 企業培訓 15 分鐘快傾",
+      body: "卓文你好,\n\n收到你嘅回覆,已經幫你 hold 咗下星期兩個時段同 Jimmy 快傾 15 分鐘,重點傾 20 人團隊嘅導入次序同 Club 企業席位計法。\n\n回覆呢封 email 揀個時間就可以。\n\nAIGRO 團隊",
+    },
+    suggestedAction: "確認預約時段,轉介 Jimmy 真人跟進",
+  },
+  {
+    id: "lead-003",
+    anonId: "#A4795",
+    name: null,
+    type: "訪客",
+    persona: "Jimmy Lau 分身",
+    score: 61,
+    signals: ["問課程"],
+    lastActivity: "昨日 18:41",
+    stage: "已接觸",
+    questions: [
+      { date: "昨日 18:31", text: "語境工程同提示詞工程有咩分別?", persona: "Jimmy Lau 分身" },
+      { date: "昨日 18:41", text: "有冇相關課程或者工作坊可以上?", persona: "Jimmy Lau 分身" },
+    ],
+    analysis: {
+      detected: ["學習導向提問", "問及課程/工作坊"],
+      angle: "一般學習需求 — 建議由免費情報訂閱切入,再推 Club 工作坊",
+    },
+    member: null,
+    timeline: [
+      { date: "昨日 18:31", label: "與 Jimmy Lau 分身對話發生(6 則訊息)" },
+      { date: "今日 09:05", label: "發出跟進 email(語境工程文章 + 工作坊資訊)" },
+    ],
+    emailDraft: {
+      subject: "語境工程入門 — Jimmy 嘅文章同工作坊時間表",
+      body: "你好,\n\n你昨日問到語境工程同提示詞工程嘅分別,Jimmy 寫咗篇完整拆解「語境工程入門:香港企業嘅 AI 落地第一步」,另外每月 Club 都有一場實戰工作坊。\n\n附上連結,有問題隨時再傾。\n\nAIGRO 團隊",
+    },
+    suggestedAction: "發送語境工程文章 + Club 工作坊時間表",
+  },
+  {
+    id: "lead-004",
+    anonId: "#A4788",
+    name: "陳家欣",
+    type: "免費會員",
+    persona: "平台編輯部",
+    score: 47,
+    signals: ["問課程"],
+    lastActivity: "今日 12:04",
+    stage: "已接觸",
+    questions: [
+      { date: "今日 11:48", text: "VIP 會員同進階會員有咩分別?", persona: "平台編輯部" },
+      { date: "今日 12:04", text: "Beauty 行業有冇 AI 文案案例可以參考?", persona: "平台編輯部" },
+    ],
+    analysis: {
+      detected: ["比較會員層級", "指定行業(Beauty)案例需求"],
+      angle: "有升級潛力 — 建議以 Beauty 案例 + 進階會員權益切入",
+    },
+    member: {
+      email: "kayan.chen@gmail.com",
+      tier: "免費",
+      joinedAt: "2026-07-08",
+      mcpInterests: ["Beauty"],
+    },
+    timeline: [
+      { date: "今日 11:48", label: "與平台編輯部對話發生(5 則訊息)" },
+      { date: "今日 12:20", label: "發出跟進 email(Beauty 案例合集)" },
+    ],
+    emailDraft: {
+      subject: "Beauty 行業 AI 案例合集 — 專屬你嘅行業情報",
+      body: "家欣你好,\n\n你問到 Beauty 行業嘅 AI 文案案例,我哋整理咗三個香港本地案例,涵蓋產品文案、KOL brief 同社群內容。進階會員可以睇到完整拆解。\n\nAIGRO 團隊",
+    },
+    suggestedAction: "發送 Beauty 案例合集,附進階會員升級連結",
+  },
+  {
+    id: "lead-005",
+    anonId: "#A4803",
+    name: null,
+    type: "訪客",
+    persona: "Elvin 分身",
+    score: 55,
+    signals: ["問課程"],
+    lastActivity: "今日 09:58",
+    stage: "新線索",
+    questions: [
+      { date: "今日 09:47", text: "Claude Code 同 Cursor 邊個適合非技術出身嘅人?", persona: "Elvin 分身" },
+      { date: "今日 09:50", text: "咁學習曲線大概幾耐?", persona: "Elvin 分身" },
+      { date: "今日 09:58", text: "有冇實測片可以跟住做?", persona: "Elvin 分身" },
+    ],
+    analysis: {
+      detected: ["工具選型提問", "自學意願高(跟片實作)"],
+      angle: "一般學習需求 — 建議推 Elvin 14 天上手日記,自然帶出 VIP 分身額度",
+    },
+    member: null,
+    timeline: [
+      { date: "今日 09:47", label: "與 Elvin 分身對話發生(12 則訊息)" },
+      { date: "今日 10:01", label: "系統評分 55 — 歸類中意向線索" },
+    ],
+    emailDraft: {
+      subject: "Elvin 嘅 14 天 Claude Code 上手日記",
+      body: "你好,\n\n你問非技術出身點上手 Claude Code — Elvin 自己就係咁樣行過嚟,佢嘅「14 天上手日記」記錄咗每日 30 分鐘嘅實作路線。\n\n文章附喺下面,VIP 會員仲可以無限同 Elvin 分身跟進實作問題。\n\nAIGRO 團隊",
+    },
+    suggestedAction: "發送 Elvin 上手日記 + 免費會員註冊引導",
+  },
+  {
+    id: "lead-006",
+    anonId: "#A4688",
+    name: null,
+    type: "訪客",
+    persona: "平台編輯部",
+    score: 74,
+    signals: ["問公司導入", "問價錢"],
+    lastActivity: "昨日 15:30",
+    stage: "新線索",
+    questions: [
+      { date: "昨日 15:12", text: "補習社想用 AI 批改,有冇本地案例參考?", persona: "平台編輯部" },
+      { date: "昨日 15:19", text: "導入成本大概幾多?細規模補習社負擔到嗎?", persona: "平台編輯部" },
+      { date: "昨日 15:30", text: "有冇人可以幫手評估我哋嘅流程?", persona: "平台編輯部" },
+    ],
+    analysis: {
+      detected: ["具體行業場景(補習社批改)", "主動問成本", "要求評估支援"],
+      angle: "中小企導入意圖明確 — 建議以補習社案例 + 免費流程評估切入",
+    },
+    member: null,
+    timeline: [
+      { date: "昨日 15:12", label: "與平台編輯部對話發生(10 則訊息)" },
+      { date: "昨日 15:35", label: "系統評分 74 — 歸類高意向線索" },
+    ],
+    emailDraft: {
+      subject: "補習社 AI 批改 — 案例拆解 + 免費流程評估",
+      body: "你好,\n\n你問到補習社 AI 批改,平台案例庫收錄咗一間香港補習社嘅完整拆解:批改同個人化練習交俾 AI,導師時間放回教學,內容產出提升 2.4 倍。\n\n我哋可以為你做一次免費流程評估,睇下邊個環節最值得先導入。\n\nAIGRO 團隊",
+    },
+    suggestedAction: "發送補習社案例 + 提供免費流程評估",
+  },
+  {
+    id: "lead-007",
+    anonId: "#A4733",
+    name: "吳詠琳",
+    type: "免費會員",
+    persona: "Elvin 分身",
+    score: 34,
+    signals: ["閒聊"],
+    lastActivity: "今日 10:22",
+    stage: "新線索",
+    questions: [
+      { date: "今日 10:11", text: "AI 會唔會取代 marketing 團隊?", persona: "Elvin 分身" },
+      { date: "今日 10:18", text: "你係咪真人嚟㗎?", persona: "Elvin 分身" },
+      { date: "今日 10:22", text: "香港邊間茶餐廳好食?", persona: "Elvin 分身" },
+    ],
+    analysis: {
+      detected: ["話題發散", "無明確學習或商業意圖"],
+      angle: "閒聊型互動 — 保持輕觸及,用每週情報電子報培養",
+    },
+    member: {
+      email: "winglam.ng@gmail.com",
+      tier: "免費",
+      joinedAt: "2026-03-22",
+      mcpInterests: [],
+    },
+    timeline: [
+      { date: "今日 10:11", label: "與 Elvin 分身對話發生(6 則訊息)" },
+      { date: "今日 10:25", label: "系統評分 34 — 歸類低意向線索" },
+    ],
+    emailDraft: {
+      subject: "今週香港 AI 情報速遞",
+      body: "詠琳你好,\n\n多謝你同 Elvin 分身傾計!今週香港 AI 圈有幾單值得留意嘅消息,整理咗喺呢封速遞入面。\n\n有咩想深入了解,隨時返嚟傾。\n\nAIGRO 團隊",
+    },
+    suggestedAction: "加入每週情報電子報名單,暫不主動跟進",
+  },
+  {
+    id: "lead-008",
+    anonId: "#A4654",
+    name: null,
+    type: "訪客",
+    persona: "Elvin 分身",
+    score: 66,
+    signals: ["問課程"],
+    lastActivity: "昨日 11:10",
+    stage: "已接觸",
+    questions: [
+      { date: "昨日 10:58", text: "點樣用 MCP 將 AIGRO 情報接入我自己嘅 AI 工具?", persona: "Elvin 分身" },
+      { date: "昨日 11:10", text: "AI 行業 server 幾時開放?有冇文件可以先睇?", persona: "Elvin 分身" },
+    ],
+    analysis: {
+      detected: ["技術整合意圖(MCP)", "主動問開放時間同文件"],
+      angle: "開發者型線索 — 建議推 MCP 優先名單登記 + Developers 頁",
+    },
+    member: null,
+    timeline: [
+      { date: "昨日 10:58", label: "與 Elvin 分身對話發生(5 則訊息)" },
+      { date: "昨日 14:00", label: "發出跟進 email(MCP 優先名單登記連結)" },
+    ],
+    emailDraft: {
+      subject: "AIGRO MCP 優先名單 — AI 行業 server 第一批開放",
+      body: "你好,\n\n你問到點樣用 MCP 接入 AIGRO 情報 — AI 行業 server 會係第一批開放,依家喺 Developers 頁登記優先名單,開放時會第一時間通知,接入文件會一併提供。\n\nAIGRO 團隊",
+    },
+    suggestedAction: "確認已登記 MCP 優先名單,開放時優先通知",
+  },
+  {
+    id: "lead-009",
+    anonId: "#A4402",
+    name: "黃子朗",
+    type: "進階會員",
+    persona: "Jimmy Lau 分身",
+    score: 95,
+    signals: ["問公司導入", "問預約", "問價錢"],
+    lastActivity: "3 天前",
+    stage: "已轉化",
+    questions: [
+      { date: "4 天前 14:02", text: "想幫公司成個 marketing team 導入 AI workflow", persona: "Jimmy Lau 分身" },
+      { date: "4 天前 14:15", text: "Club 企業方案幾錢?包幾多個席位?", persona: "Jimmy Lau 分身" },
+      { date: "4 天前 14:20", text: "可唔可以今個星期預約傾?", persona: "Jimmy Lau 分身" },
+    ],
+    analysis: {
+      detected: ["三個高意向訊號齊發", "明確時間要求(今個星期)", "決策者身份"],
+      angle: "已完成轉化 — 企業方案簽約,進入 Club 客戶成功流程",
+    },
+    member: {
+      email: "tszlong.wong@outlook.com",
+      tier: "VIP",
+      joinedAt: "2025-11-02",
+      mcpInterests: ["AI", "Technology"],
+    },
+    timeline: [
+      { date: "4 天前 14:02", label: "與 Jimmy Lau 分身對話發生(11 則訊息)" },
+      { date: "4 天前 15:10", label: "已讀 — 開啟 Club 企業方案頁" },
+      { date: "4 天前 16:30", label: "發出跟進 email(企業方案 + 預約連結)" },
+      { date: "3 天前 10:05", label: "收到回覆 — 確認預約" },
+      { date: "3 天前 15:00", label: "完成顧問傾談 — 簽約 Club 企業席位" },
+    ],
+    emailDraft: {
+      subject: "歡迎加入 AIGRO Club 企業方案",
+      body: "子朗你好,\n\n多謝你同公司信任 AIGRO Club 企業方案。跟住落嚟客戶成功團隊會安排 onboarding,幫 20 人團隊分批上手。\n\n有任何問題隨時搵我哋。\n\nAIGRO 團隊",
+    },
+    suggestedAction: "已完成轉化 — 轉介客戶成功團隊 onboarding",
+  },
+  {
+    id: "lead-010",
+    anonId: "#A4590",
+    name: null,
+    type: "訪客",
+    persona: "Jimmy Lau 分身",
+    score: 28,
+    signals: ["閒聊"],
+    lastActivity: "2 天前",
+    stage: "新線索",
+    questions: [
+      { date: "2 天前 20:14", text: "AI 會唔會取代 marketing 團隊?", persona: "Jimmy Lau 分身" },
+      { date: "2 天前 20:22", text: "你答嘢咁快,係咪抄 Google?", persona: "Jimmy Lau 分身" },
+    ],
+    analysis: {
+      detected: ["測試型提問", "無後續深入"],
+      angle: "閒聊型互動 — 不主動跟進,靠內容自然回流",
+    },
+    member: null,
+    timeline: [
+      { date: "2 天前 20:14", label: "與 Jimmy Lau 分身對話發生(7 則訊息)" },
+      { date: "2 天前 20:30", label: "系統評分 28 — 歸類低意向線索" },
+    ],
+    emailDraft: {
+      subject: "AI 會唔會取代 marketing?Jimmy 嘅完整回答",
+      body: "你好,\n\n你問 AI 會唔會取代 marketing 團隊 — Jimmy 嘅睇法係:識得用 AI 嘅 marketer 會取代唔識用嘅。完整論述喺平台情報區。\n\nAIGRO 團隊",
+    },
+    suggestedAction: "低意向 — 暫不跟進,觀察回流",
+  },
+  {
+    id: "lead-011",
+    anonId: "#A4543",
+    name: null,
+    type: "訪客",
+    persona: "平台編輯部",
+    score: 52,
+    signals: ["閒聊", "問課程"],
+    lastActivity: "2 天前",
+    stage: "已接觸",
+    questions: [
+      { date: "2 天前 16:40", text: "GPT-5 對香港中小企有咩實際影響?", persona: "平台編輯部" },
+      { date: "2 天前 16:55", text: "有冇啲入門級嘅情報可以訂閱?", persona: "平台編輯部" },
+    ],
+    analysis: {
+      detected: ["時事型提問", "對訂閱有興趣"],
+      angle: "內容消費型線索 — 建議引導訂閱免費情報,逐步培養",
+    },
+    member: null,
+    timeline: [
+      { date: "2 天前 16:40", label: "與平台編輯部對話發生(9 則訊息)" },
+      { date: "昨日 09:00", label: "發出跟進 email(免費情報訂閱連結)" },
+    ],
+    emailDraft: {
+      subject: "香港中小企 AI 情報 — 每週免費訂閱",
+      body: "你好,\n\n你問到 GPT-5 對香港中小企嘅影響,呢類本地化分析我哋每週都會出。免費訂閱就可以收到。\n\nAIGRO 團隊",
+    },
+    suggestedAction: "已發訂閱連結 — 一週後檢查開信率再決定",
+  },
+  {
+    id: "lead-012",
+    anonId: "#A4621",
+    name: "周穎怡",
+    type: "進階會員",
+    persona: "Elvin 分身",
+    score: 81,
+    signals: ["問預約", "問課程"],
+    lastActivity: "今日 08:47",
+    stage: "跟進中",
+    questions: [
+      { date: "昨日 21:03", text: "Elvin 有冇開實體 workshop?", persona: "Elvin 分身" },
+      { date: "昨日 21:15", text: "想預約一對一,傾下我嘅 YouTube 頻道點用 AI 提速", persona: "Elvin 分身" },
+      { date: "今日 08:47", text: "VIP 係咪可以無限問 Elvin 分身?", persona: "Elvin 分身" },
+    ],
+    analysis: {
+      detected: ["主動要求一對一預約", "問 VIP 權益", "具體使用場景(YouTube 頻道)"],
+      angle: "升級 VIP 意圖明確 — 建議以一對一預約 + VIP 無限分身角度促成",
+    },
+    member: {
+      email: "wingyi.chow@gmail.com",
+      tier: "進階",
+      joinedAt: "2025-11-27",
+      mcpInterests: ["AI"],
+    },
+    timeline: [
+      { date: "昨日 21:03", label: "與 Elvin 分身對話發生(8 則訊息)" },
+      { date: "昨日 21:40", label: "已讀 — 開啟 Pricing 頁" },
+      { date: "今日 09:10", label: "發出跟進 email(VIP 升級 + 一對一預約選項)" },
+    ],
+    emailDraft: {
+      subject: "幫你留咗位 — Elvin 一對一 + VIP 無限分身",
+      body: "穎怡你好,\n\n你問到一對一預約同 VIP 權益:VIP 會員除咗無限同 Elvin 分身對話,每季仲有一次優先預約實體/視像一對一嘅名額,正好用嚟拆你嘅 YouTube 頻道提速方案。\n\n升級連結附喺下面。\n\nAIGRO 團隊",
+    },
+    suggestedAction: "跟進 VIP 升級進度,三日內未升級再提醒",
+  },
+  {
+    id: "lead-013",
+    anonId: "#A4501",
+    name: null,
+    type: "訪客",
+    persona: "Elvin 分身",
+    score: 44,
+    signals: ["閒聊"],
+    lastActivity: "3 天前",
+    stage: "新線索",
+    questions: [
+      { date: "3 天前 13:26", text: "用 AI 做 YouTube 縮圖有咩 workflow 推介?", persona: "Elvin 分身" },
+      { date: "3 天前 13:40", text: "Midjourney 而家月費幾多?", persona: "Elvin 分身" },
+    ],
+    analysis: {
+      detected: ["單次工具提問", "無深入對話"],
+      angle: "一般學習需求 — 推 Elvin 縮圖 workflow 實測片即可",
+    },
+    member: null,
+    timeline: [
+      { date: "3 天前 13:26", label: "與 Elvin 分身對話發生(11 則訊息)" },
+      { date: "3 天前 13:45", label: "系統評分 44 — 歸類中意向線索" },
+    ],
+    emailDraft: {
+      subject: "Elvin 嘅 AI 縮圖 workflow(實測片)",
+      body: "你好,\n\n你問到 AI 縮圖 workflow — Elvin 拍咗條完整實測片:Midjourney 出構圖、生成填充執細節、最後手機尺寸檢查。連結附喺下面。\n\nAIGRO 團隊",
+    },
+    suggestedAction: "發送實測片連結,觀察是否回流",
+  },
+  {
+    id: "lead-014",
+    anonId: "#A4315",
+    name: "李凱彤",
+    type: "進階會員",
+    persona: "平台編輯部",
+    score: 77,
+    signals: ["問價錢", "問公司導入"],
+    lastActivity: "1 星期前",
+    stage: "已轉化",
+    questions: [
+      { date: "1 星期前", text: "進階會員年費有冇優惠?", persona: "平台編輯部" },
+      { date: "1 星期前", text: "公司想買 5 個席位有冇團隊折扣?", persona: "平台編輯部" },
+    ],
+    analysis: {
+      detected: ["問團隊席位", "價格敏感但有明確購買意圖"],
+      angle: "已完成轉化 — 5 席位團隊方案,按季檢視使用情況",
+    },
+    member: {
+      email: "hoitung.lee@gmail.com",
+      tier: "進階",
+      joinedAt: "2026-01-19",
+      mcpInterests: ["Technology"],
+    },
+    timeline: [
+      { date: "1 星期前", label: "與平台編輯部對話發生(6 則訊息)" },
+      { date: "1 星期前", label: "發出跟進 email(團隊席位報價)" },
+      { date: "6 天前", label: "收到回覆 — 確認 5 席位" },
+      { date: "5 天前", label: "完成付款 — 轉化為團隊方案" },
+    ],
+    emailDraft: {
+      subject: "你嘅 5 席位團隊方案已生效",
+      body: "凱彤你好,\n\n5 個席位已經全部開通,團隊成員用公司 email 註冊就會自動加入。按季我哋會出使用報告,睇下邊啲情報最有用。\n\nAIGRO 團隊",
+    },
+    suggestedAction: "已完成轉化 — 季度使用報告跟進",
+  },
+  {
+    id: "lead-015",
+    anonId: "#A4477",
+    name: null,
+    type: "訪客",
+    persona: "平台編輯部",
+    score: 58,
+    signals: ["問價錢"],
+    lastActivity: "3 天前",
+    stage: "新線索",
+    questions: [
+      { date: "3 天前 09:02", text: "VIP 會員同進階會員有咩分別?", persona: "平台編輯部" },
+      { date: "3 天前 09:10", text: "價錢係咪包晒所有分身?會唔會有額外收費?", persona: "平台編輯部" },
+    ],
+    analysis: {
+      detected: ["比較層級", "關注收費透明度"],
+      angle: "有付費意願但需消除疑慮 — 建議發送清晰收費表 + 7 日保證",
+    },
+    member: null,
+    timeline: [
+      { date: "3 天前 09:02", label: "與平台編輯部對話發生(3 則訊息)" },
+      { date: "3 天前 09:15", label: "系統評分 58 — 歸類中意向線索" },
+    ],
+    emailDraft: {
+      subject: "AIGRO 收費一覽 — 無隱藏收費",
+      body: "你好,\n\n你問到收費透明度:VIP 月費已包晒全部專家分身無限對話、案例拆解全文同 Club 活動優先名額,無任何額外收費。附上完整比較表。\n\nAIGRO 團隊",
+    },
+    suggestedAction: "發送收費比較表,強調無隱藏收費",
+  },
+];
