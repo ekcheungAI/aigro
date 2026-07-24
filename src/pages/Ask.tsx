@@ -16,7 +16,7 @@ import {
   setActiveSession,
 } from "@/components/ask/sessions";
 import type { SessionStore } from "@/components/ask/sessions";
-import { getPersona, personas, personaInitials, pickPersonaReply } from "@/data/personas";
+import { getPersona, personas, personaInitials, pickReply } from "@/data/personas";
 import { expertHasPhoto } from "@/data/experts";
 import {
   DEFAULT_NOTIFICATIONS,
@@ -180,18 +180,26 @@ export default function Ask() {
     (raw: string) => {
       const question = raw.trim();
       if (!question || exhausted) return;
+      // v1.19:加權匹配 + 問題類型感知 + 多意圖 compose;
+      // 傳入 session memory(lastTopicId)俾模糊追問承接上一個話題
+      const { reply, topicId } = pickReply(
+        persona,
+        question,
+        activeSession?.lastTopicId ?? null
+      );
       const { store: next, aiMessageId } = appendRound(
         store,
         persona.key,
         question,
-        pickPersonaReply(persona, question)
+        reply,
+        topicId
       );
       setStore(next);
       setAnimatingId(aiMessageId); // 淨係呢條新回答行打字機
       setInput("");
       if (textareaRef.current) textareaRef.current.style.height = "auto";
     },
-    [exhausted, persona, store]
+    [exhausted, persona, store, activeSession]
   );
 
   const autoGrow = (el: HTMLTextAreaElement) => {
@@ -415,6 +423,7 @@ export default function Ask() {
                             }
                             lowConfidenceAction={lowConfidenceAction}
                             onTyped={scrollToBottom}
+                            onFollowUp={send}
                           />
                         )}
                       </div>

@@ -1,17 +1,42 @@
 /**
- * Ask 分身 personas — 每個分身嘅語氣、開場白、建議問題同 scripted 回答。
- * 平台編輯部 = 中性編輯語氣；Jimmy = AI-First 實戰派；Elvin = source-aware 實測派(@ekcheungAI)。
+ * Ask 分身 personas — 每個分身嘅語氣、開場白、建議問題、加權檢索回答同追問模型。
+ * 平台編輯部 = 中性編輯語氣;Jimmy = AI-First 實戰派;Elvin = source-aware 實測派(@ekcheungAI)。
  * 語氣規則同專家背景見 src/data/experts.ts(bio / viewpoints)。
+ *
+ * v1.19 matching engine(架構對齊真 RAG 行為,frontend mock):
+ * - 加權關鍵字評分(每個 topic 一組 [pattern, weight],加總揀最佳;tie → 命中較多關鍵字嘅更 specific)
+ * - 問題類型感知:點樣/如何 → steps;邊個/推薦/分別 → compare;係咩/乜嘢 → define,命中 style 加分
+ * - 多意圖 compose:兩個話題同時強命中 → intro + 兩段 digest 合併回答,唔硬揀一個
+ * - 近話題 bridge:無直接命中但有接近話題 → 照答 + 誠實交代
+ * - Fallback 維持「無引用唔亂噏」,但動態建議 2 個最近可答話題 chips
+ * - Session memory:承接 lastTopicId,模糊追問(「咁然後呢?」)自動接返上一個話題
+ * - 每個回答附 2–3 條分身口吻嘅「追問」chips(followUps map)
  */
 
-import type { AiReply } from "@/components/ask/AiMessage";
+import type { AiReply, Citation } from "@/components/ask/AiMessage";
 import type { Expert } from "@/data/experts";
 import { expertFullName, experts } from "@/data/experts";
 
+/** 問題類型 — 影響匹配加分(點樣做 → steps;邊個/推薦 → compare;係咩 → define) */
+export type QuestionType = "steps" | "compare" | "define";
+
 export interface ScriptedReply {
-  /** 命中關鍵字即用呢套回答(順序匹配,先中先用) */
-  keywords: RegExp;
+  /** topic id — session memory 承接 + compose 用 */
+  id: string;
+  /** 話題短名(承接語 / bridge / fallback 建議用) */
+  topic: string;
+  /** 問題類型偏好(問題類型命中時加分) */
+  style?: QuestionType;
+  /** 加權關鍵字 [pattern, weight] — 命中加總,最高分勝出 */
+  weights: [RegExp, number][];
+  /** 完整回答(直接命中 / 承接 / 近話題時用) */
   reply: AiReply;
+  /** 壓縮版 — 多意圖 compose 時做其中一段 */
+  digest: string;
+  /** 追問 chips(2–3 條,分身口吻邀請深入;click 直接送出) */
+  followUps: string[];
+  /** fallback「最接近話題」chip 用嘅示範問題 */
+  chip: string;
 }
 
 export interface Persona {
@@ -35,7 +60,7 @@ export interface Persona {
   greetingBody: string;
   suggestions: string[];
   replies: ScriptedReply[];
-  /** 無命中關鍵字時嘅回答(信心 <0.6 → 專家走 Club 優先預約 toast) */
+  /** 無命中話題時嘅回答(信心 <0.6 → 專家走 Club 優先預約 toast) */
   fallback: AiReply;
   /** 右欄「關於此分身」卡 */
   aboutBio: string;
@@ -46,13 +71,22 @@ export interface Persona {
 
 const INK_ACCENT = "hsl(var(--ink))";
 
-/* ---------------- 平台編輯部(既有中性編輯語氣,保留原回答) ---------------- */
+/* ---------------- 平台編輯部(中性編輯語氣) ---------------- */
 
 const PLATFORM_REPLIES: ScriptedReply[] = [
   {
-    // 「Who's Jimmy Lau」「Jimmy 係邊個」「你係邊個」→ 領航專家名錄卡
-    keywords:
-      /jimmy|劉泰麟|elvin|ekcheung|領航專家|兩位專家|邊位專家|你係邊個|你係咩人|你叫咩|邊個係你/i,
+    id: "who-experts",
+    topic: "領航專家係邊個",
+    style: "define",
+    weights: [
+      [/jimmy/i, 3],
+      [/劉泰麟/, 3],
+      [/elvin/i, 3],
+      [/ekcheung/i, 3],
+      [/領航專家|兩位專家|邊位專家/, 3],
+      [/你係邊個|你係咩人|你叫咩|邊個係你/, 3],
+      [/專家/, 1],
+    ],
     reply: {
       text: `我係 AIGRO 平台編輯部 AI — 基於全站情報同案例庫回答,背後有兩位領航專家:
 **Jimmy Lau 劉泰麟** — DotAI 共同創辦人 & CMO、AIGRO 領航專家,倡議 AI-First 思維,帶住香港企業走出「AI 試玩」舒適圈,將靈感轉化為實踐。
@@ -65,9 +99,46 @@ const PLATFORM_REPLIES: ScriptedReply[] = [
       ],
       confidence: 0.9,
     },
+    digest: `兩位領航專家:Jimmy Lau 劉泰麟(DotAI 共同創辦人 & CMO)倡議 AI-First 思維;Elvin Cheung(@ekcheungAI / Perskill 創辦人)用廣東話 source-aware 拆工具同 workflow。左欄可以直接揀佢哋嘅 AI 分身傾。`,
+    followUps: ["邊個分身啱我?", "Jimmy 同 Elvin 嘅風格有咩分別?"],
+    chip: "AIGRO 有邊幾位領航專家?",
   },
   {
-    keywords: /內容|營銷|content/i,
+    id: "persona-picker",
+    topic: "邊個分身啱你",
+    style: "compare",
+    weights: [
+      [/邊個分身|邊位分身|邊個啱|啱我/, 4],
+      [/揾邊個|問邊個|搵邊個/, 3],
+      [/分身/, 2],
+      [/揀邊|點揀/, 2],
+    ],
+    reply: {
+      text: `兩位領航專家嘅分身,按你嘅需要咁揀:
+**Jimmy Lau 劉泰麟** — AI-First 實戰派,DotAI 共同創辦人 & CMO。適合:AI 行銷、品牌內容、由 idea 到行動、語境工程。如果你係市場人或者創辦人,想將靈感變落地行動,揀佢。
+**Elvin Cheung** — source-aware 實測派,@ekcheungAI / Perskill 創辦人。適合:AI 工具實測、自動化 workflow、vibe coding。如果你想拆工具、串流程、親手整產品,揀佢。
+兩個分身都係真人授權內容蒸餾,回答代表方法論。想廣泛啲問全站情報,就繼續問我(編輯部)。`,
+      citations: [
+        { title: "直接問 Jimmy 分身", href: "/ask?expert=jimmy-lau" },
+        { title: "直接問 Elvin 分身", href: "/ask?expert=elvin-cheung" },
+        { title: "領航專家總覽", href: "/experts" },
+      ],
+      confidence: 0.88,
+    },
+    digest: `揀分身好簡單:AI 行銷、品牌、由 idea 到行動搵 Jimmy(AI-First 實戰派);工具實測、自動化 workflow、vibe coding 搵 Elvin(source-aware 實測派)。全站情報就問編輯部。`,
+    followUps: ["Jimmy 嘅分身可以答咩?", "Elvin 嘅分身可以答咩?"],
+    chip: "邊個分身啱我?",
+  },
+  {
+    id: "content-marketing",
+    topic: "AI 內容營銷",
+    style: "steps",
+    weights: [
+      [/內容/, 3],
+      [/營銷|行銷|marketing/i, 2],
+      [/content/i, 2],
+      [/產出|分發/, 1],
+    ],
     reply: {
       text: `根據本平台案例庫同最新情報,香港團隊常見嘅做法係咁:
 第一,內容產出用 GPT-5 或 Claude 起草,但**觀點同本地案例必須人手注入** — 同質化係香港細市場最快被懲罰嘅問題。
@@ -81,9 +152,20 @@ const PLATFORM_REPLIES: ScriptedReply[] = [
       ],
       confidence: 0.82,
     },
+    digest: `AI 內容營銷三點:GPT-5 / Claude 起草但觀點同本地案例必須人手注入;一篇長文拆做 LinkedIn、IG、WhatsApp 多平台分發;慳返嘅時間投放喺客戶訪談,真實洞察先係差異化。`,
+    followUps: ["預算有限應該點樣買工具?", "邊個分身啱我深入問?"],
+    chip: "點樣用 AI 做內容營銷?",
   },
   {
-    keywords: /今日|大事|新聞|頭條/,
+    id: "today-news",
+    topic: "今日 AI 大事",
+    weights: [
+      [/今日|而家/, 3],
+      [/大事|頭條/, 3],
+      [/新聞|消息|情報/, 2],
+      [/最新/, 1],
+      [/gpt|openai|minimax|perplexity|claude/i, 1],
+    ],
     reply: {
       text: `今日編輯部精選三件大事:
 第一,OpenAI 發佈 GPT-5,統一推理與生成,API 價格下調 40%,中小企接入成本大降。
@@ -97,9 +179,20 @@ const PLATFORM_REPLIES: ScriptedReply[] = [
       ],
       confidence: 0.84,
     },
+    digest: `今日三件大事:GPT-5 發佈(API 價格下調 40%)、MiniMax M2 開源(推理成本僅及 Claude 8%)、Perplexity Comet 瀏覽器 Agent 模式挑戰搜尋廣告。`,
+    followUps: ["香港邊啲行業最用得著 AI?", "預算有限應該買邊個工具?"],
+    chip: "今日 AI 有咩大事?",
   },
   {
-    keywords: /行業|用得著|邊啲/,
+    id: "industries",
+    topic: "香港邊啲行業用得著 AI",
+    style: "compare",
+    weights: [
+      [/行業/, 3],
+      [/用得著|落地快/, 2],
+      [/邊啲/, 1],
+      [/金融|保險|教育|補習|零售|電商/, 1],
+    ],
     reply: {
       text: `以香港案例嚟講,而家落地最快嘅係三類行業:
 第一,金融同保險 — 金管局生成式 AI 沙盒 2.0 已經有 20 家機構參與,合規路線明朗化。
@@ -112,9 +205,22 @@ const PLATFORM_REPLIES: ScriptedReply[] = [
       ],
       confidence: 0.76,
     },
+    digest: `香港落地最快三類:金融保險(金管局沙盒 2.0 有 20 家機構參與)、教育補習(AI 批改令內容產出升 2.4 倍)、零售電商(客服同文案自動化,回本最快)。`,
+    followUps: ["點樣用 AI 做內容營銷?", "預算有限應該買邊個工具?"],
+    chip: "香港邊啲行業最用得著 AI?",
   },
   {
-    keywords: /工具|預算|買|邊個/,
+    id: "tools-budget",
+    topic: "預算有限點揀工具",
+    style: "compare",
+    weights: [
+      [/預算/, 3],
+      [/工具/, 2],
+      [/推薦/, 2],
+      [/買|課金|訂閱/, 1],
+      [/邊個/, 1],
+      [/免費額度|慳錢/, 1],
+    ],
     reply: {
       text: `預算有限嘅話,我會咁樣排優先:
 第一,寫作同研究用免費額度已經夠起步 — GPT-5 API 價格下調 40%,按用量付費比訂閱更慳。
@@ -128,6 +234,9 @@ const PLATFORM_REPLIES: ScriptedReply[] = [
       ],
       confidence: 0.79,
     },
+    digest: `預算有限咁排:寫作研究用免費額度起步(GPT-5 API 降價 40%);敏感資料本地部署睇 MiniMax M2(成本只係 Claude 8%);開發團隊上 Cursor 2.0 多 Agent 並行。`,
+    followUps: ["今日 AI 有咩大事?", "邊個分身啱我?"],
+    chip: "預算有限應該買邊個工具?",
   },
 ];
 
@@ -143,9 +252,17 @@ const PLATFORM_FALLBACK: AiReply = {
 
 const JIMMY_REPLIES: ScriptedReply[] = [
   {
-    // 「Jimmy 係邊個」「你係邊個」→ 分身自我介紹(謙遜第一人稱)
-    keywords:
-      /jimmy|劉泰麟|dotai|你係邊|你叫咩|你係咩人|邊個係你|你嘅背景|介紹下你|介紹你/i,
+    id: "who-jimmy",
+    topic: "Jimmy 係邊個",
+    style: "define",
+    weights: [
+      [/jimmy/i, 4],
+      [/劉泰麟/, 4],
+      [/你係邊|你叫咩|你係咩人|邊個係你/, 3],
+      [/你嘅背景|介紹下你|介紹你/, 3],
+      [/dotai/i, 2],
+      [/everyone\.?ai/i, 1],
+    ],
     reply: {
       text: `我係 Jimmy 嘅 AI 分身 — 由佢嘅公開分享同授權內容蒸餾而成,知識庫經本人審核。
 Jimmy Lau 劉泰麟係 **DotAI 共同創辦人 & CMO、AIGRO 領航專家**,做咗三年幾 AI Marketing 同 Full-Stack Marketing。佢創立咗 DotAI 學習基地(dotai.spot 實驗型社群),2026 年 1 月仲喺尖沙咀 K11 Atelier 主辦 Everyone.AI 年度大會,全場爆滿 200+ 企業決策者,聯同 Microsoft、Google、HP 三大巨頭,首度喺香港提出「語境工程取代提示詞工程」。
@@ -153,11 +270,71 @@ Jimmy Lau 劉泰麟係 **DotAI 共同創辦人 & CMO、AIGRO 領航專家**,做�
       citations: [{ title: "Jimmy 嘅 10 個核心觀點", href: "/experts/jimmy-lau" }],
       confidence: 0.9,
     },
+    digest: `Jimmy Lau 劉泰麟係 DotAI 共同創辦人 & CMO、AIGRO 領航專家,三年幾 AI Marketing 實戰,2026 年 1 月喺 K11 Atelier 主辦 Everyone.AI 年度大會,首度喺香港提出「語境工程取代提示詞工程」。`,
+    followUps: ["AI-First 係咩意思?", "你同 Elvin 有咩唔同?"],
+    chip: "Jimmy 你係邊個?",
   },
   {
-    // AI-First / 語境工程 vs prompt / 點學 AI
-    keywords:
-      /ai.?first|語境|context|prompt|提示詞|學|開始|入門|新手|點用|工具|揀|試玩/i,
+    id: "who-elvin",
+    topic: "Elvin 係邊個",
+    style: "define",
+    weights: [
+      [/elvin/i, 4],
+      [/ekcheung|perskill|superbash/i, 3],
+      [/另一位|另外嗰位/, 2],
+      [/唔同|分別/, 1],
+    ],
+    reply: {
+      text: `Elvin 嘅強項係 **source-aware 實測拆解** — @ekcheungAI / Perskill 創辦人,用廣東話拆 AI 工具、Agent 架構同自動化 workflow,實測先行,demo 唔會講到似 production。
+我哋嘅分工好清晰:我專注 AI-First 思維、行銷同品牌落地;佢專注工具實測同 workflow 工程。想問工具點揀、流程點自動化,你不如直接問佢嘅分身 — 佢嘅知識庫先係第一手。`,
+      citations: [
+        { title: "直接問 Elvin 分身", href: "/ask?expert=elvin-cheung" },
+        { title: "Elvin 嘅 10 個核心觀點", href: "/experts/elvin-cheung" },
+      ],
+      confidence: 0.86,
+    },
+    digest: `Elvin 係 source-aware 實測派(@ekcheungAI / Perskill 創辦人),專注工具實測同 workflow 工程 — 呢類問題直接問佢嘅分身最準。`,
+    followUps: ["AI 行銷點入手?", "點樣由 idea 變成行動?"],
+    chip: "Elvin 係咩人?",
+  },
+  {
+    id: "about-platform",
+    topic: "AIGRO 平台係咩",
+    style: "define",
+    weights: [
+      [/aigro/i, 4],
+      [/呢度係咩|做咩嘅|呢個平台/, 3],
+      [/平台|網站/, 2],
+      [/club|會員/, 2],
+    ],
+    reply: {
+      text: `AIGRO 係香港嘅 AI growth hacking club — 情報庫、案例庫、領航專家分身同 Club 社群集於一身,目標好清晰:幫香港企業同 builders 將 AI 由「試玩」變「落地」。
+我係其中一位領航專家,另一位係 Elvin。除咗分身對話,平台仲有認證導師嘅 Club 預約(即將開放)。
+想睇全站情報,去 Insights;想知兩位領航專家嘅分工,問返平台編輯部分身就最中立。`,
+      citations: [
+        { title: "AIGRO 情報庫", href: "/insights" },
+        { title: "領航專家總覽", href: "/experts" },
+      ],
+      confidence: 0.8,
+    },
+    digest: `AIGRO 係香港嘅 AI growth hacking club:情報庫、案例庫、領航專家分身加 Club 社群,幫香港企業將 AI 由試玩變落地。`,
+    followUps: ["AI-First 係咩意思?", "AI 行銷點入手?"],
+    chip: "AIGRO 係咩平台?",
+  },
+  {
+    id: "ai-first",
+    topic: "AI-First 思維同語境工程",
+    style: "define",
+    weights: [
+      [/ai.?first/i, 4],
+      [/語境|context/i, 3],
+      [/prompt|提示詞/i, 2],
+      [/拆/, 2],
+      [/起步|開始/, 2],
+      [/學|入門|新手/, 1],
+      [/點用|工具|揀/, 1],
+      [/試玩/, 1],
+    ],
     reply: {
       text: `**AI-First 唔係「咩都用 AI」,係「先由場景諗起」** — 呢個係我喺 Everyone.AI 年度大會上面,同 200+ 企業決策者講嘅核心:停止喺工具追逐中空轉。
 點落地?三步:
@@ -171,10 +348,23 @@ Jimmy Lau 劉泰麟係 **DotAI 共同創辦人 & CMO、AIGRO 領航專家**,做�
       ],
       confidence: 0.87,
     },
+    digest: `AI-First 係「先由場景諗起」:唔好問邊個工具最勁,問邊個場景最痛;學識語境工程 — 執好品牌背景、受眾、語氣嘅 context,輸出自然到位;學 AI 係旅程,dotai.spot 學習基地就係實戰場域。`,
+    followUps: ["想唔想我拆多一步點起步?", "語境工程具體點樣執 context?", "有冇企業落地嘅實例?"],
+    chip: "AI-First 係咩意思?",
   },
   {
-    // 由 idea 到行動 / Creator 理念
-    keywords: /idea|靈感|行動|實踐|creator|創作|內容|做嘢|開始做|拖延/i,
+    id: "idea-to-action",
+    topic: "由 idea 到行動",
+    style: "steps",
+    weights: [
+      [/idea|靈感/i, 3],
+      [/行動|實踐/, 2],
+      [/creator|創作/i, 2],
+      [/開始做|郁手|做嘢/, 2],
+      [/第一步/, 2],
+      [/拖延/, 2],
+      [/內容/, 1],
+    ],
     reply: {
       text: `我一直相信:**Creator 唔只係創作內容,係透過 AI 將靈感轉化為實踐** — 幫助更多人跨過從 idea 到行動嘅障礙。
 Idea 唔行動,等於零。我嘅做法係咁:
@@ -188,11 +378,24 @@ Idea 唔行動,等於零。我嘅做法係咁:
       ],
       confidence: 0.85,
     },
+    digest: `Idea 唔行動等於零:將個 idea 同 AI 講出嚟變具體描述;拆出「今日做得到嘅第一步」,例如用圖像 AI 生成品牌草稿試水溫;搵實戰場域一齊行 — 最快郁手嘅學員先最見效。`,
+    followUps: ["點樣拆出今日做得到嘅第一步?", "語境工程同 prompt 有咩分別?"],
+    chip: "點樣由 idea 變成行動?",
   },
   {
-    // AI 行銷 / 品牌 / 企業落地
-    keywords:
-      /行銷|營銷|marketing|品牌|圖像|影像|生意|公司|企業|團隊|老闆|預算|落地/i,
+    id: "ai-marketing",
+    topic: "AI 行銷同品牌落地",
+    style: "steps",
+    weights: [
+      [/行銷|營銷|marketing/i, 3],
+      [/企業|公司|生意/, 3],
+      [/品牌/, 2],
+      [/圖像|影像/, 2],
+      [/團隊|老闆/, 2],
+      [/落地/, 2],
+      [/入手/, 1],
+      [/預算/, 1],
+    ],
     reply: {
       text: `我做咗三年幾 AI Marketing,由策略、內容到圖像影像都係一條龍落地 — **行銷嘅下半場,係 AI 全棧**。
 俾香港企業嘅建議,由 Everyone.AI 大會嘅觀察講起:
@@ -207,6 +410,9 @@ Idea 唔行動,等於零。我嘅做法係咁:
       ],
       confidence: 0.84,
     },
+    digest: `AI 行銷落地三點:走出「AI 試玩」舒適圈,揀一條最花時間嘅行銷流程跑順佢;用 AI 放大你本來最值錢嘅行業知識同品牌語氣;行銷團隊學語境工程,產出先會 on-brand。`,
+    followUps: ["品牌點樣由試玩變落地?", "行銷團隊點樣學語境工程?"],
+    chip: "AI 行銷點入手?",
   },
 ];
 
@@ -221,9 +427,16 @@ const JIMMY_FALLBACK: AiReply = {
 
 const ELVIN_REPLIES: ScriptedReply[] = [
   {
-    // 「Elvin 係咩人」「你係邊個」→ 分身自我介紹(謙遜第一人稱)
-    keywords:
-      /elvin|ekcheung|superbash|perskill|你係邊|你叫咩|你係咩人|邊個係你|你嘅背景|介紹下你|介紹你/i,
+    id: "who-elvin",
+    topic: "Elvin 係邊個",
+    style: "define",
+    weights: [
+      [/elvin/i, 4],
+      [/ekcheung|perskill/i, 3],
+      [/你係邊|你叫咩|你係咩人|邊個係你/, 3],
+      [/你嘅背景|介紹下你|介紹你/, 3],
+      [/superbash/i, 2],
+    ],
     reply: {
       text: `我係 Elvin 嘅 AI 分身 — 由佢嘅公開內容同授權材料蒸餾而成,知識庫經本人審核。
 Elvin Cheung 係 **@ekcheungAI 創辦人、Perskill 創辦人、AIGRO 領航專家**,用廣東話 source-aware 拆解 AI 工具、Agent 架構同自動化 workflow — 實測先行,唔會將 demo 講到似 production。
@@ -231,9 +444,75 @@ Elvin Cheung 係 **@ekcheungAI 創辦人、Perskill 創辦人、AIGRO 領航專�
       citations: [{ title: "Elvin 嘅 10 個核心觀點", href: "/experts/elvin-cheung" }],
       confidence: 0.9,
     },
+    digest: `Elvin Cheung 係 @ekcheungAI / Perskill 創辦人、AIGRO 領航專家,用廣東話 source-aware 拆 AI 工具、Agent 架構同自動化 workflow — 實測先行,demo 唔當 production。`,
+    followUps: ["邊個 AI 工具真係用得過?", "Vibe coding 點開始?"],
+    chip: "Elvin 你係邊個?",
   },
   {
-    keywords: /工具|邊個|揀|實用|用得過|推薦|測評|hype/i,
+    id: "who-jimmy",
+    topic: "Jimmy 係邊個",
+    style: "define",
+    weights: [
+      [/jimmy/i, 4],
+      [/劉泰麟/, 4],
+      [/dotai/i, 2],
+      [/另一位|另外嗰位/, 2],
+      [/唔同|分別/, 1],
+    ],
+    reply: {
+      text: `Jimmy 嘅強項係 **AI-First 思維同 AI 行銷落地** — DotAI 共同創辦人 & CMO,喺香港首度提出「語境工程取代提示詞工程」,幫企業走出 AI 試玩舒適圈。
+我哋分工清晰:品牌、行銷、由 idea 到行動嘅問題,佢嘅知識庫係第一手;工具實測、workflow、vibe coding 就係我嘅範圍。想問行銷或者 AI-First,你不如直接問佢嘅分身。`,
+      citations: [
+        { title: "直接問 Jimmy 分身", href: "/ask?expert=jimmy-lau" },
+        { title: "Jimmy 嘅 10 個核心觀點", href: "/experts/jimmy-lau" },
+      ],
+      confidence: 0.86,
+    },
+    digest: `Jimmy 係 AI-First 實戰派(DotAI 共同創辦人 & CMO),專注 AI 行銷、品牌同由 idea 到行動 — 呢類問題直接問佢嘅分身最準。`,
+    followUps: ["點樣由 prompt demo 變真 workflow?", "邊個 AI 工具真係用得過?"],
+    chip: "Jimmy 係咩人?",
+  },
+  {
+    id: "about-platform",
+    topic: "AIGRO 平台係咩",
+    style: "define",
+    weights: [
+      [/aigro/i, 4],
+      [/呢度係咩|做咩嘅|呢個平台/, 3],
+      [/平台|網站/, 2],
+      [/club|會員/, 2],
+    ],
+    reply: {
+      text: `AIGRO 係香港嘅 AI growth hacking club — 情報、案例、領航專家分身加 Club 社群,幫香港 builders 將 AI 真正落地。
+我係其中一位領航專家,另一位係 Jimmy。我負責嘅部分係實測拆解:工具、workflow、vibe coding,限制同來源講明。
+想睇全站情報去 Insights;想知兩位專家分工,問返平台編輯部分身就最中立。`,
+      citations: [
+        { title: "AIGRO 情報庫", href: "/insights" },
+        { title: "領航專家總覽", href: "/experts" },
+      ],
+      confidence: 0.8,
+    },
+    digest: `AIGRO 係香港嘅 AI growth hacking club:情報、案例、領航專家分身加 Club 社群,幫香港 builders 將 AI 真正落地。`,
+    followUps: ["點樣幫公司做 AI 自動化?", "Vibe coding 點開始?"],
+    chip: "AIGRO 係咩平台?",
+  },
+  {
+    id: "tools-review",
+    topic: "AI 工具實測點揀",
+    style: "compare",
+    weights: [
+      [/工具/, 3],
+      [/實用|用得過/, 3],
+      [/測評|評測/, 3],
+      [/揀/, 2],
+      [/推薦/, 2],
+      [/實測/, 2],
+      [/免費|額度|慳/, 2],
+      [/hype/i, 2],
+      [/邊個|邊款/, 1],
+      [/起步/, 1],
+      [/試/, 1],
+    ],
     reply: {
       text: `我答呢類問題有條鐵律:**冇來源唔出聲,冇實測唔推薦**。
 ekcheungAI 拆工具嘅結構永遠係四步:可以點試、限制係咩、風險喺邊、下一步點落地。
@@ -248,9 +527,25 @@ ekcheungAI 拆工具嘅結構永遠係四步:可以點試、限制係咩、風�
       ],
       confidence: 0.85,
     },
+    digest: `揀工具鐵律:冇來源唔出聲,冇實測唔推薦。唔好問邊個工具最勁,問邊個流程最嘥時間;新工具第一時間係試唔係讚;預算有限由免費額度開始,驗證咗先課金。`,
+    followUps: ["新工具出咗你點樣實測?", "免費額度夠唔夠起步?"],
+    chip: "邊個 AI 工具真係用得過?",
   },
   {
-    keywords: /workflow|自動化|流程|demo|production|落地|串|agent/i,
+    id: "workflow-automation",
+    topic: "由 demo 變真 workflow",
+    style: "steps",
+    weights: [
+      [/workflow|流程/i, 3],
+      [/自動化/, 3],
+      [/demo/i, 2],
+      [/production/i, 2],
+      [/串/, 2],
+      [/落地/, 1],
+      [/agent/i, 1],
+      [/步驟/, 1],
+      [/系統|沉澱/, 1],
+    ],
     reply: {
       text: `直接講:**一個工具唔係答案,串成 workflow 先係**。
 由 prompt demo 變真 workflow,我嘅次序係咁:
@@ -264,9 +559,26 @@ ekcheungAI 拆工具嘅結構永遠係四步:可以點試、限制係咩、風�
       ],
       confidence: 0.84,
     },
+    digest: `一個工具唔係答案,串成 workflow 先係:寫低人手流程,重複嘅先交俾 AI;逐步實測邊度會斷、邊度要人把關(demo 同 production 嘅誠實線);跑順就沉澱做系統,先係真正落地。`,
+    followUps: ["點樣開始幫公司做自動化?", "workflow 點樣沉澱做系統?"],
+    chip: "點樣由 prompt demo 變真 workflow?",
   },
   {
-    keywords: /vibe|coding|寫code|寫程式|做產品|產品化|開發|整app|整網站/i,
+    id: "vibe-coding",
+    topic: "Vibe coding 點開始",
+    style: "steps",
+    weights: [
+      [/vibe|coding/i, 3],
+      [/整app|整網站|整個app/i, 3],
+      [/寫code|寫程式|程式/i, 2],
+      [/做產品|產品化/, 2],
+      [/驗證/, 2],
+      [/社群|hkvibecoders|telegram/i, 2],
+      [/開發|產品/, 1],
+      [/code/i, 1],
+      [/實戰/, 1],
+      [/prototype/i, 1],
+    ],
     reply: {
       text: `Vibe coding 最大嘅改變係:**唔使再等工程師 — 識拆解問題嘅人,而家都可以親手將諗法變成產品**。
 想開始,我建議咁行:
@@ -281,6 +593,9 @@ ekcheungAI 拆工具嘅結構永遠係四步:可以點試、限制係咩、風�
       ],
       confidence: 0.82,
     },
+    digest: `Vibe coding 令識拆解問題嘅人可以親手做產品:由一個好細嘅真問題開始;學識「驗證」而唔係淨係「生成」;跑通諗法 → prototype → 真用戶試 → 迭代嘅完整流程。`,
+    followUps: ["點樣驗證 AI 生成嘅 code?", "想跟住做,邊度有實戰社群?"],
+    chip: "Vibe coding 點開始?",
   },
 ];
 
@@ -387,12 +702,183 @@ export function getPersona(key: string | null): Persona {
   return personas.find((p) => p.key === key) ?? PLATFORM_PERSONA;
 }
 
-/** 按問題關鍵字揀 scripted 回答;無命中 → 分身 fallback(no chip, no claim) */
-export function pickPersonaReply(persona: Persona, question: string): AiReply {
-  for (const r of persona.replies) {
-    if (r.keywords.test(question)) return r.reply;
+/* ---------------- Matching engine(v1.19) ---------------- */
+
+/** 直接命中門檻(加權分加總);>0 但低過門檻 → 近話題 bridge */
+const MATCH_THRESHOLD = 3;
+/** 問題類型命中 style 嘅加分 */
+const TYPE_BONUS = 2;
+/** 第二話題 ≥ 第一話題 × COMPOSE_RATIO 且雙雙過門檻 → 多意圖 compose */
+const COMPOSE_RATIO = 0.6;
+const MAX_COMPOSE_CITATIONS = 4;
+/** 模糊追問嘅最長字數(太長就當正式問題處理) */
+const VAGUE_MAX_LEN = 16;
+const VAGUE_RE =
+  /然後|之後|下一步|仲有|繼續|跟住|講多啲|詳細啲|多啲|例子|點樣開始|點開始|點入手|點樣入手|點算|即係點/;
+
+function detectQuestionType(q: string): QuestionType | null {
+  if (/點樣|如何|點做|點入手|點開始|點起步|步驟|點用|點學/.test(q)) return "steps";
+  if (/邊個|邊啲|邊位|邊款|推薦|比較|分別|唔同|揀邊|定係|定系/.test(q)) return "compare";
+  if (/係咩|係乜|乜嘢|咩意思|係邊|what is|介紹/i.test(q)) return "define";
+  return null;
+}
+
+interface Scored {
+  r: ScriptedReply;
+  score: number;
+  hits: number;
+}
+
+/** 加權評分 + 問題類型加分;排序:分高 → 命中關鍵字多(most specific)→ 定義更完整 */
+function scoreReplies(persona: Persona, q: string): Scored[] {
+  const qType = detectQuestionType(q);
+  return persona.replies
+    .map((r) => {
+      let score = 0;
+      let hits = 0;
+      for (const [re, w] of r.weights) {
+        if (re.test(q)) {
+          score += w;
+          hits += 1;
+        }
+      }
+      if (score > 0 && qType && r.style === qType) score += TYPE_BONUS;
+      return { r, score, hits };
+    })
+    .sort(
+      (a, b) =>
+        b.score - a.score || b.hits - a.hits || b.r.weights.length - a.r.weights.length
+    );
+}
+
+export type MatchKind = "direct" | "composed" | "near" | "continued" | "fallback";
+
+export interface PickResult {
+  /** 最終回答(followUps 已附上,可直接俾 AiMessage 渲染追問 chips) */
+  reply: AiReply;
+  /** 命中話題 id — 寫入 session 做 memory;fallback → null(唔洗走舊 memory) */
+  topicId: string | null;
+  matched: MatchKind;
+}
+
+function withFollowUps(reply: AiReply, followUps: string[], confidence?: number): AiReply {
+  return { ...reply, confidence: confidence ?? reply.confidence, followUps };
+}
+
+function dedupeCitations(list: Citation[]): Citation[] {
+  const seen = new Set<string>();
+  return list.filter((c) => (seen.has(c.href) ? false : (seen.add(c.href), true)));
+}
+
+/**
+ * 揀回答主流程(對齊 RAG 行為):
+ * 1. 模糊追問 + 低分 + 有 lastTopicId → 承接上一個話題(session memory)
+ * 2. 兩個話題同時強命中 → compose 合併回答(intro + 雙 digest + 去重引用)
+ * 3. 單一強命中 → 直接回答
+ * 4. 有分但未過門檻 → 近話題 bridge(誠實交代 + 照答最近話題,信心下調)
+ * 5. 零命中 → fallback「無引用唔亂噏」+ 建議 2 個最近可答話題 chips
+ */
+export function pickReply(
+  persona: Persona,
+  question: string,
+  lastTopicId?: string | null
+): PickResult {
+  const q = question.trim();
+  const ranked = scoreReplies(persona, q);
+  const best = ranked[0];
+  const second = ranked[1];
+
+  // 1. Session memory — 模糊追問承接返上一個話題
+  if (
+    lastTopicId &&
+    q.length <= VAGUE_MAX_LEN &&
+    VAGUE_RE.test(q) &&
+    best.score < MATCH_THRESHOLD
+  ) {
+    const last = persona.replies.find((r) => r.id === lastTopicId);
+    if (last) {
+      return {
+        topicId: last.id,
+        matched: "continued",
+        reply: withFollowUps(
+          {
+            ...last.reply,
+            text: `承接返頭先講嘅「${last.topic}」— 我接住拆:\n${last.reply.text}`,
+          },
+          last.followUps
+        ),
+      };
+    }
   }
-  return persona.fallback;
+
+  // 2. 多意圖 compose — 唔硬揀一個,intro + 兩段 digest
+  if (
+    best &&
+    second &&
+    best.score >= MATCH_THRESHOLD &&
+    second.score >= MATCH_THRESHOLD &&
+    second.score >= best.score * COMPOSE_RATIO
+  ) {
+    const [a, b] = [best.r, second.r];
+    const confidence = Math.max(
+      0.3,
+      +(Math.min(a.reply.confidence, b.reply.confidence) - 0.03).toFixed(2)
+    );
+    return {
+      topicId: a.id,
+      matched: "composed",
+      reply: {
+        text: `你條問題踩中兩個話題 — 我一齊拆:\n**${a.topic}**\n${a.digest}\n**${b.topic}**\n${b.digest}\n想深挖邊一部分,撳下面嘅追問繼續。`,
+        citations: dedupeCitations([...a.reply.citations, ...b.reply.citations]).slice(
+          0,
+          MAX_COMPOSE_CITATIONS
+        ),
+        confidence,
+        followUps: [a.followUps[0], b.followUps[0]].filter(
+          (f): f is string => typeof f === "string"
+        ),
+      },
+    };
+  }
+
+  // 3. 直接命中
+  if (best && best.score >= MATCH_THRESHOLD) {
+    return {
+      topicId: best.r.id,
+      matched: "direct",
+      reply: withFollowUps(best.r.reply, best.r.followUps),
+    };
+  }
+
+  // 4. 近話題 — 誠實 bridge + 答最近嗰個話題(信心下調)
+  if (best && best.score > 0) {
+    const confidence = Math.max(0.3, +(best.r.reply.confidence - 0.12).toFixed(2));
+    return {
+      topicId: best.r.id,
+      matched: "near",
+      reply: withFollowUps(
+        {
+          ...best.r.reply,
+          text: `你問嘅呢部分,我冇完全對應嘅答案 — 但同我可以可靠回答嘅「${best.r.topic}」好近,先講呢部分:\n${best.r.reply.text}`,
+        },
+        best.r.followUps,
+        confidence
+      ),
+    };
+  }
+
+  // 5. Fallback — no chip, no claim + 建議 2 個最近可答話題 chips
+  const suggest = ranked.slice(0, 2);
+  const topicsLine = suggest.map((s) => `「${s.r.topic}」`).join("同");
+  return {
+    topicId: null,
+    matched: "fallback",
+    reply: {
+      ...persona.fallback,
+      text: `${persona.fallback.text}\n我可以可靠回答嘅最近話題:${topicsLine} — 撳下面 chip 直接問。`,
+      followUps: suggest.map((s) => s.r.chip),
+    },
+  };
 }
 
 /** Monogram initials,如 "Jimmy Lau" → "JL" */
