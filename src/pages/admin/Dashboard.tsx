@@ -9,11 +9,16 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import {
+  contentQueue,
+  conversations,
   dashboardKpis,
+  expertPosts,
+  mcpVerticals,
   recentActivity,
   weeklyChats,
 } from "@/data/admin-mock";
 import type { ActivityItem } from "@/data/admin-mock";
+import { pendingExperts, verifiedExperts } from "@/data/experts";
 
 interface Kpi {
   label: string;
@@ -21,11 +26,23 @@ interface Kpi {
   note: string;
 }
 
+/* ---- 衍生數字(同其他 admin 頁同一來源,改 mock 即全站一致) ---- */
+const pendingInsights = contentQueue.filter(
+  (q) => q.status === "待審核"
+).length;
+const avgConfidence =
+  conversations.reduce((s, c) => s + c.confidenceAvg, 0) /
+  conversations.length;
+const flaggedCount = conversations.filter((c) => c.flagged).length;
+const draftPosts = expertPosts.filter((p) => p.status === "草稿").length;
+const aiWaitlist =
+  mcpVerticals.find((v) => v.key === "ai")?.waitlist ?? 0;
+
 const KPIS: Kpi[] = [
   {
     label: "今日情報",
     value: String(dashboardKpis.todayInsights),
-    note: "4 條待審核",
+    note: `${pendingInsights} 條待審核`,
   },
   {
     label: "總會員",
@@ -35,7 +52,7 @@ const KPIS: Kpi[] = [
   {
     label: "今日對話",
     value: String(dashboardKpis.todayChats),
-    note: "平均信心 0.81",
+    note: `平均信心 ${avgConfidence.toFixed(2)}`,
   },
   {
     label: "待審核內容",
@@ -54,25 +71,25 @@ const QUICK_LINKS = [
   {
     to: "/admin/experts",
     title: "專家管理",
-    desc: "Jimmy · Elvin 已認證,2 席草稿",
+    desc: `${verifiedExperts.map((e) => e.nameEn.split(" ")[0]).join(" · ")} 已認證,${pendingExperts.length} 席草稿`,
     icon: Users,
   },
   {
     to: "/admin/content",
     title: "內容管理",
-    desc: "7 條情報待審核 · 2 篇專家草稿",
+    desc: `${pendingInsights} 條情報待審核 · ${draftPosts} 篇專家草稿`,
     icon: FileText,
   },
   {
     to: "/admin/engagement",
     title: "對話參與",
-    desc: "2 段對話已標記待跟進",
+    desc: `${flaggedCount} 段對話已標記待跟進`,
     icon: MessagesSquare,
   },
   {
     to: "/admin/members",
     title: "會員管理",
-    desc: "MCP 優先名單 AI 412 人",
+    desc: `MCP 優先名單 AI ${aiWaitlist} 人`,
     icon: UserPlus,
   },
 ];

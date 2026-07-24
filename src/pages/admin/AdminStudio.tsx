@@ -795,7 +795,7 @@ function TestChatSection({ expert }: { expert: StudioExpert }) {
     {
       id: ++idRef.current,
       from: "ai",
-      text: `你好,我係 ${expert.displayName} 嘅 AI 分身(Prompt ${expert.promptVersions[0]?.version ?? "v1.0"})。試問我任何問題,睇下蒸餾成果貼唔貼我嘅觀點。`,
+      text: `你好,我係 ${expert.displayName} 嘅 AI 分身(${expert.promptVersions[0]?.version ?? "Prompt v1.0"})。試問我任何問題,睇下蒸餾成果貼唔貼我嘅觀點。`,
     },
   ]);
   const [input, setInput] = useState("");

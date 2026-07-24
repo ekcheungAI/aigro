@@ -3,7 +3,7 @@ import { Search, ShieldBan, UserCog } from "lucide-react";
 import AdminSlideOver from "@/components/admin/AdminSlideOver";
 import { useAdminToast } from "@/components/admin/AdminToast";
 import { cn } from "@/lib/utils";
-import { members, mcpVerticals } from "@/data/admin-mock";
+import { dashboardKpis, members, mcpVerticals } from "@/data/admin-mock";
 import type { Member, MemberTier } from "@/data/admin-mock";
 
 type TierFilter = "全部" | MemberTier;
@@ -91,7 +91,8 @@ export default function AdminMembers() {
             ))}
           </div>
           <p className="mt-3 font-mono text-[11px] text-text-muted">
-            顯示樣本 {list.length} 人 · 全站 1,284 人(mock)
+            顯示樣本 {list.length} 人 · 全站{" "}
+            {dashboardKpis.totalMembers.toLocaleString("en-US")} 人(mock)
           </p>
         </section>
 
