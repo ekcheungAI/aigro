@@ -3,7 +3,7 @@ import { BookPlus, Download, Flag } from "lucide-react";
 import AdminSlideOver from "@/components/admin/AdminSlideOver";
 import { useAdminToast } from "@/components/admin/AdminToast";
 import { cn } from "@/lib/utils";
-import { conversations } from "@/data/admin-mock";
+import { conversations, dashboardKpis } from "@/data/admin-mock";
 import type { Conversation } from "@/data/admin-mock";
 
 type Filter = "全部" | "低信心" | "已標記";
@@ -59,7 +59,9 @@ export default function AdminEngagement() {
       <div className="grid grid-cols-3 gap-3">
         <div className="rounded-lg border border-border bg-surface p-4">
           <p className="text-xs text-text-muted">今日對話</p>
-          <p className="mt-1.5 font-mono text-2xl font-medium text-text-primary">96</p>
+          <p className="mt-1.5 font-mono text-2xl font-medium text-text-primary">
+            {dashboardKpis.todayChats}
+          </p>
         </div>
         <div className="rounded-lg border border-border bg-surface p-4">
           <p className="text-xs text-text-muted">平均信心</p>

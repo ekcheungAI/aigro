@@ -2,7 +2,21 @@
  * Admin mock data part 2 — v1.17 admin 360 擴充。
  * 新增資料一律放呢度,避免同 admin-mock.ts 衝突。
  * 涵蓋:專家 360 數據、會員↔專家活動 timeline、email 數據中心、專家投稿佇列。
+ *
+ * v1.20:會同其他 mock 重複嘅數字(KB chunks、分身對話、社交、MCP 名單、
+ * 會員總數、情報投稿)一律改為由 canonical 來源衍生 — admin-mock.ts /
+ * portal-mock.ts。Supabase 接入時,呢啲衍生位就係聚合 view 嘅種子。
  */
+import {
+  dashboardKpis,
+  mcpVerticals,
+  studioExperts,
+} from "./admin-mock";
+import {
+  portalInsights,
+  portalSocials,
+  portalStats,
+} from "./portal-mock";
 
 /* ==================== A. Expert 360 ==================== */
 
@@ -31,37 +45,10 @@ export interface ExpertStats {
   kbSizeMb: number;
 }
 
-export const expertStatsBySlug: Record<string, ExpertStats> = {
-  "jimmy-lau": {
-    convTotal: 1284,
-    convWeek: 86,
-    avgConfidence: 91,
-    weeklyBars: [9, 12, 8, 14, 11, 16, 16],
-    insightsPublished: 2,
-    insightsSubmitted: 3,
-    social: [
-      { platform: "Threads", handle: "@jimmylau.hk", followers: "18.2K" },
-      { platform: "LinkedIn", handle: "Jimmy Lau", followers: "9.4K" },
-      { platform: "YouTube", handle: "Jimmy 嘅 AI 日常", followers: "3.1K" },
-    ],
-    kbChunks: 342,
-    kbSizeMb: 18.6,
-  },
-  "elvin-cheung": {
-    convTotal: 412,
-    convWeek: 34,
-    avgConfidence: 88,
-    weeklyBars: [3, 5, 4, 6, 5, 6, 5],
-    insightsPublished: 1,
-    insightsSubmitted: 1,
-    social: [
-      { platform: "LinkedIn", handle: "Elvin Cheung", followers: "4.8K" },
-      { platform: "Threads", handle: "@elvin.builds", followers: "1.2K" },
-    ],
-    kbChunks: 128,
-    kbSizeMb: 7.4,
-  },
-};
+/**
+ * expertStatsBySlug 定義喺檔案底部(section D)— 全部由
+ * portal-mock / admin-mock 衍生,避免同專家平台、工作室數字甩轆。
+ */
 
 export interface ExpertActivityEntry {
   /** mono 時間戳 */
@@ -111,14 +98,11 @@ export interface EmailContact {
   status: EmailStatus;
 }
 
+/** Segment 總數 — 會員數同 MCP 名單由 admin-mock 衍生(單一來源) */
 export const emailSegmentSummary = {
-  members: 1284,
-  mcpTotal: 802,
-  mcp: [
-    { label: "AI", count: 412 },
-    { label: "Beauty", count: 203 },
-    { label: "Technology", count: 187 },
-  ],
+  members: dashboardKpis.totalMembers,
+  mcpTotal: mcpVerticals.reduce((s, v) => s + v.waitlist, 0),
+  mcp: mcpVerticals.map((v) => ({ label: v.label, count: v.waitlist })),
   newsletter: 2341,
   expertNotify: 96,
 } as const;
@@ -130,8 +114,8 @@ export const emailEngagement = {
 
 export const emailContacts: EmailContact[] = [
   { email: "cheukman.leung@yahoo.com.hk", segments: ["會員", "MCP-AI"], interest: "企業 AI 導入", joinedAt: "2025-12-15", status: "active" },
-  { email: "tszlong.wong@gmail.com", segments: ["會員", "Newsletter"], interest: "內容工場", joinedAt: "2025-12-18", status: "active" },
-  { email: "kayan.chan@outlook.com", segments: ["會員", "MCP-Beauty"], interest: "Beauty 文案", joinedAt: "2026-01-03", status: "active" },
+  { email: "tszlong.wong@outlook.com", segments: ["會員", "Newsletter"], interest: "內容工場", joinedAt: "2025-12-18", status: "active" },
+  { email: "kayan.chen@gmail.com", segments: ["會員", "MCP-Beauty"], interest: "Beauty 文案", joinedAt: "2026-07-08", status: "active" },
   { email: "jason.lam@techbase.hk", segments: ["會員", "MCP-Technology", "Newsletter"], interest: "自動化 workflow", joinedAt: "2026-01-09", status: "active" },
   { email: "ting.ho@beautylab.hk", segments: ["MCP-Beauty", "Newsletter"], interest: "AI 客服", joinedAt: "2026-01-12", status: "active" },
   { email: "siuchung.lam@gmail.com", segments: ["MCP-Beauty", "專家通知"], interest: "Beauty 個案", joinedAt: "2026-01-15", status: "active" },
@@ -200,3 +184,55 @@ export const homepageQuota = {
 /** 情報佇列 — 首頁顯示位置選項 */
 export type QueuePlacement = "首頁" | "日報" | "普通";
 export const queuePlacements: QueuePlacement[] = ["首頁", "日報", "普通"];
+
+/* ==================== D. Expert 360 派生聚合 ====================
+ * Admin「數據 Data」tab 嘅所有數字由 canonical mock 衍生:
+ *   - 分身對話 / 信心 / 7 日趨勢 → portal-mock.portalStats(同 /portal 總覽一致)
+ *   - 社交觸及 → portal-mock.portalSocials(只計已連接,handle 同 experts.ts 一致)
+ *   - 知識庫片段 → admin-mock.studioExperts(同 AdminStudio 一致)
+ *   - 情報已發佈 / 投稿 → portal-mock.portalInsights + 本檔 expertSubmissions
+ * Supabase 接入:呢段換做 `admin_expert_360` 聚合 view,consumer 唔使改。
+ */
+
+const DAY_ORDER = ["一", "二", "三", "四", "五", "六", "日"] as const;
+
+/** 知識庫容量(MB)— admin 獨有展示數字,無其他來源 */
+const KB_SIZE_MB: Record<string, number> = {
+  "jimmy-lau": 18.6,
+  "elvin-cheung": 7.4,
+};
+
+function deriveExpertStats(slug: string): ExpertStats {
+  const stats = portalStats[slug];
+  const trendByLabel = new Map(
+    (stats?.weeklyTrend ?? []).map((t) => [t.label, t.count])
+  );
+  const insights = portalInsights[slug] ?? [];
+  const published = insights.filter((i) => i.status === "已發佈").length;
+  const pendingSubs = expertSubmissions.filter(
+    (s) => s.expertSlug === slug && s.status === "待審核"
+  ).length;
+  return {
+    convTotal: stats?.totalChats ?? 0,
+    convWeek: stats?.weekChats ?? 0,
+    avgConfidence: Math.round((stats?.avgConfidence ?? 0) * 100),
+    weeklyBars: DAY_ORDER.map((d) => trendByLabel.get(d) ?? 0),
+    insightsPublished: published,
+    insightsSubmitted: insights.length + pendingSubs,
+    social: (portalSocials[slug] ?? [])
+      .filter((s) => s.connected)
+      .map((s) => ({
+        platform: s.platform,
+        handle: s.handle ?? "",
+        followers: s.reach ?? "—",
+      })),
+    kbChunks:
+      studioExperts.find((e) => e.slug === slug)?.kbChunks ?? 0,
+    kbSizeMb: KB_SIZE_MB[slug] ?? 0,
+  };
+}
+
+export const expertStatsBySlug: Record<string, ExpertStats> = {
+  "jimmy-lau": deriveExpertStats("jimmy-lau"),
+  "elvin-cheung": deriveExpertStats("elvin-cheung"),
+};

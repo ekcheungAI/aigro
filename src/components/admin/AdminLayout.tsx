@@ -122,7 +122,7 @@ export default function AdminLayout() {
           </div>
           <div className="border-t border-[#35302A] px-6 py-4">
             <p className="font-mono text-[10px] uppercase tracking-wider text-[#938D83]">
-              內部後台 · v1.13
+              內部後台 · v1.20
             </p>
             <p className="mt-1 text-xs text-[#938D83]">
               Mock data · Supabase 即將接入
