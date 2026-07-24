@@ -15,6 +15,9 @@ import Developers from "@/pages/Developers";
 import Login from "@/pages/Login";
 import Join from "@/pages/Join";
 import Account from "@/pages/Account";
+import Skills from "@/pages/Skills";
+import DataPartnership from "@/pages/DataPartnership";
+import Access from "@/pages/Access";
 import AdminLayout from "@/components/admin/AdminLayout";
 import Dashboard from "@/pages/admin/Dashboard";
 import AdminExperts from "@/pages/admin/AdminExperts";
@@ -49,6 +52,9 @@ function RouteMeta() {
     [/^\/ask/, "Ask 問答", "問 AI 編輯部任何 AI、增長、營銷問題 — 每個論點附來源引用。"],
     [/^\/pricing/, "方案 Pricing", "免費/進階/VIP 三層會員方案 — 解鎖無限 AI 對話與領航專家分身。"],
     [/^\/developers/, "AIGRO MCP Network", "行業情報 MCP server — 你嘅 AI 工具一連接,即刻有行業雷達。AI 行業優先名單開放中。"],
+    [/^\/skills/, "Skills", "AIGRO Skills — 俾你嘅 AI agent 裝上專業能力。"],
+    [/^\/data/, "AIGRO Data", "行業情報基建 — 來源伙伴、數據伙伴、行業伙伴合作。"],
+    [/^\/access/, "全級別入口", "AIGRO 全級別入口 — 訪客、會員、創始會員、領航專家、管理員示範登入。"],
     [/^\/login/, "登入", "登入 AIGRO Club — 無限分身對話、完整案例拆解、MCP 優先接入。"],
     [/^\/join/, "加入 Club", "加入 AIGRO Club — 三步成為會員,免費開始,隨時升級。"],
     [/^\/account/, "會員專區", "你嘅 AIGRO 會員專區 — 層級、對話紀錄、MCP 名單與設定。"],
@@ -78,13 +84,16 @@ export default function App() {
         <Route path="cases/:slug" element={<CaseDetail />} />
         <Route
           path="library"
-          element={<Navigate to="/insights?tab=library" replace />}
+          element={<Navigate to="/insights" replace />}
         />
         <Route path="experts" element={<Experts />} />
         <Route path="experts/:slug" element={<ExpertProfile />} />
         <Route path="ask" element={<Ask />} />
         <Route path="pricing" element={<Pricing />} />
         <Route path="developers" element={<Developers />} />
+        <Route path="skills" element={<Skills />} />
+        <Route path="data" element={<DataPartnership />} />
+        <Route path="access" element={<Access />} />
         <Route path="login" element={<Login />} />
         <Route path="join" element={<Join />} />
         <Route path="account" element={<Account />} />
