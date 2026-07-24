@@ -4,10 +4,12 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowUpRight,
   FileText,
+  FlaskConical,
   LayoutDashboard,
   Menu,
   MessagesSquare,
   Settings,
+  Target,
   UserRound,
   Users,
   X,
@@ -24,6 +26,13 @@ const NAV = [
     icon: LayoutDashboard,
   },
   { to: "/admin/experts", zh: "專家管理", en: "Experts", icon: Users },
+  {
+    to: "/admin/studio",
+    zh: "專家工作室",
+    en: "Studio",
+    icon: FlaskConical,
+  },
+  { to: "/admin/crm", zh: "CRM", en: "CRM", icon: Target },
   { to: "/admin/content", zh: "內容管理", en: "Content", icon: FileText },
   {
     to: "/admin/engagement",

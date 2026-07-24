@@ -791,3 +791,131 @@ export const aihotSources: AihotSource[] = [
     ok: false,
   },
 ];
+
+
+/* ---------------- 專家工作室 Instructor Studio ---------------- */
+
+export type StudioResourceType = "文件" | "研究" | "連結" | "逐字稿";
+
+export interface StudioResource {
+  id: string;
+  name: string;
+  type: StudioResourceType;
+  /** 檔案類型+大小(文件/研究/逐字稿)或來源平台(連結) */
+  detail: string;
+  addedAt: string;
+  /** 已入知識庫(完成切塊 + embedding) */
+  inKb: boolean;
+}
+
+export interface StudioPromptVersion {
+  version: string;
+  date: string;
+  status: "已上線" | "待審批";
+}
+
+export interface StudioPersonaReply {
+  q: string;
+  a: string;
+}
+
+export interface StudioExpert {
+  /** 對應 experts.ts slug */
+  slug: string;
+  /** selector chip 短名 */
+  shortName: string;
+  /** header 顯示名 */
+  displayName: string;
+  resources: StudioResource[];
+  /** 素材收集步驟 — 已收集項數 */
+  collectedCount: number;
+  /** 知識庫片段數(Plex Mono 顯示) */
+  kbChunks: number;
+  lastDistilled: string;
+  topics: string[];
+  promptVersions: StudioPromptVersion[];
+  /** 測試分身 — 專家語氣嘅 scripted 回覆(輪播) */
+  personaReplies: StudioPersonaReply[];
+}
+
+export const studioExperts: StudioExpert[] = [
+  {
+    slug: "jimmy-lau",
+    shortName: "Jimmy",
+    displayName: "Jimmy Lau 劉泰麟",
+    collectedCount: 12,
+    kbChunks: 1284,
+    lastDistilled: "2026-07-22",
+    topics: ["AI-First", "語境工程", "AI 行銷", "圖像影像", "社群營運"],
+    promptVersions: [
+      { version: "Prompt v1.0", date: "2026-07", status: "已上線" },
+      { version: "Prompt v1.1", date: "2026-07", status: "待審批" },
+    ],
+    personaReplies: [
+      {
+        q: "我間公司想開始用 AI,應該點起步?",
+        a: "我嘅答案永遠係 AI-First:唔好問「呢個工具勁唔勁」,先問「我邊個場景最痛」。停止喺工具追逐中空轉 — 由你嘅真實業務場景出發,AI 先至有落腳點。揀一個場景,做到底。",
+      },
+      {
+        q: "有個 idea 但一直未開始,點算?",
+        a: "Idea 唔行動,等於零。用 AI 將你嘅靈感拆成今日做得到嘅第一步 — 例如先生成一個品牌視覺草稿去試水溫,而唔係等萬事俱備先行。Creator 嘅使命係將靈感轉化為實踐。",
+      },
+      {
+        q: "點解 AI 成日答非所問?",
+        a: "唔好再背 prompt 咒語 — 執好你俾 AI 嘅 context:品牌背景、受眾、語氣、限制。語境工程 Context Engineering 係我喺 Everyone.AI 大會首度喺香港提出嘅路線:context 對咗,輸出自然到位。",
+      },
+    ],
+    resources: [
+      { id: "j-r1", name: "Everyone.AI 大會簡報.pdf", type: "文件", detail: "PDF · 24.6 MB", addedAt: "2026-07-02", inKb: true },
+      { id: "j-r2", name: "AI-First 企業導入指南.docx", type: "文件", detail: "DOCX · 1.8 MB", addedAt: "2026-06-18", inKb: true },
+      { id: "j-r3", name: "語境工程白皮書(Context Engineering).pdf", type: "文件", detail: "PDF · 6.2 MB", addedAt: "2026-07-11", inKb: false },
+      { id: "j-r4", name: "AI Marketing 全棧方法論研究.md", type: "研究", detail: "MD · 84 KB", addedAt: "2026-05-30", inKb: true },
+      { id: "j-r5", name: "香港企業 AI 採用調查 2026.pdf", type: "研究", detail: "PDF · 3.1 MB", addedAt: "2026-07-08", inKb: false },
+      { id: "j-r6", name: "dotai.hk — 停止工具追逐系列文章", type: "連結", detail: "dotai.hk", addedAt: "2026-06-25", inKb: true },
+      { id: "j-r7", name: "Everyone.AI 大會回顧(Microsoft · Google · HP)", type: "連結", detail: "dotai.hk", addedAt: "2026-07-15", inKb: true },
+      { id: "j-r8", name: "Threads @jimmylau.ai 精選貼文(36 則)", type: "連結", detail: "Threads", addedAt: "2026-07-19", inKb: false },
+      { id: "j-r9", name: "AI-First 訪談逐字稿.md", type: "逐字稿", detail: "MD · 128 KB", addedAt: "2026-06-05", inKb: true },
+      { id: "j-r10", name: "Everyone.AI 主題演講逐字稿.txt", type: "逐字稿", detail: "TXT · 96 KB", addedAt: "2026-07-03", inKb: true },
+      { id: "j-r11", name: "Podcast《AI 放大自身價值》逐字稿", type: "逐字稿", detail: "MP3 → TXT · 74 KB", addedAt: "2026-07-20", inKb: false },
+    ],
+  },
+  {
+    slug: "elvin-cheung",
+    shortName: "Elvin",
+    displayName: "Elvin Cheung @ekcheungAI",
+    collectedCount: 9,
+    kbChunks: 968,
+    lastDistilled: "2026-07-18",
+    topics: ["AI 實戰拆解", "自動化 Workflow", "Vibe Coding", "Agent 架構", "分身經濟"],
+    promptVersions: [
+      { version: "Prompt v1.0", date: "2026-06", status: "已上線" },
+      { version: "Prompt v1.1", date: "2026-07", status: "待審批" },
+    ],
+    personaReplies: [
+      {
+        q: "新 AI 工具層出不窮,值唔值得追?",
+        a: "先講底線:冇來源,唔出聲。我每個論點都會保留出處同實測脈絡 — demo 唔等於 production,實測過先講限制。一個工具唔係答案,串成 workflow 先係。",
+      },
+      {
+        q: "點樣先算真正 AI 落地?",
+        a: "慳一次時間係技巧;將流程沉澱成系統,先係資產。工具會過時,workflow 嘅槓桿唔會 — source-aware 咁將工具變 workflow,workflow 變系統,先係真正落地。",
+      },
+      {
+        q: "唔識寫 code 可唔可以做產品?",
+        a: "Vibe coding 改變咗「邊個可以做產品」— 唔使再等工程師,識拆解問題嘅人,而家都可以親手將諗法變成產品。但記住:由 demo 到產品化,中間嗰段先係真功夫。",
+      },
+    ],
+    resources: [
+      { id: "e-r1", name: "ekcheungAI 指南系列 — Agent 架構篇.pdf", type: "文件", detail: "PDF · 9.4 MB", addedAt: "2026-06-12", inKb: true },
+      { id: "e-r2", name: "Perskill persona 檔案.md", type: "文件", detail: "MD · 156 KB", addedAt: "2026-07-05", inKb: true },
+      { id: "e-r3", name: "Vibe Coding 實戰手冊.docx", type: "文件", detail: "DOCX · 2.3 MB", addedAt: "2026-07-14", inKb: false },
+      { id: "e-r4", name: "自動化 Workflow 拆解研究(n8n / Make).md", type: "研究", detail: "MD · 112 KB", addedAt: "2026-05-28", inKb: true },
+      { id: "e-r5", name: "AI 工具實測記錄庫(來源 + 限制).md", type: "研究", detail: "MD · 240 KB", addedAt: "2026-07-09", inKb: true },
+      { id: "e-r6", name: "YouTube 拆解連結 —「工具變 Workflow」系列", type: "連結", detail: "YouTube", addedAt: "2026-06-20", inKb: true },
+      { id: "e-r7", name: "IG Reels 教學連結(實測先行系列)", type: "連結", detail: "Instagram", addedAt: "2026-07-01", inKb: false },
+      { id: "e-r8", name: "ekcheung.com — 分身經濟長文", type: "連結", detail: "ekcheung.com", addedAt: "2026-07-16", inKb: true },
+      { id: "e-r9", name: "YouTube「Workflow 變系統」逐字稿", type: "逐字稿", detail: "TXT · 88 KB", addedAt: "2026-06-27", inKb: true },
+      { id: "e-r10", name: "Podcast 訪談逐字稿 — 分身經濟與授權", type: "逐字稿", detail: "MP3 → TXT · 102 KB", addedAt: "2026-07-21", inKb: false },
+    ],
+  },
+];
