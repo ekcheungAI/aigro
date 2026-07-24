@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Check, Pencil, Plus, Save, Star, X } from "lucide-react";
+import { Ban, Check, Pencil, Plus, Save, Star, Undo2, X } from "lucide-react";
 import AdminSlideOver from "@/components/admin/AdminSlideOver";
 import AdminToggle from "@/components/admin/AdminToggle";
 import { useAdminToast } from "@/components/admin/AdminToast";
@@ -10,6 +10,12 @@ import {
   expertPosts,
 } from "@/data/admin-mock";
 import type { ExpertPost, QueueItem } from "@/data/admin-mock";
+import {
+  expertSubmissions,
+  homepageQuota,
+  queuePlacements,
+} from "@/data/admin-mock2";
+import type { ExpertSubmission, QueuePlacement } from "@/data/admin-mock2";
 
 type ContentTab = "情報佇列" | "專家文章" | "案例管理";
 const TABS: ContentTab[] = ["情報佇列", "專家文章", "案例管理"];
@@ -31,6 +37,50 @@ export default function AdminContent() {
   /* ---- 情報佇列 ---- */
   const [queue, setQueue] = useState<QueueItem[]>(contentQueue);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [queueSubTab, setQueueSubTab] = useState<"佇列" | "專家投稿">("佇列");
+  const [placements, setPlacements] = useState<Record<string, QueuePlacement>>(
+    () =>
+      Object.fromEntries(
+        contentQueue.map((q) => [q.id, q.featured ? "首頁" : "普通"])
+      ) as Record<string, QueuePlacement>
+  );
+
+  /* ---- 專家投稿 ---- */
+  const [subs, setSubs] = useState<ExpertSubmission[]>(expertSubmissions);
+  const [returningId, setReturningId] = useState<string | null>(null);
+  const [returnNote, setReturnNote] = useState("");
+
+  const subPendingCount = useMemo(
+    () => subs.filter((s) => s.status === "待審核").length,
+    [subs]
+  );
+
+  const setSubStatus = (id: string, status: ExpertSubmission["status"], note?: string) => {
+    setSubs((list) =>
+      list.map((s) => (s.id === id ? { ...s, status, note } : s))
+    );
+  };
+
+  const approveSub = (s: ExpertSubmission) => {
+    setSubStatus(s.id, "已核准");
+    toast("已核准,將顯示於編輯精選");
+  };
+
+  const returnSub = (s: ExpertSubmission) => {
+    if (!returnNote.trim()) {
+      toast("請先填寫退回備註");
+      return;
+    }
+    setSubStatus(s.id, "已退回", returnNote.trim());
+    setReturningId(null);
+    setReturnNote("");
+    toast(`已退回「${s.title.slice(0, 14)}…」俾 ${s.expert}(mock)`);
+  };
+
+  const takedownSub = (s: ExpertSubmission) => {
+    setSubStatus(s.id, "已下架");
+    toast(`已下架「${s.title.slice(0, 14)}…」(mock)`);
+  };
 
   const pendingCount = useMemo(
     () => queue.filter((q) => q.status === "待審核").length,
@@ -117,8 +167,10 @@ export default function AdminContent() {
             )}
           >
             {t}
-            {t === "情報佇列" && pendingCount > 0 && (
-              <span className="ml-1.5 font-mono text-xs">{pendingCount}</span>
+            {t === "情報佇列" && pendingCount + subPendingCount > 0 && (
+              <span className="ml-1.5 font-mono text-xs">
+                {pendingCount + subPendingCount}
+              </span>
             )}
           </button>
         ))}
@@ -127,6 +179,32 @@ export default function AdminContent() {
       {/* ================= 情報佇列 ================= */}
       {tab === "情報佇列" && (
         <div>
+          {/* Sub-tabs: 佇列 / 專家投稿 */}
+          <div className="mb-4 flex gap-1 border-b border-border">
+            {(["佇列", "專家投稿"] as const).map((st) => (
+              <button
+                key={st}
+                type="button"
+                onClick={() => setQueueSubTab(st)}
+                className={cn(
+                  "relative px-4 py-2 text-sm font-medium transition-colors",
+                  queueSubTab === st
+                    ? "text-lime-text after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-lime"
+                    : "text-text-secondary hover:text-text-primary"
+                )}
+              >
+                {st}
+                {st === "專家投稿" && subPendingCount > 0 && (
+                  <span className="ml-1.5 rounded-sm bg-lime-soft px-1.5 py-0.5 font-mono text-[11px] text-lime-text">
+                    {subPendingCount}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+
+          {queueSubTab === "佇列" && (
+          <div>
           {selected.size > 0 && (
             <div className="mb-3 flex items-center gap-2 rounded-md border border-lime bg-lime-soft px-3 py-2 text-sm">
               <span className="font-mono text-xs text-lime-text">
@@ -197,6 +275,36 @@ export default function AdminContent() {
                     <p className="mt-1 text-xs leading-relaxed text-text-secondary">
                       {item.summary}
                     </p>
+                    {/* 顯示位置 */}
+                    <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+                      <span className="text-[11px] text-text-muted">顯示位置</span>
+                      {queuePlacements.map((p) => (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() => {
+                            setPlacements((prev) => ({ ...prev, [item.id]: p }));
+                            toast(
+                              p === "首頁"
+                                ? `「${item.title.slice(0, 12)}…」將顯示於首頁(mock)`
+                                : p === "日報"
+                                  ? `「${item.title.slice(0, 12)}…」已編入日報(mock)`
+                                  : `「${item.title.slice(0, 12)}…」已設為普通顯示`
+                            );
+                          }}
+                          className={cn(
+                            "rounded-sm px-2 py-0.5 text-[11px] font-medium transition-colors",
+                            placements[item.id] === p
+                              ? p === "首頁"
+                                ? "bg-lime text-on-accent"
+                                : "bg-lime-soft text-lime-text"
+                              : "border border-border bg-surface text-text-muted hover:border-border-strong hover:text-text-secondary"
+                          )}
+                        >
+                          {p}
+                        </button>
+                      ))}
+                    </div>
                     {item.status === "待審核" && (
                       <div className="mt-3 flex gap-2">
                         <button
@@ -235,6 +343,128 @@ export default function AdminContent() {
               </li>
             ))}
           </ul>
+          </div>
+          )}
+
+          {/* ---- 專家投稿 ---- */}
+          {queueSubTab === "專家投稿" && (
+            <div>
+              {/* 首頁顯示配額 */}
+              <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border border-border bg-card px-4 py-3">
+                <span className="text-xs text-text-muted">首頁顯示配額</span>
+                <span className="text-sm text-text-secondary">
+                  編輯精選{" "}
+                  <span className="font-mono font-medium text-lime-text">
+                    {homepageQuota.used}/{homepageQuota.total}
+                  </span>
+                </span>
+                {homepageQuota.used >= homepageQuota.total ? (
+                  <span className="rounded-sm bg-card px-2 py-0.5 text-[11px] font-medium text-[#A36A0F]">
+                    已滿 — 新核准需替換現有精選
+                  </span>
+                ) : (
+                  <span className="rounded-sm bg-lime-soft px-2 py-0.5 text-[11px] font-medium text-lime-text">
+                    尚有配額
+                  </span>
+                )}
+              </div>
+
+              <ul className="space-y-2">
+                {subs.map((s) => (
+                  <li
+                    key={s.id}
+                    className={cn(
+                      "rounded-lg border border-border bg-surface p-4",
+                      (s.status === "已退回" || s.status === "已下架") && "opacity-60"
+                    )}
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="rounded-sm bg-card px-1.5 py-0.5 text-[11px] font-medium text-text-secondary">
+                        {s.expert}
+                      </span>
+                      <span
+                        className={cn(
+                          "rounded-sm px-1.5 py-0.5 text-[11px] font-medium",
+                          s.status === "已核准"
+                            ? "bg-lime-soft text-lime-text"
+                            : s.status === "待審核"
+                              ? "bg-card text-[#A36A0F]"
+                              : "bg-card text-text-muted"
+                        )}
+                      >
+                        {s.status}
+                      </span>
+                      <span className="ml-auto font-mono text-[11px] text-text-muted">
+                        投稿 {s.submittedAt}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-sm font-medium text-text-primary">{s.title}</p>
+                    <p className="mt-1 text-xs leading-relaxed text-text-secondary">
+                      {s.summary}
+                    </p>
+                    {s.status === "已退回" && s.note && (
+                      <p className="mt-2 rounded-md border border-dashed border-border-strong bg-card px-3 py-2 text-[11px] leading-relaxed text-text-secondary">
+                        退回備註:{s.note}
+                      </p>
+                    )}
+                    {s.status === "待審核" && (
+                      <div className="mt-3 space-y-2">
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => approveSub(s)}
+                            className="inline-flex items-center gap-1 rounded-md bg-lime px-3 py-1.5 text-xs font-medium text-on-accent hover:bg-lime-hover"
+                          >
+                            <Check className="h-3 w-3" />
+                            核准上首頁
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setReturningId(returningId === s.id ? null : s.id);
+                              setReturnNote("");
+                            }}
+                            className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs text-text-secondary hover:border-border-strong"
+                          >
+                            <Undo2 className="h-3 w-3" />
+                            退回
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => takedownSub(s)}
+                            className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs text-text-secondary hover:border-border-strong"
+                          >
+                            <Ban className="h-3 w-3" />
+                            下架
+                          </button>
+                        </div>
+                        {returningId === s.id && (
+                          <div className="flex items-start gap-2">
+                            <input
+                              value={returnNote}
+                              onChange={(e) => setReturnNote(e.target.value)}
+                              placeholder="退回原因(會連同投稿寄返俾專家)…"
+                              className="flex-1 rounded-md border border-border-strong bg-surface px-3 py-2 text-xs text-text-primary placeholder:text-text-muted focus:border-lime focus:outline-none"
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") returnSub(s);
+                              }}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => returnSub(s)}
+                              className="rounded-md bg-lime px-3 py-2 text-xs font-medium text-on-accent hover:bg-lime-hover"
+                            >
+                              確認退回
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
 
