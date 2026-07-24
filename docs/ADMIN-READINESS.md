@@ -13,8 +13,9 @@
 - **Runtime:** 9 條 admin 路由全部 render 正常,dev log 無錯誤,頁面無 crash。
 - **死制:** 0 個。全部 button/toggle/drawer 都係「改 local state + 可見反饋」或 toast
   (grep 全區無 `href="#"`、`console.log`-only、空 onClick、alert)。
-- **數據矛盾:** 13 處全部修復(見下表),修復方式以「由 canonical mock 衍生」為主,
+- **數據矛盾:** 14 處全部修復(見下表),修復方式以「由 canonical mock 衍生」為主,
   唔係齋改數字 — 衍生邏輯本身就係日後 Supabase 聚合 view 嘅 spec。
+  (#14 係第二輪 adversarial 複核時補捉嘅跨表敘事矛盾。)
 - **路由缺口:** `/admin/skills` 冇 route 冇頁面(見「阻塞點」#1,需 main agent 喺 App.tsx 接線)。
 
 ---
@@ -23,7 +24,7 @@
 
 ### /admin(Dashboard)— `src/pages/admin/Dashboard.tsx`
 - 控制:4 張 KPI 卡(展示)、本週對話圖(展示)、最近活動(展示)、4 個快速進入 link ✅ 全部去正確路由。
-- 數據:【已修】「今日情報」注腳 4 條待審核 → 衍生自 `contentQueue`(=7);「平均信心 0.81」→ 衍生自 `conversations`(=0.80);快速進入描述全部衍生(待審核 7、專家草稿 2、已標記 2、MCP AI 412、2 席草稿)。
+- 數據:【已修】「今日情報」注腳 4 條待審核 → 衍生自 `contentQueue`(=7);「平均信心 0.81」→ 衍生自 `conversations`(=0.80);快速進入描述全部衍生(待審核 7、專家草稿 2、已標記 2、MCP AI 412、2 席草稿);【已修 #14】recentActivity 黃子朗升級事件同 members 表 timeline 對齊。
 - 來源:`admin-mock.ts` + `experts.ts`(verified/pending 計數)。✅
 
 ### /admin/experts — `src/pages/admin/AdminExperts.tsx`
@@ -90,12 +91,18 @@
 | 11 | AdminLayout.tsx:125 | 側欄版本「v1.13」過時 | → v1.20 |
 | 12 | AdminStudio.tsx:798 | 測試分身開場白「(Prompt Prompt v1.0)」重複字 | 移除硬編 "Prompt " 前綴 |
 | 13 | Dashboard.tsx QUICK_LINKS | 描述數字(7 條/2 篇/2 段/412 人/2 席)全部寫死 | 全部衍生(contentQueue、expertPosts、conversations、mcpVerticals、experts.ts) |
+| 14 | admin-mock.ts recentActivity act-4 | 「黃子朗升級至進階會員 3 小時前」 vs members m-001 黃子朗 timeline(2025-11-20 升進階、2026-01-14 已升 VIP)— 同一 sample 成員嘅歷史被即日活動推翻 | 改為「黃子朗(tszlong.wong@outlook.com)續訂 VIP 會員」,同 m-001 VIP 現狀一致 |
 
 ### 觀察(唔算矛盾,唔改)
 - `crmKpis`(342/28/41/15)係全站 mock,CRM 頁尾已如實標明「顯示樣本 15 · 全站 342」。
 - `portal-mock` 嘅 pi-e2(Elvin · Veo 4 · 待審核)喺 portal 佇列但唔喺 admin `expertSubmissions` 佇列 — 兩邊審核 queue 嘅 mock 樣本唔同;投稿總數衍生已正確反映。
 - `expertActivityBySlug` 嘅創始會員名(陳嘉怡/吳日言/林子聰/何凱婷/張曉彤)唔喺 members 樣本表 — feed 係敘事樣本。
 - AdminExperts「知識庫」tab 公開分享 12 / 授權訪談 3 係寫死敘事數字,無跨頁對應。
+- `CrmLeadType` 只有 訪客/免費會員/進階會員 三值 — VIP 會員(如黃子朗)喺 CRM「類型」欄
+  歸類為「進階會員」(= 付費會員),但 lead drawer 嘅 `member.tier` 快照係準確嘅「VIP」,
+  同 members 表一致;接入 `leads` 表時 type 應改為直接 reference `profiles.tier`。
+- recentActivity act-3「OpenAI 發佈 GPT-5 統一模型」對應 insights.ts `openai-gpt-5-unified`
+  (已發佈,唔再喺審核佇列)— 標題係簡稱,唔算矛盾。
 
 ---
 
@@ -140,4 +147,9 @@ swap point 乾淨。admin-mock2 而家會由 admin-mock / portal-mock 衍生 —
 ---
 
 *審計:v1.20(branch fix-20-adminqa)。驗證:`npm run build` ✅、`vite dev` 全 9 頁巡檢 ✅、
-CRM/Content/Experts 互動抽驗 ✅。*
+CRM/Content/Experts 互動抽驗 ✅。第二輪 adversarial 複核:`vite preview` 實機重巡
+9 頁 + 互動驗證(CRM 接受建議 pill 7→6/4→5、Content 通過 badge 10→9、
+Settings Beauty toggle 未開放→開放中、Experts 360 衍生數字 1,847/126/83%/1284 chunks)、
+逐項核算 mock 數字(avgConfidence=0.80、collectedCount=resources.length、
+aihotSources items 3+2+6+4=15=todayInsights、portalInsights 投稿 2/4 與 1/3)— 
+補修 #14,其餘 13 項修復全部確認有效。*

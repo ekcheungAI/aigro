@@ -52,7 +52,7 @@ export const recentActivity: ActivityItem[] = [
   {
     id: "act-4",
     kind: "新會員",
-    text: "黃子朗升級至進階會員",
+    text: "黃子朗(tszlong.wong@outlook.com)續訂 VIP 會員",
     time: "3 小時前",
   },
   {
