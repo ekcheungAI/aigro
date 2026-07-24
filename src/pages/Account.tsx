@@ -1,16 +1,31 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, Check, LogOut, MessageSquare } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import {
+  ArrowRight,
+  Check,
+  Lock,
+  LogOut,
+  MessageSquare,
+  PenLine,
+  Zap,
+} from "lucide-react";
 import Toast, { useToast } from "@/components/auth/Toast";
+import ProfileEditor from "@/components/auth/ProfileEditor";
 import {
   clearMember,
   greeting,
+  isFoundingTier,
   loadMember,
   memberInitial,
+  milestonesFor,
+  profileCompletion,
+  referralLabel,
   ROLE_LABELS,
   saveMember,
+  teamSizeLabel,
   TIER_LABEL,
+  unlockedMilestones,
 } from "@/components/auth/member";
 import type { AigroMember, MemberRole } from "@/components/auth/member";
 import { loadSessionStore } from "@/components/ask/sessions";
@@ -88,9 +103,37 @@ function RoleChip({ role }: { role: MemberRole }) {
   );
 }
 
+/** 檔案欄位總覽(完成度卡)— 空值顯示「未填寫」一 click 編輯 anchor */
+const PROFILE_ROWS: {
+  key: string;
+  label: string;
+  value: (m: AigroMember) => string | null;
+}[] = [
+  { key: "company", label: "公司/團隊", value: (m) => m.company ?? null },
+  { key: "roleTitle", label: "職位", value: (m) => m.roleTitle ?? null },
+  {
+    key: "teamSize",
+    label: "團隊規模",
+    value: (m) => (m.teamSize ? teamSizeLabel(m.teamSize) : null),
+  },
+  { key: "city", label: "城市", value: (m) => m.city ?? null },
+  {
+    key: "goals",
+    label: "想達成嘅目標",
+    value: (m) => (m.goals && m.goals.length > 0 ? m.goals.join("、") : null),
+  },
+  { key: "social", label: "主要社交平台", value: (m) => m.social ?? null },
+  {
+    key: "referral",
+    label: "點知我哋",
+    value: (m) => (m.referral ? referralLabel(m.referral) : null),
+  },
+];
+
 /**
  * Account `/account` — 會員專區(示範模式)。
- * 問候 + 方案卡(升級 CTA → /pricing)+ 用量統計 + 我的對話
+ * 問候 + 方案卡(升級 CTA → /pricing)+ 檔案完成度(里程碑解鎖 +
+ * 完善檔案 inline editor)+ 用量統計 + 我的對話
  * (讀 aigro-ask-sessions-v1)+ 設定(email 通知 toggles + 登出)。
  * 未登入 → 引導去 /login /join。
  */
@@ -99,6 +142,7 @@ export default function Account() {
   const reduced = useReducedMotion();
   const { toast, showToast } = useToast();
   const [member, setMember] = useState<AigroMember | null>(loadMember);
+  const [editing, setEditing] = useState(false);
   const sessions = useMemo(collectSessions, []);
   const mcpSignedUp = useMemo(() => {
     try {
@@ -148,6 +192,26 @@ export default function Account() {
     showToast("已登出(示範模式)");
     window.setTimeout(() => navigate("/"), 700);
   };
+
+  /** 完善檔案儲存:persist + 重算完成度,新解鎖里程碑逐一 toast */
+  const handleProfileSave = (next: AigroMember) => {
+    const before = new Set(unlockedMilestones(member).map((ms) => ms.title));
+    saveMember(next);
+    setMember(next);
+    setEditing(false);
+    const newly = unlockedMilestones(next).filter((ms) => !before.has(ms.title));
+    showToast("檔案已儲存");
+    newly.forEach((ms, i) => {
+      window.setTimeout(
+        () => showToast(`已解鎖:${ms.title}`),
+        1800 * (i + 1)
+      );
+    });
+  };
+
+  const completion = profileCompletion(member);
+  const founding = isFoundingTier(member);
+  const milestones = milestonesFor(member);
 
   const stats = [
     { label: "對話數", value: String(sessions.length) },
@@ -215,6 +279,156 @@ export default function Account() {
               <ArrowRight className="h-4 w-4" strokeWidth={1.5} />
             </Link>
           )}
+        </section>
+
+        {/* ---- 檔案完成度 + 解鎖里程碑 ---- */}
+        <section className="mt-6 rounded-md border bg-surface p-6 md:p-8">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="text-overline uppercase tracking-[0.12em] text-text-muted">
+                檔案完成度
+              </p>
+              <p className="mt-2 font-mono text-metric text-ink">
+                {completion}%
+              </p>
+            </div>
+            {!editing && (
+              <button
+                type="button"
+                onClick={() => setEditing(true)}
+                className="press inline-flex h-11 shrink-0 items-center gap-2 rounded-md border border-border-strong px-5 text-label text-text-primary hover:border-ink hover:text-ink"
+              >
+                <PenLine className="h-4 w-4" strokeWidth={1.5} />
+                完善檔案
+              </button>
+            )}
+          </div>
+
+          {/* hairline progress bar */}
+          <div className="mt-5 h-[2px] w-full rounded-full bg-lime-soft">
+            <div
+              className="h-full rounded-full bg-lime transition-[width] duration-500 motion-reduce:transition-none"
+              style={{ width: `${completion}%` }}
+            />
+          </div>
+          <p className="mt-2 text-caption text-text-muted">
+            完成更多,解鎖更多
+          </p>
+
+          {founding && (
+            <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-lime-soft px-3 py-1 text-caption text-ink">
+              <Zap className="h-3.5 w-3.5" strokeWidth={1.5} />
+              創始會員加成 — 創始會員專屬加速,門檻降至 40 / 60 / 80%
+            </p>
+          )}
+
+          {/* 里程碑階梯 */}
+          <ul className="mt-6">
+            {milestones.map((ms, i) => {
+              const unlocked = completion >= ms.pct;
+              return (
+                <li
+                  key={ms.title}
+                  className={cn(
+                    "flex items-center gap-4 py-3",
+                    i > 0 && "border-t"
+                  )}
+                >
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      "flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
+                      unlocked
+                        ? "bg-lime text-on-accent"
+                        : "border border-border-strong text-text-muted"
+                    )}
+                  >
+                    {unlocked ? (
+                      <Check className="h-4 w-4" strokeWidth={2} />
+                    ) : (
+                      <Lock className="h-3.5 w-3.5" strokeWidth={1.5} />
+                    )}
+                  </span>
+                  <div className="flex-1">
+                    <p
+                      className={cn(
+                        "text-label",
+                        unlocked ? "text-text-primary" : "text-text-muted"
+                      )}
+                    >
+                      {ms.title}
+                    </p>
+                    <p className="mt-0.5 text-caption text-text-muted">
+                      {ms.desc}
+                    </p>
+                  </div>
+                  {unlocked ? (
+                    <span className="shrink-0 text-caption text-ink">
+                      已解鎖
+                    </span>
+                  ) : (
+                    <span className="shrink-0 font-mono text-caption text-text-muted">
+                      {ms.pct}%
+                    </span>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+
+          {/* 欄位總覽 ⇄ inline editor */}
+          <AnimatePresence mode="wait" initial={false}>
+            {editing ? (
+              <motion.div
+                key="profile-editor"
+                initial={reduced ? { opacity: 0 } : { opacity: 0, y: 12 }}
+                animate={reduced ? { opacity: 1 } : { opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+                className="mt-6 border-t pt-6"
+              >
+                <ProfileEditor
+                  member={member}
+                  onSave={handleProfileSave}
+                  onCancel={() => setEditing(false)}
+                />
+              </motion.div>
+            ) : (
+              <motion.dl
+                key="profile-summary"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="mt-6 grid grid-cols-1 gap-x-8 border-t sm:grid-cols-2"
+              >
+                {PROFILE_ROWS.map((row) => {
+                  const v = row.value(member);
+                  return (
+                    <div
+                      key={row.key}
+                      className="flex items-baseline justify-between gap-4 border-b py-3"
+                    >
+                      <dt className="shrink-0 text-caption text-text-muted">
+                        {row.label}
+                      </dt>
+                      <dd className="text-right text-body-sm text-text-primary">
+                        {v ?? (
+                          <button
+                            type="button"
+                            onClick={() => setEditing(true)}
+                            className="press text-body-sm text-text-muted underline decoration-dotted underline-offset-4 hover:text-ink"
+                          >
+                            未填寫
+                          </button>
+                        )}
+                      </dd>
+                    </div>
+                  );
+                })}
+              </motion.dl>
+            )}
+          </AnimatePresence>
         </section>
 
         {/* ---- 用量統計 ---- */}
