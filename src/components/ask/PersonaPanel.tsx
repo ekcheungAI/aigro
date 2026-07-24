@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { motion, useReducedMotion } from "framer-motion";
 import { MessageSquarePlus, Sparkles } from "lucide-react";
 import MonogramAvatar, { PhotoAvatar } from "@/components/MonogramAvatar";
 import VerifiedBadge from "@/components/VerifiedBadge";
@@ -47,6 +48,7 @@ export default function PersonaPanel({
   onNewSession,
   anonymous = false,
 }: PersonaPanelProps) {
+  const reduced = useReducedMotion();
   return (
     <aside className="flex h-full w-[260px] shrink-0 flex-col border-r border-border bg-surface">
       {/* 分身選擇 */}
@@ -136,6 +138,13 @@ export default function PersonaPanel({
           </button>
         </div>
         <div className="mt-2 min-h-0 flex-1 overflow-y-auto" data-lenis-prevent>
+          {/* 分身切換:對話紀錄 cross-fade(200ms opacity) */}
+          <motion.div
+            key={activePersona.key}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: reduced ? 0.12 : 0.2 }}
+          >
           {sessions.length === 0 ? (
             <p className="pt-2 text-caption text-text-muted">
               呢個分身暫時未有對話 — 送出第一條問題就會自動記低。
@@ -176,6 +185,7 @@ export default function PersonaPanel({
               })}
             </ul>
           )}
+          </motion.div>
         </div>
       </div>
 
