@@ -36,7 +36,6 @@ export default function Footer() {
               <li><Link className="text-band-text-secondary transition-colors duration-150 hover:text-band-ink" to="/insights">Insights 情報</Link></li>
               <li><Link className="text-band-text-secondary transition-colors duration-150 hover:text-band-ink" to="/insights?tab=daily">Daily 日報</Link></li>
               <li><Link className="text-band-text-secondary transition-colors duration-150 hover:text-band-ink" to="/cases">Cases 案例</Link></li>
-              <li><Link className="text-band-text-secondary transition-colors duration-150 hover:text-band-ink" to="/insights?tab=library">Library 資源庫</Link></li>
             </ul>
           </nav>
 

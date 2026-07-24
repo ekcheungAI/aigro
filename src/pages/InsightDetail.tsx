@@ -9,7 +9,7 @@ import {
   type Insight,
   type InsightArticle,
 } from "@/data/insights";
-import { AIHOT_CREDIT, findAihotInsight } from "@/data/aihot";
+import { findAihotInsight } from "@/data/aihot";
 
 /** 設計稿中的原型路由別名 (daily.md / insight-detail.md 使用 openai-gpt-5-launch) */
 const SLUG_ALIASES: Record<string, string> = {
@@ -98,39 +98,33 @@ export default function InsightDetail() {
             </h1>
             <div className="mt-8 rounded-md bg-card p-8 max-md:p-6">
               <p className="text-overline font-sans uppercase text-text-muted">
-                本文由 AI HOT 提供
+                香港繁體整理 · 編輯部每日更新
               </p>
               <p className="mt-3 text-body-lg text-text-secondary">
                 {aihot.summary}
               </p>
             </div>
             <p className="mt-6 text-caption text-text-muted">
-              {AIHOT_CREDIT}・原始來源：{aihot.source}
+              原始來源：{aihot.source}
             </p>
-            <div className="mt-8 flex flex-wrap items-center gap-4">
-              <a
-                href={aihot.permalink}
-                target="_blank"
-                rel="noreferrer"
-                className="group inline-flex h-11 items-center gap-2 rounded-md bg-ink-solid px-6 text-label text-white press hover:bg-ink-hover"
-              >
-                閱讀原文
-                <ExternalLink
-                  className="h-4 w-4 transition-transform duration-150 nudge-x"
-                  strokeWidth={1.5}
-                  aria-hidden="true"
-                />
-              </a>
-              <a
-                href={aihot.canonical}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex h-11 items-center gap-2 rounded-md border border-border-strong px-6 text-label text-ink press hover:bg-ink-soft"
-              >
-                AI HOT 出處
-                <ExternalLink className="h-3 w-3" strokeWidth={1.5} aria-hidden="true" />
-              </a>
-            </div>
+            {/* 「閱讀原文」僅在指向原始來源時顯示；移除上游聚合站出處連結 */}
+            {aihot.originalUrl && (
+              <div className="mt-8 flex flex-wrap items-center gap-4">
+                <a
+                  href={aihot.originalUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group inline-flex h-11 items-center gap-2 rounded-md bg-ink-solid px-6 text-label text-white press hover:bg-ink-hover"
+                >
+                  閱讀原文
+                  <ExternalLink
+                    className="h-4 w-4 transition-transform duration-150 nudge-x"
+                    strokeWidth={1.5}
+                    aria-hidden="true"
+                  />
+                </a>
+              </div>
+            )}
           </Reveal>
         </section>
       );

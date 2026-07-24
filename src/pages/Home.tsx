@@ -26,11 +26,7 @@ import {
   insights,
   type InsightCategory,
 } from "@/data/insights";
-import {
-  AIHOT_CREDIT,
-  aihotDailyPicks,
-  aihotInsights,
-} from "@/data/aihot";
+import { aihotDailyPicks, aihotInsights } from "@/data/aihot";
 import { featuredCases } from "@/data/cases";
 import { expertFullName, expertHasPhoto, experts } from "@/data/experts";
 
@@ -202,14 +198,7 @@ function Hero() {
                     ))}
                   </ol>
                   <p className="border-t border-band-border px-6 py-3 text-caption text-band-text-muted">
-                    <a
-                      href="https://aihot.virxact.com"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="transition-colors duration-150 hover:text-band-ink"
-                    >
-                      {AIHOT_CREDIT}
-                    </a>
+                    香港繁體整理 · 編輯部每日更新
                   </p>
                 </motion.div>
               )}
@@ -429,14 +418,9 @@ function InsightsWall() {
           >
             <ChevronRight className="h-5 w-5" strokeWidth={1.5} />
           </button>
-          <a
-            href="https://aihot.virxact.com"
-            target="_blank"
-            rel="noreferrer"
-            className="ml-auto text-caption text-text-muted transition-colors duration-150 hover:text-ink"
-          >
-            {AIHOT_CREDIT}
-          </a>
+          <span className="ml-auto text-caption text-text-muted">
+            香港繁體整理 · 編輯部每日更新
+          </span>
         </div>
       </div>
     </section>

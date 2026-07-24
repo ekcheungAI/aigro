@@ -19,8 +19,13 @@ export interface TopicDef {
   name: string;
   /** 英文副名（如有，mono 小字展示） */
   nameEn?: string;
-  /** 2 字符 monogram tile 文字 */
+  /** 2 字符 monogram tile 文字（無 logo 或 logo 載入失敗時的 fallback） */
   mono: string;
+  /**
+   * Simple Icons slug — 真實公司 logo 經 cdn.simpleicons.org/<slug> 載入；
+   * 留空或載入失敗（onError）即 fallback 到 monogram tile。
+   */
+  logo?: string;
   /** 一句繁體描述 */
   desc: string;
   /** 比對用關鍵詞（小寫 substring 比對 title / titleEn / summary）；首個亦作 feed 搜尋詞 */
@@ -51,6 +56,7 @@ const COMPANY_TOPICS: TopicDef[] = [
     id: "anthropic",
     name: "Anthropic / Claude",
     mono: "AN",
+    logo: "anthropic",
     desc: "追蹤 Claude、Claude Code、安全研究,以及 Anthropic 嘅產品同公司進展。",
     keywords: ["claude", "anthropic"],
   },
@@ -58,6 +64,7 @@ const COMPANY_TOPICS: TopicDef[] = [
     id: "google",
     name: "Google / Gemini",
     mono: "GO",
+    logo: "google",
     desc: "追蹤 Gemini、DeepMind、Veo,以及 Google 嘅 AI 產品同研究生態。",
     keywords: ["gemini", "deepmind", "veo", "google"],
   },
@@ -65,6 +72,7 @@ const COMPANY_TOPICS: TopicDef[] = [
     id: "deepseek",
     name: "DeepSeek",
     mono: "DS",
+    logo: "deepseek",
     desc: "追蹤 DeepSeek 嘅模型發佈、開源權重、技術報告同產品進展。",
     keywords: ["deepseek"],
   },
@@ -72,6 +80,7 @@ const COMPANY_TOPICS: TopicDef[] = [
     id: "qwen",
     name: "通義千問 Qwen",
     mono: "QW",
+    logo: "qwen",
     desc: "追蹤 Qwen 系列模型、開源版本、端側模型同阿里 AI 生態。",
     keywords: ["qwen", "通義", "千問"],
   },
@@ -79,6 +88,7 @@ const COMPANY_TOPICS: TopicDef[] = [
     id: "kimi",
     name: "Kimi / 月之暗面",
     mono: "KI",
+    logo: "kimi",
     desc: "追蹤 Kimi 模型、長上下文技術、開源路線同產品更新。",
     keywords: ["kimi", "月之暗面"],
   },
@@ -86,6 +96,7 @@ const COMPANY_TOPICS: TopicDef[] = [
     id: "minimax",
     name: "MiniMax",
     mono: "MM",
+    logo: "minimax",
     desc: "追蹤 MiniMax 嘅大模型、語音、多模態能力同商業產品。",
     keywords: ["minimax"],
   },
@@ -100,6 +111,7 @@ const COMPANY_TOPICS: TopicDef[] = [
     id: "xai",
     name: "xAI / Grok",
     mono: "XA",
+    logo: "x",
     desc: "追蹤 Grok 模型迭代、算力部署,以及 xAI 同 X 平台嘅整合。",
     keywords: ["grok", "xai"],
   },
@@ -107,6 +119,7 @@ const COMPANY_TOPICS: TopicDef[] = [
     id: "meta",
     name: "Meta / Llama",
     mono: "ME",
+    logo: "meta",
     desc: "追蹤 Llama 開源模型、Meta AI 產品、研究團隊同公司策略。",
     keywords: ["llama", "meta"],
   },
@@ -121,6 +134,7 @@ const COMPANY_TOPICS: TopicDef[] = [
     id: "nvidia",
     name: "NVIDIA",
     mono: "NV",
+    logo: "nvidia",
     desc: "追蹤 GPU、CUDA、AI 基建、機械人平台同算力市場變化。",
     keywords: ["nvidia", "cuda", "gpu"],
   },
@@ -128,6 +142,7 @@ const COMPANY_TOPICS: TopicDef[] = [
     id: "huggingface",
     name: "Hugging Face",
     mono: "HF",
+    logo: "huggingface",
     desc: "追蹤開源模型、數據集、社群工具同排行榜嘅最新變化。",
     keywords: ["hugging face", "huggingface"],
   },
@@ -135,6 +150,7 @@ const COMPANY_TOPICS: TopicDef[] = [
     id: "cursor",
     name: "Cursor",
     mono: "CU",
+    logo: "cursor",
     desc: "追蹤 Cursor 編輯器、Agent 功能、模型選擇同開發者工作流程。",
     keywords: ["cursor"],
   },
@@ -142,6 +158,7 @@ const COMPANY_TOPICS: TopicDef[] = [
     id: "openrouter",
     name: "OpenRouter",
     mono: "OR",
+    logo: "openrouter",
     desc: "追蹤模型上架、路由服務、用量排行同開發者選型訊號。",
     keywords: ["openrouter"],
   },

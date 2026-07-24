@@ -4,18 +4,20 @@ import { motion } from "framer-motion";
 import {
   ArrowLeft,
   ArrowRight,
+  Building2,
   Cpu,
   ExternalLink,
   Flower2,
+  Landmark,
   Plus,
   Radar,
   Search,
+  ShoppingBag,
   type LucideIcon,
 } from "lucide-react";
 import CategoryChip from "@/components/CategoryChip";
 import Reveal, { REVEAL_EASE } from "@/components/Reveal";
 import { DailyContent } from "@/pages/Daily";
-import { LibraryEmbed } from "@/pages/Library";
 import {
   INSIGHT_ARTICLES,
   INSIGHT_CATEGORIES,
@@ -26,7 +28,6 @@ import {
   type InsightCategory,
 } from "@/data/insights";
 import {
-  AIHOT_CREDIT,
   aihotAllInsights,
   aihotHotTopics,
   aihotInsights,
@@ -45,13 +46,12 @@ import { cn } from "@/lib/utils";
 
 /* ============ Tabs ============ */
 
-type TabKey = "feed" | "daily" | "topics" | "library";
+type TabKey = "feed" | "daily" | "topics";
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: "feed", label: "即時動態" },
   { key: "daily", label: "每日日報" },
   { key: "topics", label: "主題地圖" },
-  { key: "library", label: "資源庫" },
 ];
 
 const TAB_KEYS = TABS.map((t) => t.key) as string[];
@@ -203,7 +203,7 @@ function EditorPickCard({
 /* ============ 即時動態 — Feed row（左 mono rail + 右內容欄，非卡片） ============ */
 
 function FeedRow({ insight }: { insight: AihotInsight }) {
-  /** 標題 / 原文 → 原始來源 URL；AIHOT permalink 僅作署名（via AI HOT） */
+  /** 標題 → 原始來源 URL（缺失時 fallback permalink）；「原文」僅在指向原始來源時顯示 */
   const originalHref = insight.originalUrl ?? insight.permalink;
   return (
     <article className="flex gap-6 py-6">
@@ -243,31 +243,17 @@ function FeedRow({ insight }: { insight: AihotInsight }) {
         </p>
         <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-caption text-text-muted">
           <span>{insight.source}</span>
-          <span aria-hidden="true">·</span>
-          <a
-            href={originalHref}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-1 transition-colors duration-150 hover:text-ink"
-          >
-            原文
-            <ExternalLink
-              className="h-3 w-3"
-              strokeWidth={1.5}
-              aria-hidden="true"
-            />
-          </a>
-          {/* AIHOT 署名 — 保留 canonical 連結（使用規則）；原始來源缺失時「原文」已指 permalink，唔重複 */}
+          {/* 「原文」連結僅在指向原始來源時顯示（不署名上游聚合站） */}
           {insight.originalUrl && (
             <>
               <span aria-hidden="true">·</span>
               <a
-                href={insight.permalink}
+                href={originalHref}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-1 transition-colors duration-150 hover:text-ink"
               >
-                via AI HOT
+                原文
                 <ExternalLink
                   className="h-3 w-3"
                   strokeWidth={1.5}
@@ -589,7 +575,35 @@ function FocusSection() {
   );
 }
 
-/** 主題卡 — monogram tile + 名 + 一句描述 + 相關動態計數 + → feed 搜尋/分類 */
+/**
+ * 主題 logo tile — 公司與模型群組優先用 Simple Icons CDN 真實 logo
+ * （黑色版本 + dark:invert 反白，兩主題皆 muted tile）；CDN 無該 logo
+ * 或載入失敗時 onError fallback 到 monogram 文字。
+ */
+function TopicLogoTile({ topic }: { topic: TopicDef }) {
+  const [logoFailed, setLogoFailed] = useState(false);
+  const showLogo = topic.logo && !logoFailed;
+  return (
+    <span
+      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-sm bg-ink-soft font-mono text-caption text-ink"
+      aria-hidden="true"
+    >
+      {showLogo ? (
+        <img
+          src={`https://cdn.simpleicons.org/${topic.logo}/000000`}
+          alt=""
+          loading="lazy"
+          onError={() => setLogoFailed(true)}
+          className="h-6 w-6 dark:invert"
+        />
+      ) : (
+        topic.mono
+      )}
+    </span>
+  );
+}
+
+/** 主題卡 — logo/monogram tile + 名 + 一句描述 + 相關動態計數 + → feed 搜尋/分類 */
 function TopicCard({ topic }: { topic: TopicDef }) {
   const count = countTopicItems(topic);
   return (
@@ -598,12 +612,7 @@ function TopicCard({ topic }: { topic: TopicDef }) {
       className="card-hover group flex h-full flex-col rounded-md border bg-surface p-5 shadow-card dark:shadow-none"
     >
       <div className="flex items-center gap-3">
-        <span
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-sm bg-ink-soft font-mono text-caption text-ink"
-          aria-hidden="true"
-        >
-          {topic.mono}
-        </span>
+        <TopicLogoTile topic={topic} />
         <div className="min-w-0">
           <h4 className="truncate text-label text-text-primary transition-colors duration-150 group-hover:text-ink">
             {topic.name}
@@ -686,7 +695,7 @@ function HotSignalsSection() {
             </span>
           </div>
           <p className="mt-1 text-caption text-text-secondary">
-            AIHOT 追蹤中嘅熱門話題,按訊號強度排列 — 數字為覆蓋該話題嘅來源數。
+            編輯部追蹤中嘅熱門話題,按訊號強度排列 — 數字為覆蓋該話題嘅來源數。
           </p>
         </div>
       </Reveal>
@@ -818,7 +827,14 @@ function TopicsTab() {
 
 /* ============ 行業切換 Sector Switcher ============ */
 
-type SectorKey = "ai" | "beauty" | "tech" | "more";
+type SectorKey =
+  | "ai"
+  | "beauty"
+  | "tech"
+  | "finance"
+  | "property"
+  | "retail"
+  | "more";
 
 interface SectorDef {
   key: SectorKey;
@@ -828,10 +844,17 @@ interface SectorDef {
   live: boolean;
 }
 
+/**
+ * 行業切換唯一數據源 — 加新行業只需加一行（live: false 即 greyed
+ * 「情報即將推出」+ 空狀態，空狀態文案由 SectorDef 驅動）。
+ */
 const SECTORS: SectorDef[] = [
   { key: "ai", name: "AI 情報", icon: Radar, live: true },
   { key: "beauty", name: "Beauty 美妝", icon: Flower2, live: false },
   { key: "tech", name: "Technology 科技", icon: Cpu, live: false },
+  { key: "finance", name: "Finance 金融", icon: Landmark, live: false },
+  { key: "property", name: "Property 地產", icon: Building2, live: false },
+  { key: "retail", name: "Retail 零售", icon: ShoppingBag, live: false },
   { key: "more", name: "更多行業", icon: Plus, live: false },
 ];
 
@@ -889,12 +912,14 @@ function SectorEmptyState({ sector }: { sector: SectorDef }) {
 /* ============ Page ============ */
 
 /**
- * 資訊中心 Intelligence Hub（v1.18 多行業情報網）— 行業切換 + tab 化情報中樞：
- * 行業層（?sector=）：AI 情報 live,Beauty / Technology / 更多行業 greyed
- * （waitlist 提示 → /developers,直接訪問 URL 見優雅空狀態）。
+ * 資訊中心 Intelligence Hub（v1.19 多行業情報網）— 行業切換 + tab 化情報中樞：
+ * 行業層（?sector=）：AI 情報 live,Beauty / Technology / Finance / Property /
+ * Retail / 更多行業 greyed（waitlist 提示 → /developers,直接訪問 URL 見優雅空狀態，
+ * 全部由 SECTORS array 驅動 — 加行業只加一行）。
  * AI 行業內：即時動態（日期分組 feed：mono rail + 髮絲線列，精選/全部、
- * 搜尋、分類 chips）· 每日日報 · 主題地圖（最新焦點 + 31 主題卡 + 熱議訊號）
- * · 資源庫。URL 驅動：?sector= / ?tab= / ?mode= / ?category= / ?q=。
+ * 搜尋、分類 chips）· 每日日報 · 主題地圖（最新焦點 + 31 主題卡
+ * — 公司與模型用 Simple Icons 真實 logo,onError fallback monogram — + 熱議訊號）。
+ * URL 驅動：?sector= / ?tab= / ?mode= / ?category= / ?q=。
  */
 export default function Insights() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -947,39 +972,33 @@ export default function Insights() {
           />
           <span className="absolute inset-0 bg-band-bg/60" />
         </div>
-        <div className="mx-auto flex min-h-[300px] max-w-container flex-col justify-center px-6 py-16 max-md:min-h-[280px] max-md:py-12">
-          <Reveal y={24}>
-            <p className="flex items-center gap-3 text-overline font-sans uppercase text-band-text-muted">
-              <span
-                className="inline-block h-px w-6 bg-band-border-strong"
-                aria-hidden="true"
-              />
-              Intelligence
-            </p>
-          </Reveal>
-          <Reveal y={24} delay={0.1}>
-            <h1 className="mt-4 font-display text-display text-band-text">
-              資訊中心 <span className="text-band-ink">Intelligence Hub</span>
-            </h1>
-          </Reveal>
+        {/* 緊湊刊頭（~150px）：桌面左標題右副題一行排列，py 收緊、H1 由 display 降至 h2 */}
+        <div className="mx-auto flex max-w-container flex-col gap-4 px-6 py-10 max-md:py-8 md:flex-row md:items-end md:justify-between">
+          <div>
+            <Reveal y={24}>
+              <p className="flex items-center gap-3 text-overline font-sans uppercase text-band-text-muted">
+                <span
+                  className="inline-block h-px w-6 bg-band-border-strong"
+                  aria-hidden="true"
+                />
+                Intelligence
+              </p>
+            </Reveal>
+            <Reveal y={24} delay={0.1}>
+              <h1 className="mt-3 font-display text-h2 text-band-text">
+                資訊中心 <span className="text-band-ink">Intelligence Hub</span>
+              </h1>
+            </Reveal>
+          </div>
           <Reveal y={24} delay={0.2}>
-            <p className="mt-4 max-w-[640px] text-body-lg text-band-text-secondary">
-              由 AI 開始,逐個行業建起情報網 — 你嘅 AI 工具值得每個行業嘅雷達。
-            </p>
-            <p className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-2 text-caption text-band-text-muted">
-              {/* 「香港繁體整理」徽章 — lime-soft chip（band tokens，兩主題一致） */}
-              <span className="rounded-sm bg-band-ink-soft px-2 py-0.5 text-overline font-sans text-band-ink">
-                香港繁體整理
-              </span>
-              <a
-                href="https://aihot.virxact.com"
-                target="_blank"
-                rel="noreferrer"
-                className="transition-colors duration-150 hover:text-band-ink"
-              >
-                {AIHOT_CREDIT}
-              </a>
-            </p>
+            <div className="md:max-w-[360px] md:text-right">
+              <p className="text-body-sm text-band-text-secondary">
+                由 AI 開始,逐個行業建起情報網 — 你嘅 AI 工具值得每個行業嘅雷達。
+              </p>
+              <p className="mt-2 text-caption text-band-text-muted">
+                香港繁體整理 · 編輯部每日更新
+              </p>
+            </div>
           </Reveal>
         </div>
       </section>
@@ -1115,7 +1134,6 @@ export default function Insights() {
             {tab === "feed" && <FeedTab />}
             {tab === "daily" && <DailyContent embedded />}
             {tab === "topics" && <TopicsTab />}
-            {tab === "library" && <LibraryEmbed />}
           </div>
         </>
       )}

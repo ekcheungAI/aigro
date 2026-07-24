@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Calendar, ExternalLink } from "lucide-react";
 import Reveal, { REVEAL_EASE } from "@/components/Reveal";
 import { todayInfo, recentIssues } from "@/lib/daily";
-import { AIHOT_CREDIT, aihotDaily } from "@/data/aihot";
+import { aihotDaily } from "@/data/aihot";
 import { cn } from "@/lib/utils";
 
 /** 日報 — 日期、星期、期號按今日動態生成 (src/lib/daily.ts)；內容來自 AIHOT 真實日報 */
@@ -69,11 +69,11 @@ export function DailyContent({ embedded = false }: { embedded?: boolean }) {
 
   return (
     <>
-      {/* Section 1 — Masthead 刊頭 (置中, 上方 padding 96px; tab 嵌入時縮減) */}
+      {/* Section 1 — Masthead 刊頭 (置中; v1.19 收緊期號 nav 行上/下垂直間距) */}
       <section
         className={cn(
           "mx-auto max-w-container px-6 text-center",
-          embedded ? "pt-16 max-md:pt-12" : "pt-24 max-md:pt-16"
+          embedded ? "pt-10 max-md:pt-8" : "pt-16 max-md:pt-12"
         )}
       >
         <motion.p
@@ -88,7 +88,7 @@ export function DailyContent({ embedded = false }: { embedded?: boolean }) {
         {/* 日期導航列(slim)— 直接喺期號行之下:前一日(整理中 toast)/ 日期選擇 / 後一日(今日 disabled) */}
         <motion.nav
           aria-label="日報日期導航"
-          className="mx-auto mt-6 flex max-w-md items-center justify-between gap-3"
+          className="mx-auto mt-4 flex max-w-md items-center justify-between gap-3"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.4, delay: 0.15, ease: REVEAL_EASE }}
@@ -190,20 +190,13 @@ export function DailyContent({ embedded = false }: { embedded?: boolean }) {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.4, delay: 0.3, ease: REVEAL_EASE }}
         >
-          <a
-            href={aihotDaily.canonical}
-            target="_blank"
-            rel="noreferrer"
-            className="transition-colors duration-150 hover:text-ink"
-          >
-            {AIHOT_CREDIT}
-          </a>
+          香港繁體整理 · 編輯部每日更新
           {aihotDaily.date ? `・日報日期 ${aihotDaily.date}` : ""}
         </motion.p>
 
         {/* 雙髮絲線分隔：1px border-strong + 3px 間隙 + 1px border，由中心展開 */}
         <motion.div
-          className="mt-10"
+          className="mt-8"
           initial={{ scaleX: 0 }}
           animate={{ scaleX: 1 }}
           transition={{ duration: 0.5, delay: 0.4, ease: REVEAL_EASE }}
