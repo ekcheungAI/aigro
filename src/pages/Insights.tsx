@@ -38,6 +38,8 @@ import {
   TOPIC_GROUPS,
   TOPIC_TOTAL,
   countTopicItems,
+  filterTopicItems,
+  findTopicById,
   topicHref,
   type TopicDef,
   type TopicGroup,
@@ -776,7 +778,7 @@ function HotSignalsSection() {
   );
 }
 
-function TopicsTab() {
+function TopicMapView() {
   return (
     <section className="mx-auto max-w-container px-6 pb-24 pt-16 max-md:pb-16 max-md:pt-12">
       <Reveal y={16} duration={0.4}>
@@ -792,7 +794,7 @@ function TopicsTab() {
         </h2>
         <p className="mt-3 max-w-[640px] text-body-sm text-text-secondary">
           先看最新焦點,再按公司、技術同內容類型追蹤 {TOPIC_TOTAL} 個主題 —
-          每張卡直達即時動態嘅搜尋或分類篩選。
+          每張卡直達主題閱讀 view（日期分組嘅過濾 feed）。
         </p>
       </Reveal>
 
@@ -823,6 +825,191 @@ function TopicsTab() {
       <HotSignalsSection />
     </section>
   );
+}
+
+/* ============ 主題閱讀 view（?tab=topics&topic=<id>） ============ */
+
+/**
+ * 主題閱讀 — 單一主題嘅日期分組過濾 feed（v1.20）。
+ * 結構：← 返回主題地圖 ghost button · logo tile + serif H2 + 描述 +
+ * mono caption「顯示「{name}」最近 N 則情報」· 同主 feed 格式嘅
+ * 日期分組列（mono rail + 髮絲線分隔）· 底部同群組相關主題 rail。
+ */
+function TopicView({
+  topic,
+  group,
+  onBack,
+}: {
+  topic: TopicDef;
+  group: TopicGroup;
+  onBack: () => void;
+}) {
+  /** 過濾邏輯同卡片計數一致（filterTopicItems：分類直取 / keywords 比對） */
+  const items = useMemo(() => filterTopicItems(topic), [topic]);
+  const groups = useMemo(() => groupByDay(items), [items]);
+  /** 相關主題 rail — 同群組、排除當前、最多 4 個（保持探索 loop） */
+  const related = useMemo(
+    () => group.topics.filter((t) => t.id !== topic.id).slice(0, 4),
+    [group, topic.id]
+  );
+
+  return (
+    <section className="mx-auto max-w-container px-6 pb-24 pt-16 max-md:pb-16 max-md:pt-12">
+      {/* ← 返回主題地圖（清除 topic param,保留 tab=topics） */}
+      <Reveal y={16} duration={0.4}>
+        <button
+          type="button"
+          onClick={onBack}
+          className="press inline-flex h-11 items-center gap-2 rounded-md border border-border-strong px-5 text-label text-ink transition-colors duration-150 hover:bg-ink-soft"
+        >
+          <ArrowLeft className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+          返回主題地圖
+        </button>
+      </Reveal>
+
+      {/* 標頭：overline + logo tile + serif H2 + 描述 + mono caption */}
+      <Reveal y={16} duration={0.4} delay={0.06}>
+        <p className="mt-12 flex items-center gap-3 text-overline font-sans uppercase text-text-muted max-md:mt-10">
+          <span
+            className="inline-block h-px w-6 bg-border-strong"
+            aria-hidden="true"
+          />
+          主題閱讀 Topic Reading
+        </p>
+        <div className="mt-5 flex items-center gap-4">
+          <TopicLogoTile topic={topic} />
+          <div className="min-w-0">
+            <h2 className="font-display text-h2 text-text-primary">
+              {topic.name}
+            </h2>
+            {topic.nameEn && (
+              <p className="mt-1 font-mono text-caption text-text-muted">
+                {topic.nameEn}
+              </p>
+            )}
+          </div>
+        </div>
+        <p className="mt-4 max-w-[640px] text-body-sm text-text-secondary">
+          {topic.desc}
+        </p>
+        <p className="mt-3 font-mono text-caption text-text-muted">
+          顯示「{topic.name}」最近 {items.length} 則情報
+        </p>
+      </Reveal>
+
+      {/* 過濾 feed — 同主 feed 格式：日期分組 + mono rail 髮絲線列 */}
+      {items.length === 0 ? (
+        /* 誠實空狀態 — 唔虛構內容 */
+        <Reveal y={20} duration={0.45} delay={0.12}>
+          <div className="mt-12 border-t pt-16 text-center">
+            <p className="text-body-sm text-text-muted">
+              暫無新訊號 — 編輯部追蹤中
+            </p>
+            <button
+              type="button"
+              onClick={onBack}
+              className="press mt-6 inline-flex h-11 items-center gap-2 rounded-md border border-border-strong px-6 text-label text-ink transition-colors duration-150 hover:bg-ink-soft"
+            >
+              <ArrowLeft
+                className="h-4 w-4"
+                strokeWidth={1.5}
+                aria-hidden="true"
+              />
+              返回主題地圖
+            </button>
+          </div>
+        </Reveal>
+      ) : (
+        groups.map((feedGroup) => (
+          <section key={feedGroup.key} className="pt-10">
+            <Reveal y={16} duration={0.4}>
+              <div className="flex items-baseline gap-4 border-b pb-3">
+                <h3 className="font-display text-h3 text-text-primary">
+                  {feedGroup.label}
+                </h3>
+                <span className="font-mono text-caption text-text-muted">
+                  {feedGroup.items.length} 則
+                </span>
+              </div>
+            </Reveal>
+            <div className="divide-y">
+              {feedGroup.items.map((insight, i) => (
+                <Reveal
+                  key={insight.slug}
+                  y={20}
+                  duration={0.45}
+                  delay={Math.min(i, 7) * 0.08}
+                >
+                  <FeedRow insight={insight} />
+                </Reveal>
+              ))}
+            </div>
+          </section>
+        ))
+      )}
+
+      {/* 相關主題 rail — 同群組最多 4 個,延續探索 loop */}
+      {related.length > 0 && (
+        <section className="mt-20 max-md:mt-16">
+          <Reveal y={16} duration={0.4}>
+            <div className="border-b pb-4">
+              <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                <h3 className="font-display text-h3 text-text-primary">
+                  相關主題
+                </h3>
+                <span className="text-overline font-sans uppercase text-text-muted">
+                  Related · {group.name}
+                </span>
+                <span className="ml-auto font-mono text-caption text-text-muted">
+                  {related.length} 個主題
+                </span>
+              </div>
+            </div>
+          </Reveal>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {related.map((rel, i) => (
+              <Reveal
+                key={rel.id}
+                y={20}
+                duration={0.45}
+                delay={Math.min(i, 3) * 0.06}
+                className="h-full"
+              >
+                <TopicCard topic={rel} />
+              </Reveal>
+            ))}
+          </div>
+        </section>
+      )}
+    </section>
+  );
+}
+
+/**
+ * 主題 tab 調度 — ?topic=<id> 在場即渲染主題閱讀 view（取代主題地圖,
+ * 同一 tab 內）；未知 id fallback 返主題地圖。
+ * Scroll fix：Layout 只喺 pathname 改變時 scroll-to-top,topic param 改變
+ * （進入 / 切換 / 返回地圖）會留喺頁底 — 呢度按 topicParam 重置。
+ */
+function TopicsTab() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const topicParam = searchParams.get("topic");
+  const match = topicParam ? findTopicById(topicParam) : null;
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [topicParam]);
+
+  if (match) {
+    return (
+      <TopicView
+        topic={match.topic}
+        group={match.group}
+        onBack={() => setSearchParams({ tab: "topics" })}
+      />
+    );
+  }
+  return <TopicMapView />;
 }
 
 /* ============ 行業切換 Sector Switcher ============ */
@@ -912,14 +1099,17 @@ function SectorEmptyState({ sector }: { sector: SectorDef }) {
 /* ============ Page ============ */
 
 /**
- * 資訊中心 Intelligence Hub（v1.19 多行業情報網）— 行業切換 + tab 化情報中樞：
+ * 資訊中心 Intelligence Hub（v1.20 多行業情報網）— 行業切換 + tab 化情報中樞：
  * 行業層（?sector=）：AI 情報 live,Beauty / Technology / Finance / Property /
  * Retail / 更多行業 greyed（waitlist 提示 → /developers,直接訪問 URL 見優雅空狀態，
  * 全部由 SECTORS array 驅動 — 加行業只加一行）。
  * AI 行業內：即時動態（日期分組 feed：mono rail + 髮絲線列，精選/全部、
  * 搜尋、分類 chips）· 每日日報 · 主題地圖（最新焦點 + 31 主題卡
- * — 公司與模型用 Simple Icons 真實 logo,onError fallback monogram — + 熱議訊號）。
- * URL 驅動：?sector= / ?tab= / ?mode= / ?category= / ?q=。
+ * — 公司與模型用 Simple Icons 真實 logo,onError fallback monogram — + 熱議訊號）
+ * · 主題閱讀 view（?tab=topics&topic=<id>：← 返回主題地圖 · logo tile + serif H2
+ * + mono caption · 同格式日期分組過濾 feed · 同群組相關主題 rail;
+ * topic param 改變時 scroll-to-top — 補 Layout 只睇 pathname 嘅缺口）。
+ * URL 驅動：?sector= / ?tab= / ?topic= / ?mode= / ?category= / ?q=。
  */
 export default function Insights() {
   const [searchParams, setSearchParams] = useSearchParams();

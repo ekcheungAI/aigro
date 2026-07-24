@@ -3,13 +3,10 @@
  *
  * 三個主題群組：公司與模型（15）、技術方向（10）、內容形態（6）。
  * 每個主題以 keywords 對 aihotInsights 做關鍵詞比對，得出「本週 N 則」
- * 相關動態計數；卡片連結到即時動態 feed 的搜尋 / 分類篩選狀態。
+ * 相關動態計數；卡片連結到主題閱讀 view（?tab=topics&topic=<id>）。
  */
 import { aihotInsights, type AihotInsight } from "./aihot";
-import {
-  INSIGHT_CATEGORY_SLUGS,
-  type InsightCategory,
-} from "./insights";
+import type { InsightCategory } from "./insights";
 
 /* ============ 型別 ============ */
 
@@ -325,33 +322,48 @@ export const TOPIC_TOTAL = TOPIC_GROUPS.reduce(
 /* ============ 比對與連結 ============ */
 
 /**
- * 主題相關動態計數 — 對 aihotInsights（精選 50 則）做關鍵詞比對：
- * 有指定分類嘅主題按分類計數，其餘按 keywords 小寫 substring 比對
- * 標題 / 英文標題 / 摘要。
+ * 主題相關動態篩選 — 對 aihotInsights（精選 50 則，最新在前）做比對：
+ * 有指定分類嘅主題（內容形態）按分類直取，其餘按 keywords 小寫
+ * substring 比對標題 / 英文標題 / 摘要。返回保持輸入順序（時間倒序），
+ * 可直接俾 groupByDay 做日期分組。
  */
-export function countTopicItems(
+export function filterTopicItems(
   topic: TopicDef,
   items: AihotInsight[] = aihotInsights
-): number {
+): AihotInsight[] {
   if (topic.category) {
-    return items.filter((i) => i.category === topic.category).length;
+    return items.filter((i) => i.category === topic.category);
   }
   return items.filter((i) => {
     const haystack =
       `${i.title} ${i.titleEn ?? ""} ${i.summary}`.toLowerCase();
     return topic.keywords.some((k) => haystack.includes(k.toLowerCase()));
-  }).length;
+  });
+}
+
+/** 主題相關動態計數 — filterTopicItems 嘅計數版本（卡片「本週 N 則」用） */
+export function countTopicItems(
+  topic: TopicDef,
+  items: AihotInsight[] = aihotInsights
+): number {
+  return filterTopicItems(topic, items).length;
+}
+
+/** 按 id 查找主題及其所屬群組（主題閱讀 view + 相關主題 rail 用） */
+export function findTopicById(
+  id: string
+): { topic: TopicDef; group: TopicGroup } | null {
+  for (const group of TOPIC_GROUPS) {
+    const topic = group.topics.find((t) => t.id === id);
+    if (topic) return { topic, group };
+  }
+  return null;
 }
 
 /**
- * 主題卡連結 — 預設去即時動態 feed 搜尋（?tab=feed&mode=all&q=首個關鍵詞）;
- * 內容形態有對應分類嘅主題直達分類篩選（?tab=feed&category=）。
+ * 主題卡連結 — 直達主題閱讀 view（?tab=topics&topic=<id>），
+ * 唔再跳 feed 搜尋（v1.20：避免跳入長 feed 底部嘅斷裂體驗）。
  */
 export function topicHref(topic: TopicDef): string {
-  if (topic.category) {
-    return `/insights?tab=feed&category=${INSIGHT_CATEGORY_SLUGS[topic.category]}`;
-  }
-  return `/insights?tab=feed&mode=all&q=${encodeURIComponent(
-    topic.keywords[0]
-  )}`;
+  return `/insights?tab=topics&topic=${topic.id}`;
 }
