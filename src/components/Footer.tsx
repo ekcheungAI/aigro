@@ -43,6 +43,7 @@ export default function Footer() {
           <nav aria-label="平台">
             <p className="text-overline font-sans uppercase text-band-text-muted">平台</p>
             <ul className="mt-4 space-y-3 text-label">
+              <li><Link className="text-band-text-secondary transition-colors duration-150 hover:text-band-ink" to="/skills">Skills</Link></li>
               <li><Link className="text-band-text-secondary transition-colors duration-150 hover:text-band-ink" to="/experts">Experts 專家</Link></li>
               <li><Link className="text-band-text-secondary transition-colors duration-150 hover:text-band-ink" to="/ask">Ask 問答</Link></li>
               <li><Link className="text-band-text-secondary transition-colors duration-150 hover:text-band-ink" to="/pricing">Pricing 方案</Link></li>
@@ -61,6 +62,12 @@ export default function Footer() {
               className="mt-3 inline-block text-label text-band-ink transition-colors duration-150 hover:text-band-text"
             >
               MCP Network 優先名單
+            </Link>
+            <Link
+              to="/data"
+              className="mt-3 block text-label text-band-ink transition-colors duration-150 hover:text-band-text"
+            >
+              Data 合作
             </Link>
             <form
               className="mt-4 flex gap-2"

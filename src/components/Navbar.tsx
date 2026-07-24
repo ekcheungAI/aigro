@@ -10,7 +10,7 @@ import type { AigroMember } from "@/components/auth/member";
 
 export const NAV_LINKS = [
   { to: "/insights", en: "Insights", zh: "情報" },
-  { to: "/cases", en: "Cases", zh: "案例" },
+  { to: "/skills", en: "Skills", zh: "" },
   { to: "/experts", en: "Experts", zh: "專家" },
   { to: "/ask", en: "Ask", zh: "問答" },
   { to: "/pricing", en: "Pricing", zh: "方案" },
