@@ -219,6 +219,20 @@ export default function InsightDetail() {
         </Reveal>
       </section>
 
+      {/* Section 1.5 — Cinematic hero image（僅編輯精選長文；16:9, max-h-420,
+          rounded-md hairline border, saturate 語言同案例照片） */}
+      {article.heroImage && (
+        <section className="mx-auto max-w-[920px] px-6 pt-10">
+          <Reveal y={20} duration={0.45}>
+            <img
+              src={article.heroImage}
+              alt=""
+              className="aspect-video max-h-[420px] w-full rounded-md border object-cover saturate-[0.85]"
+            />
+          </Reveal>
+        </section>
+      )}
+
       {/* Section 2 — AI 摘要 well（card 色, padding 32px） */}
       <section className="mx-auto max-w-[720px] px-6 pt-12">
         <Reveal y={16} duration={0.4}>

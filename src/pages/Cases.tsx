@@ -12,39 +12,54 @@ type IndustryFilter = CaseIndustry | "全部";
 
 function PageHeader() {
   return (
-    <section className="mx-auto max-w-container px-6 pt-24 max-md:pt-16">
-      <motion.p
-        className="flex items-center gap-3 text-overline font-sans uppercase text-text-muted"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3, ease: REVEAL_EASE }}
+    /* Cinematic dark band — editorial image layer (opacity-45 saturate-[0.85])
+       + solid band overlay (no gradients), band text tokens, both themes */
+    <section className="relative isolate overflow-hidden border-b border-band-border bg-band-bg">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 select-none"
       >
-        <span className="inline-block h-px w-6 bg-border-strong" aria-hidden="true" />
-        Field-Tested in Hong Kong
-      </motion.p>
-
-      {/* 行級 reveal — stagger 100ms, 450ms */}
-      <span className="mt-6 block overflow-hidden">
-        <motion.h1
-          className="font-display text-display text-text-primary"
-          initial={{ y: 24, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.45, delay: 0.1, ease: REVEAL_EASE }}
-        >
-          實戰案例 Cases
-        </motion.h1>
-      </span>
-      <span className="block overflow-hidden">
+        <img
+          src="/editorial/cases-hero.jpg"
+          alt=""
+          className="h-full w-full object-cover opacity-45 saturate-[0.85]"
+        />
+        <span className="absolute inset-0 bg-band-bg/60" />
+      </div>
+      <div className="mx-auto flex min-h-[300px] max-w-container flex-col justify-center px-6 py-16 max-md:min-h-[280px] max-md:py-12">
         <motion.p
-          className="mt-4 max-w-[640px] text-body-lg text-text-secondary"
-          initial={{ y: 24, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.45, delay: 0.2, ease: REVEAL_EASE }}
+          className="flex items-center gap-3 text-overline font-sans uppercase text-band-text-muted"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3, ease: REVEAL_EASE }}
         >
-          香港企業用 AI 嘅真實成果 —
-          每個案例附量化數據、工具清單同可複製步驟。無數據，不上架。
+          <span className="inline-block h-px w-6 bg-band-border-strong" aria-hidden="true" />
+          Field-Tested in Hong Kong
         </motion.p>
-      </span>
+
+        {/* 行級 reveal — stagger 100ms, 450ms */}
+        <span className="mt-6 block overflow-hidden">
+          <motion.h1
+            className="font-display text-display text-band-text"
+            initial={{ y: 24, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.45, delay: 0.1, ease: REVEAL_EASE }}
+          >
+            實戰案例 Cases
+          </motion.h1>
+        </span>
+        <span className="block overflow-hidden">
+          <motion.p
+            className="mt-4 max-w-[640px] text-body-lg text-band-text-secondary"
+            initial={{ y: 24, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.45, delay: 0.2, ease: REVEAL_EASE }}
+          >
+            香港企業用 AI 嘅真實成果 —
+            每個案例附量化數據、工具清單同可複製步驟。無數據，不上架。
+          </motion.p>
+        </span>
+      </div>
     </section>
   );
 }

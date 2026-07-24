@@ -15,8 +15,8 @@ export default function Footer() {
 
   return (
     <footer className="border-t border-band-gold/40 bg-band-bg">
-      {/* Lime stripe band — hard-stop 45° pattern (brand motif, footer top) */}
-      <div aria-hidden="true" className="stripe-block-dark h-1.5 w-full" />
+      {/* Lime hairline — 2px solid accent rule (footer top) */}
+      <div aria-hidden="true" className="h-[2px] w-full bg-band-ink" />
       <div className="mx-auto max-w-container px-6 py-16">
         <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}

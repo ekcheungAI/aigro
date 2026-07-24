@@ -103,64 +103,81 @@ function groupByDay(items: AihotInsight[]): FeedGroup[] {
  */
 const EDITOR_PICK_SLUGS = ["openai-gpt-5-unified", "hkma-genai-sandbox-2"];
 
-const EDITOR_PICKS: { insight: Insight; lead: string }[] =
+const EDITOR_PICKS: { insight: Insight; lead: string; heroImage?: string }[] =
   EDITOR_PICK_SLUGS.flatMap((slug) => {
     const insight = insights.find((i) => i.slug === slug);
     if (!insight) return [];
     return [
-      { insight, lead: INSIGHT_ARTICLES[slug]?.lead ?? insight.hkAngle },
+      {
+        insight,
+        lead: INSIGHT_ARTICLES[slug]?.lead ?? insight.hkAngle,
+        heroImage: INSIGHT_ARTICLES[slug]?.heroImage,
+      },
     ];
   });
 
-/** 編輯精選卡 — 內部長文連結，展示真實香港視角節錄 */
+/** 編輯精選卡 — 內部長文連結，頂部 cinematic 縮圖 + 真實香港視角節錄 */
 function EditorPickCard({
   insight,
   lead,
+  heroImage,
   index,
 }: {
   insight: Insight;
   lead: string;
+  heroImage?: string;
   index: number;
 }) {
   return (
     <Link
       to={`/insights/${insight.slug}`}
-      className="card-hover group flex h-full flex-col rounded-md border bg-surface p-8 shadow-card dark:shadow-none max-md:p-6"
+      className="card-hover group flex h-full flex-col overflow-hidden rounded-md border bg-surface shadow-card dark:shadow-none"
     >
-      <div className="flex items-center gap-3">
-        <span className="font-mono text-caption text-ink" aria-hidden="true">
-          {String(index + 1).padStart(2, "0")}
-        </span>
-        <span className="rounded-sm bg-ink-soft px-3 py-1.5 text-overline font-sans uppercase text-ink">
-          {insight.category}
-        </span>
-        <span className="ml-auto text-caption text-text-muted">
-          {insight.readMinutes} 分鐘閱讀
-        </span>
-      </div>
-
-      <h4 className="mt-4 font-sans text-h4 text-text-primary transition-colors duration-150 group-hover:text-ink">
-        {insight.title}
-      </h4>
-
-      {/* 真實香港視角節錄 — 差異化核心 */}
-      <div className="mt-4 border-l-2 border-ink pl-3">
-        <p className="text-overline font-sans uppercase text-ink">
-          香港視角 HK Angle
-        </p>
-        <p className="mt-1 line-clamp-3 text-body-sm text-text-secondary">
-          {lead}
-        </p>
-      </div>
-
-      <span className="mt-auto inline-flex items-center gap-1 pt-5 text-label text-ink">
-        閱讀全文
-        <ArrowRight
-          className="h-4 w-4 transition-transform duration-150 nudge-x"
-          strokeWidth={1.5}
-          aria-hidden="true"
+      {/* 頂部影像帶（16:9 ≈ 200px）— saturate 語言同案例照片 */}
+      {heroImage && (
+        <img
+          src={heroImage}
+          alt=""
+          loading="lazy"
+          className="aspect-video h-[200px] w-full object-cover saturate-[0.8] transition-[filter] duration-250 group-hover:saturate-100"
         />
-      </span>
+      )}
+      <div className="flex flex-1 flex-col p-8 pt-6 max-md:p-6 max-md:pt-5">
+        <div className="flex items-center gap-3">
+          <span className="font-mono text-caption text-ink" aria-hidden="true">
+            {String(index + 1).padStart(2, "0")}
+          </span>
+          <span className="rounded-sm bg-ink-soft px-3 py-1.5 text-overline font-sans uppercase text-ink">
+            {insight.category}
+          </span>
+          <span className="ml-auto text-caption text-text-muted">
+            {insight.readMinutes} 分鐘閱讀
+          </span>
+        </div>
+
+        <h4 className="mt-4 font-sans text-h4 text-text-primary transition-colors duration-150 group-hover:text-ink">
+          {insight.title}
+        </h4>
+
+        {/* 真實香港視角節錄 — 差異化核心 */}
+        <div className="mt-4 border-l-2 border-ink pl-3">
+          <p className="text-overline font-sans uppercase text-ink">
+            香港視角 HK Angle
+          </p>
+          <p className="mt-1 line-clamp-3 text-body-sm text-text-secondary">
+            {lead}
+          </p>
+        </div>
+
+        <span className="mt-auto inline-flex items-center gap-1 pt-5 text-label text-ink">
+          閱讀全文
+          <ArrowRight
+            className="h-4 w-4 transition-transform duration-150 nudge-x"
+            strokeWidth={1.5}
+            aria-hidden="true"
+          />
+        </span>
+      </div>
     </Link>
   );
 }
@@ -304,6 +321,7 @@ function FeedTab() {
               <EditorPickCard
                 insight={pick.insight}
                 lead={pick.lead}
+                heroImage={pick.heroImage}
                 index={i}
               />
             </Reveal>
@@ -546,37 +564,52 @@ export default function Insights() {
 
   return (
     <>
-      {/* Page Header */}
-      <section className="mx-auto max-w-container px-6 pt-24 max-md:pt-16">
-        <Reveal y={24}>
-          <p className="flex items-center gap-3 text-overline font-sans uppercase text-text-muted">
-            <span
-              className="inline-block h-px w-6 bg-border-strong"
-              aria-hidden="true"
-            />
-            Intelligence
-          </p>
-        </Reveal>
-        <Reveal y={24} delay={0.1}>
-          <h1 className="mt-4 font-display text-display text-text-primary">
-            資訊中心
-          </h1>
-        </Reveal>
-        <Reveal y={24} delay={0.2}>
-          <p className="mt-4 max-w-[640px] text-body-lg text-text-secondary">
-            每日精選全球 AI 動態，AI 摘要附來源 — 即時動態、每日日報、主題地圖同資源庫，一頁掌握。
-          </p>
-          <p className="mt-3 text-caption text-text-muted">
-            <a
-              href="https://aihot.virxact.com"
-              target="_blank"
-              rel="noreferrer"
-              className="transition-colors duration-150 hover:text-ink"
-            >
-              {AIHOT_CREDIT}
-            </a>
-          </p>
-        </Reveal>
+      {/* Page Header — cinematic dark band: editorial image layer (opacity-45
+          saturate-[0.85]) + solid band overlay, band text tokens. Theme-
+          independent (band tokens fixed near-black in both themes). */}
+      <section className="relative isolate overflow-hidden border-b border-band-border bg-band-bg">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 -z-10 select-none"
+        >
+          <img
+            src="/editorial/newsroom.jpg"
+            alt=""
+            className="h-full w-full object-cover opacity-45 saturate-[0.85]"
+          />
+          <span className="absolute inset-0 bg-band-bg/60" />
+        </div>
+        <div className="mx-auto flex min-h-[300px] max-w-container flex-col justify-center px-6 py-16 max-md:min-h-[280px] max-md:py-12">
+          <Reveal y={24}>
+            <p className="flex items-center gap-3 text-overline font-sans uppercase text-band-text-muted">
+              <span
+                className="inline-block h-px w-6 bg-band-border-strong"
+                aria-hidden="true"
+              />
+              Intelligence
+            </p>
+          </Reveal>
+          <Reveal y={24} delay={0.1}>
+            <h1 className="mt-4 font-display text-display text-band-text">
+              資訊中心
+            </h1>
+          </Reveal>
+          <Reveal y={24} delay={0.2}>
+            <p className="mt-4 max-w-[640px] text-body-lg text-band-text-secondary">
+              每日精選全球 AI 動態，AI 摘要附來源 — 即時動態、每日日報、主題地圖同資源庫，一頁掌握。
+            </p>
+            <p className="mt-3 text-caption text-band-text-muted">
+              <a
+                href="https://aihot.virxact.com"
+                target="_blank"
+                rel="noreferrer"
+                className="transition-colors duration-150 hover:text-band-ink"
+              >
+                {AIHOT_CREDIT}
+              </a>
+            </p>
+          </Reveal>
+        </div>
       </section>
 
       {/* Tab bar — sticky 於導航之下，髮絲線底邊 */}

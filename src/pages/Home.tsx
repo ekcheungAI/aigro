@@ -21,7 +21,9 @@ import HowToUse from "@/components/home/HowToUse";
 import AskPreview from "@/components/home/AskPreview";
 import { personas } from "@/data/personas";
 import {
+  INSIGHT_ARTICLES,
   INSIGHT_CATEGORIES,
+  insights,
   type InsightCategory,
 } from "@/data/insights";
 import {
@@ -57,10 +59,6 @@ function Hero() {
         <span className="absolute inset-x-0 top-[68px] h-px bg-band-border/60" />
         {/* Broadsheet column rule — right margin only, clear of the measure */}
         <span className="absolute inset-y-0 right-[18%] hidden w-px bg-band-border/40 lg:block" />
-        {/* Brand motif — vertical 45° stripe panel on the right edge
-            (business-card reference: stripe square). Hard-stop pattern,
-            quiet lime alpha, dark-canvas variant. */}
-        <span className="stripe-block-dark absolute inset-y-0 right-0 hidden w-[120px] border-l border-band-border/60 lg:block" />
       </div>
 
       <div className="mx-auto max-w-container px-6 pb-24 pt-24 max-md:pb-16 max-md:pt-16 md:pt-32 lg:pb-32">
@@ -277,6 +275,68 @@ function McpNetworkBand() {
 
 /* ================= Section 2 — Insights 情報牆 ================= */
 
+/**
+ * Editor's Pick slide — 寬幅 cinematic 編輯精選，置於情報牆之上。
+ * 左 40% 影像 + 右內容（標題 / 香港視角 / 閱讀全文），靜態單張，非輪播。
+ * 影像語言同情報縮圖：saturate-[0.8] → group-hover:saturate-100。
+ */
+function EditorPickSlide() {
+  const insight = insights.find((i) => i.slug === "openai-gpt-5-unified");
+  if (!insight) return null;
+  const article = INSIGHT_ARTICLES[insight.slug];
+
+  return (
+    <Link
+      to={`/insights/${insight.slug}`}
+      className="card-hover group mt-8 flex flex-col overflow-hidden rounded-md border bg-surface shadow-card dark:shadow-none md:flex-row"
+    >
+      {article?.heroImage && (
+        <div className="shrink-0 md:w-[40%]">
+          <img
+            src={article.heroImage}
+            alt=""
+            loading="lazy"
+            className="aspect-video h-full w-full object-cover saturate-[0.8] transition-[filter] duration-250 group-hover:saturate-100 md:aspect-auto"
+          />
+        </div>
+      )}
+      <div className="flex flex-1 flex-col p-8 max-md:p-6">
+        <div className="flex items-center gap-3">
+          <span className="text-overline font-sans uppercase text-ink">
+            編輯精選 Editor's Pick
+          </span>
+          <span className="rounded-sm bg-ink-soft px-3 py-1.5 text-overline font-sans uppercase text-ink">
+            {insight.category}
+          </span>
+          <span className="ml-auto text-caption text-text-muted">
+            {insight.readMinutes} 分鐘閱讀
+          </span>
+        </div>
+        <h3 className="mt-4 font-display text-h3 text-text-primary transition-colors duration-150 group-hover:text-ink">
+          {insight.title}
+        </h3>
+        {/* 香港視角 — 差異化核心 */}
+        <div className="mt-4 border-l-2 border-ink pl-3">
+          <p className="text-overline font-sans uppercase text-ink">
+            香港視角 HK Angle
+          </p>
+          <p className="mt-1 line-clamp-3 text-body-sm text-text-secondary">
+            {article?.lead ?? insight.hkAngle}
+          </p>
+        </div>
+        <span className="mt-auto inline-flex items-center gap-1 pt-6 text-label text-ink">
+          閱讀全文
+          <ArrowRight
+            className="h-4 w-4 transition-transform duration-150 nudge-x"
+            strokeWidth={1.5}
+            aria-hidden="true"
+          />
+        </span>
+      </div>
+    </Link>
+  );
+}
+
 function InsightsWall() {
   const [category, setCategory] = useState<InsightCategory | "全部">("全部");
   const wallRef = useRef<HTMLDivElement>(null);
@@ -326,6 +386,11 @@ function InsightsWall() {
           </Reveal>
         ))}
       </div>
+
+      {/* Editor's Pick slide — 寬幅 cinematic 精選，置於情報牆之上 */}
+      <Reveal y={20} duration={0.45}>
+        <EditorPickSlide />
+      </Reveal>
 
       {/* Horizontal scroll-snap card wall — 340px fixed cards */}
       <div className="relative mt-8">
@@ -417,21 +482,6 @@ function CasesFeatured() {
         </p>
       </Reveal>
     </section>
-  );
-}
-
-/* ============ Brand motif divider — chevron strip, max 1 per page ============ */
-
-function SectionOrnament() {
-  return (
-    <div
-      className="mx-auto flex max-w-container items-center justify-center gap-4 px-6"
-      aria-hidden="true"
-    >
-      <span className="chevron-strip h-2 w-24" />
-      <span className="inline-block h-1.5 w-1.5 rotate-45 bg-gold/60" />
-      <span className="chevron-strip h-2 w-24" />
-    </div>
   );
 }
 
@@ -598,7 +648,6 @@ export default function Home() {
       <McpNetworkBand />
       <InsightsWall />
       <CasesFeatured />
-      <SectionOrnament />
       <ExpertsWall />
       <AskPreview />
     </>

@@ -61,8 +61,16 @@ export default function ContextPanel({
             style={{ backgroundColor: persona.accent }}
           />
         </div>
-        <div className="mt-3 rounded-md border bg-bg p-4">
-          <div className="flex items-center gap-2.5">
+        <div className="relative mt-3 overflow-hidden rounded-md border bg-bg p-4">
+          {/* Quiet editorial backdrop — 15% opacity accent, never interactive */}
+          <img
+            src="/editorial/ask.jpg"
+            alt=""
+            aria-hidden="true"
+            loading="lazy"
+            className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-[0.15] saturate-[0.85]"
+          />
+          <div className="relative flex items-center gap-2.5">
             {persona.kind === "platform" ? (
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-ink-soft">
                 <Sparkles className="h-4 w-4 text-ink" strokeWidth={1.5} />
@@ -88,21 +96,23 @@ export default function ContextPanel({
               <p className="truncate text-caption text-text-muted">{persona.domainCaption}</p>
             </div>
           </div>
-          <p className="mt-3 line-clamp-4 text-body-sm text-text-secondary">{persona.aboutBio}</p>
-          <Link
-            to={persona.aboutLinkHref}
-            className="group mt-3 inline-flex items-center gap-1 text-label text-ink"
-          >
-            {persona.aboutLinkLabel}
-            <ArrowRight
-              className="h-3.5 w-3.5 transition-transform duration-150 nudge-x"
-              strokeWidth={1.5}
-              aria-hidden="true"
-            />
-          </Link>
-          <p className="mt-3 border-t border-border pt-3 text-caption text-text-muted">
-            {persona.aboutTransparency}
-          </p>
+          <div className="relative">
+            <p className="mt-3 line-clamp-4 text-body-sm text-text-secondary">{persona.aboutBio}</p>
+            <Link
+              to={persona.aboutLinkHref}
+              className="group mt-3 inline-flex items-center gap-1 text-label text-ink"
+            >
+              {persona.aboutLinkLabel}
+              <ArrowRight
+                className="h-3.5 w-3.5 transition-transform duration-150 nudge-x"
+                strokeWidth={1.5}
+                aria-hidden="true"
+              />
+            </Link>
+            <p className="mt-3 border-t border-border pt-3 text-caption text-text-muted">
+              {persona.aboutTransparency}
+            </p>
+          </div>
         </div>
       </section>
 

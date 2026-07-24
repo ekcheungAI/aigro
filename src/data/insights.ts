@@ -284,6 +284,8 @@ export interface InsightArticleSection {
 }
 
 export interface InsightArticle {
+  /** 詳情頁 cinematic hero 圖（16:9，可選 — 僅編輯精選長文配圖） */
+  heroImage?: string;
   /** AI 摘要長文（詳情頁 card 色 well，body-lg） */
   summaryLong: string;
   /** 香港視角引言段（body-lg text-primary，2px ink 左邊框） */
@@ -298,6 +300,7 @@ export interface InsightArticle {
 /** 詳情頁 mock 長文 — slug 對應；未有長文的情報由詳情頁以 summary/hkAngle 組裝 */
 export const INSIGHT_ARTICLES: Record<string, InsightArticle> = {
   "openai-gpt-5-unified": {
+    heroImage: "/editorial/gpt5.jpg",
     summaryLong:
       "OpenAI 正式發佈 GPT-5，將 o 系列推理能力與 GPT 系列生成能力合併為單一系統，根據任務自動調節思考深度。基準測試全面超越前代：SWE-bench 74.9%、GPQA Diamond 88.4%、AIME 2025 達 94.6%。API 定價較 GPT-4o 下調 40%，並開放 minimal / low / high 三檔推理強度，供開發者按成本與時延取捨。同步推出 GPT-5 mini 與 nano，覆蓋高併發低價場景。",
     lead: "API 降價四成，不只是一條產品新聞 — 它重新改寫了香港中小企導入 AI 的成本曲線。",
@@ -336,6 +339,7 @@ export const INSIGHT_ARTICLES: Record<string, InsightArticle> = {
     updatedAt: "2025-01-15",
   },
   "hkma-genai-sandbox-2": {
+    heroImage: "/editorial/hkma.jpg",
     summaryLong:
       "香港金融管理局宣佈生成式 AI 沙盒 2.0 正式啟動，首批 20 家銀行及科技公司參與，聚焦風險管理、反詐騙與客戶服務三大場景。沙盒提供監管對話通道與真實數據測試環境，參與機構可在受控條件下驗證生成式 AI 方案。",
     lead: "監管態度明朗化，是香港金融業 AI 導入最重要的訊號 — 不確定性消除後，預算與人才會快速跟進。",

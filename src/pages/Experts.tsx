@@ -56,48 +56,63 @@ function MiniToast({ msg }: { msg: string | null }) {
 
 function PageHeader() {
   return (
-    <section className="mx-auto max-w-container px-6 pt-24 text-center max-md:pt-16">
-      <motion.p
-        className="flex items-center justify-center gap-3 text-overline font-sans uppercase text-text-muted"
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, ease: REVEAL_EASE }}
+    /* Cinematic dark band — editorial image layer (opacity-45 saturate-[0.85])
+       + solid band overlay (no gradients), band text tokens, both themes */
+    <section className="relative isolate overflow-hidden border-b border-band-border bg-band-bg">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 select-none"
       >
-        <span className="inline-block h-px w-6 bg-border-strong" aria-hidden="true" />
-        Leading Experts
-        <span className="inline-block h-px w-6 bg-border-strong" aria-hidden="true" />
-      </motion.p>
-      <motion.h1
-        className="mt-4 font-display text-display text-text-primary"
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, delay: 0.1, ease: REVEAL_EASE }}
-      >
-        領航專家 Leading Experts
-      </motion.h1>
-      <motion.p
-        className="mx-auto mt-6 max-w-[640px] text-body-lg text-text-secondary"
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, delay: 0.2, ease: REVEAL_EASE }}
-      >
-        AIGRO 係一個 growth hacking club — 兩位認證領航專家嘅 AI
-        分身基於授權內容蒸餾,隨時等你問,等會員跟住 playbook 做實驗。
-      </motion.p>
-      <motion.p
-        className="mt-5 text-caption text-text-muted"
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, delay: 0.28, ease: REVEAL_EASE }}
-      >
-        Club 會員制即將開放 —{" "}
-        <Link
-          to="/pricing"
-          className="text-ink underline-offset-2 transition-colors duration-150 hover:underline"
+        <img
+          src="/editorial/club.jpg"
+          alt=""
+          className="h-full w-full object-cover opacity-45 saturate-[0.85]"
+        />
+        <span className="absolute inset-0 bg-band-bg/60" />
+      </div>
+      <div className="mx-auto flex min-h-[320px] max-w-container flex-col items-center justify-center px-6 py-16 text-center max-md:min-h-[280px] max-md:py-12">
+        <motion.p
+          className="flex items-center justify-center gap-3 text-overline font-sans uppercase text-band-text-muted"
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, ease: REVEAL_EASE }}
         >
-          了解會員方案
-        </Link>
-      </motion.p>
+          <span className="inline-block h-px w-6 bg-band-border-strong" aria-hidden="true" />
+          Leading Experts
+          <span className="inline-block h-px w-6 bg-band-border-strong" aria-hidden="true" />
+        </motion.p>
+        <motion.h1
+          className="mt-4 font-display text-display text-band-text"
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, delay: 0.1, ease: REVEAL_EASE }}
+        >
+          領航專家 Leading Experts
+        </motion.h1>
+        <motion.p
+          className="mx-auto mt-6 max-w-[640px] text-body-lg text-band-text-secondary"
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, delay: 0.2, ease: REVEAL_EASE }}
+        >
+          AIGRO 係一個 growth hacking club — 兩位認證領航專家嘅 AI
+          分身基於授權內容蒸餾,隨時等你問,等會員跟住 playbook 做實驗。
+        </motion.p>
+        <motion.p
+          className="mt-5 text-caption text-band-text-muted"
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, delay: 0.28, ease: REVEAL_EASE }}
+        >
+          Club 會員制即將開放 —{" "}
+          <Link
+            to="/pricing"
+            className="text-band-ink underline-offset-2 transition-colors duration-150 hover:underline"
+          >
+            了解會員方案
+          </Link>
+        </motion.p>
+      </div>
     </section>
   );
 }
