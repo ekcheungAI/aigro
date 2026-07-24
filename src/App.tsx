@@ -22,6 +22,14 @@ import AdminContent from "@/pages/admin/AdminContent";
 import AdminEngagement from "@/pages/admin/AdminEngagement";
 import AdminMembers from "@/pages/admin/AdminMembers";
 import AdminSettings from "@/pages/admin/AdminSettings";
+import AdminEmails from "@/pages/admin/AdminEmails";
+import PortalLayout from "@/components/portal/PortalLayout";
+import PortalHome from "@/pages/portal/PortalHome";
+import PortalKB from "@/pages/portal/PortalKB";
+import PortalInsights from "@/pages/portal/PortalInsights";
+import PortalProfile from "@/pages/portal/PortalProfile";
+import PortalSocials from "@/pages/portal/PortalSocials";
+import PortalLeads from "@/pages/portal/PortalLeads";
 import AdminStudio from "@/pages/admin/AdminStudio";
 import AdminCRM from "@/pages/admin/AdminCRM";
 import Placeholder from "@/pages/Placeholder";
@@ -99,7 +107,16 @@ export default function App() {
         <Route path="members" element={<AdminMembers />} />
         <Route path="studio" element={<AdminStudio />} />
         <Route path="crm" element={<AdminCRM />} />
+        <Route path="emails" element={<AdminEmails />} />
         <Route path="settings" element={<AdminSettings />} />
+      </Route>
+      <Route path="portal" element={<PortalLayout />}>
+        <Route index element={<PortalHome />} />
+        <Route path="kb" element={<PortalKB />} />
+        <Route path="insights" element={<PortalInsights />} />
+        <Route path="profile" element={<PortalProfile />} />
+        <Route path="socials" element={<PortalSocials />} />
+        <Route path="leads" element={<PortalLeads />} />
       </Route>
       </Routes>
     </>
