@@ -20,6 +20,11 @@ export interface ChatSession {
   createdAt: number;
   updatedAt: number;
   messages: ChatMessage[];
+  /**
+   * Session memory(v1.19)— 最近命中嘅話題 id(personas.ts ScriptedReply.id)。
+   * 模糊追問(「咁然後呢?」「點樣開始?」)會承接呢個話題繼續;per-session only。
+   */
+  lastTopicId?: string;
 }
 
 export interface SessionStore {
@@ -57,6 +62,7 @@ function sanitizeSession(raw: unknown): ChatSession | null {
     createdAt: typeof s.createdAt === "number" ? s.createdAt : Date.now(),
     updatedAt: typeof s.updatedAt === "number" ? s.updatedAt : Date.now(),
     messages: s.messages.slice(-MESSAGE_LIMIT),
+    ...(typeof s.lastTopicId === "string" ? { lastTopicId: s.lastTopicId } : {}),
   };
 }
 
@@ -133,7 +139,9 @@ export function appendRound(
   store: SessionStore,
   personaKey: string,
   question: string,
-  reply: AiReply
+  reply: AiReply,
+  /** 命中話題 id — 寫入 session memory;null(fallback)時保留舊 topic,唔洗走條 thread */
+  topicId: string | null = null
 ): { store: SessionStore; aiMessageId: number } {
   const aiMessage: ChatMessage = { id: nextMessageId(), role: "ai", reply };
   const round: ChatMessage[] = [
@@ -151,6 +159,7 @@ export function appendRound(
       ...list[idx],
       updatedAt: now,
       messages: [...list[idx].messages, ...round].slice(-MESSAGE_LIMIT),
+      ...(topicId ? { lastTopicId: topicId } : {}),
     };
     const nextList = [updated, ...list.filter((_, i) => i !== idx)];
     return {
@@ -168,6 +177,7 @@ export function appendRound(
     createdAt: now,
     updatedAt: now,
     messages: round,
+    ...(topicId ? { lastTopicId: topicId } : {}),
   };
   return {
     aiMessageId,
