@@ -63,7 +63,7 @@ function dayKeyLabel(iso: string): { key: string; label: string } {
   );
   return {
     key: `${parts.year}-${parts.month}-${parts.day}`,
-    label: `${parts.year}年${parts.month}月${parts.day}日 ${parts.weekday}`,
+    label: `${parts.year}年${parts.month}月${parts.day}日${parts.weekday}`,
   };
 }
 
@@ -185,13 +185,15 @@ function EditorPickCard({
 /* ============ 即時動態 — Feed row（左 mono rail + 右內容欄，非卡片） ============ */
 
 function FeedRow({ insight }: { insight: AihotInsight }) {
+  /** 標題 / 原文 → 原始來源 URL；AIHOT permalink 僅作署名（via AI HOT） */
+  const originalHref = insight.originalUrl ?? insight.permalink;
   return (
     <article className="flex gap-6 py-6">
       {/* 左：mono rail ~110px（分類 / 時間 / 分數 + 髮絲線分數條） */}
       <div className="hidden w-[110px] shrink-0 flex-col gap-1.5 pt-1 font-mono text-caption sm:flex">
-        <span className="text-text-secondary">{insight.category}</span>
+        <span className="text-ink">{insight.category}</span>
         <span className="text-text-muted">{hkTime(insight.publishedAt)}</span>
-        <span className="text-ink">{insight.score} 分</span>
+        <span className="text-text-secondary">{insight.score} 分</span>
         {/* 分數快讀條 — 髮絲線比例條(0–100 分制),純視覺輔助 */}
         <span
           className="relative mt-0.5 block h-px w-full bg-border"
@@ -210,7 +212,7 @@ function FeedRow({ insight }: { insight: AihotInsight }) {
       <div className="min-w-0 flex-1">
         <h4 className="font-sans text-h4 text-text-primary">
           <a
-            href={insight.permalink}
+            href={originalHref}
             target="_blank"
             rel="noreferrer"
             className="transition-colors duration-150 hover:text-ink"
@@ -225,7 +227,7 @@ function FeedRow({ insight }: { insight: AihotInsight }) {
           <span>{insight.source}</span>
           <span aria-hidden="true">·</span>
           <a
-            href={insight.permalink}
+            href={originalHref}
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-1 transition-colors duration-150 hover:text-ink"
@@ -237,11 +239,31 @@ function FeedRow({ insight }: { insight: AihotInsight }) {
               aria-hidden="true"
             />
           </a>
+          {/* AIHOT 署名 — 保留 canonical 連結（使用規則）；原始來源缺失時「原文」已指 permalink，唔重複 */}
+          {insight.originalUrl && (
+            <>
+              <span aria-hidden="true">·</span>
+              <a
+                href={insight.permalink}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 transition-colors duration-150 hover:text-ink"
+              >
+                via AI HOT
+                <ExternalLink
+                  className="h-3 w-3"
+                  strokeWidth={1.5}
+                  aria-hidden="true"
+                />
+              </a>
+            </>
+          )}
           {/* mobile：rail 隱藏時的行內 metadata */}
           <span className="font-mono sm:hidden">
             <span aria-hidden="true">· </span>
-            {insight.category}・{hkTime(insight.publishedAt)}・
-            {insight.score} 分
+            <span className="text-ink">{insight.category}</span>
+            <span aria-hidden="true">・</span>
+            {hkTime(insight.publishedAt)}・{insight.score} 分
           </span>
         </div>
       </div>
@@ -357,24 +379,37 @@ function FeedTab() {
             ))}
           </div>
 
-          <div className="relative min-w-[200px] flex-1 sm:max-w-[280px]">
-            <Search
-              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted"
-              strokeWidth={1.5}
-              aria-hidden="true"
-            />
-            <input
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="例如 OpenAI、Sora"
-              aria-label="搜尋情報標題、摘要或來源"
-              className="h-11 w-full rounded-md border border-border-strong bg-surface pl-9 pr-3 text-body-sm text-text-primary placeholder:text-text-muted focus:border-ink focus:outline-none"
-            />
-          </div>
+          {/* 搜尋 — live filtering + 明確「搜尋」按鈕（click / Enter 均觸發） */}
+          <form
+            className="flex min-w-[200px] flex-1 items-center gap-2 sm:max-w-[360px]"
+            role="search"
+            onSubmit={(e) => e.preventDefault()}
+          >
+            <div className="relative flex-1">
+              <Search
+                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted"
+                strokeWidth={1.5}
+                aria-hidden="true"
+              />
+              <input
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="例如 OpenAI、Sora"
+                aria-label="搜尋情報標題、摘要或來源"
+                className="h-11 w-full rounded-md border border-border-strong bg-surface pl-9 pr-3 text-body-sm text-text-primary placeholder:text-text-muted focus:border-ink focus:outline-none"
+              />
+            </div>
+            <button
+              type="submit"
+              className="press h-11 shrink-0 rounded-md bg-ink-solid px-5 text-label text-on-accent hover:bg-ink-hover"
+            >
+              搜尋
+            </button>
+          </form>
 
           <span className="ml-auto font-mono text-caption text-text-muted">
-            已載入 {filtered.length} 則
+            已載入 {filtered.length} 則{mode === "selected" ? "精選" : "動態"}
           </span>
         </div>
 
@@ -598,7 +633,11 @@ export default function Insights() {
             <p className="mt-4 max-w-[640px] text-body-lg text-band-text-secondary">
               每日精選全球 AI 動態，AI 摘要附來源 — 即時動態、每日日報、主題地圖同資源庫，一頁掌握。
             </p>
-            <p className="mt-3 text-caption text-band-text-muted">
+            <p className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-2 text-caption text-band-text-muted">
+              {/* 「香港繁體整理」徽章 — lime-soft chip（band tokens，兩主題一致） */}
+              <span className="rounded-sm bg-band-ink-soft px-2 py-0.5 text-overline font-sans text-band-ink">
+                香港繁體整理
+              </span>
               <a
                 href="https://aihot.virxact.com"
                 target="_blank"

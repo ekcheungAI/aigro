@@ -449,7 +449,7 @@ function VerifiedProfile({ expert }: { expert: Expert }) {
           </motion.div>
           <Reveal delay={0.2}>
             <p className="mt-6 text-caption text-text-muted">
-              免費 3 次體驗・Club 會員無限對話
+              免費無限對話 · 限時開放
             </p>
           </Reveal>
         </div>

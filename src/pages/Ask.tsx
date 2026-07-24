@@ -362,10 +362,10 @@ export default function Ask() {
                   className="rounded-lg border bg-surface p-8 text-center"
                 >
                   <h4 className="font-display text-h4 text-text-primary">
-                    今日免費額度已用完
+                    免費無限對話 · 限時開放
                   </h4>
                   <p className="mx-auto mt-2 max-w-md text-body-sm text-text-secondary">
-                    升級進階會員,無限對話 + 專家分身通行。或者聽日再嚟。
+                    限時開放期間,訪客同會員都係免費無限對話 — 繼續問,唔使等聽日。
                   </p>
                   <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
                     <Link
