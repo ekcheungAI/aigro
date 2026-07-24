@@ -5,6 +5,8 @@ import { Menu, Moon, Sun, X } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { cn } from "@/lib/utils";
 import { REVEAL_EASE } from "@/components/Reveal";
+import { loadMember, memberInitial } from "@/components/auth/member";
+import type { AigroMember } from "@/components/auth/member";
 
 export const NAV_LINKS = [
   { to: "/insights", en: "Insights", zh: "情報" },
@@ -24,6 +26,17 @@ export default function Navbar() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { pathname } = useLocation();
+  // 會員態(示範模式 localStorage)— 路由變化 + 跨分頁 storage 時重讀
+  const [member, setMember] = useState<AigroMember | null>(loadMember);
+
+  useEffect(() => {
+    setMember(loadMember());
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === null || e.key === "aigro-member") setMember(loadMember());
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [pathname]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -109,12 +122,55 @@ export default function Navbar() {
                 <Moon className="h-5 w-5 transition-transform duration-200" strokeWidth={1.5} />
               )}
             </button>
-            <Link
-              to="/pricing"
-              className="hidden h-10 items-center rounded-md bg-ink-solid px-4 text-label text-on-accent press hover:bg-ink-hover sm:inline-flex"
-            >
-              訂閱
-            </Link>
+            {member ? (
+              /* 已登入:頭像 chip → /account */
+              <Link
+                to="/account"
+                aria-label={`${member.name} 嘅會員專區`}
+                className={cn(
+                  "press hidden h-10 items-center gap-2 rounded-md border pl-1.5 pr-3 sm:inline-flex",
+                  overHero
+                    ? "border-band-border-strong hover:bg-band-ink-soft"
+                    : "border-border-strong hover:bg-ink-soft"
+                )}
+              >
+                <span
+                  aria-hidden="true"
+                  className="flex h-7 w-7 items-center justify-center rounded-full bg-lime font-display text-[13px] font-medium text-on-accent"
+                >
+                  {memberInitial(member.name)}
+                </span>
+                <span
+                  className={cn(
+                    "max-w-[96px] truncate text-label",
+                    overHero ? "text-band-text" : "text-text-primary"
+                  )}
+                >
+                  {member.name}
+                </span>
+              </Link>
+            ) : (
+              /* 未登入:登入 ghost + 加入 Club lime primary */
+              <div className="hidden items-center gap-2 sm:flex">
+                <Link
+                  to="/login"
+                  className={cn(
+                    "press inline-flex h-10 items-center rounded-md px-4 text-label",
+                    overHero
+                      ? "text-band-text-secondary hover:bg-band-ink-soft hover:text-band-text"
+                      : "text-text-secondary hover:bg-ink-soft hover:text-ink"
+                  )}
+                >
+                  登入
+                </Link>
+                <Link
+                  to="/join"
+                  className="press inline-flex h-10 items-center rounded-md bg-lime px-4 text-label text-on-accent hover:bg-lime-hover"
+                >
+                  加入 Club
+                </Link>
+              </div>
+            )}
             {/* Mobile hamburger */}
             <button
               type="button"
@@ -182,15 +238,40 @@ export default function Navbar() {
                 initial={{ opacity: 0, transform: "translateX(-16px)" }}
                 animate={{ opacity: 1, transform: "translateX(0px)" }}
                 transition={{ duration: 0.3, delay: 6 * 0.08, ease: REVEAL_EASE }}
-                className="pt-4"
+                className="flex items-center gap-3 pt-4"
               >
-                <Link
-                  to="/pricing"
-                  onClick={() => setDrawerOpen(false)}
-                  className="inline-flex h-11 items-center rounded-md bg-ink-solid px-6 text-label text-on-accent"
-                >
-                  訂閱
-                </Link>
+                {member ? (
+                  <Link
+                    to="/account"
+                    onClick={() => setDrawerOpen(false)}
+                    className="inline-flex h-11 items-center gap-2 rounded-md border border-border-strong pl-1.5 pr-4 text-label text-text-primary"
+                  >
+                    <span
+                      aria-hidden="true"
+                      className="flex h-7 w-7 items-center justify-center rounded-full bg-lime font-display text-[13px] font-medium text-on-accent"
+                    >
+                      {memberInitial(member.name)}
+                    </span>
+                    會員專區
+                  </Link>
+                ) : (
+                  <>
+                    <Link
+                      to="/login"
+                      onClick={() => setDrawerOpen(false)}
+                      className="inline-flex h-11 items-center rounded-md border border-border-strong px-6 text-label text-text-primary"
+                    >
+                      登入
+                    </Link>
+                    <Link
+                      to="/join"
+                      onClick={() => setDrawerOpen(false)}
+                      className="inline-flex h-11 items-center rounded-md bg-lime px-6 text-label text-on-accent"
+                    >
+                      加入 Club
+                    </Link>
+                  </>
+                )}
               </motion.div>
             </nav>
           </motion.div>
