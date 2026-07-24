@@ -917,6 +917,9 @@ export const studioExperts: StudioExpert[] = [
       { id: "e-r9", name: "YouTube「Workflow 變系統」逐字稿", type: "逐字稿", detail: "TXT · 88 KB", addedAt: "2026-06-27", inKb: true },
       { id: "e-r10", name: "Podcast 訪談逐字稿 — 分身經濟與授權", type: "逐字稿", detail: "MP3 → TXT · 102 KB", addedAt: "2026-07-21", inKb: false },
     ],
+  },
+];
+
 /* ---------------- CRM 線索 ---------------- */
 
 export type CrmStage = "新線索" | "已接觸" | "跟進中" | "已轉化";
