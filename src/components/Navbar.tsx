@@ -10,7 +10,8 @@ import type { AigroMember } from "@/components/auth/member";
 
 export const NAV_LINKS = [
   { to: "/insights", en: "Insights", zh: "情報" },
-  { to: "/skills", en: "Skills", zh: "" },
+  { to: "/skills", en: "Skills", zh: "技能庫" },
+  { to: "/data", en: "Data", zh: "數據" },
   { to: "/experts", en: "Experts", zh: "專家" },
   { to: "/ask", en: "Ask", zh: "問答" },
   { to: "/pricing", en: "Pricing", zh: "方案" },
@@ -264,7 +265,7 @@ export default function Navbar() {
               <motion.div
                 initial={{ opacity: 0, transform: "translateX(-16px)" }}
                 animate={{ opacity: 1, transform: "translateX(0px)" }}
-                transition={{ duration: 0.3, delay: 6 * 0.08, ease: REVEAL_EASE }}
+                transition={{ duration: 0.3, delay: 7 * 0.08, ease: REVEAL_EASE }}
                 className="flex items-center gap-3 pt-4"
               >
                 {member ? (

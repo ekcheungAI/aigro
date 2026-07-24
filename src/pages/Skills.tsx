@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
@@ -7,59 +7,17 @@ import {
   ExternalLink,
   Layers,
   Radar,
+  Search,
   ShieldCheck,
   Swords,
 } from "lucide-react";
 import Reveal from "@/components/Reveal";
+import { cn } from "@/lib/utils";
+import { SKILL_TAGS, skills } from "@/data/skills";
+import type { SkillEntry, SkillStatus, SkillTag } from "@/data/skills";
 
-/* ================= 資料 ================= */
-
-type Tag = "情報" | "設計" | "分身";
-
-interface SkillCard {
-  name: string;
-  value: string; // 一句價值
-  detail: string; // 幾時用
-  tags: Tag[];
-  repo: string; // owner/repo
-  url: string; // source link
-  note?: string;
-}
-
-const CURATED: SkillCard[] = [
-  {
-    name: "Perskill Persona Skills",
-    value: "俾你嘅 agent 裝上專業分身 — 唔同場景,唔同人設,輸出即刻啱 tone。",
-    detail: "想要 agent 分飾唔同角色(marketer / 分析師 / 客服)而唔使自己重寫 system prompt 嗰陣用。",
-    tags: ["分身"],
-    repo: "ekcheungAI/perskill",
-    url: "https://github.com/ekcheungAI/perskill",
-  },
-  {
-    name: "Impeccable Design",
-    value: "將高級設計判斷寫成 agent 讀得明嘅規則 — 由 layout 到細節都有準則。",
-    detail: "叫 agent 整 UI / landing page,想佢好似資深 designer 咁諗,而唔係齋砌 Tailwind class。",
-    tags: ["設計"],
-    repo: "pbakaus/impeccable",
-    url: "https://github.com/pbakaus/impeccable",
-  },
-  {
-    name: "Taste Skill",
-    value: "taste 都可以裝 — 令 agent 嘅審美決策有跡可尋,唔再靠運氣。",
-    detail: "覺得 agent 出嚟嘅嘢「似樣但冇 taste」,想要一套可以複用嘅審美框架嗰陣用。",
-    tags: ["設計"],
-    repo: "Leonxlnx/taste-skill",
-    url: "https://github.com/Leonxlnx/taste-skill",
-  },
-  {
-    name: "Emil Kowalski Design Skills",
-    value: "動效大師 Emil 嘅設計詞彙同判斷 — animation vocabulary、Apple 式 interaction。",
-    detail: "想精準描述 motion 效果、做 interruptible gesture / spring 動畫嗰陣用。",
-    tags: ["設計"],
-    repo: "emilkowalski/skills",
-    url: "https://github.com/emilkowalski/skills",
-  },
-];
+type TagFilter = SkillTag | "全部";
+const TAG_FILTERS: TagFilter[] = ["全部", ...SKILL_TAGS];
 
 const VALUE_PROPS = [
   {
@@ -79,11 +37,45 @@ const VALUE_PROPS = [
   },
 ];
 
-/* ================= Copy snippet(mono block + copy button) ================= */
+/* ================= 小組件 ================= */
 
-function InstallSnippet({ repo }: { repo: string }) {
+function statusChipClass(status: SkillStatus) {
+  if (status === "自家") return "bg-ink-solid text-on-accent";
+  if (status === "優先名單") return "bg-lime-soft text-lime-text";
+  return "border border-border-strong text-text-muted";
+}
+
+function StatusChip({ status }: { status: SkillStatus }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-sm px-2.5 py-1 text-overline font-sans uppercase",
+        statusChipClass(status)
+      )}
+    >
+      {status}
+    </span>
+  );
+}
+
+function TagChips({ tags }: { tags: SkillTag[] }) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {tags.map((t) => (
+        <span
+          key={t}
+          className="inline-flex items-center rounded-sm bg-ink-soft px-2.5 py-1 text-overline font-sans uppercase text-ink"
+        >
+          {t}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+/* Copy snippet(mono block + copy button) */
+function InstallSnippet({ cmd }: { cmd: string }) {
   const [copied, setCopied] = useState(false);
-  const cmd = `npx skills add ${repo}`;
 
   const copy = async () => {
     try {
@@ -96,7 +88,7 @@ function InstallSnippet({ repo }: { repo: string }) {
   };
 
   return (
-    <div className="mt-5 flex items-center justify-between gap-3 rounded-md border bg-card px-4 py-3">
+    <div className="mt-4 flex items-center justify-between gap-3 rounded-md border bg-card px-3 py-2.5">
       <code className="min-w-0 truncate font-mono text-[12px] leading-6 text-text-secondary">
         {cmd}
       </code>
@@ -104,7 +96,7 @@ function InstallSnippet({ repo }: { repo: string }) {
         type="button"
         onClick={copy}
         aria-label={copied ? `已複製 ${cmd}` : `複製安裝指令 ${cmd}`}
-        className="press inline-flex h-8 shrink-0 items-center gap-1.5 rounded-sm border border-border-strong px-2.5 text-caption text-ink hover:border-ink"
+        className="press inline-flex h-7 shrink-0 items-center gap-1.5 rounded-sm border border-border-strong px-2 text-caption text-ink hover:border-ink"
       >
         {copied ? (
           <>
@@ -122,17 +114,38 @@ function InstallSnippet({ repo }: { repo: string }) {
   );
 }
 
-function TagChips({ tags }: { tags: Tag[] }) {
+function SkillCard({ s }: { s: SkillEntry }) {
   return (
-    <div className="flex flex-wrap gap-2">
-      {tags.map((t) => (
-        <span
-          key={t}
-          className="inline-flex items-center rounded-sm bg-ink-soft px-3 py-1.5 text-overline font-sans uppercase text-ink"
-        >
-          {t}
-        </span>
-      ))}
+    <div className="flex h-full flex-col">
+      <div className="flex flex-wrap items-center gap-2">
+        <StatusChip status={s.status} />
+        <TagChips tags={s.tags} />
+      </div>
+      <h3 className="mt-3 font-display text-h3 text-text-primary">{s.name}</h3>
+      <p className="mt-2 text-body-sm text-text-secondary">{s.value}</p>
+      <p className="mt-2 text-caption text-text-muted">幾時用:{s.detail}</p>
+      <div className="mt-auto">
+        <InstallSnippet cmd={s.install} />
+        {s.waitlist ? (
+          <Link
+            to="/developers"
+            className="group mt-3 inline-flex items-center gap-1.5 text-label text-ink link-underline"
+          >
+            加入優先名單
+            <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.5} aria-hidden="true" />
+          </Link>
+        ) : (
+          <a
+            href={s.url}
+            target="_blank"
+            rel="noreferrer"
+            className="group mt-3 inline-flex items-center gap-1.5 text-label text-ink link-underline"
+          >
+            睇來源
+            <ExternalLink className="h-3.5 w-3.5" strokeWidth={1.5} aria-hidden="true" />
+          </a>
+        )}
+      </div>
     </div>
   );
 }
@@ -140,112 +153,116 @@ function TagChips({ tags }: { tags: Tag[] }) {
 /* ================= Page ================= */
 
 export default function Skills() {
+  const [query, setQuery] = useState("");
+  const [tag, setTag] = useState<TagFilter>("全部");
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return skills.filter((s) => {
+      if (tag !== "全部" && !s.tags.includes(tag)) return false;
+      if (!q) return true;
+      const haystack = [s.name, s.value, s.detail, ...s.tags]
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [query, tag]);
+
   return (
     <>
-      {/* Header — 標準頁首 pattern */}
-      <section className="mx-auto max-w-container px-6 pb-16 pt-24 max-md:pt-16">
+      {/* Header — 目錄頁首 */}
+      <section className="mx-auto max-w-container px-6 pb-10 pt-24 max-md:pt-16">
         <Reveal>
           <p className="flex items-center gap-3 text-overline font-sans uppercase text-text-muted">
             <span
               className="inline-block h-px w-6 bg-border-strong"
               aria-hidden="true"
             />
-            AIGRO Skills
+            AIGRO Directory
           </p>
           <h1 className="mt-3 max-w-[760px] font-display text-display text-text-primary">
-            俾你嘅 AI agent 裝上專業能力
+            Skills 技能庫
           </h1>
           <p className="mt-6 max-w-[680px] text-body-lg text-text-secondary">
-            Skill 係可以裝入任何 agent 嘅專業能力包 — 一條指令,你嘅 agent
-            即刻識行業情報、識設計判斷、識分飾唔同角色。以下係 AIGRO 自己整、
-            同埋我哋親自用過真心推薦嘅精選。
+            俾你嘅 AI agent 裝上專業能力 — 由 AIGRO 策劃嘅開源技能目錄。
           </p>
         </Reveal>
       </section>
 
-      {/* Featured — AIGRO 情報 Skill(自家) */}
-      <section className="mx-auto max-w-container px-6 pb-16 max-md:pb-12">
+      {/* Directory toolbar — search + tag chips + count */}
+      <section className="mx-auto max-w-container px-6 pb-8">
         <Reveal>
-          <div className="rounded-md border border-border-strong bg-surface p-8 shadow-card dark:shadow-none md:p-10">
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="inline-flex items-center rounded-sm bg-ink-solid px-3 py-1.5 text-overline font-sans uppercase text-on-accent">
-                AIGRO 自家
-              </span>
-              <span className="inline-flex items-center rounded-sm border border-border-strong px-3 py-1.5 text-overline font-sans uppercase text-text-muted">
-                優先名單開放中
-              </span>
+          <div className="flex flex-wrap items-center gap-3 border-y py-4">
+            <div className="relative min-w-[220px] flex-1 sm:max-w-xs">
+              <Search
+                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted"
+                strokeWidth={1.5}
+                aria-hidden="true"
+              />
+              <input
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="搜尋技能名稱、描述、標籤…"
+                aria-label="搜尋技能"
+                className="h-10 w-full rounded-md border border-border-strong bg-surface pl-9 pr-3 text-body-sm text-text-primary placeholder:text-text-muted focus:border-ink focus:outline-none"
+              />
             </div>
-            <h2 className="mt-5 font-display text-h2 text-text-primary">
-              AIGRO 情報 Skill
-            </h2>
-            <p className="mt-4 max-w-[680px] text-body text-text-secondary">
-              教你嘅 agent 正確讀取 AIGRO 情報:引用規則、來源標註、
-              禁憑記憶回答 — 每則結論都要講得出處,唔會「聽落似啱」就當事實。
+            <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="按標籤篩選">
+              {TAG_FILTERS.map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setTag(t)}
+                  aria-pressed={tag === t}
+                  className={cn(
+                    "press inline-flex h-9 items-center rounded-md px-3.5 text-label transition-colors",
+                    tag === t
+                      ? "bg-ink-solid text-on-accent"
+                      : "border border-border-strong text-text-secondary hover:border-ink hover:text-ink"
+                  )}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+            <p className="ml-auto font-mono text-[12px] uppercase tracking-wider text-text-muted">
+              {filtered.length} 個技能
             </p>
-            <div className="mt-5 max-w-[520px]">
-              <InstallSnippet repo="aigro-hk/intel" />
-            </div>
-            <div className="mt-6 flex flex-wrap items-center gap-4">
-              <Link
-                to="/developers"
-                className="inline-flex h-11 items-center rounded-md bg-ink-solid px-6 text-label text-on-accent press hover:bg-ink-hover"
-              >
-                加入優先名單
-                <ArrowRight className="ml-1 h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-              </Link>
-              <p className="text-caption text-text-muted">
-                Skill 正式發布前,優先名單會第一批收到安裝方法。
-              </p>
-            </div>
           </div>
         </Reveal>
       </section>
 
-      {/* Curated — 我哋用緊嘅 skills */}
+      {/* Directory grid — 2-3 col hairline grid */}
       <section className="mx-auto max-w-container px-6 pb-24 max-md:pb-16">
-        <Reveal>
-          <p className="flex items-center gap-3 text-overline font-sans uppercase text-text-muted">
-            <span
-              className="inline-block h-px w-6 bg-border-strong"
-              aria-hidden="true"
-            />
-            Club 精選
-          </p>
-          <h2 className="mt-3 font-display text-h2 text-text-primary">
-            我哋日日用緊嘅 skills
-          </h2>
-        </Reveal>
-        {/* gap-px hairline grid — 1px gaps let bg-border show through as rules */}
-        <div className="mt-10 grid gap-px border-y bg-border md:grid-cols-2">
-          {CURATED.map((s, i) => (
-            <Reveal key={s.repo} delay={i * 0.08} className="bg-bg p-8">
-              <div className="flex h-full flex-col">
-                <TagChips tags={s.tags} />
-                <h3 className="mt-4 font-display text-h3 text-text-primary">
-                  {s.name}
-                </h3>
-                <p className="mt-3 text-body-sm text-text-secondary">{s.value}</p>
-                <p className="mt-2 text-caption text-text-muted">
-                  幾時用:{s.detail}
-                </p>
-                <InstallSnippet repo={s.repo} />
-                <a
-                  href={s.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="group mt-4 inline-flex items-center gap-1.5 text-label text-ink link-underline"
-                >
-                  睇來源
-                  <ExternalLink
-                    className="h-3.5 w-3.5"
-                    strokeWidth={1.5}
-                    aria-hidden="true"
-                  />
-                </a>
-              </div>
-            </Reveal>
-          ))}
-        </div>
+        {filtered.length > 0 ? (
+          <div className="grid gap-px border-y bg-border md:grid-cols-2 lg:grid-cols-3">
+            {filtered.map((s, i) => (
+              <Reveal key={s.id} delay={(i % 3) * 0.08} className="bg-bg p-6">
+                <SkillCard s={s} />
+              </Reveal>
+            ))}
+          </div>
+        ) : (
+          <div className="border-y py-16 text-center">
+            <p className="font-mono text-[12px] uppercase tracking-wider text-text-muted">
+              0 個技能
+            </p>
+            <p className="mt-3 text-body text-text-secondary">
+              搵唔到相關技能 — 試下其他關鍵字,或者清除篩選。
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setQuery("");
+                setTag("全部");
+              }}
+              className="press mt-5 inline-flex h-10 items-center rounded-md border border-border-strong px-5 text-label text-ink hover:border-ink"
+            >
+              清除篩選
+            </button>
+          </div>
+        )}
       </section>
 
       {/* 點解 Skills 重要 — 3 value props hairline grid */}
@@ -285,7 +302,7 @@ export default function Skills() {
               <Link to="/ask" className="mx-1 text-ink link-underline">
                 Ask 問答
               </Link>
-              話我哋知,編輯團隊試用後會更新精選。
+              話我哋知,編輯團隊試用後會更新目錄。
             </span>
           </p>
         </Reveal>
