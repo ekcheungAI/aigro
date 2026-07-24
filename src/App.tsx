@@ -22,6 +22,8 @@ import AdminContent from "@/pages/admin/AdminContent";
 import AdminEngagement from "@/pages/admin/AdminEngagement";
 import AdminMembers from "@/pages/admin/AdminMembers";
 import AdminSettings from "@/pages/admin/AdminSettings";
+import AdminStudio from "@/pages/admin/AdminStudio";
+import AdminCRM from "@/pages/admin/AdminCRM";
 import Placeholder from "@/pages/Placeholder";
 
 /** Per-page <title> + meta（v1.1 SEO 基建） */
@@ -95,6 +97,8 @@ export default function App() {
         <Route path="content" element={<AdminContent />} />
         <Route path="engagement" element={<AdminEngagement />} />
         <Route path="members" element={<AdminMembers />} />
+        <Route path="studio" element={<AdminStudio />} />
+        <Route path="crm" element={<AdminCRM />} />
         <Route path="settings" element={<AdminSettings />} />
       </Route>
       </Routes>
