@@ -9,6 +9,8 @@ export type MemberTier = "free" | "pro" | "vip";
 
 /** 4 級用戶制度:免費 / 創始會員 / 領航專家 / 管理員 */
 export type MemberRole = "free" | "founding" | "expert" | "admin";
+/** 入口角色 alias(專家平台 gate /portal 用)— 與 MemberRole 同型 */
+export type MemberPortalRole = MemberRole;
 
 export interface MemberNotifications {
   /** 每日情報摘要 */
@@ -27,7 +29,8 @@ export interface AigroMember {
   persona: string | null;
   /** 帳號級別(權限)— 預設 free */
   role: MemberRole;
-  /** 收費方案 — 同 role 分開:VIP 都係 founding 級權限 */
+  /** 入口角色(專家平台 gate)— 預設由 role 衍生 */
+  portalRole?: MemberPortalRole;
   tier: MemberTier;
   joinedAt: number;
   notifications: MemberNotifications;
@@ -87,6 +90,15 @@ function sanitize(raw: unknown): AigroMember | null {
     persona:
       typeof m.persona === "string" && m.persona ? m.persona : legacyPersona,
     role: isMemberRole(m.role) ? m.role : roleFromTier(tier),
+    portalRole:
+      m.portalRole === "founding" ||
+      m.portalRole === "expert" ||
+      m.portalRole === "admin" ||
+      m.portalRole === "free"
+        ? m.portalRole
+        : isMemberRole(m.role)
+          ? m.role
+          : roleFromTier(tier),
     tier,
     joinedAt: typeof m.joinedAt === "number" ? m.joinedAt : Date.now(),
     notifications: { ...DEFAULT_NOTIFICATIONS, ...(m.notifications ?? {}) },
