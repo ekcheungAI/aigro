@@ -16,6 +16,7 @@ import Login from "@/pages/Login";
 import Join from "@/pages/Join";
 import Account from "@/pages/Account";
 import Skills from "@/pages/Skills";
+import Sources from "@/pages/Sources";
 import DataPartnership from "@/pages/DataPartnership";
 import Access from "@/pages/Access";
 import AdminLayout from "@/components/admin/AdminLayout";
@@ -53,6 +54,7 @@ function RouteMeta() {
     [/^\/ask/, "Ask 問答", "問 AI 編輯部任何 AI、增長、營銷問題 — 每個論點附來源引用。"],
     [/^\/pricing/, "方案 Pricing", "免費/進階/VIP 三層會員方案 — 解鎖無限 AI 對話與領航專家分身。"],
     [/^\/developers/, "AIGRO MCP Network", "行業情報 MCP server — 你嘅 AI 工具一連接,即刻有行業雷達。AI 行業優先名單開放中。"],
+    [/^\/sources/, "情報渠道", "AIGRO 情報渠道 — 公開透明嘅來源牆、數據流程與免費任用方式。"],
     [/^\/skills/, "Skills", "AIGRO Skills — 俾你嘅 AI agent 裝上專業能力。"],
     [/^\/data/, "AIGRO Data", "行業情報基建 — 來源伙伴、數據伙伴、行業伙伴合作。"],
     [/^\/access/, "全級別入口", "AIGRO 全級別入口 — 訪客、會員、創始會員、領航專家、管理員示範登入。"],
@@ -93,6 +95,7 @@ export default function App() {
         <Route path="pricing" element={<Pricing />} />
         <Route path="developers" element={<Developers />} />
         <Route path="skills" element={<Skills />} />
+        <Route path="sources" element={<Sources />} />
         <Route path="data" element={<DataPartnership />} />
         <Route path="access" element={<Access />} />
         <Route path="login" element={<Login />} />
