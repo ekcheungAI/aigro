@@ -1,6 +1,8 @@
+import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
+  Check,
   Database,
   Handshake,
   Mail,
@@ -10,6 +12,7 @@ import {
   Workflow,
 } from "lucide-react";
 import Reveal from "@/components/Reveal";
+import { appendInterest, PARTNER_INTEREST_KEY } from "@/lib/interest";
 
 /* ================= 資料 ================= */
 
@@ -36,24 +39,36 @@ const PIPELINE = [
   },
 ];
 
-const PARTNERSHIPS = [
+/** 伙伴類型 — 寫入 localStorage `aigro-partner-interest` 時按 kind 分 */
+type PartnerKind = "source" | "data" | "industry" | "general";
+
+const PARTNERSHIPS: {
+  icon: typeof Rss;
+  title: string;
+  body: string;
+  kind: Exclude<PartnerKind, "general">;
+  ctaLabel: string;
+}[] = [
   {
     icon: Rss,
     title: "來源伙伴",
     body: "你嘅內容想被收錄?授權我哋引用,來源連結導流返你 — 你嘅內容會出現喺全港 agent 嘅答案入面。",
-    cta: { label: "申請收錄", href: "mailto:hello@aigro.hk?subject=來源伙伴" },
+    kind: "source",
+    ctaLabel: "申請收錄",
   },
   {
     icon: Database,
     title: "數據伙伴",
     body: "想用我哋嘅情報做產品?MCP / API 合作 — 將行業雷達接入你嘅 app、agent 或內部工具。",
-    cta: { label: "傾 API 合作", href: "mailto:hello@aigro.hk?subject=數據伙伴" },
+    kind: "data",
+    ctaLabel: "傾 API 合作",
   },
   {
     icon: Vote,
     title: "行業伙伴",
     body: "提議新行業情報網,Club 投票優先開 — 你話邊個行業香港最需要,我哋排期起管道。",
-    cta: { label: "提議行業", href: "mailto:hello@aigro.hk?subject=行業伙伴" },
+    kind: "industry",
+    ctaLabel: "提議行業",
   },
 ];
 
@@ -65,6 +80,116 @@ const SECTORS: { name: string; status: string; live?: boolean }[] = [
   { name: "Property", status: "Q4" },
   { name: "Retail", status: "籌備中" },
 ];
+
+/* ================= F4:伙伴 interest form =================
+ * mailto 會漏數據 — 改做 inline form,寫 localStorage
+ * `aigro-partner-interest`(按 kind 分;Supabase swap note 見 src/lib/interest.ts)。 */
+function PartnerInterestForm({
+  kind,
+  label,
+  variant = "outline",
+}: {
+  kind: PartnerKind;
+  label: string;
+  variant?: "outline" | "solid";
+}) {
+  const [open, setOpen] = useState(false);
+  const [done, setDone] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [note, setNote] = useState("");
+
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    appendInterest(PARTNER_INTEREST_KEY, {
+      kind,
+      name: name.trim(),
+      email: email.trim(),
+      note: note.trim(),
+    });
+    setDone(true);
+  };
+
+  if (done) {
+    return (
+      <p
+        role="status"
+        className="mt-6 inline-flex w-fit items-center gap-2 rounded-md border border-ink px-4 py-2.5 text-label text-ink"
+      >
+        <Check className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+        已記低 — 我哋會親自覆你
+      </p>
+    );
+  }
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className={
+          variant === "solid"
+            ? "press inline-flex h-12 items-center rounded-md bg-ink-solid px-8 text-label text-on-accent hover:bg-ink-hover"
+            : "press mt-6 inline-flex h-10 w-fit items-center rounded-md border border-border-strong px-4 text-label text-ink hover:border-ink"
+        }
+      >
+        {variant === "solid" && (
+          <Mail className="mr-2 h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+        )}
+        {label}
+      </button>
+    );
+  }
+
+  const inputCls =
+    "h-10 w-full rounded-md border bg-surface px-3 text-body-sm text-text-primary placeholder:text-text-muted focus:border-ink focus:outline-none";
+
+  return (
+    <form onSubmit={submit} className="mt-6 grid w-full grid-cols-1 gap-2.5">
+      <label className="sr-only" htmlFor={`partner-${kind}-name`}>
+        姓名 / 公司
+      </label>
+      <input
+        id={`partner-${kind}-name`}
+        required
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="姓名 / 公司"
+        className={inputCls}
+      />
+      <label className="sr-only" htmlFor={`partner-${kind}-email`}>
+        Email
+      </label>
+      <input
+        id={`partner-${kind}-email`}
+        required
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="Email"
+        className={inputCls}
+      />
+      <label className="sr-only" htmlFor={`partner-${kind}-note`}>
+        一句話講下想點合作
+      </label>
+      <textarea
+        id={`partner-${kind}-note`}
+        required
+        rows={2}
+        value={note}
+        onChange={(e) => setNote(e.target.value)}
+        placeholder="一句話講下想點合作"
+        className="w-full rounded-md border bg-surface px-3 py-2.5 text-body-sm text-text-primary placeholder:text-text-muted focus:border-ink focus:outline-none"
+      />
+      <button
+        type="submit"
+        className="press inline-flex h-10 items-center justify-center rounded-md bg-ink-solid px-4 text-label text-on-accent hover:bg-ink-hover"
+      >
+        送出・我哋親自覆
+      </button>
+    </form>
+  );
+}
 
 /* ================= Page ================= */
 
@@ -161,12 +286,7 @@ export default function DataPartnership() {
                 <p className="mt-3 flex-1 text-body-sm text-text-secondary">
                   {p.body}
                 </p>
-                <a
-                  href={p.cta.href}
-                  className="press mt-6 inline-flex h-10 w-fit items-center rounded-md border border-border-strong px-4 text-label text-ink hover:border-ink"
-                >
-                  {p.cta.label}
-                </a>
+                <PartnerInterestForm kind={p.kind} label={p.ctaLabel} />
               </div>
             </Reveal>
           ))}
@@ -250,14 +370,14 @@ export default function DataPartnership() {
               無論你係內容方、產品方,定係想提議新行業 — 第一批合作伙伴會參與
               管道設計,優先接入蒸餾後嘅情報。
             </p>
-            <div className="mt-6 flex flex-wrap items-center gap-4">
-              <a
-                href="mailto:hello@aigro.hk?subject=Data 合作"
-                className="inline-flex h-12 items-center rounded-md bg-ink-solid px-8 text-label text-on-accent press hover:bg-ink-hover"
-              >
-                <Mail className="mr-2 h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-                同我哋傾合作
-              </a>
+            <div className="mt-6 flex flex-wrap items-start gap-4">
+              <div className="w-full max-w-[320px]">
+                <PartnerInterestForm
+                  kind="general"
+                  label="同我哋傾合作"
+                  variant="solid"
+                />
+              </div>
               <Link
                 to="/developers"
                 className="press inline-flex h-12 items-center rounded-md border border-border-strong px-8 text-label text-ink hover:border-ink"
@@ -271,7 +391,7 @@ export default function DataPartnership() {
               </Link>
             </div>
             <p className="mt-4 font-mono text-caption text-text-muted">
-              hello@aigro.hk · subject: Data 合作
+              hello@aigro.hk · 或者直接留低聯絡,我哋親自覆
             </p>
             {/* mono hint — 管道狀態 */}
             <p className="mt-2 flex items-center gap-2 font-mono text-caption text-text-muted">

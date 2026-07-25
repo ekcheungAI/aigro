@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, Check, Code, Compass, ExternalLink } from "lucide-react";
@@ -13,44 +13,13 @@ import {
   type Expert,
 } from "@/data/experts";
 import { demoPersonas, type DemoPersona } from "@/data/demoPersonas";
+import { appendInterest, EXPERT_INTEREST_KEY } from "@/lib/interest";
 
 /** 領航專家 monogram 字母(data 無此欄位,由 slug 映射) */
 const EXPERT_INITIALS: Record<string, string> = {
   "jimmy-lau": "JL",
   "elvin-cheung": "EC",
 };
-
-/* ================= Local toast(頁面級原型提示) ================= */
-
-function useMiniToast() {
-  const [msg, setMsg] = useState<string | null>(null);
-  const timer = useRef<number | undefined>(undefined);
-  const show = (m: string) => {
-    setMsg(m);
-    window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => setMsg(null), 2600);
-  };
-  return { msg, show };
-}
-
-function MiniToast({ msg }: { msg: string | null }) {
-  return (
-    <AnimatePresence>
-      {msg && (
-        <motion.div
-          role="status"
-          className="fixed bottom-6 left-1/2 z-[70] rounded-md border bg-surface px-4 py-2.5 text-caption text-text-primary shadow-card dark:shadow-none"
-          initial={{ opacity: 0, transform: "translateX(-50%) translateY(12px)" }}
-          animate={{ opacity: 1, transform: "translateX(-50%) translateY(0px)" }}
-          exit={{ opacity: 0, transform: "translateX(-50%) translateY(8px)" }}
-          transition={{ duration: 0.2, ease: REVEAL_EASE }}
-        >
-          {msg}
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-}
 
 /* ================= Section 1 — Page Header(Club framing) ================= */
 
@@ -461,7 +430,27 @@ function LaurelBadge() {
   );
 }
 
-function InviteSection({ onApply }: { onApply: () => void }) {
+/* F4:interest form — 留低聯絡,邀請制開放時第一批通知。
+ * 寫 localStorage `aigro-expert-interest`(見 src/lib/interest.ts 嘅 Supabase swap note)。 */
+function InviteSection() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [field, setField] = useState("");
+  const [done, setDone] = useState(false);
+
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    appendInterest(EXPERT_INTEREST_KEY, {
+      name: name.trim(),
+      email: email.trim(),
+      field: field.trim(),
+    });
+    setDone(true);
+  };
+
+  const inputCls =
+    "h-11 w-full rounded-md border bg-surface px-4 text-body-sm text-text-primary placeholder:text-text-muted focus:border-ink focus:outline-none";
+
   return (
     <section className="mx-auto max-w-container px-6 py-24 max-md:py-16">
       <div className="rounded-md bg-gold-soft p-12 text-center max-md:p-8">
@@ -488,22 +477,71 @@ function InviteSection({ onApply }: { onApply: () => void }) {
           <p className="mx-auto mt-4 max-w-[520px] text-body-sm text-text-secondary">
             AIGRO 領航專家不設公開申請 — 由 Jimmy 與 Elvin
             親自邀請有可查證實績、願意授權知識庫嘅香港 AI ×
-            增長實戰者,一齊帶住個 club 向前行。下一席,敬請期待。
+            增長實戰者,一齊帶住個 club 向前行。想俾我哋睇到你?留低聯絡,開放時第一批通知你。
           </p>
         </Reveal>
         <Reveal delay={0.32}>
-          <button
-            type="button"
-            onClick={onApply}
-            className="group mt-8 inline-flex h-11 items-center gap-1.5 rounded-md bg-ink-solid px-6 text-label text-white press hover:bg-ink-hover"
-          >
-            邀請制・暫不開放申請
-            <ArrowRight
-              className="h-4 w-4 transition-transform duration-150 nudge-x"
-              strokeWidth={1.5}
-              aria-hidden="true"
-            />
-          </button>
+          {done ? (
+            <p
+              role="status"
+              className="mx-auto mt-8 inline-flex items-center gap-2 rounded-md border border-gold bg-surface px-5 py-3 text-label text-text-primary"
+            >
+              <Check className="h-4 w-4 text-gold" strokeWidth={1.5} aria-hidden="true" />
+              已記低 — 邀請制開放時第一批通知你
+            </p>
+          ) : (
+            <form
+              onSubmit={submit}
+              className="mx-auto mt-8 grid max-w-[520px] grid-cols-1 gap-3 text-left sm:grid-cols-2"
+            >
+              <label className="sr-only" htmlFor="expert-interest-name">
+                姓名
+              </label>
+              <input
+                id="expert-interest-name"
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="姓名"
+                className={inputCls}
+              />
+              <label className="sr-only" htmlFor="expert-interest-email">
+                Email
+              </label>
+              <input
+                id="expert-interest-email"
+                required
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Email"
+                className={inputCls}
+              />
+              <label className="sr-only" htmlFor="expert-interest-field">
+                一句話介紹你嘅實戰領域
+              </label>
+              <textarea
+                id="expert-interest-field"
+                required
+                rows={3}
+                value={field}
+                onChange={(e) => setField(e.target.value)}
+                placeholder="一句話介紹你嘅實戰領域(例:連鎖餐飲 AI 排班落地)"
+                className="w-full rounded-md border bg-surface px-4 py-3 text-body-sm text-text-primary placeholder:text-text-muted focus:border-ink focus:outline-none sm:col-span-2"
+              />
+              <button
+                type="submit"
+                className="group inline-flex h-11 items-center justify-center gap-1.5 rounded-md bg-ink-solid px-6 text-label text-white press hover:bg-ink-hover sm:col-span-2"
+              >
+                留低聯絡・開放時通知我
+                <ArrowRight
+                  className="h-4 w-4 transition-transform duration-150 nudge-x"
+                  strokeWidth={1.5}
+                  aria-hidden="true"
+                />
+              </button>
+            </form>
+          )}
         </Reveal>
       </div>
     </section>
@@ -513,8 +551,6 @@ function InviteSection({ onApply }: { onApply: () => void }) {
 /* ================= Page ================= */
 
 export default function Experts() {
-  const toast = useMiniToast();
-
   return (
     <div>
       <PageHeader />
@@ -555,13 +591,7 @@ export default function Experts() {
       {/* Section 3.5 — 示範分身 Perskill Demo */}
       <DemoPersonasSection />
 
-      <InviteSection
-        onApply={() =>
-          toast.show("領航專家採邀請制,由 Jimmy 與 Elvin 親自邀請")
-        }
-      />
-
-      <MiniToast msg={toast.msg} />
+      <InviteSection />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { ArrowRight } from "lucide-react";
 import CaseCard from "@/components/CaseCard";
 import Reveal, { REVEAL_EASE } from "@/components/Reveal";
 import { getCaseBySlug, relatedCases, type CaseStudy } from "@/data/cases";
+import usePageMeta from "@/hooks/usePageMeta";
 
 /* ---------- Metric count-up（design.md §5.1：800ms ease-out，首次進入 viewport） ---------- */
 
@@ -362,6 +363,13 @@ function RelatedCases({ caseStudy }: { caseStudy: CaseStudy }) {
 export default function CaseDetail() {
   const { slug } = useParams<{ slug: string }>();
   const caseStudy = slug ? getCaseBySlug(slug) : undefined;
+
+  /* F9:per-case OG — canonical + og:type article + 案例紀實照片 */
+  usePageMeta(caseStudy?.title, caseStudy?.method, {
+    canonical: caseStudy ? `/cases/${caseStudy.slug}` : undefined,
+    ogType: "article",
+    ogImage: caseStudy?.image,
+  });
 
   if (!caseStudy) {
     return (

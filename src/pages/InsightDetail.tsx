@@ -10,6 +10,7 @@ import {
   type InsightArticle,
 } from "@/data/insights";
 import { findAihotInsight } from "@/data/aihot";
+import usePageMeta from "@/hooks/usePageMeta";
 
 /** 設計稿中的原型路由別名 (daily.md / insight-detail.md 使用 openai-gpt-5-launch) */
 const SLUG_ALIASES: Record<string, string> = {
@@ -64,6 +65,13 @@ export default function InsightDetail() {
     () => (insight ? pickRelated(insight) : []),
     [insight]
   );
+
+  /* F9:per-article OG — canonical + og:type article + hero 圖(有則用) */
+  usePageMeta(insight?.title, insight?.summary, {
+    canonical: insight ? `/insights/${insight.slug}` : undefined,
+    ogType: "article",
+    ogImage: article?.heroImage,
+  });
 
   if (!insight || !article) {
     /* AIHOT 外部情報：無站內長文，展示摘要卡 + 閱讀原文（不虛構詳情） */

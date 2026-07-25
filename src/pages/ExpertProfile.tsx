@@ -12,6 +12,7 @@ import {
   experts,
   type Expert,
 } from "@/data/experts";
+import usePageMeta from "@/hooks/usePageMeta";
 
 /** 領航專家 monogram 字母(data 無此欄位,由 slug 映射) */
 const EXPERT_INITIALS: Record<string, string> = {
@@ -598,6 +599,17 @@ function PendingProfile({ expert }: { expert: Expert }) {
 export default function ExpertProfile() {
   const { slug } = useParams<{ slug: string }>();
   const expert = experts.find((e) => e.slug === slug);
+
+  /* F9:per-expert OG — canonical + og:type profile;真實肖像先至做 og:image */
+  usePageMeta(
+    expert ? expertFullName(expert) : undefined,
+    expert ? `${expert.title}${expert.quote ? ` — ${expert.quote}` : ""}` : undefined,
+    {
+      canonical: expert ? `/experts/${expert.slug}` : undefined,
+      ogType: "profile",
+      ogImage: expert?.image.startsWith("/") ? expert.image : undefined,
+    }
+  );
 
   if (!expert) {
     return (

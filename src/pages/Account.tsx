@@ -11,6 +11,7 @@ import {
   Zap,
 } from "lucide-react";
 import Toast, { useToast } from "@/components/auth/Toast";
+import QueryState from "@/components/QueryState";
 import ProfileEditor from "@/components/auth/ProfileEditor";
 import {
   clearMember,
@@ -431,20 +432,26 @@ export default function Account() {
           </AnimatePresence>
         </section>
 
-        {/* ---- 用量統計 ---- */}
-        <section className="mt-6 grid grid-cols-1 overflow-hidden rounded-md border bg-surface sm:grid-cols-3">
-          {stats.map((s, i) => (
-            <div
-              key={s.label}
-              className={cn("p-6", i > 0 && "border-t sm:border-l sm:border-t-0")}
-            >
-              <p className="text-caption text-text-muted">{s.label}</p>
-              <p className="mt-2 font-display text-h3 text-text-primary">{s.value}</p>
-              {"note" in s && s.note && (
-                <p className="mt-1 text-caption text-text-muted">{s.note}</p>
-              )}
+        {/* ---- 用量統計 ----
+            F7 QueryState exemplar:而家 stats 係 sync 衍生(loading 恆 false),
+            接 Supabase 後將 loading/error/retry 駁去真 query — 見 docs/QueryState.md */}
+        <section className="mt-6 overflow-hidden rounded-md border bg-surface">
+          <QueryState loading={false} error={null}>
+            <div className="grid grid-cols-1 sm:grid-cols-3">
+              {stats.map((s, i) => (
+                <div
+                  key={s.label}
+                  className={cn("p-6", i > 0 && "border-t sm:border-l sm:border-t-0")}
+                >
+                  <p className="text-caption text-text-muted">{s.label}</p>
+                  <p className="mt-2 font-display text-h3 text-text-primary">{s.value}</p>
+                  {"note" in s && s.note && (
+                    <p className="mt-1 text-caption text-text-muted">{s.note}</p>
+                  )}
+                </div>
+              ))}
             </div>
-          ))}
+          </QueryState>
         </section>
 
         {/* ---- 我的對話 ---- */}
