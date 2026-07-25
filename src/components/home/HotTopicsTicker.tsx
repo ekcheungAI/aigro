@@ -54,7 +54,7 @@ export default function HotTopicsTicker() {
         <AnimatePresence mode="wait" initial={false}>
           <motion.a
             key={topic.id}
-            href={topic.permalink}
+            href="/insights?tab=topics"
             target="_blank"
             rel="noreferrer"
             className="absolute inset-0 flex items-center font-mono text-caption text-band-text-secondary transition-colors duration-150 hover:text-band-ink"

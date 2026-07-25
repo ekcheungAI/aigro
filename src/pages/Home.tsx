@@ -179,7 +179,7 @@ function Hero() {
                     {aihotDailyPicks.map((pick, i) => (
                       <li key={pick.slug}>
                         <a
-                          href={pick.permalink}
+                          href={pick.originalUrl ?? pick.permalink}
                           target="_blank"
                           rel="noreferrer"
                           className="group flex items-baseline gap-4 px-6 py-3 transition-colors duration-150 hover:bg-band-card"
