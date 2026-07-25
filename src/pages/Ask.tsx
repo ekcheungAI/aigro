@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, ArrowUp, Check, Info, Sparkles } from "lucide-react";
 import AiMessage from "@/components/ask/AiMessage";
+import ThinkingBars from "@/components/ask/ThinkingBars";
 import PersonaPanel from "@/components/ask/PersonaPanel";
 import ContextPanel from "@/components/ask/ContextPanel";
 import QuotaMeter from "@/components/ask/QuotaMeter";
@@ -20,6 +21,13 @@ import {
 } from "@/components/ask/sessions";
 import type { SessionStore } from "@/components/ask/sessions";
 import { getPersona, personas, personaInitials, pickReply } from "@/data/personas";
+import {
+  callLlmGeneral,
+  guardrailReply,
+  isLlmConfigured,
+  isOffGuard,
+  llmReply,
+} from "@/lib/llmFallback";
 import { expertHasPhoto } from "@/data/experts";
 import {
   DEFAULT_NOTIFICATIONS,
@@ -92,6 +100,19 @@ export default function Ask() {
   const toastTimer = useRef(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // v1.21:LLM 一般知識 fallback 嘅異步狀態 — 等待期間渲染用戶氣泡 + thinking bars,
+  // resolve 後先入 store(同一條 typewriter 路徑)。同時間只准一條 in-flight。
+  const [pendingLlm, setPendingLlm] = useState<{
+    personaKey: string;
+    question: string;
+  } | null>(null);
+  // 最新 store 嘅 ref — async LLM resolve 時喺最新狀態上 append,唔會冧咗中途嘅新訊息
+  const storeRef = useRef(store);
+  useEffect(() => {
+    storeRef.current = store;
+  }, [store]);
+  const showPending = pendingLlm !== null && pendingLlm.personaKey === persona.key;
 
   // 訪客註冊捕捉:有 member record 就永遠唔顯示
   const [member, setMember] = useState<AigroMember | null>(loadMember);
@@ -212,27 +233,60 @@ export default function Ask() {
   const send = useCallback(
     (raw: string) => {
       const question = raw.trim();
-      if (!question || exhausted) return;
+      if (!question || exhausted || pendingLlm) return;
+      setInput("");
+      if (textareaRef.current) textareaRef.current.style.height = "auto";
+
+      const personaKey = persona.key;
+      /** 即刻入 store + 行打字機(KB / guardrail / 內建模板都係同步路徑) */
+      const commit = (reply: Parameters<typeof appendRound>[3], topicId: string | null) => {
+        const { store: next, aiMessageId } = appendRound(
+          storeRef.current,
+          personaKey,
+          question,
+          reply,
+          topicId
+        );
+        storeRef.current = next;
+        setStore(next);
+        setAnimatingId(aiMessageId); // 淨係呢條新回答行打字機
+      };
+
+      // B. Guardrail — 明顯 spam / 違規 / jailbreak / 偷個人資料 → 分身口吻 deflect(唔係拒絕模板)
+      const guard = isOffGuard(question);
+      if (guard) {
+        commit(guardrailReply(persona, guard), null);
+        return;
+      }
+
       // v1.19:加權匹配 + 問題類型感知 + 多意圖 compose;
       // 傳入 session memory(lastTopicId)俾模糊追問承接上一個話題
-      const { reply, topicId } = pickReply(
+      const { reply, topicId, matched } = pickReply(
         persona,
         question,
         activeSession?.lastTopicId ?? null
       );
-      const { store: next, aiMessageId } = appendRound(
-        store,
-        persona.key,
-        question,
-        reply,
-        topicId
-      );
-      setStore(next);
-      setAnimatingId(aiMessageId); // 淨係呢條新回答行打字機
-      setInput("");
-      if (textareaRef.current) textareaRef.current.style.height = "auto";
+
+      // KB 命中(含近話題 bridge)→ 直接用;KB 零命中但未設 LLM → 內建一般知識模板
+      if (matched !== "fallback" || !isLlmConfigured()) {
+        commit(reply, topicId);
+        return;
+      }
+
+      // C. LLM 一般知識 fallback — 先渲染用戶氣泡 + thinking bars(pendingLlm),
+      //    resolve 後先入 store 行同一條 typewriter 路徑;error/timeout → 內建模板
+      setPendingLlm({ personaKey, question });
+      callLlmGeneral(persona, question)
+        .then((text) => llmReply(persona, text))
+        .catch(() => reply) // 10s timeout / 網絡 / API 錯 → graceful 內建一般知識回覆
+        .then((finalReply) => {
+          setPendingLlm((cur) =>
+            cur && cur.personaKey === personaKey && cur.question === question ? null : cur
+          );
+          commit(finalReply, null);
+        });
     },
-    [exhausted, persona, store, activeSession]
+    [exhausted, persona, activeSession, pendingLlm]
   );
 
   const autoGrow = (el: HTMLTextAreaElement) => {
@@ -425,7 +479,7 @@ export default function Ask() {
         {/* Sections 2–3 — 訊息流(滾動區) */}
         <div ref={scrollRef} data-lenis-prevent className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-[720px] px-6 pb-12">
-            {messages.length === 0 ? (
+            {messages.length === 0 && !showPending ? (
               /* Empty State — 導師宣傳 spotlight card + 佢嘅 4 條建議問題,
                  好似導師邀請你入嚟傾,而唔係一張空白表格 */
               <div className="flex flex-col items-center pt-10 sm:pt-16">
@@ -460,7 +514,7 @@ export default function Ask() {
                         ease: EASE_OUT_STRONG,
                       }}
                       onClick={() => send(s)}
-                      disabled={exhausted}
+                      disabled={exhausted || pendingLlm !== null}
                       className="press rounded-sm border bg-surface px-4 py-2.5 text-body-sm text-text-secondary transition-colors duration-150 hover:border-[var(--ask-accent)] hover:text-[var(--ask-accent)] disabled:pointer-events-none disabled:opacity-40"
                     >
                       {s}
@@ -520,6 +574,35 @@ export default function Ask() {
                       </div>
                     </motion.div>
                   )
+                )}
+
+                {/* LLM fallback pending — 用戶氣泡 + thinking bars,等 API resolve;
+                    入 store 後由正常訊息路徑接手(typewriter) */}
+                {pendingLlm && pendingLlm.personaKey === persona.key && (
+                  <>
+                    <div className="flex justify-end">
+                      <div className="max-w-[80%] whitespace-pre-wrap rounded-lg bg-card px-5 py-4 text-body text-text-primary">
+                        {pendingLlm.question}
+                      </div>
+                    </div>
+                    <div className="flex justify-start">
+                      <div className="w-full">
+                        <div
+                          className={cn(
+                            "w-full rounded-lg bg-ink-soft px-6 py-5",
+                            persona.kind === "expert" && "border-l-2"
+                          )}
+                          style={
+                            persona.kind === "expert"
+                              ? { borderLeftColor: persona.accent }
+                              : undefined
+                          }
+                        >
+                          <ThinkingBars />
+                        </div>
+                      </div>
+                    </div>
+                  </>
                 )}
 
                 {/* 訪客捕捉卡 — 第 3 條訊息後一次性 inline 出現(非 modal) */}
@@ -685,7 +768,7 @@ export default function Ask() {
                     <button
                       type="button"
                       onClick={() => send(input)}
-                      disabled={!input.trim()}
+                      disabled={!input.trim() || pendingLlm !== null}
                       aria-label="送出問題"
                       className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-ink-solid text-white press hover:bg-ink-hover disabled:pointer-events-none disabled:opacity-40"
                     >
@@ -718,7 +801,7 @@ export default function Ask() {
           persona={persona}
           citations={citations}
           onSuggestion={send}
-          suggestionsDisabled={exhausted}
+          suggestionsDisabled={exhausted || pendingLlm !== null}
         />
       </motion.div>
 

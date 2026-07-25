@@ -8,7 +8,8 @@
  * - 問題類型感知:點樣/如何 → steps;邊個/推薦/分別 → compare;係咩/乜嘢 → define,命中 style 加分
  * - 多意圖 compose:兩個話題同時強命中 → intro + 兩段 digest 合併回答,唔硬揀一個
  * - 近話題 bridge:無直接命中但有接近話題 → 照答 + 誠實交代
- * - Fallback 維持「無引用唔亂噏」,但動態建議 2 個最近可答話題 chips
+ * - v1.21:覆蓋話題補全(about-dotai / ekcheungai / perskill / aigro / superbash),
+ *   fallback 改做「一般知識回覆」軟模板(唔再拒答),guardrail 同 LLM fallback 見 src/lib/llmFallback.ts
  * - Session memory:承接 lastTopicId,模糊追問(「咁然後呢?」)自動接返上一個話題
  * - 每個回答附 2–3 條分身口吻嘅「追問」chips(followUps map)
  */
@@ -130,6 +131,102 @@ const PLATFORM_REPLIES: ScriptedReply[] = [
     chip: "邊個分身啱我?",
   },
   {
+    id: "about-aigro",
+    topic: "AIGRO 係咩",
+    style: "define",
+    weights: [
+      [/aigro/i, 6],
+      [/呢個平台|呢個網站|呢度係咩|做咩嘅/, 4],
+      [/mcp/i, 3],
+      [/about this site|呢個site/i, 3],
+      [/club|會員制/, 2],
+    ],
+    reply: {
+      text: `**AIGRO** 係香港嘅 AI growth hacking club — 情報庫、案例庫、領航專家 AI 分身同 Club 社群集於一身,目標好清晰:幫香港企業同 builders 將 AI 由「試玩」變「落地」。
+願景係一個 AI-native 嘅成長中樞:平台本身就係用 AI-native 方式打造,之後仲會經 **MCP** 將情報同分身能力開放,俾會員接入自己嘅工具鏈。
+兩位領航專家 Jimmy Lau 同 Elvin Cheung 嘅分身可以喺左欄直接揀嚟傾;Club 會員仲有導師預約等權益(即將開放)。`,
+      citations: [
+        { title: "AIGRO 情報庫", href: "/insights" },
+        { title: "領航專家總覽", href: "/experts" },
+        { title: "AIGRO Club", href: "/pricing" },
+      ],
+      confidence: 0.88,
+    },
+    digest: `AIGRO 係香港嘅 AI growth hacking club:情報庫、案例庫、領航專家分身加 Club 社群,幫香港企業將 AI 由試玩變落地;平台 AI-native 打造,之後會經 MCP 開放能力俾會員接入工具鏈。`,
+    followUps: ["AIGRO 有邊幾位領航專家?", "邊個分身啱我?"],
+    chip: "AIGRO 係咩平台?",
+  },
+  {
+    id: "about-dotai",
+    topic: "DotAI 係咩",
+    style: "define",
+    weights: [
+      [/dot\s?ai|dotai/i, 6],
+      [/學習基地/, 4],
+      [/dotai\.hk|dotai\.spot/i, 4],
+      [/everyone\.?ai/i, 2],
+    ],
+    reply: {
+      text: `**DotAI** 係領航專家 Jimmy Lau 劉泰麟共同創辦嘅公司(佢任共同創辦人 & CMO)— 定位係香港嘅 AI 學習基地,推動 AI-First 思維落地,帶企業走出「AI 試玩」舒適圈。
+重點項目包括 **dotai.spot 實驗型社群**(陪伴式學習基地),同埋 2026 年 1 月喺尖沙咀 K11 Atelier 主辦嘅 **Everyone.AI 年度大會** — 全場爆滿 200+ 企業決策者,聯同 Microsoft、Google、HP,首度喺香港提出「語境工程取代提示詞工程」。
+想深入了解,可以上 dotai.hk,或者直接問 Jimmy 嘅分身 — 佢嘅知識庫先係第一手。`,
+      citations: [
+        { title: "DotAI dotai.hk", href: "https://dotai.hk" },
+        { title: "直接問 Jimmy 分身", href: "/ask?expert=jimmy-lau" },
+        { title: "Jimmy Lau 專家頁", href: "/experts/jimmy-lau" },
+      ],
+      confidence: 0.86,
+    },
+    digest: `DotAI 係 Jimmy Lau 共同創辦嘅公司(佢任 CMO):dotai.spot 實驗型學習社群 + 2026 年 1 月 K11 Atelier Everyone.AI 年度大會,首度喺香港提出語境工程取代提示詞工程。詳情 dotai.hk,或直接問 Jimmy 分身。`,
+    followUps: ["Jimmy 嘅分身可以答咩?", "邊個分身啱我?"],
+    chip: "DotAI 係咩?",
+  },
+  {
+    id: "about-perskill",
+    topic: "Perskill 係咩",
+    style: "define",
+    weights: [
+      [/perskill/i, 6],
+      [/分身庫|分身平台/, 4],
+    ],
+    reply: {
+      text: `**Perskill** 係領航專家 Elvin Cheung 創辦嘅世界級人物 AI 分身庫 — **invite-only**,將各領域高手嘅知識同風格蒸餾成可以對話嘅 AI 分身,強調 source-aware:來源同限制講明,先值得信任。
+AIGRO 嘅分身對話係同一思路嘅實踐 — 你而家同緊嘅就係授權內容蒸餾嘅分身。
+想再了解,去 perskill.com;或者直接問 Elvin 嘅分身,佢嘅知識庫係第一手。`,
+      citations: [
+        { title: "Perskill perskill.com", href: "https://perskill.com" },
+        { title: "直接問 Elvin 分身", href: "/ask?expert=elvin-cheung" },
+        { title: "Elvin Cheung 專家頁", href: "/experts/elvin-cheung" },
+      ],
+      confidence: 0.85,
+    },
+    digest: `Perskill 係 Elvin Cheung 創辦嘅世界級人物 AI 分身庫(invite-only),將高手嘅知識同風格蒸餾成可對話嘅 AI 分身,source-aware 講明來源同限制。詳情 perskill.com。`,
+    followUps: ["Elvin 嘅分身可以答咩?", "AIGRO 係咩平台?"],
+    chip: "Perskill 係咩?",
+  },
+  {
+    id: "about-superbash",
+    topic: "SuperBash 活動",
+    style: "define",
+    weights: [
+      [/super\s?bash/i, 6],
+      [/活動|聚會|meetup/i, 2],
+      [/線下/, 1],
+    ],
+    reply: {
+      text: `**SuperBash** 係領航專家 Elvin Cheung 有份搞嘅香港 AI builders 實戰活動 — 唔係講座式 meetup,係一班人真係郁手:vibe coding、工具實測、workflow 拆解,即場試即場講限制。
+最新場次同報名詳情,直接問 Elvin 嘅分身最準 — 佢係搞手,知識庫係第一手。`,
+      citations: [
+        { title: "直接問 Elvin 分身", href: "/ask?expert=elvin-cheung" },
+        { title: "Elvin Cheung 專家頁", href: "/experts/elvin-cheung" },
+      ],
+      confidence: 0.82,
+    },
+    digest: `SuperBash 係 Elvin Cheung 有份搞嘅香港 AI builders 實戰活動:vibe coding、工具實測、workflow 拆解,即場郁手唔係講座。場次同報名問 Elvin 分身最準。`,
+    followUps: ["Elvin 嘅分身可以答咩?", "AIGRO 有邊幾位領航專家?"],
+    chip: "SuperBash 係咩活動?",
+  },
+  {
     id: "content-marketing",
     topic: "AI 內容營銷",
     style: "steps",
@@ -240,12 +337,16 @@ const PLATFORM_REPLIES: ScriptedReply[] = [
   },
 ];
 
-/** no chip, no claim — 無可檢索來源必須明言(ask.md 規則) */
+/**
+ * v1.21 一般知識回覆模板(唔再拒答)— {topic} = 問題節錄,{topics} = 最近可答話題,
+ * 由 pickReply fallback 分支注入;confidence 0.6 + source "general"(一般知識 chip,唔觸發低信心警示)。
+ */
 const PLATFORM_FALLBACK: AiReply = {
-  text: `呢個問題暫時超出我可以可靠引用嘅範圍 — 編輯部原則係冇來源就唔會亂噏。
-你可以試下換個問法,或者瀏覽 Insights 情報庫搵相關主題。如果想深入傾,認證導師可以一對一幫你。`,
+  text: `你問嘅「{topic}」— 編輯部嘅授權內容庫冇直接對應嘅條目,所以以下係一般知識回覆,唔附引用來源。
+一般嚟講,拆解呢類題目最有效係三步:先睇佢解決咩問題,再睇邊個喺度用,最後睇同現有方案嘅分別 — 三個角度齊咗,判斷自然穩。
+呢個係一般知識範圍 — 想深入本站覆蓋嘅主題,可以問我{topics}。`,
   citations: [],
-  confidence: 0.55,
+  confidence: 0.6,
 };
 
 /* ---------------- Jimmy Lau 劉泰麟(DotAI — AI-First 實戰派) ---------------- */
@@ -298,22 +399,71 @@ Jimmy Lau 劉泰麟係 **DotAI 共同創辦人 & CMO、AIGRO 領航專家**,做�
     chip: "Elvin 係咩人?",
   },
   {
+    id: "about-dotai",
+    topic: "DotAI 係咩",
+    style: "define",
+    weights: [
+      [/dot\s?ai|dotai/i, 6],
+      [/學習基地/, 4],
+      [/dotai\.hk|dotai\.spot/i, 4],
+      [/你嘅公司|你間公司|你創辦嘅公司/, 3],
+      [/everyone\.?ai/i, 3],
+    ],
+    reply: {
+      text: `**DotAI** 係我共同創辦嘅公司 — 我做緊**共同創辦人 & CMO**,使命係帶香港企業走出「AI 試玩」舒適圈,將 AI-First 思維真正落地。
+幾個我最有感受嘅里程碑:我哋建立咗 **DotAI 學習基地(dotai.spot)** — 一個實驗型社群,靠陪伴、交流同實戰場域持續進化,因為我一直相信學 AI 係旅程,唔係一堂課。2026 年 1 月,我哋喺尖沙咀 K11 Atelier 主辦 **Everyone.AI 年度大會**,全場爆滿 200+ 企業決策者、教育領袖同技術專家,聯同 Microsoft、Google、HP 三大巨頭,首度喺香港提出「語境工程取代提示詞工程」。
+想再了解我哋做緊咩,上 dotai.hk 就最齊;我嘅 10 個核心觀點喺專家頁。`,
+      citations: [
+        { title: "DotAI dotai.hk", href: "https://dotai.hk" },
+        { title: "Jimmy 嘅 10 個核心觀點", href: "/experts/jimmy-lau" },
+      ],
+      confidence: 0.92,
+    },
+    digest: `DotAI 係我共同創辦嘅公司(我任 CMO):DotAI 學習基地 dotai.spot 實驗型社群,加上 2026 年 1 月 K11 Atelier Everyone.AI 年度大會(200+ 決策者,聯同 Microsoft、Google、HP),首度喺香港提出語境工程取代提示詞工程。詳情 dotai.hk。`,
+    followUps: ["AI-First 係咩意思?", "語境工程同 prompt 有咩分別?"],
+    chip: "DotAI 係咩?",
+  },
+  {
+    id: "about-superbash",
+    topic: "SuperBash 活動",
+    style: "define",
+    weights: [
+      [/super\s?bash/i, 6],
+      [/活動|聚會|meetup/i, 2],
+      [/線下/, 1],
+    ],
+    reply: {
+      text: `**SuperBash** 係 Elvin 有份搞嘅香港 AI builders 實戰活動 — vibe coding、工具實測、workflow 拆解,一班人即場郁手,唔係講座式 meetup。
+我呢邊專注 AI-First 思維同行銷落地;SuperBash 嘅場次、報名同詳情,Elvin 嘅分身先係第一手 — 佢係搞手,你直接問佢最準。`,
+      citations: [
+        { title: "直接問 Elvin 分身", href: "/ask?expert=elvin-cheung" },
+        { title: "Elvin 嘅 10 個核心觀點", href: "/experts/elvin-cheung" },
+      ],
+      confidence: 0.82,
+    },
+    digest: `SuperBash 係 Elvin 有份搞嘅香港 AI builders 實戰活動(vibe coding、工具實測、即場郁手)— 場次同報名直接問 Elvin 嘅分身最準。`,
+    followUps: ["Elvin 嘅分身可以答咩?", "AI-First 係咩意思?"],
+    chip: "SuperBash 係咩活動?",
+  },
+  {
     id: "about-platform",
     topic: "AIGRO 平台係咩",
     style: "define",
     weights: [
       [/aigro/i, 4],
       [/呢度係咩|做咩嘅|呢個平台/, 3],
+      [/mcp/i, 3],
       [/平台|網站/, 2],
       [/club|會員/, 2],
     ],
     reply: {
       text: `AIGRO 係香港嘅 AI growth hacking club — 情報庫、案例庫、領航專家分身同 Club 社群集於一身,目標好清晰:幫香港企業同 builders 將 AI 由「試玩」變「落地」。
-我係其中一位領航專家,另一位係 Elvin。除咗分身對話,平台仲有認證導師嘅 Club 預約(即將開放)。
+我係其中一位領航專家,另一位係 Elvin。除咗分身對話,平台仲有認證導師嘅 Club 預約(即將開放)。平台本身都係 AI-native 打造 — 之後仲會經 **MCP** 將情報同分身能力開放,俾會員接入自己嘅工具鏈。
 想睇全站情報,去 Insights;想知兩位領航專家嘅分工,問返平台編輯部分身就最中立。`,
       citations: [
         { title: "AIGRO 情報庫", href: "/insights" },
         { title: "領航專家總覽", href: "/experts" },
+        { title: "AIGRO Club", href: "/pricing" },
       ],
       confidence: 0.8,
     },
@@ -331,7 +481,7 @@ Jimmy Lau 劉泰麟係 **DotAI 共同創辦人 & CMO、AIGRO 領航專家**,做�
       [/prompt|提示詞/i, 2],
       [/拆/, 2],
       [/起步|開始/, 2],
-      [/學|入門|新手/, 1],
+      [/學\s?ai|ai\s?課|入門|新手/i, 1],
       [/點用|工具|揀/, 1],
       [/試玩/, 1],
     ],
@@ -417,10 +567,11 @@ Idea 唔行動,等於零。我嘅做法係咁:
 ];
 
 const JIMMY_FALLBACK: AiReply = {
-  text: `呢個問題超出咗我授權知識庫可以可靠回答嘅範圍 — 我唔會靠估。
-你可以換個問法,例如問我 AI-First 思維、由 idea 到行動、AI 行銷或者語境工程嘅問題。想同真人深入傾,可以留意 Club 優先預約嘅開放消息。`,
+  text: `你問嘅「{topic}」— 呢個唔係我授權知識庫直接覆蓋嘅題目,所以以下係一般知識回覆,唔代表 Jimmy 本人嘅觀點。
+用我一貫嘅 AI-First 問法,任何新題目都可以咁拆:佢解決邊個場景嘅痛?邊個最受惠?同而家嘅做法差喺邊?三條答到,已經掌握八成。
+呢個係一般知識範圍 — 想深入我嘅專長,可以問我{topics}。`,
   citations: [],
-  confidence: 0.5,
+  confidence: 0.6,
 };
 
 /* ---------------- Elvin Cheung(@ekcheungAI — source-aware 實測派) ---------------- */
@@ -432,10 +583,8 @@ const ELVIN_REPLIES: ScriptedReply[] = [
     style: "define",
     weights: [
       [/elvin/i, 4],
-      [/ekcheung|perskill/i, 3],
       [/你係邊|你叫咩|你係咩人|邊個係你/, 3],
       [/你嘅背景|介紹下你|介紹你/, 3],
-      [/superbash/i, 2],
     ],
     reply: {
       text: `我係 Elvin 嘅 AI 分身 — 由佢嘅公開內容同授權材料蒸餾而成,知識庫經本人審核。
@@ -473,22 +622,88 @@ Elvin Cheung 係 **@ekcheungAI 創辦人、Perskill 創辦人、AIGRO 領航專�
     chip: "Jimmy 係咩人?",
   },
   {
+    id: "about-ekcheungai",
+    topic: "ekcheungAI 係咩",
+    style: "define",
+    weights: [
+      [/ekcheung/i, 6],
+      [/你嘅網站|你嘅channel|你個channel|你嘅帳號|你嘅頻道/i, 3],
+      [/channel|頻道/i, 2],
+    ],
+    reply: {
+      text: `**@ekcheungAI** 係我嘅內容品牌 — 用廣東話 source-aware 拆解 AI 工具、Agent 架構同自動化 workflow,俾全網 builders 跟住學。
+特色好簡單:**實測先行**。每一篇都保留來源同限制,唔會將 demo 講到似 production。新工具出咗第一時間係試,唔係讚 — 親手跑過,先講邊度用得、邊度用唔得。
+想睇我嘅完整背景同 10 個核心觀點,去我嘅專家頁就有。`,
+      citations: [{ title: "Elvin 嘅 10 個核心觀點", href: "/experts/elvin-cheung" }],
+      confidence: 0.9,
+    },
+    digest: `@ekcheungAI 係我嘅內容品牌:廣東話 source-aware 拆 AI 工具、Agent 架構同自動化 workflow,實測先行,保留來源同限制,demo 唔當 production。`,
+    followUps: ["邊個 AI 工具真係用得過?", "Perskill 係咩?"],
+    chip: "ekcheungAI 係咩?",
+  },
+  {
+    id: "about-perskill",
+    topic: "Perskill 分身庫",
+    style: "define",
+    weights: [
+      [/perskill/i, 6],
+      [/分身庫|分身平台/, 4],
+      [/你嘅產品|你整嘅產品/, 2],
+    ],
+    reply: {
+      text: `**Perskill** 係我創辦嘅世界級人物 AI 分身庫 — **invite-only**,將各領域高手嘅知識同風格蒸餾成可以對話嘅 AI 分身。
+理念同我做內容一脈相承:分身要 **source-aware**,講明來源同限制,先值得信任。你而家喺 AIGRO 同我傾緊嘅呢種分身對話,其實都係同一套思路嘅實踐。
+有興趣可以去 perskill.com 了解 — invite-only,開放名額會喺社群公佈。`,
+      citations: [
+        { title: "Perskill perskill.com", href: "https://perskill.com" },
+        { title: "Elvin 嘅 10 個核心觀點", href: "/experts/elvin-cheung" },
+      ],
+      confidence: 0.88,
+    },
+    digest: `Perskill 係我創辦嘅世界級人物 AI 分身庫(invite-only):將高手嘅知識同風格蒸餾成可對話嘅 AI 分身,source-aware 講明來源同限制。詳情 perskill.com。`,
+    followUps: ["ekcheungAI 係咩?", "Vibe coding 點開始?"],
+    chip: "Perskill 係咩?",
+  },
+  {
+    id: "about-superbash",
+    topic: "SuperBash 活動",
+    style: "define",
+    weights: [
+      [/super\s?bash/i, 6],
+      [/活動|聚會|meetup/i, 2],
+      [/線下/, 2],
+      [/hkvibecoders|telegram/i, 2],
+    ],
+    reply: {
+      text: `**SuperBash** 係我有份搞嘅香港 AI builders 實戰活動 — 唔係講座式 meetup,係一班人真係郁手:vibe coding、工具實測、workflow 拆解,即場試、即場講限制。
+想跟住玩,除咗 SuperBash,仲有 Telegram 嘅 **hkvibecoders** 社群,成班香港 builders 日日交流實戰心得。
+最新場次同報名詳情會喺社群公佈 — 想我講多啲點參與,問落去就得。`,
+      citations: [{ title: "Elvin 嘅 10 個核心觀點", href: "/experts/elvin-cheung" }],
+      confidence: 0.85,
+    },
+    digest: `SuperBash 係我有份搞嘅香港 AI builders 實戰活動:vibe coding、工具實測、workflow 拆解,即場郁手唔係講座;仲有 Telegram hkvibecoders 社群日日交流。`,
+    followUps: ["Vibe coding 點開始?", "點樣幫公司做 AI 自動化?"],
+    chip: "SuperBash 係咩活動?",
+  },
+  {
     id: "about-platform",
     topic: "AIGRO 平台係咩",
     style: "define",
     weights: [
       [/aigro/i, 4],
       [/呢度係咩|做咩嘅|呢個平台/, 3],
+      [/mcp/i, 3],
       [/平台|網站/, 2],
       [/club|會員/, 2],
     ],
     reply: {
       text: `AIGRO 係香港嘅 AI growth hacking club — 情報、案例、領航專家分身加 Club 社群,幫香港 builders 將 AI 真正落地。
-我係其中一位領航專家,另一位係 Jimmy。我負責嘅部分係實測拆解:工具、workflow、vibe coding,限制同來源講明。
+我係其中一位領航專家,另一位係 Jimmy。我負責嘅部分係實測拆解:工具、workflow、vibe coding,限制同來源講明。平台本身都係 AI-native 打造 — 之後仲會經 **MCP** 將情報同分身能力開放,俾會員接入自己嘅工具鏈。
 想睇全站情報去 Insights;想知兩位專家分工,問返平台編輯部分身就最中立。`,
       citations: [
         { title: "AIGRO 情報庫", href: "/insights" },
         { title: "領航專家總覽", href: "/experts" },
+        { title: "AIGRO Club", href: "/pricing" },
       ],
       confidence: 0.8,
     },
@@ -600,10 +815,11 @@ ekcheungAI 拆工具嘅結構永遠係四步:可以點試、限制係咩、風�
 ];
 
 const ELVIN_FALLBACK: AiReply = {
-  text: `呢條問題超出咗我實測過同授權內容支持嘅範圍 — 冇來源我唔會亂講。
-試下問我 AI 工具實測、自動化 workflow 或者 vibe coding 嘅問題。想同真人傾,留意 Club 優先預約開放。`,
+  text: `你問嘅「{topic}」— 我冇實測過、授權內容又冇直接講,所以以下係一般知識回覆,唔係我嘅實測結論。
+一般框架我會咁睇:呢樣嘢可以點試?限制係咩?風險喺邊?下一步點落地?四條問完,hype 定實用好快知。
+呢個係一般知識範圍 — 想深入我嘅範圍,可以問我{topics}。`,
   citations: [],
-  confidence: 0.48,
+  confidence: 0.6,
 };
 
 /* ---------------- Persona 組裝 ---------------- */
@@ -867,15 +1083,21 @@ export function pickReply(
     };
   }
 
-  // 5. Fallback — no chip, no claim + 建議 2 個最近可答話題 chips
+  // 5. Fallback(v1.21)— 一般知識回覆,唔再拒答:承認 + 軟模板(注入問題節錄)+ 專長 redirect chips。
+  //    source "general" → AiMessage 顯示「一般知識回覆」chip,唔觸發低信心警示。
   const suggest = ranked.slice(0, 2);
   const topicsLine = suggest.map((s) => `「${s.r.topic}」`).join("同");
+  const snippet = q.length > 20 ? `${q.slice(0, 20)}…` : q;
   return {
     topicId: null,
     matched: "fallback",
     reply: {
       ...persona.fallback,
-      text: `${persona.fallback.text}\n我可以可靠回答嘅最近話題:${topicsLine} — 撳下面 chip 直接問。`,
+      text: persona.fallback.text
+        .replace("{topic}", snippet)
+        .replace("{topics}", topicsLine),
+      confidence: 0.6,
+      source: "general",
       followUps: suggest.map((s) => s.r.chip),
     },
   };

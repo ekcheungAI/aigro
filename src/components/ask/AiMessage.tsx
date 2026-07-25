@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, ArrowUpRight, CornerDownRight } from "lucide-react";
+import { ArrowRight, ArrowUpRight, CornerDownRight, Sparkles } from "lucide-react";
 import TypewriterText from "./TypewriterText";
 import ThinkingBars from "./ThinkingBars";
 import { tokenizeTypewriter } from "./typewriter";
@@ -22,6 +22,14 @@ export interface AiReply {
    * 喺引用 chips 之後渲染；點擊經 onFollowUp 直接送出。
    */
   followUps?: string[];
+  /**
+   * 回答來源(v1.21):
+   * - kb(預設/undefined)= 授權知識庫,正常引用 + 信心行
+   * - llm = LLM 一般知識回覆 → 顯示「AI 生成 · 一般知識」chip 取代引用 chips
+   * - general = 內建一般知識模板 → 顯示「一般知識回覆」chip
+   * - guardrail = 安全 deflect → 唔顯示信心行(deflect 唔係低信心答案)
+   */
+  source?: "kb" | "llm" | "general" | "guardrail";
 }
 
 interface AiMessageProps {
@@ -168,6 +176,24 @@ export default function AiMessage({
         </motion.div>
       )}
 
+      {/* 一般知識 chip(v1.21)— LLM / 內建模板回覆冊引用,用呢個 chip 標明性質。
+          同引用 chips 一樣文字完成後先 fade-in;還原歷史即刻顯示。 */}
+      {phase === "done" &&
+        (reply.source === "llm" || reply.source === "general") &&
+        reply.citations.length === 0 && (
+          <motion.div
+            className="mt-3 flex flex-wrap gap-2"
+            initial={animate ? { opacity: 0 } : false}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.12 }}
+          >
+            <span className="inline-flex h-6 items-center gap-1.5 rounded-sm border bg-surface px-2 text-caption text-text-muted">
+              <Sparkles className="h-3 w-3 shrink-0" strokeWidth={1.5} aria-hidden="true" />
+              {reply.source === "llm" ? "AI 生成 · 一般知識" : "一般知識回覆"}
+            </span>
+          </motion.div>
+        )}
+
       {/* 追問 chips — 引用之後,分身口吻邀請深入;點擊直接送出。
           同引用一樣 fade-in stagger 60ms;還原歷史(animate=false)即刻顯示。 */}
       {phase === "done" && followUps.length > 0 && (
@@ -214,8 +240,9 @@ export default function AiMessage({
         </motion.div>
       )}
 
-      {/* 信心行 */}
-      {phase === "done" && (
+      {/* 信心行 — guardrail deflect 唔顯示(係 deflect 唔係低信心答案);
+          llm / general 回覆標「一般知識回覆」而唔係假精密信心分 */}
+      {phase === "done" && reply.source !== "guardrail" && (
         <motion.p
           initial={animate ? { opacity: 0 } : false}
           animate={{ opacity: 1 }}
@@ -228,7 +255,9 @@ export default function AiMessage({
             lowConfidence ? "text-warning" : "text-text-muted"
           )}
         >
-          信心分數 {reply.confidence.toFixed(2)}・回答僅供參考
+          {reply.source === "llm" || reply.source === "general"
+            ? "一般知識回覆・回答僅供參考"
+            : `信心分數 ${reply.confidence.toFixed(2)}・回答僅供參考`}
           {lowConfidence && lowConfidenceAction && (
             <>
               {"・"}
