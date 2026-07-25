@@ -10,6 +10,7 @@ import {
   Menu,
   MessagesSquare,
   Puzzle,
+  Radio,
   Settings,
   Target,
   UserRound,
@@ -36,6 +37,7 @@ const NAV = [
   },
   { to: "/admin/crm", zh: "CRM", en: "CRM", icon: Target },
   { to: "/admin/content", zh: "內容管理", en: "Content", icon: FileText },
+  { to: "/admin/sources", zh: "來源", en: "Sources", icon: Radio },
   { to: "/admin/skills", zh: "技能", en: "Skills", icon: Puzzle },
   {
     to: "/admin/engagement",
