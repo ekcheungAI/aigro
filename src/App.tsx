@@ -28,6 +28,7 @@ import AdminMembers from "@/pages/admin/AdminMembers";
 import AdminSettings from "@/pages/admin/AdminSettings";
 import AdminEmails from "@/pages/admin/AdminEmails";
 import AdminSkills from "@/pages/admin/AdminSkills";
+import AdminSources from "@/pages/admin/AdminSources";
 import PortalLayout from "@/components/portal/PortalLayout";
 import PortalHome from "@/pages/portal/PortalHome";
 import PortalKB from "@/pages/portal/PortalKB";
@@ -122,6 +123,7 @@ export default function App() {
         <Route path="crm" element={<AdminCRM />} />
         <Route path="emails" element={<AdminEmails />} />
         <Route path="skills" element={<AdminSkills />} />
+        <Route path="sources" element={<AdminSources />} />
         <Route path="settings" element={<AdminSettings />} />
       </Route>
       <Route path="portal" element={<PortalLayout />}>
