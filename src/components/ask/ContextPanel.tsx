@@ -1,15 +1,12 @@
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, ArrowUpRight, Quote, Sparkles } from "lucide-react";
-import MonogramAvatar, { PhotoAvatar } from "@/components/MonogramAvatar";
-import VerifiedBadge from "@/components/VerifiedBadge";
+import { ArrowUpRight, Quote } from "lucide-react";
+import AboutPersonaCard from "@/components/ask/AboutPersonaCard";
 import type { Citation } from "@/components/ask/AiMessage";
 import { citationDomain } from "@/components/ask/sessions";
 import { aihotAllInsights, aihotFetchedAt } from "@/data/aihot";
 import { cases } from "@/data/cases";
-import { expertHasPhoto } from "@/data/experts";
 import type { Persona } from "@/data/personas";
-import { personaInitials } from "@/data/personas";
 import { cn } from "@/lib/utils";
 
 interface ContextPanelProps {
@@ -71,59 +68,9 @@ export default function ContextPanel({
             style={{ backgroundColor: persona.accent }}
           />
         </div>
-        <div className="relative mt-3 overflow-hidden rounded-md border bg-bg p-4">
-          {/* Quiet editorial backdrop — 15% opacity accent, never interactive */}
-          <img
-            src="/editorial/ask.jpg"
-            alt=""
-            aria-hidden="true"
-            loading="lazy"
-            className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-[0.15] saturate-[0.85]"
-          />
-          <div className="relative flex items-center gap-2.5">
-            {persona.kind === "platform" ? (
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-ink-soft">
-                <Sparkles className="h-4 w-4 text-ink" strokeWidth={1.5} />
-              </span>
-            ) : persona.expert && expertHasPhoto(persona.expert) ? (
-              <PhotoAvatar
-                src={persona.expert.image}
-                alt={persona.name}
-                size={32}
-              />
-            ) : (
-              <MonogramAvatar
-                initials={personaInitials(persona)}
-                color={persona.accent}
-                size={32}
-              />
-            )}
-            <div className="min-w-0">
-              <p className="flex items-center gap-1 text-label text-text-primary">
-                <span className="truncate">{persona.name}</span>
-                {persona.kind === "expert" && <VerifiedBadge size={16} />}
-              </p>
-              <p className="truncate text-caption text-text-muted">{persona.domainCaption}</p>
-            </div>
-          </div>
-          <div className="relative">
-            <p className="mt-3 line-clamp-4 text-body-sm text-text-secondary">{persona.aboutBio}</p>
-            <Link
-              to={persona.aboutLinkHref}
-              className="group mt-3 inline-flex items-center gap-1 text-label text-ink"
-            >
-              {persona.aboutLinkLabel}
-              <ArrowRight
-                className="h-3.5 w-3.5 transition-transform duration-150 nudge-x"
-                strokeWidth={1.5}
-                aria-hidden="true"
-              />
-            </Link>
-            <p className="mt-3 border-t border-border pt-3 text-caption text-text-muted">
-              {persona.aboutTransparency}
-            </p>
-          </div>
-        </div>
+        {/* v1.21 premium speaker card:專家 = key visual + DP + socials + CRM CTAs;
+            平台 = 知識庫 counts + 瀏覽情報庫 CTA(精簡 variant) */}
+        <AboutPersonaCard persona={persona} />
       </section>
 
       {/* 分身資料與限制 — 知識庫來源 / 更新日期 / 使用限制(hairline 分隔,mono label) */}
