@@ -204,15 +204,8 @@ export default function InsightDetail() {
 
         <Reveal duration={0.3} y={0} delay={0.4}>
           <div className="mt-6 flex flex-wrap items-center gap-x-2 gap-y-1 text-caption text-text-muted">
-            <a
-              href="#"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1 transition-colors duration-150 hover:text-ink"
-            >
-              {insight.source}
-              <ExternalLink className="h-3 w-3" strokeWidth={1.5} aria-hidden="true" />
-            </a>
+            {/* 策展長文為編輯部整理 — 來源只作署名,唔放假連結 */}
+            <span>參考來源：{insight.source}</span>
             <span aria-hidden="true">·</span>
             <span>{formatDateTime(insight.publishedAt)}</span>
             <span aria-hidden="true">·</span>
@@ -284,15 +277,10 @@ export default function InsightDetail() {
               <p className="mt-2 text-caption text-text-secondary">
                 {article.sourceTitle}
               </p>
-              <a
-                href="#"
-                target="_blank"
-                rel="noreferrer"
-                className="mt-3 inline-flex h-9 items-center gap-1.5 rounded-md border border-border-strong px-4 text-caption text-ink press hover:bg-ink-soft"
-              >
-                閱讀原文
-                <ExternalLink className="h-3 w-3" strokeWidth={1.5} aria-hidden="true" />
-              </a>
+              {/* 策展長文係 AIGRO 自家整理內容 — 冇外部原文連結,唔放 href="#" */}
+              <p className="mt-3 text-caption text-text-muted">
+                由 AIGRO 編輯部整理
+              </p>
             </div>
             <div>
               <p className="text-overline font-sans uppercase text-text-muted">

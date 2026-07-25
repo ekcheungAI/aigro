@@ -4,7 +4,6 @@ import {
   CheckCircle2,
   Instagram,
   Linkedin,
-  Loader2,
   Plug,
   Podcast,
   RefreshCw,
@@ -42,40 +41,55 @@ const PLATFORM_HINT: Record<PortalPlatform, string> = {
  * 每平台一 row:icon + 連接按鈕 → connected 態(lime check + handle +
  * reach + 同步狀態);已連接顯示數據卡(subscribers + 30 日增長 hairline bars)。
  */
+/** 用戶輸入嘅 handle / 公開連結 — 原樣顯示,唔會虛構追蹤數 */
+function normalizeHandle(raw: string): string {
+  const v = raw.trim();
+  if (!v) return "";
+  if (/^https?:\/\//i.test(v) || v.startsWith("@")) return v;
+  return `@${v.replace(/^@+/, "")}`;
+}
+
 export default function PortalSocials() {
   const { slug } = usePortalExpert();
   const toast = useAdminToast();
   const [list, setList] = useState<PortalSocial[]>(
     () => (portalSocials[slug] ?? []).map((s) => ({ ...s }))
   );
-  const [connecting, setConnecting] = useState<PortalPlatform | null>(null);
+  /** 邊個平台開緊 inline handle 輸入(連接 = 話我哋知你嘅 handle,唔係假 OAuth) */
+  const [drafting, setDrafting] = useState<PortalPlatform | null>(null);
+  const [handleDraft, setHandleDraft] = useState("");
 
   const connectedCount = list.filter((s) => s.connected).length;
 
-  const connect = (platform: PortalPlatform) => {
-    if (connecting) return;
-    setConnecting(platform);
-    // 示範模式:模擬 OAuth 往返 → connected
-    window.setTimeout(() => {
-      setList((ls) =>
-        ls.map((s) =>
-          s.platform === platform
-            ? {
-                ...s,
-                connected: true,
-                handle: s.handle ?? "@your-handle",
-                reach: s.reach ?? "1.2K 追蹤",
-                subscribers: s.subscribers ?? 1200,
-                growth30d:
-                  s.growth30d ?? [8, 12, 10, 15, 13, 18, 16, 21, 19, 24, 22, 27],
-                syncNote: "每 6 小時更新",
-              }
-            : s
-        )
-      );
-      setConnecting(null);
-      toast(`${platform} 已連接(mock)— 首次同步完成,語料已排入下次蒸餾`);
-    }, 1400);
+  const startConnect = (platform: PortalPlatform) => {
+    setDrafting(platform);
+    setHandleDraft("");
+  };
+
+  const cancelConnect = () => {
+    setDrafting(null);
+    setHandleDraft("");
+  };
+
+  const confirmConnect = (platform: PortalPlatform) => {
+    const handle = normalizeHandle(handleDraft);
+    if (!handle) return;
+    setList((ls) =>
+      ls.map((s) =>
+        s.platform === platform
+          ? {
+              // 只記低用戶嘅 handle — 追蹤數 / 增長等數據同步開放後先顯示,唔虛構
+              platform,
+              connected: true,
+              handle,
+              syncNote: "數據同步即將開放",
+            }
+          : s
+      )
+    );
+    setDrafting(null);
+    setHandleDraft("");
+    toast(`${platform} 已連接 — 數據同步即將開放,開放後會顯示你嘅真實數據`);
   };
 
   const disconnect = (platform: PortalPlatform) => {
@@ -114,7 +128,6 @@ export default function PortalSocials() {
       <div className="space-y-4">
         {list.map((s) => {
           const Icon = PLATFORM_ICONS[s.platform];
-          const isConnecting = connecting === s.platform;
           return (
             <section
               key={s.platform}
@@ -147,15 +160,23 @@ export default function PortalSocials() {
                         已連接
                       </span>
                       <span className="font-mono">{s.handle}</span>
-                      <span aria-hidden="true">·</span>
-                      <span className="font-mono text-text-secondary">
-                        {s.reach}
-                      </span>
-                      <span aria-hidden="true">·</span>
-                      <span className="inline-flex items-center gap-1">
-                        <RefreshCw className="h-3 w-3" />
-                        {s.syncNote}
-                      </span>
+                      {s.reach && (
+                        <>
+                          <span aria-hidden="true">·</span>
+                          <span className="font-mono text-text-secondary">
+                            {s.reach}
+                          </span>
+                        </>
+                      )}
+                      {s.syncNote && (
+                        <>
+                          <span aria-hidden="true">·</span>
+                          <span className="inline-flex items-center gap-1">
+                            <RefreshCw className="h-3 w-3" />
+                            {s.syncNote}
+                          </span>
+                        </>
+                      )}
                     </p>
                   ) : (
                     <p className="mt-0.5 text-xs text-text-muted">
@@ -174,24 +195,68 @@ export default function PortalSocials() {
                 ) : (
                   <button
                     type="button"
-                    disabled={connecting !== null}
-                    onClick={() => connect(s.platform)}
+                    disabled={drafting !== null}
+                    onClick={() => startConnect(s.platform)}
                     className={cn(
                       "inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-medium transition-colors",
-                      connecting !== null
+                      drafting !== null
                         ? "cursor-not-allowed bg-card text-text-muted"
                         : "bg-lime text-on-accent hover:bg-lime-hover"
                     )}
                   >
-                    {isConnecting ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Plug className="h-4 w-4" />
-                    )}
-                    {isConnecting ? "連接中…" : "連接"}
+                    <Plug className="h-4 w-4" />
+                    連接
                   </button>
                 )}
               </div>
+
+              {/* 連接 = 話我哋知你嘅 handle / 公開連結(唔係假 OAuth,唔虛構數據) */}
+              {!s.connected && drafting === s.platform && (
+                <form
+                  className="flex flex-wrap items-center gap-3 border-t border-border px-5 py-4"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    confirmConnect(s.platform);
+                  }}
+                >
+                  <label
+                    htmlFor={`handle-${s.platform}`}
+                    className="text-xs text-text-secondary"
+                  >
+                    你嘅 {s.platform} handle 或公開連結:
+                  </label>
+                  <input
+                    id={`handle-${s.platform}`}
+                    autoFocus
+                    value={handleDraft}
+                    onChange={(e) => setHandleDraft(e.target.value)}
+                    placeholder="例:@yourname 或 https://…"
+                    className="h-9 min-w-0 flex-1 rounded-md border border-border bg-surface px-3 font-mono text-sm text-text-primary placeholder:text-text-muted"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!handleDraft.trim()}
+                    className={cn(
+                      "rounded-md px-4 py-2 text-sm font-medium transition-colors",
+                      handleDraft.trim()
+                        ? "bg-lime text-on-accent hover:bg-lime-hover"
+                        : "cursor-not-allowed bg-card text-text-muted"
+                    )}
+                  >
+                    確認連接
+                  </button>
+                  <button
+                    type="button"
+                    onClick={cancelConnect}
+                    className="text-xs text-text-muted transition-colors hover:text-text-secondary"
+                  >
+                    取消
+                  </button>
+                  <p className="w-full text-[11px] text-text-muted">
+                    只會讀取公開內容做蒸餾語料;追蹤數等數據喺同步功能開放後先顯示。
+                  </p>
+                </form>
+              )}
 
               {/* 數據卡(已連接先顯示) */}
               {s.connected && s.growth30d && (
@@ -233,7 +298,7 @@ export default function PortalSocials() {
           連接越多,分身數據越準 —
         </span>{" "}
         每個已連接平台嘅公開內容都會轉成蒸餾語料,令分身回答更貼近你嘅最新觀點;
-        數據每 6 小時同步一次,絕不讀取私人訊息。
+        追蹤數等數據會喺同步功能開放後每 6 小時更新,絕不讀取私人訊息。
       </p>
     </div>
   );

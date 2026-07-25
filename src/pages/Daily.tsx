@@ -191,7 +191,6 @@ export function DailyContent({ embedded = false }: { embedded?: boolean }) {
           transition={{ duration: 0.4, delay: 0.3, ease: REVEAL_EASE }}
         >
           香港繁體整理 · 編輯部每日更新
-          {aihotDaily.date ? `・日報日期 ${aihotDaily.date}` : ""}
         </motion.p>
 
         {/* 雙髮絲線分隔：1px border-strong + 3px 間隙 + 1px border，由中心展開 */}

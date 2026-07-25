@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   ArrowLeft,
@@ -85,6 +85,9 @@ function passwordStrength(pw: string): Strength {
 export default function Join() {
   const reduced = useReducedMotion();
   const { toast, showToast } = useToast();
+  // /pricing CTA 直達:?plan=pro(創始會員,都係預設)/ ?plan=vip(審核制申請)
+  const [searchParams] = useSearchParams();
+  const planParam = searchParams.get("plan");
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [done, setDone] = useState(false);
@@ -100,8 +103,10 @@ export default function Join() {
   const [persona, setPersona] = useState<string | null>(null);
   const [interestError, setInterestError] = useState<string | null>(null);
 
-  // Step 3 — 創始會員預選
-  const [tier, setTier] = useState<MemberTier>("pro");
+  // Step 3 — 創始會員預選;?plan= 可帶入 /pricing 嘅選擇(vip = 審核制申請)
+  const [tier, setTier] = useState<MemberTier>(() =>
+    planParam === "vip" ? "vip" : planParam === "free" ? "free" : "pro"
+  );
 
   const strength = useMemo(() => passwordStrength(password), [password]);
 
@@ -151,11 +156,10 @@ export default function Join() {
   };
 
   const pickTier = (id: MemberTier) => {
-    if (id === "vip") {
-      showToast("VIP 採審核制 — 完成註冊後可於帳戶頁申請");
-      return;
-    }
     setTier(id);
+    if (id === "vip") {
+      showToast("VIP 採審核制 — 完成註冊即提交申請,48 小時內電郵回覆");
+    }
   };
 
   /* ---------------- 成功畫面 ---------------- */
@@ -427,6 +431,12 @@ export default function Join() {
                     );
                   })}
                 </div>
+                {tier === "vip" && (
+                  <p className="mt-4 rounded-md border border-border bg-card/60 px-4 py-3 text-caption text-text-secondary">
+                    VIP 採審核制 — 完成註冊即提交申請,我哋會喺 48
+                    小時內電郵回覆審核結果;審核期間可先用創始會員全部功能。
+                  </p>
+                )}
                 <p className="mt-4 text-caption text-text-muted">
                   而家免費開始,隨時升級。詳細方案對照見
                   <Link to="/pricing" className="link-underline ml-1 text-ink">

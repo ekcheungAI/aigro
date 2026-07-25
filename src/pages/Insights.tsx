@@ -1127,12 +1127,19 @@ export default function Insights() {
   const [sectorNotice, setSectorNotice] = useState<SectorKey | null>(null);
 
   const selectTab = (key: TabKey) => {
+    // tab 切換都清走 transient 行業提示(唔俾 Beauty 提示殘留)
+    setSectorNotice(null);
     setSearchParams(key === "feed" ? {} : { tab: key });
   };
 
   const selectSector = (key: SectorKey) => {
     const def = SECTORS.find((s) => s.key === key);
-    if (!def || key === sector) return;
+    if (!def) return;
+    if (key === sector) {
+      // 已喺呢個行業(例如撳返 AI)— 清除任何 transient 提示
+      setSectorNotice(null);
+      return;
+    }
     if (!def.live) {
       // 未開放行業 — 唔導航,靜靜哋顯示優先名單提示
       setSectorNotice(sectorNotice === key ? null : key);

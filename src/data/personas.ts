@@ -988,7 +988,7 @@ function dedupeCitations(list: Citation[]): Citation[] {
 
 /**
  * 揀回答主流程(對齊 RAG 行為):
- * 1. 模糊追問 + 低分 + 有 lastTopicId → 承接上一個話題(session memory)
+ * 1. 模糊追問 + 低分 + 有 lastTopicId → 答下一個最近嘅唔同話題(唔逐字重複上一個回答)
  * 2. 兩個話題同時強命中 → compose 合併回答(intro + 雙 digest + 去重引用)
  * 3. 單一強命中 → 直接回答
  * 4. 有分但未過門檻 → 近話題 bridge(誠實交代 + 照答最近話題,信心下調)
@@ -1000,31 +1000,44 @@ export function pickReply(
   lastTopicId?: string | null
 ): PickResult {
   const q = question.trim();
-  const ranked = scoreReplies(persona, q);
+  const rankedAll = scoreReplies(persona, q);
+  // Dedupe by reply id — 追問唔可以逐字重複啱啱嗰個回答:
+  // 命中返同一話題時,改用下一個最高分嘅唔同話題;冇 → graceful general fallback。
+  const lastTopic = lastTopicId
+    ? persona.replies.find((r) => r.id === lastTopicId)
+    : undefined;
+  const ranked = lastTopic
+    ? rankedAll.filter((x) => x.r.id !== lastTopic.id)
+    : rankedAll;
   const best = ranked[0];
   const second = ranked[1];
 
-  // 1. Session memory — 模糊追問承接返上一個話題
+  // 1. Session memory — 模糊追問:唔重複上一個回答,改答下一個最近嘅唔同話題
   if (
-    lastTopicId &&
+    lastTopic &&
     q.length <= VAGUE_MAX_LEN &&
     VAGUE_RE.test(q) &&
-    best.score < MATCH_THRESHOLD
+    (!best || best.score < MATCH_THRESHOLD)
   ) {
-    const last = persona.replies.find((r) => r.id === lastTopicId);
-    if (last) {
+    if (best && best.score > 0) {
+      const confidence = Math.max(
+        0.3,
+        +(best.r.reply.confidence - 0.06).toFixed(2)
+      );
       return {
-        topicId: last.id,
+        topicId: best.r.id,
         matched: "continued",
         reply: withFollowUps(
           {
-            ...last.reply,
-            text: `承接返頭先講嘅「${last.topic}」— 我接住拆:\n${last.reply.text}`,
+            ...best.r.reply,
+            text: `「${lastTopic.topic}」我可以可靠分享嘅已經講晒 — 最近嘅相關話題係「${best.r.topic}」,我接住拆:\n${best.r.reply.text}`,
           },
-          last.followUps
+          best.r.followUps,
+          confidence
         ),
       };
     }
+    // 冇其他可答話題 → 落入分支 5 嘅 general fallback(唔重複上一個回答)
   }
 
   // 2. 多意圖 compose — 唔硬揀一個,intro + 兩段 digest

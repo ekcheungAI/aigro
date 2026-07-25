@@ -52,7 +52,7 @@ function loadCaptureDismissed(): boolean {
   }
 }
 
-/** 「通話中」mono 計時器 — 每秒 tick,賣 private-call 感(唔係真通話)。
+/** 「對話中」mono 計時器 — 每秒 tick,顯示呢個文字對話進行咗幾耐(唔係通話)。
  *  key 用 persona.key,切換分身即由 00:00 重新計起。 */
 function SessionTimer() {
   const [seconds, setSeconds] = useState(0);
@@ -70,7 +70,7 @@ function SessionTimer() {
   return (
     <span className="flex items-center gap-1.5" aria-label={`對話開始咗 ${text}`}>
       <PresenceDot size={8} />
-      <span className="font-mono text-caption text-text-muted">通話中 {text}</span>
+      <span className="font-mono text-caption text-text-muted">對話中 {text}</span>
     </span>
   );
 }
@@ -415,7 +415,7 @@ export default function Ask() {
             )}
           </motion.div>
 
-          {/* 通話中計時 + 關於佢 + 對話額度(限時無限開放) */}
+          {/* 對話中計時 + 關於佢 + 對話額度(限時無限開放) */}
           <div className="ml-auto flex items-center gap-3 sm:gap-4">
             <span className="hidden sm:flex">
               <SessionTimer key={persona.key} />

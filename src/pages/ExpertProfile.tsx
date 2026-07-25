@@ -419,7 +419,9 @@ function VerifiedProfile({ expert }: { expert: Expert }) {
             <button
               type="button"
               aria-disabled="true"
-              onClick={() => toast.show("語音對話為 VIP 專享")}
+              onClick={() =>
+                toast.show("語音對話即將開放 — 開放時 Club 會員優先收到通知")
+              }
               className="inline-flex h-11 items-center gap-2 rounded-md px-4 text-label text-ink opacity-60 transition-opacity duration-150 hover:opacity-80"
             >
               <AudioLines className="h-5 w-5" strokeWidth={1.5} aria-hidden="true" />
@@ -431,7 +433,7 @@ function VerifiedProfile({ expert }: { expert: Expert }) {
               type="button"
               aria-disabled="true"
               onClick={() =>
-                toast.show("Club 優先預約將隨會員制開放,敬請期待")
+                toast.show("Club 優先預約即將開放 — 開放時 Club 會員優先收到通知")
               }
               className="inline-flex h-11 items-center gap-2 rounded-md px-4 text-label text-ink opacity-60 transition-opacity duration-150 hover:opacity-80"
             >

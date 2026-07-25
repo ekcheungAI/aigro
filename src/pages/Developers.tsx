@@ -342,11 +342,20 @@ export default function Developers() {
                   <li key={p}>{p}</li>
                 ))}
               </ul>
-              {/* Endpoints preview — mono block */}
+              {/* Endpoints preview — mono block(未上線:Coming Soon badge + 刪除線,
+                  唔可以誤當 live endpoint) */}
               <div className="mt-5 rounded-md border bg-card p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-text-muted">
+                    Endpoints
+                  </p>
+                  <span className="inline-flex items-center rounded-sm border border-dashed border-border-strong px-2 py-0.5 text-overline font-sans uppercase text-text-muted">
+                    即將開放 Coming Soon
+                  </span>
+                </div>
                 {/* 12px mono so all three endpoints fit the narrow column —
                     no clipped text, no native scrollbar */}
-                <p className="font-mono text-[12px] leading-6 text-text-secondary">
+                <p className="mt-2 font-mono text-[12px] leading-6 text-text-muted line-through decoration-border-strong">
                   GET /api/public/items
                   <br />
                   GET /api/public/daily
@@ -354,7 +363,7 @@ export default function Developers() {
                   GET /api/public/hot-topics
                 </p>
                 <p className="mt-3 border-t border-border pt-2 text-caption text-text-muted">
-                  MCP server 封裝中
+                  MCP server 封裝中 — 上線後優先名單會員第一批收到接入文件
                 </p>
               </div>
             </div>

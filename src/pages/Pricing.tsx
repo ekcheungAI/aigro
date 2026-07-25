@@ -61,7 +61,7 @@ const TIERS: Tier[] = [
       "專家活動優先席",
     ],
     ctaLabel: "成為創始會員",
-    ctaTo: "/ask",
+    ctaTo: "/join?plan=pro",
   },
   {
     id: "vip",
@@ -79,7 +79,7 @@ const TIERS: Tier[] = [
       "專屬會員活動邀請",
     ],
     ctaLabel: "申請 VIP",
-    ctaTo: "/experts",
+    ctaTo: "/join?plan=vip",
   },
 ];
 

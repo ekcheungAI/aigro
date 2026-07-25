@@ -20,6 +20,40 @@ const EXPERT_INITIALS: Record<string, string> = {
   "elvin-cheung": "EC",
 };
 
+/** 檔案編輯按專家 slug 持久化(reload 唔會還原)— key:`aigro-portal-profile-<slug>` */
+interface ProfileDraft {
+  displayName: string;
+  title: string;
+  bio: string;
+  specialties: string[];
+  brandColor: string;
+  quote: string;
+}
+
+function profileKey(slug: string) {
+  return `aigro-portal-profile-${slug}`;
+}
+
+function loadProfileDraft(slug: string): ProfileDraft | null {
+  try {
+    const raw = window.localStorage.getItem(profileKey(slug));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<ProfileDraft>;
+    if (typeof parsed.displayName !== "string" || !Array.isArray(parsed.specialties))
+      return null;
+    return {
+      displayName: parsed.displayName,
+      title: typeof parsed.title === "string" ? parsed.title : "",
+      bio: typeof parsed.bio === "string" ? parsed.bio : "",
+      specialties: parsed.specialties.filter((s): s is string => typeof s === "string"),
+      brandColor: typeof parsed.brandColor === "string" ? parsed.brandColor : "",
+      quote: typeof parsed.quote === "string" ? parsed.quote : "",
+    };
+  } catch {
+    return null;
+  }
+}
+
 /**
  * PortalProfile `/portal/profile` — 檔案自訂。
  * 左:編輯表單(顯示名稱/頭銜/bio/專長 chips/品牌色/一句觀點);
@@ -28,18 +62,21 @@ const EXPERT_INITIALS: Record<string, string> = {
 export default function PortalProfile() {
   const { slug, expert } = usePortalExpert();
   const toast = useAdminToast();
+  const [saved] = useState<ProfileDraft | null>(() => loadProfileDraft(slug));
 
   const [displayName, setDisplayName] = useState(
-    [expert.nameZh, expert.nameEn].filter(Boolean).join(" ")
+    saved?.displayName ?? [expert.nameZh, expert.nameEn].filter(Boolean).join(" ")
   );
-  const [title, setTitle] = useState(expert.title);
-  const [bio, setBio] = useState(expert.bio ?? "");
-  const [specialties, setSpecialties] = useState<string[]>(expert.specialties);
+  const [title, setTitle] = useState(saved?.title ?? expert.title);
+  const [bio, setBio] = useState(saved?.bio ?? expert.bio ?? "");
+  const [specialties, setSpecialties] = useState<string[]>(
+    saved?.specialties ?? expert.specialties
+  );
   const [newSpec, setNewSpec] = useState("");
   const [brandColor, setBrandColor] = useState(
-    expert.brandColor ?? BRAND_PRESETS[0].hex
+    saved?.brandColor || expert.brandColor || BRAND_PRESETS[0].hex
   );
-  const [quote, setQuote] = useState(expert.quote ?? "");
+  const [quote, setQuote] = useState(saved?.quote ?? expert.quote ?? "");
 
   const addSpec = () => {
     const v = newSpec.trim();
@@ -56,7 +93,20 @@ export default function PortalProfile() {
     setSpecialties((list) => list.filter((x) => x !== s));
 
   const save = () => {
-    toast("已更新(示範模式 — 接 Supabase 後即時生效)");
+    const draft: ProfileDraft = {
+      displayName,
+      title,
+      bio,
+      specialties,
+      brandColor,
+      quote,
+    };
+    try {
+      window.localStorage.setItem(profileKey(slug), JSON.stringify(draft));
+      toast("已儲存 — 檔案變更已保留,reload 都唔會甩");
+    } catch {
+      toast("儲存失敗 — 瀏覽器 localStorage 唔可用");
+    }
   };
 
   const initials = EXPERT_INITIALS[slug] ?? "·";
@@ -310,7 +360,8 @@ export default function PortalProfile() {
               </div>
             )}
             <p className="mt-4 text-xs text-text-muted">
-              預覽為示範模式即時渲染 — 儲存後接 Supabase 即時生效。
+              預覽為即時渲染 — 儲存後變更會保留喺呢個瀏覽器(localStorage),接
+              Supabase 後同步上線。
             </p>
           </div>
         </section>
