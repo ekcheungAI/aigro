@@ -227,6 +227,7 @@ export interface AihotDailyPick {
   title: string;
   source: string;
   permalink: string;
+  originalUrl: string | null;
   score: number;
 }
 
@@ -239,6 +240,7 @@ export const aihotDailyPicks: AihotDailyPick[] = [...aihotInsights]
     title: i.title,
     source: i.source,
     permalink: i.permalink,
+    originalUrl: i.originalUrl,
     score: i.score,
   }));
 
