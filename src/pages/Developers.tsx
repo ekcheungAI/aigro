@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, Check, Copy, Cpu, Sparkles, Vote, Wrench } from "lucide-react";
 import Reveal from "@/components/Reveal";
 import CategoryChip from "@/components/CategoryChip";
+import { captureWaitlist } from "@/lib/waitlist";
 
 /* ================= 資料 ================= */
 
@@ -100,6 +101,14 @@ function SignupCard({ initialInterests = [] }: { initialInterests?: string[] }) 
     } catch {
       /* localStorage 不可用時仍顯示成功態(前端原型) */
     }
+    // 真實收集:寫入 Supabase waitlist(無 env / 離線 → 靜默,localStorage 已記低)
+    void captureWaitlist({
+      email: rec.email,
+      kind: "mcp",
+      vertical: rec.interests.join(", ") || null,
+      role: rec.role,
+      source: "developers-mcp",
+    });
     setRecord(rec);
   };
 

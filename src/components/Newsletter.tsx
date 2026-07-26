@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Check } from "lucide-react";
 import Reveal from "@/components/Reveal";
+import { captureWaitlist } from "@/lib/waitlist";
 
 /**
  * Newsletter Block (design.md §6.9): surface full-width band + border top/bottom.
@@ -34,7 +35,14 @@ export default function Newsletter() {
               className="flex gap-3"
               onSubmit={(e) => {
                 e.preventDefault();
-                if (email.trim()) setSubscribed(true);
+                if (!email.trim()) return;
+                // 真實收集:寫入 Supabase waitlist(無 env / 離線 → 靜默)
+                void captureWaitlist({
+                  email: email.trim(),
+                  kind: "newsletter",
+                  source: "newsletter-band",
+                });
+                setSubscribed(true);
               }}
             >
               <label htmlFor="newsletter-email" className="sr-only">

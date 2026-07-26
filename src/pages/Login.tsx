@@ -18,9 +18,11 @@ import {
   loadMember,
   ROLE_LABELS,
   saveMember,
+  sendMagicLink,
   validEmail,
 } from "@/components/auth/member";
 import type { MemberRole, MemberTier } from "@/components/auth/member";
+import { supabaseReady } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 
 const BENEFITS = [
@@ -60,6 +62,9 @@ export default function Login() {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [state, setState] = useState<SubmitState>("idle");
   const [demoOpen, setDemoOpen] = useState(false);
+  // magic-link 真發送狀態(supabaseReady 時用)
+  const [linkSending, setLinkSending] = useState(false);
+  const [linkSent, setLinkSent] = useState(false);
 
   const validate = () => {
     const next: typeof errors = {};
@@ -79,7 +84,7 @@ export default function Login() {
       const existing = loadMember();
       saveMember(
         existing && existing.email === email.trim()
-          ? existing
+          ? { ...existing, demo: true }
           : {
               name: email.trim().split("@")[0] || "會員",
               email: email.trim(),
@@ -89,6 +94,7 @@ export default function Login() {
               tier: "free",
               joinedAt: Date.now(),
               notifications: { ...DEFAULT_NOTIFICATIONS },
+              demo: true,
             }
       );
       showToast("登入成功(示範模式)");
@@ -105,7 +111,7 @@ export default function Login() {
     const existing = loadMember();
     saveMember(
       existing && existing.email === account.email
-        ? { ...existing, role: account.role, tier: account.tier }
+        ? { ...existing, role: account.role, tier: account.tier, demo: true }
         : {
             name: account.name,
             email: account.email,
@@ -115,6 +121,7 @@ export default function Login() {
             tier: account.tier,
             joinedAt: Date.now(),
             notifications: { ...DEFAULT_NOTIFICATIONS },
+            demo: true,
           }
     );
     showToast(
@@ -125,13 +132,26 @@ export default function Login() {
     window.setTimeout(() => navigate("/account"), 700);
   };
 
-  const handleMagicLink = () => {
+  const handleMagicLink = async () => {
     if (!validEmail(email)) {
       setErrors((prev) => ({ ...prev, email: "先輸入 Email,先可以寄登入連結" }));
       return;
     }
     setErrors({});
-    showToast(`登入連結已發送至 ${email.trim()}(示範模式)`);
+    if (!supabaseReady) {
+      // 示範模式:無 Supabase env,維持本地假裝發送
+      showToast(`登入連結已發送至 ${email.trim()}(示範模式)`);
+      return;
+    }
+    setLinkSending(true);
+    const res = await sendMagicLink(email);
+    setLinkSending(false);
+    if (res.ok) {
+      setLinkSent(true);
+      showToast("連結已發送,去你嘅信箱click 連結登入");
+    } else {
+      showToast(`發送失敗:${res.error ?? "請稍後再試"}`);
+    }
   };
 
   return (
@@ -235,10 +255,26 @@ export default function Login() {
             <button
               type="button"
               onClick={handleMagicLink}
-              className="press inline-flex h-12 items-center justify-center gap-2 rounded-md border border-border-strong text-label text-text-primary hover:border-ink hover:text-ink"
+              disabled={linkSending}
+              className={cn(
+                "press inline-flex h-12 items-center justify-center gap-2 rounded-md border text-label disabled:opacity-80",
+                linkSent
+                  ? "border-transparent bg-lime-soft text-ink"
+                  : "border-border-strong text-text-primary hover:border-ink hover:text-ink"
+              )}
             >
-              <Mail className="h-4 w-4" strokeWidth={1.5} />
-              用 Email 連結登入
+              {linkSending ? (
+                <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />
+              ) : linkSent ? (
+                <Check className="h-4 w-4" strokeWidth={2} />
+              ) : (
+                <Mail className="h-4 w-4" strokeWidth={1.5} />
+              )}
+              {linkSending
+                ? "發送中…"
+                : linkSent
+                  ? "連結已發送,去你嘅信箱"
+                  : "用 Email 連結登入"}
             </button>
           </form>
 
@@ -298,7 +334,9 @@ export default function Login() {
             </Link>
           </p>
           <p className="mt-3 text-caption text-text-muted">
-            示範模式 — Supabase Auth 即將接入
+            {supabaseReady
+              ? "用 Email 連結登入 — 無需密碼;示範帳號仍可一 click 體驗"
+              : "示範模式 — 未設定 Supabase env,資料只存喺瀏覽器"}
           </p>
         </div>
       </motion.div>

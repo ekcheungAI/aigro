@@ -33,6 +33,7 @@ import {
   validEmail,
 } from "@/components/auth/member";
 import type { AigroMember } from "@/components/auth/member";
+import { captureWaitlist } from "@/lib/waitlist";
 
 /**
  * 「關於此分身」卡 — v1.21 premium speaker card。
@@ -113,6 +114,12 @@ function CaptureStrip({
       return;
     }
     setMember(registerFreeMember(email));
+    // 真實收集:寫入 Supabase waitlist(無 env / 離線 → 靜默)
+    void captureWaitlist({
+      email: email.trim(),
+      kind: "newsletter",
+      source: "about-persona-capture",
+    });
     setJustRegistered(true);
     onToast("登記成功 — 專家而家可以跟進你嘅對話。");
   };

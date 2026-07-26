@@ -5,6 +5,8 @@
  */
 
 import type { AiReply } from "./AiMessage";
+import { supabase, supabaseReady, getAnonId } from "@/lib/supabase";
+import { getAuthUserId } from "@/components/auth/member";
 
 export interface ChatMessage {
   id: number;
@@ -25,6 +27,11 @@ export interface ChatSession {
    * 模糊追問(「咁然後呢?」「點樣開始?」)會承接呢個話題繼續;per-session only。
    */
   lastTopicId?: string;
+  /**
+   * Supabase `conversations.id`(P0 logging)— 第一條訊息異步建立後回填,
+   * 之後每條訊息都寫入對應 `messages.conversation_id`。無 env / 離線 = undefined。
+   */
+  conversationId?: string;
 }
 
 export interface SessionStore {
@@ -63,6 +70,7 @@ function sanitizeSession(raw: unknown): ChatSession | null {
     updatedAt: typeof s.updatedAt === "number" ? s.updatedAt : Date.now(),
     messages: s.messages.slice(-MESSAGE_LIMIT),
     ...(typeof s.lastTopicId === "string" ? { lastTopicId: s.lastTopicId } : {}),
+    ...(typeof s.conversationId === "string" ? { conversationId: s.conversationId } : {}),
   };
 }
 
@@ -131,6 +139,141 @@ export function saveSessionStore(store: SessionStore): void {
   }
 }
 
+/* ================= Supabase 對話 logging(P0)=================
+ * localStorage 仍然係讀取路徑(今輪唔 migrate);呢度係**額外**嘅
+ * fire-and-forget 寫入 — 每個 session 第一條訊息建 `conversations` row,
+ * 每條訊息(user + AI)寫 `messages` row。離線 / 無 env 完全靜默,唔阻塞 UI。
+ */
+
+/** sessionId ↔ conversations.id 映射(持久,reload 後繼續寫入同一對話) */
+const CONV_MAP_KEY = "aigro-ask-conv-map";
+let convMapCache: Map<string, string> | null = null;
+const pendingConv = new Map<string, Promise<string | null>>();
+
+function loadConvMap(): Map<string, string> {
+  if (convMapCache) return convMapCache;
+  convMapCache = new Map();
+  try {
+    const raw = window.localStorage.getItem(CONV_MAP_KEY);
+    if (raw) {
+      const obj = JSON.parse(raw) as Record<string, unknown>;
+      for (const [k, v] of Object.entries(obj)) {
+        if (typeof v === "string") convMapCache.set(k, v);
+      }
+    }
+  } catch {
+    /* ignore */
+  }
+  return convMapCache;
+}
+
+function convMapGet(sessionId: string): string | null {
+  return loadConvMap().get(sessionId) ?? null;
+}
+
+function convMapSet(sessionId: string, conversationId: string): void {
+  const m = loadConvMap();
+  m.set(sessionId, conversationId);
+  try {
+    window.localStorage.setItem(CONV_MAP_KEY, JSON.stringify(Object.fromEntries(m)));
+  } catch {
+    /* private mode — in-memory 仍然 work */
+  }
+}
+
+/** AiReply.source → messages.source(schema 註釋:kb / llm / guardrail / scripted) */
+function mapMessageSource(source: AiReply["source"]): string {
+  if (source === "general") return "scripted";
+  return source ?? "kb";
+}
+
+/** 取得(或建立)呢個 session 嘅 conversations.id;失敗 / 無 env → null */
+function ensureConversationId(
+  sessionId: string,
+  personaKey: string,
+  title: string
+): Promise<string | null> {
+  if (!supabase || !supabaseReady) return Promise.resolve(null);
+  const cached = convMapGet(sessionId);
+  if (cached) return Promise.resolve(cached);
+  const pending = pendingConv.get(sessionId);
+  if (pending) return pending;
+
+  const p = (async (): Promise<string | null> => {
+    try {
+      const uid = getAuthUserId();
+      const { data, error } = await supabase
+        .from("conversations")
+        .insert({
+          user_id: uid,
+          anon_id: uid ? null : getAnonId(),
+          persona: personaKey,
+          title,
+        })
+        .select("id")
+        .single();
+      if (error || !data) return null;
+      convMapSet(sessionId, data.id as string);
+      return data.id as string;
+    } catch {
+      return null;
+    }
+  })();
+  pendingConv.set(sessionId, p);
+  void p.finally(() => pendingConv.delete(sessionId));
+  return p;
+}
+
+/** 一輪問答 → messages rows(user + assistant) */
+function roundToMessageRows(
+  conversationId: string,
+  round: ChatMessage[]
+): Record<string, unknown>[] {
+  const rows: Record<string, unknown>[] = [];
+  for (const m of round) {
+    if (m.role === "user") {
+      rows.push({
+        conversation_id: conversationId,
+        role: "user",
+        content: m.text ?? "",
+        source: "kb",
+        confidence: null,
+        citations: [],
+      });
+    } else if (m.reply) {
+      rows.push({
+        conversation_id: conversationId,
+        role: "assistant",
+        content: m.reply.text,
+        source: mapMessageSource(m.reply.source),
+        confidence: m.reply.confidence,
+        citations: m.reply.citations,
+      });
+    }
+  }
+  return rows;
+}
+
+/** fire-and-forget:確保 conversation 存在,然後寫入呢一輪嘅 messages */
+function logRoundToSupabase(
+  sessionId: string,
+  personaKey: string,
+  title: string,
+  round: ChatMessage[]
+): void {
+  if (!supabase || !supabaseReady) return;
+  void ensureConversationId(sessionId, personaKey, title)
+    .then(async (conversationId) => {
+      if (!conversationId || !supabase) return;
+      const rows = roundToMessageRows(conversationId, round);
+      if (rows.length === 0) return;
+      await supabase.from("messages").insert(rows);
+    })
+    .catch(() => {
+      /* 離線靜默 */
+    });
+}
+
 /**
  * 追加一輪問答;無 active session 時開新 session(第一條問題做標題)。
  * 回傳新 store + 新 AI 訊息 id — 只有呢個 id 會行打字機;還原嘅歷史訊息即刻渲染。
@@ -155,13 +298,18 @@ export function appendRound(
 
   const idx = activeId ? list.findIndex((s) => s.id === activeId) : -1;
   if (idx >= 0) {
+    const prior = list[idx];
+    const convId = convMapGet(prior.id) ?? prior.conversationId;
     const updated: ChatSession = {
-      ...list[idx],
+      ...prior,
       updatedAt: now,
-      messages: [...list[idx].messages, ...round].slice(-MESSAGE_LIMIT),
+      messages: [...prior.messages, ...round].slice(-MESSAGE_LIMIT),
       ...(topicId ? { lastTopicId: topicId } : {}),
+      ...(convId ? { conversationId: convId } : {}),
     };
     const nextList = [updated, ...list.filter((_, i) => i !== idx)];
+    // P0:fire-and-forget 寫入 Supabase(離線 / 無 env 靜默)
+    void logRoundToSupabase(updated.id, personaKey, updated.title, round);
     return {
       aiMessageId,
       store: {
@@ -179,6 +327,8 @@ export function appendRound(
     messages: round,
     ...(topicId ? { lastTopicId: topicId } : {}),
   };
+  // P0:第一條訊息 — fire-and-forget 建 conversations row + 寫 messages
+  void logRoundToSupabase(created.id, personaKey, created.title, round);
   return {
     aiMessageId,
     store: {

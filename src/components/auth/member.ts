@@ -1,9 +1,17 @@
 /**
- * AIGRO 會員 — 示範模式 localStorage 持久化。
- * Supabase Auth 接入時:將 loadMember/saveMember/clearMember 換成
- * supabase.auth.getSession() / signUp / signOut,consumer(Navbar、
- * Login、Join、Account)唔使改 — 全部經呢個 module 出入。
+ * AIGRO 會員 — Supabase Auth(magic link)+ localStorage 快取。
+ *
+ * 雙層設計(P0 接入,graceful fallback):
+ * - 有 env + 已登入 → `profiles` 表係 source of truth,localStorage 係
+ *   同步快取(令 sync `loadMember()` 嘅舊 consumer 零改動繼續用得)。
+ * - 無 env / 離線 / demo 帳號 → 純 localStorage 示範模式,全部照行。
+ *
+ * `initAuth()` 訂閱 `onAuthStateChange`,登入後 fetch/upsert `profiles`
+ * 並 broadcast 俾 `useMember()` 訂閱者(Navbar / Account 重render)。
  */
+
+import { supabase, supabaseReady } from "@/lib/supabase";
+import type { User } from "@supabase/supabase-js";
 
 export type MemberTier = "free" | "pro" | "vip";
 
@@ -87,6 +95,11 @@ export interface AigroMember {
   social?: string;
   /** 點知我哋 */
   referral?: ReferralSource;
+  /**
+   * 示範/訪客帳號標記 — demo 帳號(Login/Access/Portal gate 一 click 登入)
+   * 只存本機,唔會寫入 Supabase;真 magic-link 會員無呢個 flag。
+   */
+  demo?: boolean;
 }
 
 export const MEMBER_KEY = "aigro-member";
@@ -183,6 +196,7 @@ function sanitize(raw: unknown): AigroMember | null {
       : undefined,
     social: cleanString(m.social),
     referral: isReferralSource(m.referral) ? m.referral : undefined,
+    demo: m.demo === true ? true : undefined,
   };
 }
 
@@ -201,6 +215,9 @@ export function saveMember(member: AigroMember): void {
   } catch {
     /* private mode — 示範模式靜默失敗 */
   }
+  notifyMember();
+  // 已登入(非 demo)時同步去 profiles 表;fire-and-forget,離線靜默
+  void syncProfileToSupabase(member);
 }
 
 export function clearMember(): void {
@@ -208,6 +225,298 @@ export function clearMember(): void {
     window.localStorage.removeItem(MEMBER_KEY);
   } catch {
     /* noop */
+  }
+  notifyMember();
+  // 真 magic-link session 都一齊登出;fire-and-forget
+  if (supabase) {
+    supabase.auth.signOut().catch(() => {
+      /* 離線靜默 */
+    });
+  }
+}
+
+/* ================= Supabase Auth(P0)=================
+ * magic-link 登入 + profiles 表同步 + auth state listener。
+ * 全部 grace­ful:無 env / 離線 → 純 localStorage 示範模式。
+ */
+
+/** profiles 表 row 形狀(冇 generated types,手寫對應) */
+interface ProfileRow {
+  id: string;
+  email: string;
+  name: string | null;
+  role: MemberRole | null;
+  tier: MemberTier | null;
+  persona: string | null;
+  interests: string[] | null;
+  goals: string[] | null;
+  company: string | null;
+  role_title: string | null;
+  team_size: string | null;
+  city: string | null;
+  social: string | null;
+  referral: string | null;
+  notifications: Partial<MemberNotifications> | null;
+  expert_slug: string | null;
+  created_at: string | null;
+}
+
+/* ---------------- 事件廣播(Navbar / Account 重render) ---------------- */
+
+type MemberListener = (member: AigroMember | null) => void;
+const memberListeners = new Set<MemberListener>();
+
+/** 訂閱會員態變化;回傳 unsubscribe。useMember() 用呢個。 */
+export function subscribeMember(listener: MemberListener): () => void {
+  memberListeners.add(listener);
+  return () => {
+    memberListeners.delete(listener);
+  };
+}
+
+function notifyMember(): void {
+  const m = loadMember();
+  memberListeners.forEach((l) => {
+    try {
+      l(m);
+    } catch {
+      /* listener error 唔影響其他 */
+    }
+  });
+}
+
+/* ---------------- 當前 auth user(畀 sessions.ts 記對話用) ---------------- */
+
+let currentUserId: string | null = null;
+
+/** 已登入 Supabase user id;未登入 / 示範模式 = null。initAuth() 維護。 */
+export function getAuthUserId(): string | null {
+  return currentUserId;
+}
+
+/* ---------------- pending profile(magic-link 空窗期嘅 onboarding 欄位) ---------------- */
+
+const PENDING_PROFILE_KEY = "aigro-pending-profile";
+
+/**
+ * Join 完成後暫存 onboarding 欄位(name/interests/goals/persona/tier)。
+ * magic-link 要clickemail 先有 session,呢啲欄位等 `initAuth` 喺
+ * SIGNED_IN 時先 upsert 入 profiles。
+ */
+export function savePendingProfile(fields: Partial<AigroMember>): void {
+  try {
+    window.localStorage.setItem(PENDING_PROFILE_KEY, JSON.stringify(fields));
+  } catch {
+    /* noop */
+  }
+}
+
+function readPendingProfile(): Partial<AigroMember> | null {
+  try {
+    const raw = window.localStorage.getItem(PENDING_PROFILE_KEY);
+    return raw ? (JSON.parse(raw) as Partial<AigroMember>) : null;
+  } catch {
+    return null;
+  }
+}
+
+function clearPendingProfile(): void {
+  try {
+    window.localStorage.removeItem(PENDING_PROFILE_KEY);
+  } catch {
+    /* noop */
+  }
+}
+
+/* ---------------- member ↔ profiles 映射 ---------------- */
+
+function memberToProfile(member: AigroMember, userId: string): Record<string, unknown> {
+  return {
+    id: userId,
+    email: member.email,
+    name: member.name,
+    role: member.role,
+    tier: member.tier,
+    persona: member.persona,
+    interests: member.interests,
+    goals: member.goals ?? [],
+    company: member.company ?? null,
+    role_title: member.roleTitle ?? null,
+    team_size: member.teamSize ?? null,
+    city: member.city ?? "香港",
+    social: member.social ?? null,
+    referral: member.referral ?? null,
+    notifications: member.notifications,
+  };
+}
+
+function profileToMember(row: ProfileRow): AigroMember {
+  const clean = sanitize({
+    name: row.name ?? undefined,
+    email: row.email,
+    interests: row.interests ?? [],
+    persona: row.persona ?? undefined,
+    role: row.role ?? undefined,
+    tier: row.tier ?? undefined,
+    joinedAt: row.created_at ? Date.parse(row.created_at) : Date.now(),
+    notifications: row.notifications ?? undefined,
+    company: row.company ?? undefined,
+    roleTitle: row.role_title ?? undefined,
+    teamSize: row.team_size ?? undefined,
+    city: row.city ?? undefined,
+    goals: row.goals ?? undefined,
+    social: row.social ?? undefined,
+    referral: row.referral ?? undefined,
+  });
+  // sanitize 保證非 null(email 必填);雙重保險
+  return (
+    clean ?? {
+      name: row.email.split("@")[0] || "會員",
+      email: row.email,
+      interests: [],
+      persona: null,
+      role: "free",
+      tier: "free",
+      joinedAt: Date.now(),
+      notifications: { ...DEFAULT_NOTIFICATIONS },
+    }
+  );
+}
+
+/** 寫入 localStorage 快取 + 廣播(唔觸發 supabase 同步,避免循環) */
+function writeMemberCache(member: AigroMember): void {
+  try {
+    window.localStorage.setItem(MEMBER_KEY, JSON.stringify(member));
+  } catch {
+    /* noop */
+  }
+  notifyMember();
+}
+
+/**
+ * 將 member upsert 去 profiles(只限已登入 + 非 demo + email 夾 session)。
+ * saveMember 自動 call;demo / 訪客 / 離線 → skip。
+ */
+async function syncProfileToSupabase(member: AigroMember): Promise<void> {
+  if (!supabase || !supabaseReady || member.demo) return;
+  try {
+    const { data } = await supabase.auth.getSession();
+    const user = data.session?.user;
+    if (!user || !user.email || user.email !== member.email) return;
+    await supabase
+      .from("profiles")
+      .upsert(memberToProfile(member, user.id), { onConflict: "id" });
+  } catch {
+    /* 離線靜默 — local 快取仍然有效 */
+  }
+}
+
+/** 登入後 fetch(或建立)profiles row → 寫入 local 快取 + 廣播 */
+async function hydrateProfile(user: User): Promise<void> {
+  if (!supabase) return;
+  try {
+    const { data: row } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .maybeSingle();
+    const pending = readPendingProfile();
+    const email = user.email ?? pending?.email ?? "";
+
+    if (!row) {
+      // 第一次登入:用 pending(Join onboarding)或 email 預設建立 profile
+      const seed = sanitize({
+        interests: [],
+        persona: null,
+        role: "free",
+        tier: "free",
+        joinedAt: Date.now(),
+        notifications: { ...DEFAULT_NOTIFICATIONS },
+        ...pending,
+        email,
+      });
+      if (!seed) return;
+      await supabase
+        .from("profiles")
+        .upsert(memberToProfile(seed, user.id), { onConflict: "id" });
+      clearPendingProfile();
+      writeMemberCache(seed);
+      return;
+    }
+
+    // 已有 profile:食埋 pending(如有)再更新,然後快取
+    let member = profileToMember(row as ProfileRow);
+    if (pending) {
+      member = sanitize({ ...member, ...pending, email: member.email }) ?? member;
+      await supabase
+        .from("profiles")
+        .upsert(memberToProfile(member, user.id), { onConflict: "id" });
+      clearPendingProfile();
+    }
+    writeMemberCache(member);
+  } catch {
+    /* 離線靜默 */
+  }
+}
+
+let authInitialized = false;
+
+/**
+ * 啟動 Supabase auth listener(app 入口 call 一次,idempotent)。
+ * - hydrate 現有 session
+ * - SIGNED_IN → fetch/upsert profiles → 快取 + 廣播
+ * - SIGNED_OUT → 清快取 + 廣播
+ * 無 env → no-op(示範模式)。
+ */
+export function initAuth(): void {
+  if (!supabase || !supabaseReady || authInitialized) return;
+  authInitialized = true;
+
+  void supabase.auth
+    .getSession()
+    .then(({ data }) => {
+      const user = data.session?.user ?? null;
+      currentUserId = user?.id ?? null;
+      if (user) void hydrateProfile(user);
+    })
+    .finally(() => {
+      // 即使係訪客(無 session)都廣播一次,俾 useMember 結束 loading
+      notifyMember();
+    });
+
+  supabase.auth.onAuthStateChange((event, session) => {
+    const user = session?.user ?? null;
+    currentUserId = user?.id ?? null;
+    if (event === "SIGNED_IN" && user) {
+      void hydrateProfile(user);
+    } else if (event === "SIGNED_OUT") {
+      try {
+        window.localStorage.removeItem(MEMBER_KEY);
+      } catch {
+        /* noop */
+      }
+      notifyMember();
+    }
+  });
+}
+
+/**
+ * 發送 magic-link 登入 email。回傳 ok / error(離線或無 env → ok:false)。
+ * 成功後用戶要clickemail 連結先建立 session(之後 initAuth 接手)。
+ */
+export async function sendMagicLink(
+  email: string
+): Promise<{ ok: boolean; error?: string }> {
+  if (!supabase || !supabaseReady) return { ok: false, error: "offline" };
+  try {
+    const { error } = await supabase.auth.signInWithOtp({
+      email: email.trim(),
+      options: { emailRedirectTo: window.location.origin },
+    });
+    if (error) return { ok: false, error: error.message };
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "unknown" };
   }
 }
 

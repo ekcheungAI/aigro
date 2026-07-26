@@ -15,9 +15,12 @@ import {
   DEFAULT_NOTIFICATIONS,
   roleFromTier,
   saveMember,
+  savePendingProfile,
+  sendMagicLink,
   validEmail,
 } from "@/components/auth/member";
 import type { MemberTier } from "@/components/auth/member";
+import { supabaseReady } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 
 const STEP_LABELS = ["建立帳號", "揀你嘅戰場", "揀方案"] as const;
@@ -91,6 +94,8 @@ export default function Join() {
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [done, setDone] = useState(false);
+  // magic-link 成功發送(有 env 時)— 成功畫面提示去信箱click 連結
+  const [magicSent, setMagicSent] = useState(false);
 
   // Step 1
   const [name, setName] = useState("");
@@ -133,8 +138,8 @@ export default function Join() {
     }
   };
 
-  const finish = () => {
-    saveMember({
+  const finish = async () => {
+    const member = {
       name: name.trim(),
       email: email.trim(),
       interests,
@@ -144,7 +149,23 @@ export default function Join() {
       tier,
       joinedAt: Date.now(),
       notifications: { ...DEFAULT_NOTIFICATIONS },
-    });
+      // 離線 / 無 env → 本地示範帳號;有 env → 行真 magic-link
+      ...(supabaseReady ? {} : { demo: true as const }),
+    };
+    saveMember(member);
+    if (supabaseReady) {
+      // magic-link 空窗期:暫存 onboarding 欄位,session 建立後 upsert 入 profiles
+      savePendingProfile({
+        name: member.name,
+        email: member.email,
+        interests,
+        persona,
+        tier,
+      });
+      const res = await sendMagicLink(member.email);
+      setMagicSent(res.ok);
+      if (!res.ok) showToast("登入連結發送失敗 — 帳號已喺本機建立,可稍後再登入");
+    }
     setDone(true);
   };
 
@@ -182,6 +203,12 @@ export default function Join() {
             {name.trim()},你嘅帳號已經開通。而家免費開始,隨時升級 —
             以下係你可以即刻做嘅三件事:
           </p>
+          {magicSent && (
+            <p className="mt-4 inline-flex items-center gap-2 rounded-md border border-lime bg-lime-soft px-4 py-2.5 text-caption text-ink">
+              <Check className="h-4 w-4 shrink-0" strokeWidth={2} />
+              登入連結已發送至 {email.trim()} — 去你嘅信箱click 連結,完成登入同步資料
+            </p>
+          )}
         </motion.div>
 
         <div className="mt-10 grid gap-4 sm:grid-cols-3">
@@ -479,7 +506,9 @@ export default function Join() {
         </div>
 
         <p className="mt-6 text-caption text-text-muted">
-          示範模式 — Supabase Auth 即將接入
+          {supabaseReady
+            ? "完成註冊後會收到登入連結 email — click 連結即同步你嘅資料"
+            : "示範模式 — 未設定 Supabase env,資料只存喺瀏覽器"}
         </p>
       </motion.div>
 

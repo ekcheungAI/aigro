@@ -2,10 +2,15 @@
 
 > v1.19 全站接入審計。誠實記錄而家邊啲係 MOCK(localStorage / 靜態 TS 數據)、
 > 邊啲已經 SUPABASE-READY(換一個 module 就上得線),同埋每區嘅接入點同工作量。
-> Schema 參考:`/mnt/agents/output/hk-ai-platform/docs/03-data-model.md`(pgvector-ready),
-> 路線圖:`docs/ROADMAP.md` Phase 1–2。
+> Schema 參考:`supabase/schema.sql`(已建立:profiles / waitlist / conversations /
+> messages / leads / items / sources / usage_logs + RLS),路線圖:`docs/ROADMAP.md` Phase 1–2。
 
-現狀總結:**全站零後端**。所有「帳號」係 localStorage JSON,所有內容係 `src/data/*.ts`
+> **v1.24 更新(P0 Supabase 接入):** Auth、Waitlist、Conversation logging 已**接入真 Supabase**
+> — 設 `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY`(見 `.env.example`)即行真後端;
+> 唔設 env 時全站自動回落 localStorage 示範模式(graceful,consumer 零改動)。
+> 下表「已接入(需 env)」= 有 env 即真、無 env 回落 demo。
+
+現狀總結(v1.19 基線):**當時全站零後端**。所有「帳號」係 localStorage JSON,所有內容係 `src/data/*.ts`
 靜態 export 或 AIHOT snapshot JSON。好處係全部 mock 都集中喺 3 個位置
 (`components/auth/member.ts`、`components/ask/sessions.ts`、`src/data/*`),
 接 Supabase 時 consumer 頁面基本唔使改。
@@ -16,16 +21,17 @@
 
 | 功能 | 位置 | 現狀 | Supabase 接入點 | 工作量 |
 |---|---|---|---|---|
-| Auth / 會員 | `src/components/auth/member.ts` | MOCK — localStorage `aigro-member`,4 級 role 已定型 | 換 `loadMember/saveMember/clearMember` 做 `supabase.auth` + `profiles` 表;consumer(Navbar/Login/Join/Account/PortalLayout/AdminLayout/Access)唔使改 | **S** |
-| Ask 對話 sessions | `src/components/ask/sessions.ts` | MOCK — localStorage `aigro-ask-sessions-v1` | `conversations` + `messages` 表;sessions.ts 換 async repo,Ask.tsx 已經係單一入口 | **S–M** |
+| Auth / 會員 | `src/components/auth/member.ts` | **已接入(需 env)** — magic-link `signInWithOtp` + `profiles` upsert;`initAuth()` 訂閱 auth state,localStorage 做同步快取;無 env 回落 demo | `useMember()` hook(Navbar/Account 已用);demo 帳號 `demo:true` 唔上 Supabase | **S**(done) |
+| Ask 對話 sessions | `src/components/ask/sessions.ts` | **已接入(需 env)** — localStorage 仍係讀取路徑;每 session 建 `conversations`、每訊息寫 `messages`(fire-and-forget) | 讀取路徑之後先 migrate 去 Supabase;匿名用 `getAnonId()`,登入後可 claim | **S–M**(write done) |
 | Ask personas( scripted 回答) | `src/data/personas.ts` + `demoPersonas.ts` | MOCK — keyword regex → scripted reply | RAG:LLM + pgvector 檢索 `expert_knowledge_base`;personas.ts 保留做語氣 system prompt 同 fallback | **L** |
 | 情報數據 | `src/data/aihot.ts` + `aihot-snapshot.json`、`insights.ts` | SEMI-MOCK — 真 AIHOT API snapshot(build 時 fetch),自家 pipeline 未起 | 自家 scraper(sources→fetch→dedupe→score)寫入 `items` 表;aihot.ts 介面已係 typed adapter,換 data source 即接 | **M** |
 | 專家目錄 | `src/data/experts.ts` | MOCK — 靜態 2 位專家 | `experts` 表;ExpertProfile/Experts 頁經 data module 讀,換 query 即接 | **S** |
 | 專家平台數據 | `src/data/portal-mock.ts` | MOCK — 按 slug 寫死嘅 stats/conversations/insights/socials | `experts` / `expert_insights` / `conversations` 表 + RLS(專家只見自己);`expertSlugForEmail()` 換 auth user ↔ expert join | **M** |
 | Admin 後台數據 | `src/data/admin-mock.ts` + `admin-mock2.ts` | MOCK — KPI、members、content queue、studio、expert 360 全部寫死 | 全部係上面各表嘅 **admin RLS views / 聚合 query**;唔需要新 table,需要 policies + views | **M** |
 | CRM leads | `admin-mock.ts` `crmLeads` | MOCK — 靜態 lead 列表 | `leads` 表:由 conversation events(高意圖訊息、預約 click)自動生成;AdminCRM + PortalLeads 共用 | **M** |
-| Emails | `admin-mock2.ts` `emailContacts`、Account notifications、`components/Newsletter.tsx`、ExpertProfile subscribe | MOCK — 訂閱狀態全部前端 state | `emails` 表(email, segment, status, source);waitlist/member/newsletter 三個入口統一寫入,admin 讀聚合 | **S** |
-| MCP 報名 | `src/pages/Developers.tsx` localStorage `aigro-mcp-signup` | MOCK — `{email, interests, role, ts}` 單機 JSON | `waitlist` 表;`save()` 一個 function 換 insert,Account.tsx 讀返名單狀態 | **S** |
+| Emails / newsletter | `components/Newsletter.tsx`、Ask capture、AboutPersonaCard capture、Account notifications | **已接入(需 env)** — 各 capture 入口寫 `waitlist`(kind='newsletter');Account notifications 跟 `profiles` 走 | `src/lib/waitlist.ts` `captureWaitlist()` 統一入口;訂閱狀態 segment 聚合之後先做 | **S**(done) |
+| MCP 報名 | `src/pages/Developers.tsx` localStorage `aigro-mcp-signup` | **已接入(需 env)** — `save()` 雙寫 localStorage + `waitlist`(kind='mcp', vertical=interests, role=builder) | `captureWaitlist()`;Account.tsx 名單狀態讀 Supabase 之後先做 | **S**(done) |
+| Expert / Partner interest | `src/lib/interest.ts`(Experts / Sources / DataPartnership 表單) | **已接入(需 env)** — `appendInterest()` 雙寫 localStorage + `waitlist`(kind='expert'/'partner' + note) | `captureWaitlist()` 統一入口 | **S**(done) |
 | Uploads(Studio 蒸餾) | `src/pages/admin/AdminStudio.tsx` file picker | MOCK — 揀咗 file 只係 UI state,冇上傳 | Supabase Storage bucket `kb-uploads` + distillation Edge Function(chunk→embed→`expert_knowledge_base`) | **M–L** |
 | Quota / 用量 | `admin-mock2.ts` `homepageQuota`、`PORTAL_INSIGHT_QUOTA = 3` | MOCK — 而家全站無限,quota 係展示用 | `usage_logs` + `api_quota_settings` 表;先記錄後執行,會員對話 quota 之後先上 | **M** |
 | Payments | `src/pages/Pricing.tsx` | MOCK — 純展示,CTA 去 /join | Stripe Checkout + `subscriptions` 表;webhook 更新 `profiles.tier`。展示層唔使改 | **M** |
@@ -34,22 +40,23 @@
 
 ## 分區詳情
 
-### 1. Auth / 會員 — `src/components/auth/member.ts`【S】
-**現狀:** `AigroMember`(name/email/role/tier/persona/notifications)存 localStorage。
-4 級制度 `MemberRole = free | founding | expert | admin` 已貫穿全站
-(Navbar 頭像、Login 示範帳號、PortalLayout / AdminLayout gate、Access 頁)。
-**換法(module 內 3 個 function,consumer 零改動):**
-- `loadMember()` → `supabase.auth.getSession()` + `profiles` select
-- `saveMember()` → signUp / profile upsert
-- `clearMember()` → `supabase.auth.signOut()`
-- 額外:session listener(`onAuthStateChange`)broadcast 俾 Navbar 重讀。
+### 1. Auth / 會員 — `src/components/auth/member.ts`【S · 已接入(需 env)】
+**v1.24 已接入:** magic-link(`sendMagicLink()` → `signInWithOtp`)+ `profiles` 表雙層。
+- `initAuth()`(main.tsx 入口 call)訂閱 `onAuthStateChange`:SIGNED_IN → fetch/upsert
+  `profiles` → 寫 localStorage 快取 + 廣播;SIGNED_OUT → 清快取。
+- `loadMember()` 維持 sync(讀 localStorage 快取)→ 舊 consumer(Login/Join/Access/
+  PortalLayout/AboutPersonaCard/Ask)零改動。
+- `saveMember()` 寫 localStorage + 廣播 + (已登入非 demo)upsert `profiles`;demo 帳號
+  `demo:true` 唔上 Supabase。`clearMember()` 清快取 + `signOut()`。
+- `useMember()` hook(`src/hooks/useMember.ts`)→ Navbar / Account 已改用,auth 狀態即時重render。
+- Join onboarding 欄位經 `savePendingProfile()` 暫存,magic-link session 建立後先 upsert。
 
-### 2. Ask sessions — `src/components/ask/sessions.ts`【S–M】
-**現狀:** `ChatSession[]`(id、persona key、messages、updatedAt)存
-`aigro-ask-sessions-v1`;有 legacy key 遷移邏輯,已係乾淨嘅 repo pattern。
-**換法:** 同介面換 async implementation:
-`conversations`(user_id, expert_id, started_at)+ `messages`(conversation_id, role, content, created_at)。
-訪客對話可先寫 `user_id = null` + anon id,登入後 claim。
+### 2. Ask sessions — `src/components/ask/sessions.ts`【S–M · write 已接入(需 env)】
+**v1.24 已接入(write path):** localStorage `aigro-ask-sessions-v1` 仍係**讀取**路徑;
+每個 session 第一條訊息建 `conversations` row(`user_id` 或 `anon_id` 来自 `getAnonId()`),
+每條訊息(user + assistant)寫 `messages`(role/content/source/confidence/citations)。
+全部 fire-and-forget、離線靜默;`sessionId ↔ conversationId` 映射持久喺 `aigro-ask-conv-map`。
+**下一步:** 讀取路徑 migrate 去 Supabase、登入後 claim 匿名對話。
 
 ### 3. Personas / AI 回答 — `src/data/personas.ts`【L】
 **現狀:** 每個分身 = keywords regex → `ScriptedReply`,無命中行 fallback
@@ -93,17 +100,17 @@ Admin 用 service role 或 `role = 'admin'` RLS policy。寫入側(審核通過/
 MCP 報名 → insert lead(user_id, expert_id, source_message_id, intent, score)。
 AdminCRM 睇全表,PortalLeads RLS 只見自己 expert。
 
-### 8. Emails — 三入口【S】
-**現狀:** Newsletter band(`components/Newsletter.tsx`)、ExpertProfile subscribe、
-Account notification toggles、`emailContacts` mock — 各散沙,冇持久化。
-**換法:** 單一 `emails` 表(email, segment, status active/unsubscribed,
-source waitlist/member/newsletter, created_at),三個入口統一 upsert;
-`admin-mock2.ts` 嘅 segment summary / engagement 變聚合 view。
+### 8. Emails / newsletter — capture 入口【S · 已接入(需 env)】
+**v1.24 已接入:** Newsletter band(`components/Newsletter.tsx`)、Ask 註冊捕捉卡、
+AboutPersonaCard capture — 三個入口全部經 `captureWaitlist()` 寫 `waitlist`(kind='newsletter')。
+Expert/partner 表單(`interest.ts`)→ kind='expert'/'partner' + note。
+Account notification toggles 跟 `profiles.notifications` 走(已登入即 sync)。
+**下一步:** segment / engagement 聚合 view 俾 admin;統一 `emails` 表可考慮合併入 waitlist。
 
-### 9. MCP 報名 — `src/pages/Developers.tsx`【S】
-**現狀:** `aigro-mcp-signup` localStorage 一條 JSON;Account.tsx 只 check 存在。
-**換法:** `waitlist` 表(email, interests text[], role, ts);`save()` 換 insert,
-登入後預填 email。呢個係最快見效嘅真實數據收集。
+### 9. MCP 報名 — `src/pages/Developers.tsx`【S · 已接入(需 env)】
+**v1.24 已接入:** `save()` 雙寫 — localStorage `aigro-mcp-signup`(Account.tsx 讀狀態)+
+`captureWaitlist()` insert `waitlist`(kind='mcp', vertical=interests join, role=builder 類型)。
+最快見效嘅真實數據收集,已上線。**下一步:** Account/admin 讀返 Supabase 名單狀態。
 
 ### 10. Uploads / 蒸餾 — `AdminStudio.tsx`【M–L】
 **現狀:** file picker 純 UI state;studioExperts mock 有 prompt versions 同測試回答。
@@ -191,15 +198,19 @@ create table items (
 
 ---
 
-## 即刻接得嘅(<1 日 quick wins)
+## 即刻接得嘅(<1 日 quick wins)— v1.24 全部完成 ✅
 
-1. **Auth** — member.ts 3 個 function 換 Supabase Auth(email magic link 已夠),
-   `profiles` 表一開,Login/Join/Account/Navbar/Access 全線即真。【S】
-2. **Waitlist 表** — Developers.tsx `save()` 一個 insert,
-   MCP 報名即刻變真實收集;Account 名單狀態同 admin 即刻有數睇。【S】
-3. **Conversation logging** — sessions.ts 寫入路徑加 fire-and-forget insert 去
-   `conversations`/`messages`(讀取仍可 localStorage 先行),對話數據即刻開始累積,
-   之後 CRM leads 同專家統計有原料。【S】
+1. **Auth** ✅(v1.24)— member.ts 接 Supabase Auth(email magic link)+ `profiles` 表,
+   Login/Join/Account/Navbar/Access 全線即真(需 env);無 env 回落 demo。
+2. **Waitlist 表** ✅(v1.24)— Developers.tsx MCP + Newsletter + Ask/About capture +
+   interest.ts(expert/partner)全部經 `captureWaitlist()` 寫 `waitlist` 表,真實收集開始。
+3. **Conversation logging** ✅(v1.24)— sessions.ts 寫入路徑加 fire-and-forget insert 去
+   `conversations`/`messages`(讀取仍 localStorage 先行),對話數據即刻開始累積,
+   之後 CRM leads 同專家統計有原料。
+
+**點樣開:** 複製 `.env.example` 做 `.env.local`(已填好真 project),`npm run dev` 即行真 Supabase;
+唔設 env → 全站 localStorage 示範模式。Schema 見 `supabase/schema.sql`(RLS 已開,anon 只能
+insert waitlist / 讀寫自己 conversations+messages / 讀寫自己 profiles)。
 
 ---
 

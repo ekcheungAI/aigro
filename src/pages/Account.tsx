@@ -13,11 +13,11 @@ import {
 import Toast, { useToast } from "@/components/auth/Toast";
 import QueryState from "@/components/QueryState";
 import ProfileEditor from "@/components/auth/ProfileEditor";
+import useMember from "@/hooks/useMember";
 import {
   clearMember,
   greeting,
   isFoundingTier,
-  loadMember,
   memberInitial,
   milestonesFor,
   profileCompletion,
@@ -31,6 +31,7 @@ import {
 import type { AigroMember, MemberRole } from "@/components/auth/member";
 import { loadSessionStore } from "@/components/ask/sessions";
 import { getPersona } from "@/data/personas";
+import { supabaseReady } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 
 const MCP_KEY = "aigro-mcp-signup";
@@ -142,7 +143,8 @@ export default function Account() {
   const navigate = useNavigate();
   const reduced = useReducedMotion();
   const { toast, showToast } = useToast();
-  const [member, setMember] = useState<AigroMember | null>(loadMember);
+  // 會員態 — useMember 響應式(saveMember/clearMember 廣播即時更新)
+  const { member } = useMember();
   const [editing, setEditing] = useState(false);
   const sessions = useMemo(collectSessions, []);
   const mcpSignedUp = useMemo(() => {
@@ -184,21 +186,19 @@ export default function Account() {
       ...member,
       notifications: { ...member.notifications, [key]: !member.notifications[key] },
     };
-    saveMember(next);
-    setMember(next);
+    saveMember(next); // 廣播 → useMember 自動更新
   };
 
   const logout = () => {
     clearMember();
-    showToast("已登出(示範模式)");
+    showToast("已登出");
     window.setTimeout(() => navigate("/"), 700);
   };
 
   /** 完善檔案儲存:persist + 重算完成度,新解鎖里程碑逐一 toast */
   const handleProfileSave = (next: AigroMember) => {
     const before = new Set(unlockedMilestones(member).map((ms) => ms.title));
-    saveMember(next);
-    setMember(next);
+    saveMember(next); // 廣播 → useMember 自動更新
     setEditing(false);
     const newly = unlockedMilestones(next).filter((ms) => !before.has(ms.title));
     showToast("檔案已儲存");
@@ -555,7 +555,9 @@ export default function Account() {
           </div>
           <p className="mt-6 flex items-center gap-2 text-caption text-text-muted">
             <Check className="h-3.5 w-3.5 text-ink" strokeWidth={2} />
-            資料只存喺你嘅瀏覽器 — Supabase Auth 即將接入
+            {supabaseReady
+              ? "已連接 Supabase — 檔案改動會同步到你嘅帳號"
+              : "資料只存喺你嘅瀏覽器 — 未設定 Supabase env(示範模式)"}
           </p>
         </section>
       </motion.div>

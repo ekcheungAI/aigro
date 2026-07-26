@@ -37,6 +37,7 @@ import {
 } from "@/components/auth/member";
 import type { AigroMember } from "@/components/auth/member";
 import { EASE_OUT_STRONG } from "@/components/Reveal";
+import { captureWaitlist } from "@/lib/waitlist";
 import { cn } from "@/lib/utils";
 
 /** 訪客第 3 條訊息後嘅註冊捕捉卡 — dismiss 後永不再顯示 */
@@ -188,6 +189,12 @@ export default function Ask() {
       notifications: { ...DEFAULT_NOTIFICATIONS },
     };
     saveMember(next);
+    // 真實收集:寫入 Supabase waitlist(無 env / 離線 → 靜默)
+    void captureWaitlist({
+      email,
+      kind: "newsletter",
+      source: "ask-capture",
+    });
     setMember(next);
     setCaptureError(null);
     showToast("已免費加入 — 對話紀錄會同步到你嘅帳號");
