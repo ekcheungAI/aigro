@@ -5,7 +5,6 @@ import { ArrowRight, Check, Copy, Cpu, Sparkles, Vote, Wrench } from "lucide-rea
 import Reveal from "@/components/Reveal";
 import CategoryChip from "@/components/CategoryChip";
 import { captureWaitlist } from "@/lib/waitlist";
-import { aihotAllInsights } from "@/data/aihot";
 
 /* ================= 資料 ================= */
 
@@ -50,7 +49,7 @@ const VERTICALS: VerticalMcp[] = [
     statusKind: "open",
     points: [
       "每日精選、hot-topics、日報 API",
-      `基於而家 ${aihotAllInsights.length}+ 則情報庫,每 30 分鐘更新`,
+      "基於而家 147+ 則情報庫,持續更新",
     ],
   },
   {

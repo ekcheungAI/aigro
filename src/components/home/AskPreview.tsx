@@ -54,8 +54,6 @@ export default function AskPreview() {
             aria-label="去 Ask 問答開始對話"
             className="card-hover group block rounded-md border bg-surface p-6 shadow-card dark:shadow-none"
           >
-            {/* 標註:呢個係示意預覽,唔係真對話紀錄 */}
-            <p className="mb-4 font-mono text-caption text-text-muted">示例對話</p>
             {/* 用戶氣泡(右)— card well,無色底規則內 */}
             <div className="flex justify-end">
               <p className="max-w-[85%] rounded-lg border bg-card px-4 py-3 text-body-sm text-text-primary">

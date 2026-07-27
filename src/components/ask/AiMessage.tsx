@@ -257,13 +257,7 @@ export default function AiMessage({
         >
           {reply.source === "llm" || reply.source === "general"
             ? "一般知識回覆・回答僅供參考"
-            : `${
-                reply.confidence >= 0.8
-                  ? "核心知識"
-                  : reply.confidence >= 0.6
-                    ? "相關知識"
-                    : "一般回答"
-              }・回答僅供參考`}
+            : `信心分數 ${reply.confidence.toFixed(2)}・回答僅供參考`}
           {lowConfidence && lowConfidenceAction && (
             <>
               {"・"}
