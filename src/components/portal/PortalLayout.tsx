@@ -1,15 +1,16 @@
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useState } from "react";
 import { Link, NavLink, Outlet } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowUpRight,
-  BadgeCheck,
   FlaskConical,
   LayoutDashboard,
+  Link2,
   Lock,
   Menu,
   Newspaper,
   Share2,
+  ShieldCheck,
   Target,
   UserRound,
   X,
@@ -17,28 +18,22 @@ import {
 import { cn } from "@/lib/utils";
 import { AdminToastProvider } from "@/components/admin/AdminToast";
 import MonogramAvatar from "@/components/MonogramAvatar";
-import {
-  DEFAULT_NOTIFICATIONS,
-  loadMember,
-  saveMember,
-} from "@/components/auth/member";
+import { getAuthUserId } from "@/components/auth/member";
 import type { AigroMember } from "@/components/auth/member";
+import { useMember } from "@/hooks/useMember";
+import { supabase } from "@/lib/supabase";
 import { experts } from "@/data/experts";
 import type { Expert } from "@/data/experts";
-import { studioExperts } from "@/data/admin-mock";
-import type { StudioExpert } from "@/data/admin-mock";
-import { expertSlugForEmail } from "@/data/portal-mock";
+import { useAdminQuery } from "@/components/admin/adminData";
 
 /* ---------------- Portal expert context ---------------- */
 
 export interface PortalExpertCtx {
   member: AigroMember;
-  /** experts.ts slug,如 "jimmy-lau" */
+  /** 專家 slug(profiles.expert_slug),如 "jimmy-lau" */
   slug: string;
-  /** 公開檔案(experts.ts) */
-  expert: Expert;
-  /** 工作室檔(admin-mock studioExperts) */
-  studio: StudioExpert;
+  /** 公開檔案(experts.ts 靜態站內資料);新專家未入檔時為 null */
+  expert: Expert | null;
 }
 
 const PortalExpertContext = createContext<PortalExpertCtx | null>(null);
@@ -65,6 +60,15 @@ const EXPERT_INITIALS: Record<string, string> = {
   "jimmy-lau": "JL",
   "elvin-cheung": "EC",
 };
+
+function initialsFor(slug: string): string {
+  if (EXPERT_INITIALS[slug]) return EXPERT_INITIALS[slug];
+  const parts = slug.split("-").filter(Boolean);
+  return parts
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase() ?? "")
+    .join("") || "EX";
+}
 
 function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   return (
@@ -121,7 +125,7 @@ function Wordmark() {
         </span>
       </div>
       <p className="mt-1.5 font-mono text-[10px] uppercase tracking-wider text-[#938D83]">
-        領航專家後台 · v1.18
+        領航專家後台 · Live data
       </p>
     </div>
   );
@@ -129,23 +133,7 @@ function Wordmark() {
 
 /* ---------------- 專家登入 gate ---------------- */
 
-function PortalGate() {
-  const demoLogin = (email: string) => {
-    const existing = loadMember();
-    saveMember({
-      name: email.startsWith("elvin") ? "Elvin Cheung" : "Jimmy Lau 劉泰麟",
-      email,
-      interests: existing?.interests ?? ["AI", "Technology"],
-      persona: existing?.persona ?? null,
-      role: "expert",
-      portalRole: "expert",
-      tier: existing?.tier ?? "vip",
-      joinedAt: existing?.joinedAt ?? Date.now(),
-      notifications: existing?.notifications ?? DEFAULT_NOTIFICATIONS,
-    });
-    window.location.reload();
-  };
-
+function PortalGate({ loading }: { loading: boolean }) {
   return (
     <div className="flex min-h-[100dvh] items-center justify-center px-4 py-16">
       <div className="w-full max-w-md rounded-lg border border-border bg-surface p-8 text-center shadow-card">
@@ -153,32 +141,59 @@ function PortalGate() {
           <Lock className="h-5 w-5 text-lime-text" />
         </span>
         <h1 className="mt-5 font-display text-[24px] font-medium text-text-primary">
-          呢個區域只限領航專家
+          需要領航專家帳號登入
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-text-secondary">
-          專家平台係領航專家管理自己 AI 分身嘅地方 — 知識蒸餾、情報發佈、
-          檔案同線索,全部以本人身份登入。
+          專家平台而家直接讀 Supabase 真實數據 — 只有領航專家帳號
+          (profiles.role = expert / admin)先可以入嚟管理自己嘅 AI 分身。
         </p>
-        <p className="mt-4 rounded-md border border-border bg-card/60 px-4 py-3 font-mono text-xs leading-relaxed text-text-muted">
-          示範模式:用 jimmy@dotai.hk 登入
-          <br />
-          (或 elvin@ekcheung.com 切換 Elvin 視角)
-        </p>
-        <button
-          type="button"
-          onClick={() => demoLogin("jimmy@dotai.hk")}
+        {loading && (
+          <p className="mt-4 font-mono text-xs text-text-muted">
+            正在檢查登入狀態…
+          </p>
+        )}
+        <Link
+          to="/login"
           className="mt-5 inline-flex w-full items-center justify-center gap-1.5 rounded-md bg-lime px-4 py-2.5 text-sm font-medium text-on-accent transition-colors hover:bg-lime-hover"
         >
-          <BadgeCheck className="h-4 w-4" />
-          以領航專家身份登入(示範)
-        </button>
+          <ShieldCheck className="h-4 w-4" />
+          去登入
+        </Link>
         <p className="mt-4 text-xs text-text-muted">
           一般會員請返回{" "}
           <Link
-            to="/login"
+            to="/"
             className="text-lime-text underline-offset-2 hover:underline"
           >
-            會員登入
+            網站首頁
+          </Link>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/** 已登入 expert 但 profiles.expert_slug 未連結 — 誠實提示,唔顯示假身份 */
+function UnlinkedNotice({ email }: { email: string }) {
+  return (
+    <div className="flex min-h-[100dvh] items-center justify-center px-4 py-16">
+      <div className="w-full max-w-md rounded-lg border border-border bg-surface p-8 text-center shadow-card">
+        <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-lime-soft">
+          <Link2 className="h-5 w-5 text-lime-text" />
+        </span>
+        <h1 className="mt-5 font-display text-[24px] font-medium text-text-primary">
+          帳號未連結專家身份
+        </h1>
+        <p className="mt-2 text-sm leading-relaxed text-text-secondary">
+          {email} 嘅 profiles.expert_slug 仲未設定 — 平台團隊連結咗你嘅專家身份之後,
+          分身數據就會喺呢度出現。請聯絡平台處理。
+        </p>
+        <p className="mt-4 text-xs text-text-muted">
+          <Link
+            to="/"
+            className="text-lime-text underline-offset-2 hover:underline"
+          >
+            返回網站
           </Link>
         </p>
       </div>
@@ -188,40 +203,76 @@ function PortalGate() {
 
 /* ---------------- Layout ---------------- */
 
+/** 讀自己 profile 嘅 expert_slug(RLS:本人可讀) */
+async function fetchMyExpertSlug(): Promise<string | null> {
+  if (!supabase) return null;
+  const uid = await getAuthUserId();
+  if (!uid) return null;
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("expert_slug")
+    .eq("id", uid)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return (data?.expert_slug as string | null) ?? null;
+}
+
 /**
  * 專家平台外殼 — nested-route 模式:本組件渲染 <Outlet/>,
  * App.tsx 須以 <Route path="portal" element={<PortalLayout/>}> + 子路由接入。
  * 結構對齊 AdminLayout:左側 240px near-black 側欄(lg+),
  * mobile 收合為頂部 drawer;頂欄放「返回網站」+ 專家 chip。
- * 內容區 warm paper;gate 未過時只顯示專家登入 prompt(唔顯示側欄)。
+ * Gate:未登入 / 唔係 expert → 只顯示登入提示(冇示範帳號,冇假身份)。
  */
 export default function PortalLayout() {
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const member = loadMember();
+  const { member, loading: memberLoading } = useMember();
   const authorized =
-    member !== null &&
-    (member.portalRole === "expert" || member.portalRole === "admin");
+    member !== null && (member.role === "expert" || member.role === "admin");
 
-  const ctx = useMemo<PortalExpertCtx | null>(() => {
-    if (!authorized || !member) return null;
-    const slug = expertSlugForEmail(member.email);
-    const expert = experts.find((e) => e.slug === slug) ?? experts[0];
-    const studio =
-      studioExperts.find((e) => e.slug === slug) ?? studioExperts[0];
-    return { member, slug: expert.slug, expert, studio };
-  }, [authorized, member]);
+  const {
+    data: slug,
+    loading: slugLoading,
+    error: slugError,
+  } = useAdminQuery(fetchMyExpertSlug, [authorized]);
 
-  if (!ctx) {
+  if (memberLoading || !authorized) {
     return (
       <AdminToastProvider>
         <div className="min-h-[100dvh] bg-bg text-text-primary">
-          <PortalGate />
+          <PortalGate loading={memberLoading} />
         </div>
       </AdminToastProvider>
     );
   }
 
-  const chipInitials = EXPERT_INITIALS[ctx.slug] ?? ctx.expert.nameEn.slice(0, 1);
+  if (slugLoading) {
+    return (
+      <AdminToastProvider>
+        <div className="flex min-h-[100dvh] items-center justify-center bg-bg">
+          <p className="font-mono text-xs text-text-muted">
+            正在載入專家身份…
+          </p>
+        </div>
+      </AdminToastProvider>
+    );
+  }
+
+  if (slugError || !slug) {
+    return (
+      <AdminToastProvider>
+        <div className="min-h-[100dvh] bg-bg text-text-primary">
+          <UnlinkedNotice email={member.email} />
+        </div>
+      </AdminToastProvider>
+    );
+  }
+
+  const expert = experts.find((e) => e.slug === slug) ?? null;
+  const ctx: PortalExpertCtx = { member, slug, expert };
+  const chipInitials = initialsFor(slug);
+  const chipName = expert?.nameEn.split(" ")[0] ?? slug;
+  const chipColor = expert?.brandColor ?? "#466A5E";
 
   return (
     <AdminToastProvider>
@@ -241,7 +292,9 @@ export default function PortalLayout() {
                 分身狀態
               </p>
               <p className="mt-1 font-mono text-[10px] uppercase tracking-wider text-[#938D83]">
-                Prompt v1.0 已上線
+                {expert?.promptVersion
+                  ? `${expert.promptVersion} · ${slug}`
+                  : `slug:${slug}`}
               </p>
             </div>
           </div>
@@ -316,12 +369,12 @@ export default function PortalLayout() {
               <div className="flex items-center gap-2 rounded-full border border-border bg-card py-1 pl-1 pr-3">
                 <MonogramAvatar
                   initials={chipInitials}
-                  color={ctx.expert.brandColor ?? "#466A5E"}
+                  color={chipColor}
                   size={24}
-                  verified
+                  verified={expert?.verified ?? false}
                 />
                 <span className="text-xs text-text-primary">
-                  {ctx.expert.nameEn.split(" ")[0]}{" "}
+                  {chipName}{" "}
                   <span className="text-text-muted">· 領航專家</span>
                 </span>
               </div>

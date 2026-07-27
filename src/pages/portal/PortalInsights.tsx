@@ -1,36 +1,44 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { Eye, Link2, NotebookPen, Plus, Send } from "lucide-react";
+import { Link2, NotebookPen, Plus, Send } from "lucide-react";
 import AdminSlideOver from "@/components/admin/AdminSlideOver";
 import { useAdminToast } from "@/components/admin/AdminToast";
 import { usePortalExpert } from "@/components/portal/PortalLayout";
-import { PORTAL_FIELD } from "@/components/portal/portal-ui";
+import { PORTAL_FIELD, WEEKLY_INSIGHT_QUOTA } from "@/components/portal/portal-ui";
 import { cn } from "@/lib/utils";
-import {
-  PORTAL_INSIGHT_QUOTA,
-  portalInsights,
-} from "@/data/portal-mock";
-import type { PortalInsight, PortalInsightStatus } from "@/data/portal-mock";
 
-/** 示範模式本地持久化(Supabase 接入後由 table 取代) */
+/**
+ * 本機情報草稿 — 投稿後端(submissions 表)未接之前,
+ * 「新增情報」寫嘅內容只存呢個瀏覽器 localStorage,
+ * 一律標明「草稿 — 未發佈」;冇任何虛構嘅已發佈文章或瀏覽數。
+ */
+interface LocalInsightDraft {
+  id: string;
+  title: string;
+  summary: string;
+  hkAngle: string;
+  sourceUrl: string;
+  date: string;
+}
+
 function storageKey(slug: string) {
   return `aigro-portal-insights-${slug}`;
 }
 
-function loadInsights(slug: string): PortalInsight[] {
+function loadDrafts(slug: string): LocalInsightDraft[] {
   try {
     const raw = window.localStorage.getItem(storageKey(slug));
     if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      const parsed: unknown = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed as LocalInsightDraft[];
     }
   } catch {
-    /* private mode — fall through to mock */
+    /* private mode — 回空陣列 */
   }
-  return portalInsights[slug] ?? [];
+  return [];
 }
 
-function persistInsights(slug: string, list: PortalInsight[]) {
+function persistDrafts(slug: string, list: LocalInsightDraft[]) {
   try {
     window.localStorage.setItem(storageKey(slug), JSON.stringify(list));
   } catch {
@@ -38,19 +46,13 @@ function persistInsights(slug: string, list: PortalInsight[]) {
   }
 }
 
-function statusChipClass(s: PortalInsightStatus) {
-  if (s === "已發佈") return "bg-lime-soft text-lime-text";
-  if (s === "待審核") return "bg-card text-[#A36A0F]";
-  return "bg-card text-text-muted";
-}
-
 /* ---------------- 新增情報 editor ---------------- */
 
 function InsightEditor({
-  onPublish,
+  onSave,
   onCancel,
 }: {
-  onPublish: (draft: {
+  onSave: (draft: {
     title: string;
     summary: string;
     hkAngle: string;
@@ -69,7 +71,7 @@ function InsightEditor({
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (!valid) return;
-    onPublish({
+    onSave({
       title: title.trim(),
       summary: summary.trim(),
       hkAngle: hkAngle.trim(),
@@ -145,8 +147,9 @@ function InsightEditor({
             />
           </div>
         </div>
-        <p className="rounded-md border border-border bg-card/60 px-3.5 py-2.5 text-xs leading-relaxed text-text-muted">
-          提交後狀態為「待審核」— 編輯部審核通過先會喺公開情報區上線。
+        <p className="rounded-md border border-dashed border-border-strong bg-card/60 px-3.5 py-2.5 text-xs leading-relaxed text-text-muted">
+          投稿後端(submissions 表)即將推出 — 而家提交只會存做本機草稿
+          (未發佈),後端就位之後先會送去編輯部審核上線。
         </p>
       </div>
       <div className="flex gap-2 border-t border-border px-6 py-4">
@@ -161,7 +164,7 @@ function InsightEditor({
           )}
         >
           <Send className="h-4 w-4" />
-          發佈(提交審核)
+          儲存草稿(未發佈)
         </button>
         <button
           type="button"
@@ -178,37 +181,38 @@ function InsightEditor({
 /* ---------------- Page ---------------- */
 
 /**
- * PortalInsights `/portal/insights` — 我的情報(每週 max 3 規則)。
- * 列表 + quota hairline bar + 新增情報 slide-over editor。
+ * PortalInsights `/portal/insights` — 我的情報。
+ * 後端未接:已發佈 = 真實嘅 0;本機草稿標明未發佈。
  */
 export default function PortalInsights() {
   const { slug } = usePortalExpert();
   const toast = useAdminToast();
-  const [list, setList] = useState<PortalInsight[]>(() => loadInsights(slug));
+  const [list, setList] = useState<LocalInsightDraft[]>(() => loadDrafts(slug));
   const [editorOpen, setEditorOpen] = useState(false);
 
-  /** 已用配額 = 已發佈 + 待審核(已下架唔佔位) */
-  const used = list.filter((i) => i.status !== "已下架").length;
-  const full = used >= PORTAL_INSIGHT_QUOTA;
-
-  const publish = (draft: {
+  const saveDraft = (draft: {
     title: string;
     summary: string;
     hkAngle: string;
     sourceUrl: string;
   }) => {
-    const item: PortalInsight = {
+    const item: LocalInsightDraft = {
       id: `pi-local-${Date.now()}`,
       ...draft,
       date: new Date().toISOString().slice(0, 10),
-      status: "待審核",
-      views: 0,
     };
     const next = [item, ...list];
     setList(next);
-    persistInsights(slug, next);
+    persistDrafts(slug, next);
     setEditorOpen(false);
-    toast("已提交,編輯部審核後上線");
+    toast("已儲存本機草稿(未發佈)— 投稿後端就位後先會送審");
+  };
+
+  const removeDraft = (id: string) => {
+    const next = list.filter((i) => i.id !== id);
+    setList(next);
+    persistDrafts(slug, next);
+    toast("已刪除草稿");
   };
 
   return (
@@ -223,60 +227,47 @@ export default function PortalInsights() {
             我的情報
           </h1>
           <p className="mt-1 text-sm text-text-muted">
-            以你嘅名義發佈嘅情報 — 每週最多 {PORTAL_INSIGHT_QUOTA} 條,保持質量密度。
+            以你嘅名義發佈嘅情報 — 每週最多 {WEEKLY_INSIGHT_QUOTA} 條,保持質量密度。
           </p>
         </div>
         <div className="flex items-center gap-4">
-          {/* Quota indicator */}
+          {/* Quota indicator — 已發佈真實係 0(後端未接) */}
           <div className="w-40">
             <p className="flex items-baseline justify-between font-mono text-xs text-text-muted">
               <span>
-                <span className="text-text-primary">{used}</span>/
-                {PORTAL_INSIGHT_QUOTA} 已使用
+                <span className="text-text-primary">0</span>/
+                {WEEKLY_INSIGHT_QUOTA} 已發佈
               </span>
               <span>本週</span>
             </p>
             <div className="mt-1.5 flex gap-1">
-              {Array.from({ length: PORTAL_INSIGHT_QUOTA }).map((_, i) => (
-                <span
-                  key={i}
-                  className={cn(
-                    "h-1 flex-1 rounded-full",
-                    i < used ? "bg-lime" : "bg-border"
-                  )}
-                />
+              {Array.from({ length: WEEKLY_INSIGHT_QUOTA }).map((_, i) => (
+                <span key={i} className="h-1 flex-1 rounded-full bg-border" />
               ))}
             </div>
           </div>
           <button
             type="button"
-            disabled={full}
-            title={full ? "每週最多 3 條 — 保持質量密度" : undefined}
             onClick={() => setEditorOpen(true)}
-            className={cn(
-              "inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-medium transition-colors",
-              full
-                ? "cursor-not-allowed bg-card text-text-muted"
-                : "bg-lime text-on-accent hover:bg-lime-hover"
-            )}
+            className="inline-flex items-center gap-1.5 rounded-md bg-lime px-4 py-2 text-sm font-medium text-on-accent transition-colors hover:bg-lime-hover"
           >
             <Plus className="h-4 w-4" />
             新增情報
           </button>
         </div>
       </div>
-      {full && (
-        <p className="rounded-md border border-border bg-card/60 px-4 py-2.5 text-xs text-text-muted">
-          本週配額已用完 — 每週最多 {PORTAL_INSIGHT_QUOTA} 條,保持質量密度。下週一重置。
-        </p>
-      )}
 
-      {/* List */}
+      <p className="rounded-md border border-border bg-card/60 px-4 py-2.5 text-xs text-text-muted">
+        投稿後端即將推出 — 你而家有 {list.length} 份本機草稿(未發佈),
+        已發佈情報真實數目係 0。
+      </p>
+
+      {/* Draft list */}
       <div className="space-y-4">
         {list.map((i) => (
           <article
             key={i.id}
-            className="rounded-lg border border-border bg-surface px-5 py-4 transition-colors hover:border-border-strong"
+            className="rounded-lg border border-dashed border-border-strong bg-surface px-5 py-4 transition-colors hover:border-border-strong"
           >
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
@@ -284,13 +275,8 @@ export default function PortalInsights() {
                   <h2 className="font-display text-[17px] font-medium text-text-primary">
                     {i.title}
                   </h2>
-                  <span
-                    className={cn(
-                      "rounded-sm px-2 py-0.5 text-xs font-medium",
-                      statusChipClass(i.status)
-                    )}
-                  >
-                    {i.status}
+                  <span className="rounded-sm border border-dashed border-[#A36A0F]/50 bg-card px-2 py-0.5 text-xs font-medium text-[#A36A0F]">
+                    草稿 — 未發佈
                   </span>
                 </div>
                 <p className="mt-1.5 text-sm leading-relaxed text-text-secondary">
@@ -303,10 +289,6 @@ export default function PortalInsights() {
               </div>
               <div className="shrink-0 text-right">
                 <p className="font-mono text-xs text-text-muted">{i.date}</p>
-                <p className="mt-1.5 inline-flex items-center gap-1 font-mono text-xs text-text-secondary">
-                  <Eye className="h-3.5 w-3.5 text-text-muted" />
-                  {i.status === "待審核" ? "—" : i.views.toLocaleString()}
-                </p>
                 {i.sourceUrl && (
                   <p className="mt-1.5">
                     <a
@@ -320,6 +302,15 @@ export default function PortalInsights() {
                     </a>
                   </p>
                 )}
+                <p className="mt-1.5">
+                  <button
+                    type="button"
+                    onClick={() => removeDraft(i.id)}
+                    className="text-xs text-text-muted underline-offset-2 hover:text-[#A63A30] hover:underline"
+                  >
+                    刪除草稿
+                  </button>
+                </p>
               </div>
             </div>
           </article>
@@ -327,8 +318,12 @@ export default function PortalInsights() {
         {list.length === 0 && (
           <div className="rounded-lg border border-dashed border-border-strong px-6 py-14 text-center">
             <NotebookPen className="mx-auto h-6 w-6 text-text-muted" />
-            <p className="mt-3 text-sm text-text-muted">
-              仲未有情報 — 撳「新增情報」提交你嘅第一條香港視角。
+            <p className="mt-3 text-sm font-medium text-text-primary">
+              未有已發佈情報
+            </p>
+            <p className="mx-auto mt-1.5 max-w-[380px] text-xs leading-relaxed text-text-muted">
+              投稿後端(submissions 表)即將推出 — 你可以先用「新增情報」寫本機草稿,
+              後端就位之後一次過送審上線。
             </p>
           </div>
         )}
@@ -339,11 +334,11 @@ export default function PortalInsights() {
         open={editorOpen}
         onClose={() => setEditorOpen(false)}
         title="新增情報"
-        subtitle={`本週配額 ${used}/${PORTAL_INSIGHT_QUOTA} — 提交後由編輯部審核`}
+        subtitle="投稿後端未接 — 提交會存做本機草稿(未發佈)"
         width={520}
       >
         <InsightEditor
-          onPublish={publish}
+          onSave={saveDraft}
           onCancel={() => setEditorOpen(false)}
         />
       </AdminSlideOver>

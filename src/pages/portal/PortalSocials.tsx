@@ -13,10 +13,24 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { useAdminToast } from "@/components/admin/AdminToast";
 import { usePortalExpert } from "@/components/portal/PortalLayout";
-import { HairlineBars } from "@/components/portal/portal-ui";
 import { cn } from "@/lib/utils";
-import { portalSocials } from "@/data/portal-mock";
-import type { PortalPlatform, PortalSocial } from "@/data/portal-mock";
+
+type PortalPlatform = "YouTube" | "Instagram" | "X" | "Threads" | "LinkedIn" | "Podcast";
+
+interface SocialConnection {
+  platform: PortalPlatform;
+  connected: boolean;
+  handle?: string;
+}
+
+const PLATFORMS: PortalPlatform[] = [
+  "YouTube",
+  "Instagram",
+  "X",
+  "Threads",
+  "LinkedIn",
+  "Podcast",
+];
 
 const PLATFORM_ICONS: Record<PortalPlatform, LucideIcon> = {
   YouTube: Youtube,
@@ -28,19 +42,46 @@ const PLATFORM_ICONS: Record<PortalPlatform, LucideIcon> = {
 };
 
 const PLATFORM_HINT: Record<PortalPlatform, string> = {
-  YouTube: "訂閱數 · 影片主題 → 分身語料",
-  Instagram: "追蹤數 · Reels 內容 → 語料",
-  X: "追蹤數 · 貼文觀點 → 語料",
-  Threads: "追蹤數 · 串文觀點 → 語料",
-  LinkedIn: "追蹤數 · 長文 → 語料",
-  Podcast: "收聽數 · 逐字稿 → 語料",
+  YouTube: "影片主題 → 分身語料",
+  Instagram: "Reels 內容 → 語料",
+  X: "貼文觀點 → 語料",
+  Threads: "串文觀點 → 語料",
+  LinkedIn: "長文 → 語料",
+  Podcast: "逐字稿 → 語料",
 };
 
-/**
- * PortalSocials `/portal/socials` — 社交連結。
- * 每平台一 row:icon + 連接按鈕 → connected 態(lime check + handle +
- * reach + 同步狀態);已連接顯示數據卡(subscribers + 30 日增長 hairline bars)。
- */
+/** 本機持久化 — 社交同步後端未接之前,handle 只存呢個瀏覽器 */
+function storageKey(slug: string) {
+  return `aigro-portal-socials-${slug}`;
+}
+
+function loadConnections(slug: string): SocialConnection[] {
+  let saved: SocialConnection[] = [];
+  try {
+    const raw = window.localStorage.getItem(storageKey(slug));
+    if (raw) {
+      const parsed: unknown = JSON.parse(raw);
+      if (Array.isArray(parsed)) saved = parsed as SocialConnection[];
+    }
+  } catch {
+    /* private mode */
+  }
+  return PLATFORMS.map((p) => {
+    const hit = saved.find((s) => s.platform === p);
+    return hit && hit.connected && hit.handle
+      ? { platform: p, connected: true, handle: hit.handle }
+      : { platform: p, connected: false };
+  });
+}
+
+function persistConnections(slug: string, list: SocialConnection[]) {
+  try {
+    window.localStorage.setItem(storageKey(slug), JSON.stringify(list));
+  } catch {
+    /* noop */
+  }
+}
+
 /** 用戶輸入嘅 handle / 公開連結 — 原樣顯示,唔會虛構追蹤數 */
 function normalizeHandle(raw: string): string {
   const v = raw.trim();
@@ -49,58 +90,48 @@ function normalizeHandle(raw: string): string {
   return `@${v.replace(/^@+/, "")}`;
 }
 
+/**
+ * PortalSocials `/portal/socials` — 社交連結。
+ * 全部平台預設未連接(冇假 handle、冇假追蹤數);
+ * 連接 = 記低你嘅 handle(localStorage),數據同步開放後先顯示真實指標。
+ */
 export default function PortalSocials() {
   const { slug } = usePortalExpert();
   const toast = useAdminToast();
-  const [list, setList] = useState<PortalSocial[]>(
-    () => (portalSocials[slug] ?? []).map((s) => ({ ...s }))
-  );
-  /** 邊個平台開緊 inline handle 輸入(連接 = 話我哋知你嘅 handle,唔係假 OAuth) */
+  const [list, setList] = useState<SocialConnection[]>(() => loadConnections(slug));
   const [drafting, setDrafting] = useState<PortalPlatform | null>(null);
   const [handleDraft, setHandleDraft] = useState("");
 
   const connectedCount = list.filter((s) => s.connected).length;
+
+  const update = (next: SocialConnection[]) => {
+    setList(next);
+    persistConnections(slug, next);
+  };
 
   const startConnect = (platform: PortalPlatform) => {
     setDrafting(platform);
     setHandleDraft("");
   };
 
-  const cancelConnect = () => {
-    setDrafting(null);
-    setHandleDraft("");
-  };
-
   const confirmConnect = (platform: PortalPlatform) => {
     const handle = normalizeHandle(handleDraft);
     if (!handle) return;
-    setList((ls) =>
-      ls.map((s) =>
-        s.platform === platform
-          ? {
-              // 只記低用戶嘅 handle — 追蹤數 / 增長等數據同步開放後先顯示,唔虛構
-              platform,
-              connected: true,
-              handle,
-              syncNote: "數據同步即將開放",
-            }
-          : s
+    update(
+      list.map((s) =>
+        s.platform === platform ? { platform, connected: true, handle } : s
       )
     );
     setDrafting(null);
     setHandleDraft("");
-    toast(`${platform} 已連接 — 數據同步即將開放,開放後會顯示你嘅真實數據`);
+    toast(`${platform} 已記低 handle — 數據同步即將開放,開放後會顯示你嘅真實數據`);
   };
 
   const disconnect = (platform: PortalPlatform) => {
-    setList((ls) =>
-      ls.map((s) =>
-        s.platform === platform
-          ? { platform, connected: false }
-          : s
-      )
+    update(
+      list.map((s) => (s.platform === platform ? { platform, connected: false } : s))
     );
-    toast(`${platform} 已解除連接(mock)`);
+    toast(`${platform} 已解除連接`);
   };
 
   return (
@@ -114,7 +145,7 @@ export default function PortalSocials() {
             社交連結
           </h1>
           <p className="mt-1 text-sm text-text-muted">
-            連接你嘅公開平台 — 內容自動轉成蒸餾語料,數據反映分身热度。
+            記低你嘅公開平台 handle — 蒸餾語料同數據同步會喺 pipeline 就位後開放。
           </p>
         </div>
         <p className="font-mono text-xs text-text-muted">
@@ -157,26 +188,14 @@ export default function PortalSocials() {
                     <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-text-muted">
                       <span className="inline-flex items-center gap-1 text-lime-text">
                         <CheckCircle2 className="h-3.5 w-3.5" />
-                        已連接
+                        已記低 handle
                       </span>
                       <span className="font-mono">{s.handle}</span>
-                      {s.reach && (
-                        <>
-                          <span aria-hidden="true">·</span>
-                          <span className="font-mono text-text-secondary">
-                            {s.reach}
-                          </span>
-                        </>
-                      )}
-                      {s.syncNote && (
-                        <>
-                          <span aria-hidden="true">·</span>
-                          <span className="inline-flex items-center gap-1">
-                            <RefreshCw className="h-3 w-3" />
-                            {s.syncNote}
-                          </span>
-                        </>
-                      )}
+                      <span aria-hidden="true">·</span>
+                      <span className="inline-flex items-center gap-1">
+                        <RefreshCw className="h-3 w-3" />
+                        數據同步即將開放
+                      </span>
                     </p>
                   ) : (
                     <p className="mt-0.5 text-xs text-text-muted">
@@ -247,45 +266,19 @@ export default function PortalSocials() {
                   </button>
                   <button
                     type="button"
-                    onClick={cancelConnect}
+                    onClick={() => {
+                      setDrafting(null);
+                      setHandleDraft("");
+                    }}
                     className="text-xs text-text-muted transition-colors hover:text-text-secondary"
                   >
                     取消
                   </button>
                   <p className="w-full text-[11px] text-text-muted">
-                    只會讀取公開內容做蒸餾語料;追蹤數等數據喺同步功能開放後先顯示。
+                    只會用公開內容做蒸餾語料;追蹤數等數據喺同步功能開放後先顯示,
+                    而家唔會虛構任何數字。
                   </p>
                 </form>
-              )}
-
-              {/* 數據卡(已連接先顯示) */}
-              {s.connected && s.growth30d && (
-                <div className="grid gap-px border-t border-border bg-border sm:grid-cols-[200px_1fr]">
-                  <div className="bg-surface px-5 py-4">
-                    <p className="text-xs text-text-muted">
-                      {s.platform === "YouTube" || s.platform === "Podcast"
-                        ? "訂閱"
-                        : "追蹤者"}
-                    </p>
-                    <p className="mt-1 font-mono text-[24px] font-semibold leading-none text-text-primary">
-                      {(s.subscribers ?? 0).toLocaleString()}
-                    </p>
-                    <p className="mt-1.5 font-mono text-[11px] text-lime-text">
-                      +{s.growth30d
-                        .reduce((a, b) => a + b, 0)
-                        .toLocaleString()}{" "}
-                      / 30 日
-                    </p>
-                  </div>
-                  <div className="bg-surface px-5 py-4">
-                    <p className="text-xs text-text-muted">30 日增長</p>
-                    <HairlineBars
-                      values={s.growth30d}
-                      height={44}
-                      className="mt-2"
-                    />
-                  </div>
-                </div>
               )}
             </section>
           );
@@ -297,8 +290,9 @@ export default function PortalSocials() {
         <span className="font-medium text-lime-text">
           連接越多,分身數據越準 —
         </span>{" "}
-        每個已連接平台嘅公開內容都會轉成蒸餾語料,令分身回答更貼近你嘅最新觀點;
-        追蹤數等數據會喺同步功能開放後每 6 小時更新,絕不讀取私人訊息。
+        每個已記低平台嘅公開內容,會喺 distillation pipeline 就位後轉成蒸餾語料,
+        令分身回答更貼近你嘅最新觀點;追蹤數等指標會喺同步功能開放後先顯示真實數字,
+        絕不讀取私人訊息。
       </p>
     </div>
   );

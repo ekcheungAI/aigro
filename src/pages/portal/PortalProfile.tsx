@@ -65,18 +65,21 @@ export default function PortalProfile() {
   const [saved] = useState<ProfileDraft | null>(() => loadProfileDraft(slug));
 
   const [displayName, setDisplayName] = useState(
-    saved?.displayName ?? [expert.nameZh, expert.nameEn].filter(Boolean).join(" ")
+    saved?.displayName ??
+      (expert
+        ? [expert.nameZh, expert.nameEn].filter(Boolean).join(" ")
+        : slug)
   );
-  const [title, setTitle] = useState(saved?.title ?? expert.title);
-  const [bio, setBio] = useState(saved?.bio ?? expert.bio ?? "");
+  const [title, setTitle] = useState(saved?.title ?? expert?.title ?? "");
+  const [bio, setBio] = useState(saved?.bio ?? expert?.bio ?? "");
   const [specialties, setSpecialties] = useState<string[]>(
-    saved?.specialties ?? expert.specialties
+    saved?.specialties ?? expert?.specialties ?? []
   );
   const [newSpec, setNewSpec] = useState("");
   const [brandColor, setBrandColor] = useState(
-    saved?.brandColor || expert.brandColor || BRAND_PRESETS[0].hex
+    saved?.brandColor || expert?.brandColor || BRAND_PRESETS[0].hex
   );
-  const [quote, setQuote] = useState(saved?.quote ?? expert.quote ?? "");
+  const [quote, setQuote] = useState(saved?.quote ?? expert?.quote ?? "");
 
   const addSpec = () => {
     const v = newSpec.trim();
@@ -292,7 +295,7 @@ export default function PortalProfile() {
             <article className="rounded-md border border-border bg-surface p-8 shadow-card max-md:p-6">
               <div className="flex gap-6 max-md:flex-col max-md:gap-5">
                 <div className="relative shrink-0">
-                  {expertHasPhoto(expert) ? (
+                  {expert && expertHasPhoto(expert) ? (
                     <PhotoAvatar
                       src={expert.image}
                       alt={displayName}
@@ -337,7 +340,7 @@ export default function PortalProfile() {
                   )}
                   <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-4">
                     <p className="font-mono text-caption text-text-muted">
-                      {expert.achievements}
+                      {expert?.achievements ?? ""}
                     </p>
                     <span className="ml-auto inline-flex h-11 items-center gap-1.5 rounded-md bg-ink-solid px-6 text-label text-white">
                       查看領航檔案
