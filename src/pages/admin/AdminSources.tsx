@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import type { ReactNode } from "react";
 import {
   ArrowRight,
   Check,
@@ -11,11 +12,19 @@ import {
   RefreshCw,
   Search,
   Trash2,
+  WifiOff,
 } from "lucide-react";
 import AdminSlideOver from "@/components/admin/AdminSlideOver";
 import AdminToggle from "@/components/admin/AdminToggle";
 import { useAdminToast } from "@/components/admin/AdminToast";
 import { cn } from "@/lib/utils";
+import {
+  argroStatusDot,
+  argroStatusLabel,
+  relativeFetchTime,
+  useArgroHealth,
+} from "@/lib/argroHealth";
+import type { ArgroSourceStatus } from "@/lib/argroHealth";
 import {
   mcpInstances,
   pipelineStatus,
@@ -68,6 +77,362 @@ function HealthBars({ history, large = false }: { history: number[]; large?: boo
         />
       ))}
     </div>
+  );
+}
+
+/* ==================== 管線健康(live argro-api feed) ==================== */
+
+/** 狀態嚴重度排序:有問題嘅來源排最前。 */
+const STATUS_RANK: Record<ArgroSourceStatus, number> = {
+  down: 0,
+  warn: 1,
+  paused: 2,
+  ok: 3,
+};
+
+function fmtClock(d: Date) {
+  return d.toLocaleTimeString("zh-HK", { hour12: false });
+}
+
+/** live KPI 卡 — value 高度固定(字型大細不變),auto-refresh 唔會 layout shift。 */
+function LiveKpi({
+  label,
+  value,
+  sub,
+  dot,
+}: {
+  label: string;
+  value: string;
+  sub: ReactNode;
+  dot?: string;
+}) {
+  return (
+    <div className="rounded-lg border border-border bg-surface p-4">
+      <p className="flex items-center gap-1.5 text-xs text-text-muted">
+        {dot && <span className={cn("h-1.5 w-1.5 rounded-full", dot)} />}
+        {label}
+      </p>
+      <p className="mt-2 font-mono text-[26px] font-medium leading-none text-text-primary">
+        {value}
+      </p>
+      <p className="mt-2 text-[11px] text-text-secondary">{sub}</p>
+    </div>
+  );
+}
+
+/** 蒸餾進度 hairline bar(no gradient,純 lime on card)。 */
+function EnrichmentBar({
+  label,
+  done,
+  total,
+}: {
+  label: string;
+  done: number;
+  total: number;
+}) {
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  return (
+    <div>
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="text-xs text-text-secondary">{label}</span>
+        <span className="font-mono text-[11px] text-text-muted">
+          {done.toLocaleString("en-US")} / {total.toLocaleString("en-US")} ·{" "}
+          {pct}%
+        </span>
+      </div>
+      <div className="mt-1.5 h-1 w-full rounded-full bg-card">
+        <div
+          className="h-1 rounded-full bg-lime transition-[width] duration-500"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * 管線健康 Pipeline Health — argro-api /meta/health 實時數據,30s 自動更新。
+ * fetch 失敗 → 離線模式卡 + 下面嘅靜態來源表繼續做 fallback;
+ * 有舊數據時失敗 → amber 提示 + 繼續顯示上次成功數據。
+ */
+function PipelineHealthSection() {
+  const { data, error, loading, lastUpdated, refresh } = useArgroHealth();
+
+  const a = data?.articles ?? null;
+  const llm = data?.llm ?? null;
+  const offline = data === null && error !== null;
+  const stale = data !== null && error !== null;
+  const backlog = a ? a.unclassified + a.untranslated_zh_tw : null;
+
+  const sortedSources = useMemo(
+    () =>
+      (data?.sources ?? [])
+        .slice()
+        .sort(
+          (x, y) =>
+            STATUS_RANK[x.status] - STATUS_RANK[y.status] ||
+            y.items_today - x.items_today
+        ),
+    [data]
+  );
+
+  return (
+    <section className="mb-8">
+      {/* header */}
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h2 className="font-display text-[17px] font-medium text-text-primary">
+            管線健康 Pipeline Health
+          </h2>
+          <p className="mt-1 text-xs text-text-muted">
+            argro-api /meta/health 實時管線狀態 — 抓取、蒸餾、LLM 一覽。
+          </p>
+        </div>
+        <div className="flex items-center gap-2.5">
+          <span
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-sm px-2 py-0.5 font-mono text-[11px] font-medium",
+              offline ? "bg-card text-[#A63A30]" : "bg-lime-soft text-lime-text"
+            )}
+          >
+            <span
+              className={cn(
+                "h-1.5 w-1.5 rounded-full",
+                offline ? "bg-[#A63A30]" : "bg-lime"
+              )}
+            />
+            Live · 30s 更新
+          </span>
+          {lastUpdated && (
+            <span className="font-mono text-[11px] text-text-muted">
+              更新於 {fmtClock(lastUpdated)}
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={refresh}
+            aria-label="立即更新管線健康"
+            className="rounded-md border border-border p-1.5 text-text-muted transition-colors hover:border-border-strong hover:text-text-primary"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {/* stale 提示:有舊數據但最近一次更新失敗 */}
+      {stale && lastUpdated && (
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-md border border-[#A36A0F]/40 bg-card px-3 py-2">
+          <p className="text-xs text-[#A36A0F]">
+            最近一次更新失敗 — 顯示 {fmtClock(lastUpdated)} 嘅數據,30
+            秒後自動重試。
+          </p>
+          <button
+            type="button"
+            onClick={refresh}
+            className="font-mono text-[11px] font-medium text-text-secondary underline-offset-2 hover:underline"
+          >
+            立即重試
+          </button>
+        </div>
+      )}
+
+      {/* KPI row(live)— loading 時顯示「—」,高度不變 */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <LiveKpi
+          label="今日新增 articles"
+          value={a ? a.today.toLocaleString("en-US") : "—"}
+          sub="argro-mcp 抓取入庫"
+        />
+        <LiveKpi
+          label="本週新增"
+          value={a ? a.week.toLocaleString("en-US") : "—"}
+          sub="過去 7 日"
+        />
+        <LiveKpi
+          label="總庫存"
+          value={a ? a.total.toLocaleString("en-US") : "—"}
+          sub={
+            data ? `最後抓取 ${relativeFetchTime(data.last_fetch)}` : "等待連線"
+          }
+        />
+        <LiveKpi
+          label="蒸餾待辦"
+          value={backlog !== null ? backlog.toLocaleString("en-US") : "—"}
+          sub={
+            a
+              ? `未分類 ${a.unclassified} · 未翻譯 ${a.untranslated_zh_tw}`
+              : "分類 + 翻譯 queue"
+          }
+        />
+        <LiveKpi
+          label="LLM 狀態"
+          value={llm ? (llm.configured ? "已連接" : "未連接") : "—"}
+          sub={
+            llm ? (
+              <span className="font-mono">DeepSeek · {llm.model}</span>
+            ) : (
+              "等待連線"
+            )
+          }
+          dot={
+            llm
+              ? llm.configured
+                ? "bg-lime"
+                : "bg-[#A63A30]"
+              : "bg-border-strong"
+          }
+        />
+      </div>
+
+      {offline ? (
+        /* 離線模式:連唔到 argro-api,靜態 mock 表(下面來源管理)做 fallback */
+        <div className="mt-3 rounded-lg border border-[#A63A30]/40 bg-surface p-5">
+          <div className="flex items-center gap-2">
+            <WifiOff className="h-4 w-4 text-[#A63A30]" />
+            <p className="text-sm font-medium text-text-primary">
+              管線暫時連唔到 argro-api — 顯示離線模式
+            </p>
+          </div>
+          <p className="mt-1.5 text-xs text-text-muted">
+            下面嘅來源管理表繼續可用(靜態快照);live 數據每 30
+            秒自動重試,無需刷新頁面。
+            <span className="ml-1 font-mono text-[11px]">({error})</span>
+          </p>
+          <button
+            type="button"
+            onClick={refresh}
+            className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-border-strong px-3 py-1.5 text-xs font-medium text-text-secondary transition-colors hover:border-lime hover:text-text-primary"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            立即重試
+          </button>
+        </div>
+      ) : (
+        <>
+          {/* 蒸餾進度 — DeepSeek 消化 queue 即視感 */}
+          <div className="mt-3 rounded-lg border border-border bg-surface p-5">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h3 className="text-sm font-medium text-text-primary">
+                蒸餾進度 Enrichment
+              </h3>
+              <span className="font-mono text-[11px] text-text-muted">
+                DeepSeek 正在消化 queue · 每 30s 更新
+              </span>
+            </div>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <EnrichmentBar
+                label="已分類"
+                done={a ? a.total - a.unclassified : 0}
+                total={a ? a.total : 0}
+              />
+              <EnrichmentBar
+                label="已翻譯(繁中)"
+                done={a ? a.total - a.untranslated_zh_tw : 0}
+                total={a ? a.total : 0}
+              />
+            </div>
+          </div>
+
+          {/* 來源健康表(live) */}
+          <div className="mt-3 rounded-lg border border-border bg-surface">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-5 py-3">
+              <h3 className="text-sm font-medium text-text-primary">
+                來源健康
+                <span className="ml-2 font-mono text-[11px] font-normal text-text-muted">
+                  {sortedSources.length} 個來源 · 按狀態排序
+                </span>
+              </h3>
+              <span className="inline-flex items-center gap-1.5 rounded-sm bg-lime-soft px-2 py-0.5 font-mono text-[11px] font-medium text-lime-text">
+                <span className="h-1.5 w-1.5 rounded-full bg-lime" />
+                Live · 30s 更新
+              </span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[640px] text-sm">
+                <thead>
+                  <tr className="border-b border-border text-left font-mono text-[11px] uppercase tracking-wider text-text-muted">
+                    <th className="px-5 py-2.5 font-medium">來源</th>
+                    <th className="px-3 py-2.5 font-medium">類型</th>
+                    <th className="px-3 py-2.5 font-medium">狀態</th>
+                    <th className="px-3 py-2.5 text-right font-medium">
+                      今日 items
+                    </th>
+                    <th className="px-5 py-2.5 text-right font-medium">
+                      最後抓取
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {loading && sortedSources.length === 0
+                    ? /* 首次載入骨架 — reserve 行高,避免 layout shift */
+                      [0, 1, 2, 3, 4].map((i) => (
+                        <tr key={i} className="animate-pulse">
+                          <td className="px-5 py-3">
+                            <div className="h-3.5 w-32 rounded-sm bg-card" />
+                            <div className="mt-1.5 h-2.5 w-20 rounded-sm bg-card" />
+                          </td>
+                          <td className="px-3 py-3">
+                            <div className="h-4 w-10 rounded-sm bg-card" />
+                          </td>
+                          <td className="px-3 py-3">
+                            <div className="h-3.5 w-14 rounded-sm bg-card" />
+                          </td>
+                          <td className="px-3 py-3">
+                            <div className="ml-auto h-3.5 w-8 rounded-sm bg-card" />
+                          </td>
+                          <td className="px-5 py-3">
+                            <div className="ml-auto h-3.5 w-16 rounded-sm bg-card" />
+                          </td>
+                        </tr>
+                      ))
+                    : sortedSources.map((s) => (
+                        <tr
+                          key={s.id}
+                          className="transition-colors hover:bg-card"
+                        >
+                          <td className="px-5 py-3">
+                            <p className="font-medium text-text-primary">
+                              {s.name}
+                            </p>
+                            <p className="mt-0.5 font-mono text-[11px] text-text-muted">
+                              {s.lang.toUpperCase()}
+                              {s.is_active ? "" : " · 已停用"}
+                            </p>
+                          </td>
+                          <td className="px-3 py-3">
+                            <span className="rounded-sm bg-card px-2 py-0.5 font-mono text-[11px] font-medium uppercase text-text-secondary">
+                              {s.type}
+                            </span>
+                          </td>
+                          <td className="px-3 py-3">
+                            <span className="inline-flex items-center gap-1.5">
+                              <span
+                                className={cn(
+                                  "h-2 w-2 rounded-full",
+                                  argroStatusDot(s.status)
+                                )}
+                                aria-label={argroStatusLabel(s.status)}
+                              />
+                              <span className="text-xs text-text-secondary">
+                                {argroStatusLabel(s.status)}
+                              </span>
+                            </span>
+                          </td>
+                          <td className="px-3 py-3 text-right font-mono text-xs text-text-primary">
+                            {s.items_today}
+                          </td>
+                          <td className="px-5 py-3 text-right font-mono text-[11px] text-text-muted">
+                            {relativeFetchTime(s.last_fetch)}
+                          </td>
+                        </tr>
+                      ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
+    </section>
   );
 }
 
@@ -229,6 +594,9 @@ export default function AdminSources() {
           情報管道控制室 — 由來源抓取,到蒸餾,到 Feed / 日報 / MCP 輸出。
         </p>
       </div>
+
+      {/* ==================== 0. 管線健康(live argro-api feed) ==================== */}
+      <PipelineHealthSection />
 
       {/* ==================== 1. Pipeline map ==================== */}
       <section className="mb-8">

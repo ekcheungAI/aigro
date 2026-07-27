@@ -6,6 +6,7 @@ import {
   MessagesSquare,
   UserPlus,
   Users,
+  Workflow,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -19,6 +20,8 @@ import {
 } from "@/data/admin-mock";
 import type { ActivityItem } from "@/data/admin-mock";
 import { pendingExperts, verifiedExperts } from "@/data/experts";
+import { useArgroHealth } from "@/lib/argroHealth";
+import { cn } from "@/lib/utils";
 
 interface Kpi {
   label: string;
@@ -96,6 +99,63 @@ const QUICK_LINKS = [
 
 const maxChat = Math.max(...weeklyChats.map((d) => d.count));
 
+/** 管線 Pipeline 快速卡 — live argro-api /meta/health,click 入 /admin/sources。 */
+function PipelineKpiCard() {
+  const { data, error, loading } = useArgroHealth();
+  const offline = data === null && error !== null;
+  const llmOk = data?.llm.configured ?? false;
+
+  return (
+    <Link
+      to="/admin/sources"
+      className="group col-span-2 rounded-lg border border-border bg-surface p-4 transition-colors hover:border-lime sm:p-5 xl:col-span-1"
+    >
+      <p className="flex items-center justify-between text-xs text-text-muted">
+        <span className="flex items-center gap-1.5">
+          <Workflow className="h-3.5 w-3.5 text-lime-text" />
+          管線 Pipeline
+        </span>
+        <span
+          className={cn(
+            "inline-flex items-center gap-1 font-mono text-[10px]",
+            offline ? "text-[#A63A30]" : "text-lime-text"
+          )}
+        >
+          <span
+            className={cn(
+              "h-1.5 w-1.5 rounded-full",
+              offline ? "bg-[#A63A30]" : "bg-lime"
+            )}
+          />
+          Live
+        </span>
+      </p>
+      <p className="mt-2 font-mono text-[30px] font-medium leading-none text-text-primary">
+        {data ? data.articles.today.toLocaleString("en-US") : "—"}
+      </p>
+      <p className="mt-2 flex items-center gap-1.5 text-xs text-text-secondary">
+        <span
+          className={cn(
+            "h-1.5 w-1.5 rounded-full",
+            offline
+              ? "bg-[#A63A30]"
+              : data
+                ? llmOk
+                  ? "bg-lime"
+                  : "bg-[#A63A30]"
+                : "bg-border-strong"
+          )}
+        />
+        {offline
+          ? "連唔到 argro-api — 離線"
+          : loading && !data
+            ? "連線中…"
+            : `LLM ${llmOk ? "已連接" : "未連接"} · 今日新增 articles`}
+      </p>
+    </Link>
+  );
+}
+
 export default function Dashboard() {
   return (
     <div className="mx-auto max-w-6xl">
@@ -111,8 +171,8 @@ export default function Dashboard() {
         </p>
       </div>
 
-      {/* KPI cards */}
-      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+      {/* KPI cards(4 張靜態 + 1 張 live 管線卡) */}
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-5">
         {KPIS.map((kpi) => (
           <div
             key={kpi.label}
@@ -125,6 +185,7 @@ export default function Dashboard() {
             <p className="mt-2 text-xs text-text-secondary">{kpi.note}</p>
           </div>
         ))}
+        <PipelineKpiCard />
       </div>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-5">
