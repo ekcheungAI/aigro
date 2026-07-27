@@ -24,8 +24,8 @@ jobs:
           node-version: 20
           cache: npm
 
-      - name: Install deps (opencc-js)
-        run: npm ci --omit=dev --no-audit --no-fund
+      - name: Install deps (opencc-js lives in devDependencies)
+        run: npm ci --no-audit --no-fund
 
       - name: Sync argro items → Supabase
         env:
