@@ -1,10 +1,9 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   Check,
-  ChevronDown,
   Loader2,
   Mail,
   MessagesSquare,
@@ -13,16 +12,8 @@ import {
 } from "lucide-react";
 import Field from "@/components/auth/Field";
 import Toast, { useToast } from "@/components/auth/Toast";
-import {
-  DEFAULT_NOTIFICATIONS,
-  loadMember,
-  ROLE_LABELS,
-  saveMember,
-  sendMagicLink,
-  validEmail,
-} from "@/components/auth/member";
-import type { MemberRole, MemberTier } from "@/components/auth/member";
-import { supabaseReady } from "@/lib/supabase";
+import { sendMagicLink, validEmail } from "@/components/auth/member";
+import { supabase, supabaseReady } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 
 const BENEFITS = [
@@ -33,24 +24,12 @@ const BENEFITS = [
 
 type SubmitState = "idle" | "loading" | "success";
 
-/** 示範帳號 — 一 click 體驗 4 級制度入面嘅 3 個角色 */
-const DEMO_ACCOUNTS: {
-  email: string;
-  name: string;
-  role: MemberRole;
-  tier: MemberTier;
-}[] = [
-  { email: "elvin@ekcheung.com", name: "Elvin", role: "expert", tier: "pro" },
-  { email: "admin@aigro.hk", name: "Admin", role: "admin", tier: "vip" },
-  { email: "member@demo.hk", name: "Demo 會員", role: "founding", tier: "pro" },
-];
-
 /**
- * Login `/login` — 會員登入(示範模式)。
+ * Login `/login` — 會員登入(真 Supabase Auth)。
  * 置中 split card(max-w-4xl):左 = 品牌板(near-black + lime 條紋,
  * 「會員專區」serif H2 + 3 個會員價值);右 = 表單。
- * Supabase Auth 接入時:handleSubmit 換 signInWithPassword,
- * magic link 換 signInWithOtp,其餘 UI 不變。
+ * 密碼登入行 signInWithPassword;magic link 行 signInWithOtp。
+ * 無 env(示範模式)→ 密碼 form disabled + 誠實提示,唔會假裝成功。
  */
 export default function Login() {
   const navigate = useNavigate();
@@ -61,10 +40,11 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [state, setState] = useState<SubmitState>("idle");
-  const [demoOpen, setDemoOpen] = useState(false);
-  // magic-link 真發送狀態(supabaseReady 時用)
+  // magic-link 真發送狀態
   const [linkSending, setLinkSending] = useState(false);
   const [linkSent, setLinkSent] = useState(false);
+  // 忘記密碼發送狀態
+  const [resetSending, setResetSending] = useState(false);
 
   const validate = () => {
     const next: typeof errors = {};
@@ -74,62 +54,53 @@ export default function Login() {
     return Object.keys(next).length === 0;
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  /** 真密碼登入(Supabase signInWithPassword);成功後 initAuth listener 接手 hydrate profile */
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    if (!supabaseReady || !supabase) return;
     if (state !== "idle" || !validate()) return;
     setState("loading");
-    // 示範模式:模擬網絡往返 → 成功 → toast → 跳轉
-    window.setTimeout(() => {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+      if (error) {
+        setState("idle");
+        setErrors((prev) => ({ ...prev, password: "Email 或密碼唔啱,請再試" }));
+        return;
+      }
       setState("success");
-      const existing = loadMember();
-      saveMember(
-        existing && existing.email === email.trim()
-          ? { ...existing, demo: true }
-          : {
-              name: email.trim().split("@")[0] || "會員",
-              email: email.trim(),
-              interests: [],
-              persona: null,
-              role: "free",
-              tier: "free",
-              joinedAt: Date.now(),
-              notifications: { ...DEFAULT_NOTIFICATIONS },
-              demo: true,
-            }
-      );
-      showToast("登入成功(示範模式)");
+      showToast("登入成功");
       window.setTimeout(() => navigate("/account"), 700);
-    }, 900);
+    } catch {
+      setState("idle");
+      showToast("登入失敗,請稍後再試");
+    }
   };
 
-  /** 示範帳號:填好欄位 + 即時以對應角色登入 */
-  const demoLogin = (account: (typeof DEMO_ACCOUNTS)[number]) => {
-    if (state !== "idle") return;
-    setEmail(account.email);
-    setPassword("demo-login");
+  /** 忘記密碼 — 真 resetPasswordForEmail(只喺 supabaseReady 時顯示) */
+  const handleResetPassword = async () => {
+    if (!supabase || resetSending) return;
+    if (!validEmail(email)) {
+      setErrors((prev) => ({ ...prev, email: "先輸入 Email,先可以寄重設連結" }));
+      return;
+    }
     setErrors({});
-    const existing = loadMember();
-    saveMember(
-      existing && existing.email === account.email
-        ? { ...existing, role: account.role, tier: account.tier, demo: true }
-        : {
-            name: account.name,
-            email: account.email,
-            interests: [],
-            persona: null,
-            role: account.role,
-            tier: account.tier,
-            joinedAt: Date.now(),
-            notifications: { ...DEFAULT_NOTIFICATIONS },
-            demo: true,
-          }
-    );
-    showToast(
-      account.role === "expert" || account.role === "admin"
-        ? `已登入(${ROLE_LABELS[account.role]})— 可前往 /portal 或 /admin`
-        : `已登入(${ROLE_LABELS[account.role]})`
-    );
-    window.setTimeout(() => navigate("/account"), 700);
+    setResetSending(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: window.location.origin,
+      });
+      showToast(
+        error
+          ? `發送失敗:${error.message}`
+          : `重設密碼連結已發送至 ${email.trim()}`
+      );
+    } catch {
+      showToast("發送失敗,請稍後再試");
+    }
+    setResetSending(false);
   };
 
   const handleMagicLink = async () => {
@@ -139,8 +110,8 @@ export default function Login() {
     }
     setErrors({});
     if (!supabaseReady) {
-      // 示範模式:無 Supabase env,維持本地假裝發送
-      showToast(`登入連結已發送至 ${email.trim()}(示範模式)`);
+      // 誠實提示:無 env 發唔到,唔假裝成功
+      showToast("示範模式未連接 Supabase — magic link 暫時發唔到");
       return;
     }
     setLinkSending(true);
@@ -219,6 +190,7 @@ export default function Login() {
                 autoComplete="current-password"
                 placeholder="••••••••"
                 value={password}
+                disabled={!supabaseReady}
                 error={errors.password}
                 onChange={(e) => {
                   setPassword(e.target.value);
@@ -226,18 +198,28 @@ export default function Login() {
                     setErrors((prev) => ({ ...prev, password: undefined }));
                 }}
               />
-              <button
-                type="button"
-                onClick={() => showToast("重設密碼連結已發送(示範模式)")}
-                className="press mt-2 text-caption text-text-muted underline decoration-text-muted/60 underline-offset-4 hover:text-ink"
-              >
-                忘記密碼?
-              </button>
+              {supabaseReady ? (
+                <button
+                  type="button"
+                  onClick={handleResetPassword}
+                  disabled={resetSending}
+                  className="press mt-2 inline-flex items-center gap-1 text-caption text-text-muted underline decoration-text-muted/60 underline-offset-4 hover:text-ink disabled:opacity-60"
+                >
+                  {resetSending && (
+                    <Loader2 className="h-3 w-3 animate-spin" strokeWidth={2} />
+                  )}
+                  忘記密碼?
+                </button>
+              ) : (
+                <p className="mt-2 text-caption text-text-muted">
+                  示範模式未連接 Supabase — 密碼登入暫時唔用得
+                </p>
+              )}
             </div>
 
             <button
               type="submit"
-              disabled={state !== "idle"}
+              disabled={!supabaseReady || state !== "idle"}
               className={cn(
                 "press inline-flex h-12 items-center justify-center gap-2 rounded-md text-label",
                 state === "success"
@@ -278,55 +260,6 @@ export default function Login() {
             </button>
           </form>
 
-          {/* ---- 示範帳號:低調 expander,一 click 角色登入 ---- */}
-          <div className="mt-6">
-            <button
-              type="button"
-              onClick={() => setDemoOpen((v) => !v)}
-              aria-expanded={demoOpen}
-              className="press inline-flex items-center gap-1 text-caption text-text-muted hover:text-ink"
-            >
-              示範帳號
-              <ChevronDown
-                className={cn(
-                  "h-3.5 w-3.5 transition-transform duration-150",
-                  demoOpen && "rotate-180"
-                )}
-                strokeWidth={1.5}
-              />
-            </button>
-            <AnimatePresence initial={false}>
-              {demoOpen && (
-                <motion.div
-                  key="demo-accounts"
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-                  className="overflow-hidden"
-                >
-                  <div className="mt-3 flex flex-col gap-2">
-                    {DEMO_ACCOUNTS.map((a) => (
-                      <button
-                        key={a.email}
-                        type="button"
-                        onClick={() => demoLogin(a)}
-                        className="press flex items-center justify-between gap-3 rounded-md border border-border-strong px-3 py-2 text-left transition-colors duration-150 hover:border-ink"
-                      >
-                        <span className="truncate font-mono text-caption text-text-secondary">
-                          {a.email}
-                        </span>
-                        <span className="shrink-0 text-caption text-ink">
-                          {ROLE_LABELS[a.role]}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
           <p className="mt-8 border-t pt-6 text-body-sm text-text-secondary">
             未有帳號?
             <Link to="/join" className="link-underline ml-1 text-ink">
@@ -335,8 +268,8 @@ export default function Login() {
           </p>
           <p className="mt-3 text-caption text-text-muted">
             {supabaseReady
-              ? "用 Email 連結登入 — 無需密碼;示範帳號仍可一 click 體驗"
-              : "示範模式 — 未設定 Supabase env,資料只存喺瀏覽器"}
+              ? "用 Email 連結登入 — 無需記密碼"
+              : "示範模式 — 未設定 Supabase env,登入功能暫時未開放"}
           </p>
         </div>
       </motion.div>

@@ -125,7 +125,8 @@ function SkillCard({ s }: { s: SkillEntry }) {
       <p className="mt-2 text-body-sm text-text-secondary">{s.value}</p>
       <p className="mt-2 text-caption text-text-muted">幾時用:{s.detail}</p>
       <div className="mt-auto">
-        <InstallSnippet cmd={s.install} />
+        {/* 安裝指令只對有真 repo url 嘅 skill 顯示;優先名單(waitlist)未發佈,唔顯示 */}
+        {s.url ? <InstallSnippet cmd={s.install} /> : null}
         {s.waitlist ? (
           <Link
             to="/developers"

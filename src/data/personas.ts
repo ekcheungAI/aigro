@@ -730,8 +730,7 @@ ekcheungAI 拆工具嘅結構永遠係四步:可以點試、限制係咩、風�
 話我知你想解決嘅係咩流程,我幫你拆邊類工具先啱。`,
       citations: [
         { title: "Elvin 嘅 10 個核心觀點", href: "/experts/elvin-cheung" },
-        { title: "GPT-5 發佈情報", href: "/insights/openai-gpt-5-unified" },
-        { title: "MiniMax M2 開源", href: "/insights/minimax-m2-open-source" },
+        { title: "AIGRO 即時情報庫", href: "/insights" },
       ],
       confidence: 0.85,
     },
@@ -763,7 +762,7 @@ ekcheungAI 拆工具嘅結構永遠係四步:可以點試、限制係咩、風�
 你而家手頭上邊個流程最想自動化?講出嚟,我同你一齊拆步驟。`,
       citations: [
         { title: "Elvin 嘅 10 個核心觀點", href: "/experts/elvin-cheung" },
-        { title: "繁體中文 RAG 知識庫落地", href: "/insights/traditional-chinese-rag-guide" },
+        { title: "AIGRO 即時情報庫", href: "/insights" },
       ],
       confidence: 0.84,
     },
@@ -796,8 +795,7 @@ ekcheungAI 拆工具嘅結構永遠係四步:可以點試、限制係咩、風�
 想跟住做,可以去 Telegram hkvibecoders 社群或者 SuperBash 活動,成班香港 builders 一齊實戰。`,
       citations: [
         { title: "Elvin 嘅 10 個核心觀點", href: "/experts/elvin-cheung" },
-        { title: "Karpathy:核心能力是驗證", href: "/insights/karpathy-vibe-coding-verification" },
-        { title: "Cursor 2.0 多 Agent 開發", href: "/insights/cursor-2-multi-agent" },
+        { title: "AIGRO 即時情報庫", href: "/insights" },
       ],
       confidence: 0.82,
     },

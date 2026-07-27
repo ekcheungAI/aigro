@@ -230,7 +230,7 @@ function ExpertAboutCard({ persona }: { persona: Persona }) {
         </p>
         <p className="mt-1.5 flex items-center gap-1.5 text-caption text-text-secondary">
           <PresenceDot size={8} />
-          在線 · 而家可以問佢
+          AI 分身 · 隨時可問
         </p>
 
         {/* Signature quote — serif,expert accent left border */}
