@@ -5,7 +5,7 @@ import AboutPersonaCard from "@/components/ask/AboutPersonaCard";
 import type { Citation } from "@/components/ask/AiMessage";
 import { citationDomain } from "@/components/ask/sessions";
 import { aihotAllInsights, aihotFetchedAt } from "@/data/aihot";
-import { cases } from "@/data/cases";
+import { useLiveFetchedAt, useLiveItems } from "@/data/liveItems";
 import type { Persona } from "@/data/personas";
 import { cn } from "@/lib/utils";
 
@@ -27,14 +27,19 @@ export default function ContextPanel({
   onSuggestion,
   suggestionsDisabled,
 }: ContextPanelProps) {
-  // 「分身資料與限制」— 按分身切換:平台用真實內容庫 counts + AIHOT snapshot 日期;
-  // 專家用授權內容說明 + 觀點數 + Prompt 版本。
+  // 「分身資料與限制」— 按分身切換:平台用真實情報庫 count(live 優先,
+  // 未成熟回落 snapshot)+ 數據時間;專家用授權內容說明 + 觀點數 + Prompt 版本。
   const isPlatform = persona.kind === "platform";
   const reduced = useReducedMotion();
+  const liveItems = useLiveItems();
+  const liveFetchedAt = useLiveFetchedAt();
+  const itemCount = liveItems?.length ?? aihotAllInsights.length;
   const knowledgeSource = isPlatform
-    ? `全站情報庫 ${aihotAllInsights.length} 則 + 案例庫 ${cases.length} 篇 + 資源庫`
+    ? `全站情報庫 ${itemCount} 則 · 自家管道每 30 分鐘更新`
     : `公開分享 + 授權內容 · ${persona.expert?.viewpoints?.length ?? 10} 個核心觀點 · Prompt v1.0`;
-  const updatedDate = isPlatform ? aihotFetchedAt.slice(0, 10) : "2026-07";
+  const updatedDate = isPlatform
+    ? (liveFetchedAt ?? aihotFetchedAt).slice(0, 10)
+    : "2026-07";
   const usageLimits = [
     "免費無限對話 · 限時開放",
     isPlatform

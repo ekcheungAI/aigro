@@ -1,23 +1,15 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Calendar, ExternalLink } from "lucide-react";
 import Reveal, { REVEAL_EASE } from "@/components/Reveal";
 import { todayInfo, recentIssues } from "@/lib/daily";
 import { aihotDaily } from "@/data/aihot";
+import { useLiveDaily } from "@/data/liveItems";
 import { cn } from "@/lib/utils";
 
-/** 日報 — 日期、星期、期號按今日動態生成 (src/lib/daily.ts)；內容來自 AIHOT 真實日報 */
+/** 日報 — 日期、星期、期號按今日動態生成 (src/lib/daily.ts)；內容來自真實情報 */
 const LIST_COUNT = 8;
-const DAILY_LIST = aihotDaily.items.slice(0, LIST_COUNT);
-
-const ISSUE = {
-  ...todayInfo(),
-  sources: aihotDaily.itemCount,
-  picks: (aihotDaily.lead ? 1 : 0) + DAILY_LIST.length,
-};
-
-const LEAD = aihotDaily.lead;
 
 /** 近 7 日（原型：往期未有真實 archive,期號按 src/lib/daily.ts 逐日遞減） */
 const RECENT_ISSUES = recentIssues(7).map((d) => ({
@@ -40,6 +32,21 @@ export function DailyContent({ embedded = false }: { embedded?: boolean }) {
   const pickerRef = useRef<HTMLDivElement>(null);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef(0);
+
+  /* Supabase live 成熟時用 placement daily/featured 真數據合成日報
+     (邏輯同 fetch-argro.mjs 一致),未成熟回落 build-time snapshot。 */
+  const liveDaily = useLiveDaily();
+  const daily = liveDaily ?? aihotDaily;
+  const issue = useMemo(() => {
+    const listCount = Math.min(daily.items.length, LIST_COUNT);
+    return {
+      ...todayInfo(),
+      sources: daily.itemCount,
+      picks: (daily.lead ? 1 : 0) + listCount,
+    };
+  }, [daily]);
+  const lead = daily.lead;
+  const dailyList = daily.items.slice(0, LIST_COUNT);
 
   // Toast 自動消失
   useEffect(() => () => window.clearTimeout(toastTimer.current), []);
@@ -82,7 +89,7 @@ export function DailyContent({ embedded = false }: { embedded?: boolean }) {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3, ease: REVEAL_EASE }}
         >
-          {ISSUE.date}・{ISSUE.weekday}・第 {ISSUE.number} 期 Issue {ISSUE.number}
+          {issue.date}・{issue.weekday}・第 {issue.number} 期 Issue {issue.number}
         </motion.p>
 
         {/* 日期導航列(slim)— 直接喺期號行之下:前一日(整理中 toast)/ 日期選擇 / 後一日(今日 disabled) */}
@@ -120,7 +127,7 @@ export function DailyContent({ embedded = false }: { embedded?: boolean }) {
               className="inline-flex h-9 items-center gap-2 rounded-md border border-border-strong px-3 text-ink press hover:bg-ink-soft"
             >
               <Calendar className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-              <span className="font-mono text-caption">{ISSUE.date}</span>
+              <span className="font-mono text-caption">{issue.date}</span>
             </button>
             <AnimatePresence>
               {pickerOpen && (
@@ -181,7 +188,7 @@ export function DailyContent({ embedded = false }: { embedded?: boolean }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2, ease: REVEAL_EASE }}
         >
-          編輯部從 {ISSUE.sources} 條即日情報選出 {ISSUE.picks} 條必讀 — 3
+          編輯部從 {issue.sources} 條即日情報選出 {issue.picks} 條必讀 — 3
           分鐘，掌握全球 AI 脈搏。
         </motion.p>
         <motion.p
@@ -207,14 +214,14 @@ export function DailyContent({ embedded = false }: { embedded?: boolean }) {
       </section>
 
       {/* Section 2 — Lead Story 頭條 (全寬 surface 卡片, padding 48px) */}
-      {LEAD && (
+      {lead && (
         <section className="mx-auto max-w-container px-6 pt-16">
           <Reveal y={24} duration={0.5}>
             <article className="rounded-md border bg-surface p-12 max-md:p-6">
               <Reveal y={16} duration={0.4} delay={0.08}>
                 <div className="flex flex-wrap items-center gap-3">
                   <span className="rounded-sm bg-ink-soft px-3 py-1.5 text-overline font-sans uppercase text-ink">
-                    {LEAD.category}
+                    {lead.category}
                   </span>
                   <span className="text-overline font-sans uppercase text-ink">
                     頭條 Lead
@@ -223,36 +230,36 @@ export function DailyContent({ embedded = false }: { embedded?: boolean }) {
               </Reveal>
               <Reveal y={16} duration={0.4} delay={0.16}>
                 <h2 className="mt-4 font-display text-h2 text-text-primary">
-                  {LEAD.title}
+                  {lead.title}
                 </h2>
               </Reveal>
               <Reveal y={16} duration={0.4} delay={0.24}>
                 <p className="mt-4 max-w-prose text-body-lg text-text-secondary">
-                  {LEAD.summary}
+                  {lead.summary}
                 </p>
               </Reveal>
               <Reveal y={16} duration={0.4} delay={0.32}>
                 <div className="mt-8 flex flex-wrap items-center gap-x-3 gap-y-3 text-caption text-text-muted">
                   <a
-                    href={LEAD.permalink}
+                    href={lead.permalink}
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center gap-1 transition-colors duration-150 hover:text-ink"
                   >
-                    {LEAD.source}
+                    {lead.source}
                     <ExternalLink className="h-3 w-3" strokeWidth={1.5} aria-hidden="true" />
                   </a>
-                  {aihotDaily.date && (
+                  {daily.date && (
                     <>
                       <span aria-hidden="true">·</span>
-                      <span>{aihotDaily.date}</span>
+                      <span>{daily.date}</span>
                     </>
                   )}
-                  {LEAD.score !== null && (
-                    <span className="font-mono text-ink">{LEAD.score}</span>
+                  {lead.score !== null && (
+                    <span className="font-mono text-ink">{lead.score}</span>
                   )}
                   <a
-                    href={LEAD.permalink}
+                    href={lead.permalink}
                     target="_blank"
                     rel="noreferrer"
                     className="group ml-auto inline-flex items-center gap-1.5 text-label text-ink"
@@ -274,7 +281,7 @@ export function DailyContent({ embedded = false }: { embedded?: boolean }) {
       {/* Section 3 — 編號列表 (2 欄 ≥1024px / 單欄 mobile)，每條外鏈至 AIHOT permalink */}
       <section className="mx-auto max-w-container px-6 pt-12">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          {DAILY_LIST.map((item, i) => (
+          {dailyList.map((item, i) => (
             <Reveal key={item.permalink} y={20} duration={0.4} delay={i * 0.1}>
               <a
                 href={item.permalink}

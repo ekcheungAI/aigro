@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import Reveal from "@/components/Reveal";
 
-const CITATIONS = ["補習社 AI 批改案例", "GPT-5 發佈情報"];
+const CITATIONS = ["AIGRO 即時情報庫", "領航專家分身觀點"];
 
 /**
  * Ask CTA band — 用靜態對話預覽展示產品,唔使文字描述。
@@ -26,7 +26,7 @@ export default function AskPreview() {
             有咩 AI 問題?問我哋嘅 AI 編輯部。
           </h3>
           <p className="mt-4 max-w-[520px] text-body-sm text-text-secondary">
-            基於全站情報與案例庫回答,每個論點附來源引用 —
+            基於全站情報庫回答,每個論點附來源引用 —
             無引用,不下結論。
           </p>
           <div className="mt-8">
@@ -68,8 +68,8 @@ export default function AskPreview() {
                   AIGRO 編輯部
                 </p>
                 <p className="mt-1.5 text-body-sm text-text-primary">
-                  由免費額度開始已經夠:用 GPT-5
-                  起草內容,再注入你嘅本地案例同觀點 — $0
+                  由免費額度開始已經夠:用 AI
+                  起草內容,再注入你嘅本地觀點同真實經驗 — $0
                   預算都可以起步。
                 </p>
                 {/* 引用 chips — 穩定、不位移(§5.2) */}

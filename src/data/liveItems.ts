@@ -12,9 +12,16 @@
  * RLS:anon 只能讀 status='published'(items_public_read),呢個 fetch 天然安全。
  */
 
-import { useSyncExternalStore } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import { supabase, supabaseReady } from "@/lib/supabase";
-import type { AihotRawItem } from "./aihot";
+import {
+  toAihotInsight,
+  type AihotDaily,
+  type AihotDailyEntry,
+  type AihotHotTopic,
+  type AihotInsight,
+  type AihotRawItem,
+} from "./aihot";
 
 /** 少過呢個數就當 live 數據未成熟(sync 未行過/管道異常),繼續用 snapshot */
 const MIN_LIVE_ITEMS = 5;
@@ -126,4 +133,118 @@ export function useLiveItems(): AihotRawItem[] | null {
 export function useLiveFetchedAt(): string | null {
   startLiveItems();
   return useSyncExternalStore(subscribe, getSnapshot).fetchedAt;
+}
+
+/* ============ 衍生 selector(v1.27 公開頁面 live hydration) ============ */
+
+/**
+ * live items → AihotInsight[](未成熟 → null,consumer 回落 aihotInsights)。
+ * 用法:`const insights = useLiveInsights() ?? aihotInsights;`
+ */
+export function useLiveInsights(): AihotInsight[] | null {
+  const raw = useLiveItems();
+  return useMemo(() => (raw ? raw.map(toAihotInsight) : null), [raw]);
+}
+
+/**
+ * 由真實情報合成日報 — 邏輯同 scripts/fetch-argro.mjs 嘅 fallback 一致:
+ * placement daily/featured(selected)優先,按分數取 top 9,再按 category 分組。
+ * selected 不足 5 條時以全庫高分補(仍然係真數據,唔作數)。
+ */
+export function synthesizeDailyFromInsights(
+  insights: AihotInsight[]
+): AihotDaily {
+  const byScore = [...insights].sort((a, b) => b.score - a.score);
+  const selected = byScore.filter((i) => i.selected).slice(0, 9);
+  const top = (selected.length >= 5 ? selected : byScore.slice(0, 9)).map(
+    (i): AihotDailyEntry => ({
+      slug: i.slug,
+      category: i.category,
+      sectionLabel: i.category,
+      title: i.title,
+      summary: i.summary,
+      source: i.source,
+      permalink: i.originalUrl ?? i.permalink,
+      canonical: i.canonical,
+      score: i.score,
+    })
+  );
+
+  const sectionOrder: AihotInsight["category"][] = [];
+  const counts = new Map<string, number>();
+  for (const entry of top) {
+    if (!counts.has(entry.category)) sectionOrder.push(entry.category);
+    counts.set(entry.category, (counts.get(entry.category) ?? 0) + 1);
+  }
+
+  const latest = insights[0]?.publishedAt ?? "";
+  return {
+    date: latest ? latest.slice(0, 10) : null,
+    canonical: "",
+    lead: top[0] ?? null,
+    items: top.slice(1),
+    sections: sectionOrder.map((category) => ({
+      label: category,
+      category,
+      count: counts.get(category) ?? 0,
+    })),
+    itemCount: top.length,
+  };
+}
+
+/** 熱門話題關鍵詞群組 — 同 scripts/fetch-argro.mjs TOPIC_GROUPS 一致 */
+const LIVE_TOPIC_GROUPS: [string, RegExp][] = [
+  ["OpenAI", /openai|gpt|chatgpt/i],
+  ["Anthropic / Claude", /anthropic|claude/i],
+  ["Google / Gemini", /google|gemini|deepmind/i],
+  ["開源模型", /open.?source|llama|qwen|deepseek|mistral|開源/i],
+  ["AI Agent", /agent|agentic|代理|智能體/i],
+  ["AI 基建與算力", /gpu|nvidia|data center|算力|基建|chip/i],
+];
+
+/**
+ * 由真實情報聚合熱門話題 — 同 fetch-argro.mjs 一致:關鍵詞群組 ≥2 條先成立,
+ * 按覆蓋數降序取 5 個。
+ */
+export function aggregateHotTopicsFromInsights(
+  insights: AihotInsight[]
+): AihotHotTopic[] {
+  return LIVE_TOPIC_GROUPS.map(
+    ([name, re]) =>
+      [
+        name,
+        insights.filter((i) => re.test(`${i.title} ${i.summary}`)),
+      ] as const
+  )
+    .filter(([, arr]) => arr.length >= 2)
+    .sort((a, b) => b[1].length - a[1].length)
+    .slice(0, 5)
+    .map(([name, arr]) => ({
+      id: name,
+      title: name,
+      permalink: arr[0]?.originalUrl ?? arr[0]?.permalink ?? "",
+      source: arr[0]?.source ?? "",
+      sourceCount: arr.length,
+      sourceNames: [...new Set(arr.map((i) => i.source))].slice(0, 4),
+      latestAt: arr[0]?.publishedAt ?? null,
+      related: arr.slice(0, 3),
+    }));
+}
+
+/** live 日報(未成熟 → null,consumer 回落 aihotDaily) */
+export function useLiveDaily(): AihotDaily | null {
+  const insights = useLiveInsights();
+  return useMemo(
+    () => (insights ? synthesizeDailyFromInsights(insights) : null),
+    [insights]
+  );
+}
+
+/** live 熱門話題(未成熟 → null,consumer 回落 aihotHotTopics) */
+export function useLiveHotTopics(): AihotHotTopic[] | null {
+  const insights = useLiveInsights();
+  return useMemo(
+    () => (insights ? aggregateHotTopicsFromInsights(insights) : null),
+    [insights]
+  );
 }

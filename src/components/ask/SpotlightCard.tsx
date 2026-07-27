@@ -6,7 +6,7 @@ import VerifiedBadge from "@/components/VerifiedBadge";
 import PresenceDot from "@/components/ask/PresenceDot";
 import { EASE_OUT_STRONG } from "@/components/Reveal";
 import { aihotAllInsights } from "@/data/aihot";
-import { cases } from "@/data/cases";
+import { useLiveItems } from "@/data/liveItems";
 import { expertHasPhoto, verifiedExperts } from "@/data/experts";
 import type { Persona } from "@/data/personas";
 import { personaInitials } from "@/data/personas";
@@ -34,13 +34,18 @@ export default function SpotlightCard({
 }: SpotlightCardProps) {
   const reduced = useReducedMotion();
   const expert = persona.kind === "expert" ? persona.expert : undefined;
+  // 平台 chips 用真實情報庫數據(live 優先,未成熟回落 snapshot)
+  const liveItems = useLiveItems();
+  const itemPool = liveItems ?? aihotAllInsights;
+  const sourceCount = new Set(itemPool.map((i) => i.source).filter(Boolean))
+    .size;
 
-  // 3 個 credential chips:專家取 experts.ts metrics 頭 3 個;平台取真實內容庫 counts
+  // 3 個 credential chips:專家取 experts.ts metrics 頭 3 個;平台取真實情報庫 counts
   const chips: CredentialChip[] = expert?.metrics
     ? expert.metrics.slice(0, 3).map((m) => ({ value: m.value, label: m.label }))
     : [
-        { value: `${aihotAllInsights.length} 則`, label: "全站情報庫・每日更新" },
-        { value: `${cases.length} 篇`, label: "香港落地案例庫" },
+        { value: `${itemPool.length} 則`, label: "全站情報庫・每日更新" },
+        { value: `${sourceCount} 個`, label: "情報來源・持續接入" },
         { value: `${verifiedExperts.length} 位`, label: "領航專家授權分身" },
       ];
 

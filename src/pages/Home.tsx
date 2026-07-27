@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
@@ -11,7 +11,6 @@ import {
 import Reveal, { REVEAL_EASE } from "@/components/Reveal";
 import { todayInfo } from "@/lib/daily";
 import InsightCard from "@/components/InsightCard";
-import CaseCard from "@/components/CaseCard";
 import CategoryChip from "@/components/CategoryChip";
 import MonogramAvatar, { PhotoAvatar } from "@/components/MonogramAvatar";
 import VerifiedBadge from "@/components/VerifiedBadge";
@@ -20,14 +19,13 @@ import HotTopicsTicker from "@/components/home/HotTopicsTicker";
 import HowToUse from "@/components/home/HowToUse";
 import AskPreview from "@/components/home/AskPreview";
 import { personas } from "@/data/personas";
+import { INSIGHT_CATEGORIES, type InsightCategory } from "@/data/insights";
 import {
-  INSIGHT_ARTICLES,
-  INSIGHT_CATEGORIES,
-  insights,
-  type InsightCategory,
-} from "@/data/insights";
-import { aihotDailyPicks, aihotInsights } from "@/data/aihot";
-import { featuredCases } from "@/data/cases";
+  aihotDailyPicks,
+  aihotInsights,
+  type AihotDailyPick,
+} from "@/data/aihot";
+import { useLiveInsights } from "@/data/liveItems";
 import { expertFullName, expertHasPhoto, experts } from "@/data/experts";
 
 /* ================= Section 1 — Cinematic Dark Hero ================= */
@@ -36,6 +34,23 @@ function Hero() {
   const [picksOpen, setPicksOpen] = useState(true);
   const reduceMotion = useReducedMotion();
   const show = reduceMotion ? false : undefined;
+
+  /* 今日精選速覽 — Supabase live 成熟時用全站評分最高 5 條,未成熟回落 snapshot */
+  const liveInsights = useLiveInsights();
+  const dailyPicks = useMemo<AihotDailyPick[]>(() => {
+    if (!liveInsights) return aihotDailyPicks;
+    return [...liveInsights]
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5)
+      .map((i) => ({
+        slug: i.slug,
+        title: i.title,
+        source: i.source,
+        permalink: i.permalink,
+        originalUrl: i.originalUrl,
+        score: i.score,
+      }));
+  }, [liveInsights]);
 
   return (
     <section className="relative isolate -mt-16 overflow-hidden border-b border-band-border bg-band-bg pt-16">
@@ -176,7 +191,7 @@ function Hero() {
                   className="overflow-hidden"
                 >
                   <ol className="border-t border-band-border">
-                    {aihotDailyPicks.map((pick, i) => (
+                    {dailyPicks.map((pick, i) => (
                       <li key={pick.slug}>
                         <a
                           href={pick.originalUrl ?? pick.permalink}
@@ -267,76 +282,17 @@ function McpNetworkBand() {
 
 /* ================= Section 2 — Insights 情報牆 ================= */
 
-/**
- * Editor's Pick slide — 寬幅 cinematic 編輯精選，置於情報牆之上。
- * 左 40% 影像 + 右內容（標題 / 香港視角 / 閱讀全文），靜態單張，非輪播。
- * 影像語言同情報縮圖：saturate-[0.8] → group-hover:saturate-100。
- */
-function EditorPickSlide() {
-  const insight = insights.find((i) => i.slug === "openai-gpt-5-unified");
-  if (!insight) return null;
-  const article = INSIGHT_ARTICLES[insight.slug];
-
-  return (
-    <Link
-      to={`/insights/${insight.slug}`}
-      className="card-hover group mt-8 flex flex-col overflow-hidden rounded-md border bg-surface shadow-card dark:shadow-none md:flex-row"
-    >
-      {article?.heroImage && (
-        <div className="shrink-0 md:w-[40%]">
-          <img
-            src={article.heroImage}
-            alt=""
-            loading="lazy"
-            className="aspect-video h-full w-full object-cover saturate-[0.8] transition-[filter] duration-250 group-hover:saturate-100 md:aspect-auto"
-          />
-        </div>
-      )}
-      <div className="flex flex-1 flex-col p-8 max-md:p-6">
-        <div className="flex items-center gap-3">
-          <span className="text-overline font-sans uppercase text-ink">
-            編輯精選 Editor's Pick
-          </span>
-          <span className="rounded-sm bg-ink-soft px-3 py-1.5 text-overline font-sans uppercase text-ink">
-            {insight.category}
-          </span>
-          <span className="ml-auto text-caption text-text-muted">
-            {insight.readMinutes} 分鐘閱讀
-          </span>
-        </div>
-        <h3 className="mt-4 font-display text-h3 text-text-primary transition-colors duration-150 group-hover:text-ink">
-          {insight.title}
-        </h3>
-        {/* 香港視角 — 差異化核心 */}
-        <div className="mt-4 border-l-2 border-ink pl-3">
-          <p className="text-overline font-sans uppercase text-ink">
-            香港視角 HK Angle
-          </p>
-          <p className="mt-1 line-clamp-3 text-body-sm text-text-secondary">
-            {article?.lead ?? insight.hkAngle}
-          </p>
-        </div>
-        <span className="mt-auto inline-flex items-center gap-1 pt-6 text-label text-ink">
-          閱讀全文
-          <ArrowRight
-            className="h-4 w-4 transition-transform duration-150 nudge-x"
-            strokeWidth={1.5}
-            aria-hidden="true"
-          />
-        </span>
-      </div>
-    </Link>
-  );
-}
-
 function InsightsWall() {
   const [category, setCategory] = useState<InsightCategory | "全部">("全部");
   const wallRef = useRef<HTMLDivElement>(null);
 
+  /* Supabase live 成熟時用 live 情報,未成熟回落 build-time snapshot */
+  const liveInsights = useLiveInsights();
+  const pool = liveInsights ?? aihotInsights;
   const filtered =
     category === "全部"
-      ? aihotInsights
-      : aihotInsights.filter((i) => i.category === category);
+      ? pool
+      : pool.filter((i) => i.category === category);
 
   const scrollWall = (dir: 1 | -1) => {
     wallRef.current?.scrollBy({ left: dir * 360, behavior: "smooth" });
@@ -378,11 +334,6 @@ function InsightsWall() {
           </Reveal>
         ))}
       </div>
-
-      {/* Editor's Pick slide — 寬幅 cinematic 精選，置於情報牆之上 */}
-      <Reveal y={20} duration={0.45}>
-        <EditorPickSlide />
-      </Reveal>
 
       {/* Horizontal scroll-snap card wall — 340px fixed cards */}
       <div className="relative mt-8">
@@ -427,8 +378,13 @@ function InsightsWall() {
   );
 }
 
-/* ================= Section 3 — Cases 精選 ================= */
+/* ================= Section 3 — Cases 精選（誠實狀態:真實案例整理中） ================= */
 
+/**
+ * v1.27:示範案例全部係虛構,已移除。
+ * 呢個 section 保留框架,內容係誠實狀態 — 上架標準講清楚,
+ * 有興趣嘅讀者去 /cases 登記通知(寫入 Supabase waitlist)。
+ */
 function CasesFeatured() {
   return (
     <section className="mx-auto max-w-container px-6 py-24 max-md:py-16">
@@ -441,11 +397,26 @@ function CasesFeatured() {
           <h2 className="font-display text-h2 text-text-primary">
             實戰案例 Cases
           </h2>
+        </div>
+      </Reveal>
+
+      <Reveal y={20} duration={0.45}>
+        <div className="mt-8 flex flex-col items-start gap-6 rounded-md border bg-surface p-10 shadow-card dark:shadow-none max-md:p-8 md:flex-row md:items-center md:justify-between">
+          <div className="max-w-[520px]">
+            <h3 className="font-display text-h3 text-text-primary">
+              真實案例整理中
+            </h3>
+            <p className="mt-3 text-body-sm text-text-secondary">
+              我哋只發佈有真實數據支持、客戶授權嘅香港 AI 落地案例 —
+              每個案例要有量化成果、工具清單同可複製步驟。
+              與其放示範數字,不如留空等真案例。
+            </p>
+          </div>
           <Link
             to="/cases"
-            className="group hidden shrink-0 items-center gap-1 text-label text-ink sm:inline-flex"
+            className="group inline-flex h-12 shrink-0 items-center gap-2 rounded-md bg-ink-solid px-8 text-label text-white press hover:bg-ink-hover"
           >
-            全部案例
+            登記上架通知
             <ArrowRight
               className="h-4 w-4 transition-transform duration-150 nudge-x"
               strokeWidth={1.5}
@@ -453,20 +424,6 @@ function CasesFeatured() {
             />
           </Link>
         </div>
-      </Reveal>
-
-      <div className="mt-8 grid gap-6 md:grid-cols-2">
-        {featuredCases.map((c, i) => (
-          <Reveal key={c.slug} delay={i * 0.1}>
-            <CaseCard caseStudy={c} />
-          </Reveal>
-        ))}
-      </div>
-
-      <Reveal delay={0.15}>
-        <p className="mt-6 text-caption text-text-muted">
-          來源：AIGRO 學員成果・Build in Public 社群・經當事人授權刊登
-        </p>
       </Reveal>
     </section>
   );

@@ -22,10 +22,14 @@ const BASE = "https://aigro-blue.vercel.app";
 
 const read = (rel) => readFileSync(join(ROOT, rel), "utf8");
 
-/** Slice out a top-level `export const NAME ... = <opener> ... <closer>;` block. */
+/**
+ * Slice out a top-level `export const NAME ... = <opener> ... <closer>;` block.
+ * v1.27:mock 數據移除後 INSIGHT_ARTICLES / cases 已唔存在 — export 缺席時
+ * 回空字串(零 slug),唔再 throw,等 sitemap 只收真實 routes。
+ */
 function block(src, name, opener, closer) {
   const start = src.indexOf(`export const ${name}`);
-  if (start === -1) throw new Error(`export const ${name} not found`);
+  if (start === -1) return "";
   const openIdx = src.indexOf(opener, start);
   const endIdx = src.indexOf(`\n${closer};`, openIdx);
   if (openIdx === -1 || endIdx === -1)

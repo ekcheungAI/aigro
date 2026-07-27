@@ -21,7 +21,7 @@ import VerifiedBadge from "@/components/VerifiedBadge";
 import PresenceDot from "@/components/ask/PresenceDot";
 import Toast, { useToast } from "@/components/auth/Toast";
 import { aihotAllInsights } from "@/data/aihot";
-import { cases } from "@/data/cases";
+import { useLiveItems } from "@/data/liveItems";
 import { expertHasPhoto } from "@/data/experts";
 import type { Expert } from "@/data/experts";
 import type { Persona } from "@/data/personas";
@@ -331,6 +331,11 @@ function ExpertAboutCard({ persona }: { persona: Persona }) {
 /* ---------------- 平台版(精簡) ---------------- */
 
 function PlatformAboutCard({ persona }: { persona: Persona }) {
+  // 知識庫 counts — 真實情報庫數據(live 優先,未成熟回落 snapshot)
+  const liveItems = useLiveItems();
+  const itemPool = liveItems ?? aihotAllInsights;
+  const sourceCount = new Set(itemPool.map((i) => i.source).filter(Boolean))
+    .size;
   return (
     <div className="mt-3 rounded-md border bg-bg p-4">
       <div className="flex items-center gap-2.5">
@@ -351,15 +356,15 @@ function PlatformAboutCard({ persona }: { persona: Persona }) {
       <div className="mt-3 flex flex-wrap gap-1.5">
         <span className="inline-flex items-baseline gap-1.5 rounded-sm border bg-surface px-2 py-1">
           <span className="font-mono text-caption text-text-primary">
-            {aihotAllInsights.length}
+            {itemPool.length}
           </span>
           <span className="text-caption text-text-muted">則情報</span>
         </span>
         <span className="inline-flex items-baseline gap-1.5 rounded-sm border bg-surface px-2 py-1">
           <span className="font-mono text-caption text-text-primary">
-            {cases.length}
+            {sourceCount}
           </span>
-          <span className="text-caption text-text-muted">篇案例</span>
+          <span className="text-caption text-text-muted">個來源</span>
         </span>
       </div>
       {/* 瀏覽情報庫 CTA */}
