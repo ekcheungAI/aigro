@@ -47,17 +47,23 @@ function statusChip(status: ItemStatus) {
   return "bg-card text-[#A36A0F]";
 }
 
-async function fetchItems(): Promise<AdminItemRow[]> {
+/** AdminItemRow + v2 專家投稿欄(expert_slug / local_commentary) */
+type ContentItemRow = AdminItemRow & {
+  expert_slug: string | null;
+  local_commentary: string | null;
+};
+
+async function fetchItems(): Promise<ContentItemRow[]> {
   if (!supabase) throw new Error("Supabase 未連接 — 請檢查環境變數。");
   const { data, error } = await supabase
     .from("items")
     .select(
-      "id,title,summary,original_url,category,score,lang,status,placement,published_at,fetched_at,source_id,sources(name)"
+      "id,title,summary,local_commentary,original_url,category,score,lang,status,placement,published_at,fetched_at,source_id,expert_slug,sources(name)"
     )
     .order("fetched_at", { ascending: false })
     .limit(500);
   if (error) throw new Error(error.message);
-  return (data ?? []) as unknown as AdminItemRow[];
+  return (data ?? []) as unknown as ContentItemRow[];
 }
 
 export default function AdminContent() {
@@ -65,19 +71,35 @@ export default function AdminContent() {
   const [tab, setTab] = useState<ContentTab>("情報佇列");
   const { data, loading, error, refetch } = useAdminQuery(fetchItems);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("pending");
+  const [expertOnly, setExpertOnly] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
 
   const items = useMemo(() => data ?? [], [data]);
   const filtered = useMemo(
     () =>
-      statusFilter === "全部"
-        ? items
-        : items.filter((i) => i.status === statusFilter),
-    [items, statusFilter]
+      items.filter(
+        (i) =>
+          (statusFilter === "全部" || i.status === statusFilter) &&
+          (!expertOnly || i.expert_slug !== null)
+      ),
+    [items, statusFilter, expertOnly]
   );
   const countOf = (s: ItemStatus) => items.filter((i) => i.status === s).length;
+  const expertItems = useMemo(
+    () =>
+      items
+        .filter((i) => i.expert_slug !== null)
+        .sort((a, b) => {
+          // pending 優先,其餘按提交時間倒序
+          const ap = a.status === "pending" ? 0 : 1;
+          const bp = b.status === "pending" ? 0 : 1;
+          if (ap !== bp) return ap - bp;
+          return (Date.parse(b.fetched_at ?? "") || 0) - (Date.parse(a.fetched_at ?? "") || 0);
+        }),
+    [items]
+  );
 
-  const updateStatus = async (item: AdminItemRow, status: ItemStatus) => {
+  const updateStatus = async (item: ContentItemRow, status: ItemStatus) => {
     if (!supabase || busyId) return;
     setBusyId(item.id);
     const patch: Record<string, unknown> = { status };
@@ -97,7 +119,7 @@ export default function AdminContent() {
     refetch();
   };
 
-  const updatePlacement = async (item: AdminItemRow, placement: ItemPlacement) => {
+  const updatePlacement = async (item: ContentItemRow, placement: ItemPlacement) => {
     if (!supabase || busyId) return;
     setBusyId(item.id);
     const { error: updateError } = await supabase
@@ -173,6 +195,20 @@ export default function AdminContent() {
                 </span>
               </button>
             ))}
+            {/* 專家投稿 filter(expert_slug 非空) */}
+            <button
+              type="button"
+              onClick={() => setExpertOnly((v) => !v)}
+              className={cn(
+                "rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors",
+                expertOnly
+                  ? "border-lime bg-lime text-on-accent"
+                  : "border-dashed border-border-strong bg-surface text-text-secondary hover:border-lime"
+              )}
+            >
+              專家投稿
+              <span className="ml-1 font-mono">{expertItems.length}</span>
+            </button>
           </div>
 
           <QueryState
@@ -206,6 +242,11 @@ export default function AdminContent() {
                       <span className="rounded-sm bg-card px-1.5 py-0.5 font-mono text-[10px] text-text-secondary">
                         {item.category ?? "未分類"}
                       </span>
+                      {item.expert_slug && (
+                        <span className="rounded-sm bg-lime-soft px-1.5 py-0.5 font-mono text-[11px] font-medium text-lime-text">
+                          專家投稿 · {item.expert_slug}
+                        </span>
+                      )}
                       <span
                         className={cn(
                           "rounded-sm px-1.5 py-0.5 text-[11px] font-medium",
@@ -226,7 +267,10 @@ export default function AdminContent() {
                         </span>
                       )}
                       <span className="ml-auto font-mono text-[11px] text-text-muted">
-                        {item.sources?.name ?? "未知來源"} ·{" "}
+                        {item.expert_slug
+                          ? `專家 ${item.expert_slug}`
+                          : (item.sources?.name ?? "未知來源")}{" "}
+                        ·{" "}
                         {item.published_at
                           ? `發佈 ${formatDate(item.published_at)}`
                           : `抓取 ${timeAgo(item.fetched_at)}`}
@@ -325,18 +369,121 @@ export default function AdminContent() {
         </div>
       )}
 
-      {/* ================= 專家文章(後端未接 — 誠實 state) ================= */}
+      {/* ================= 專家文章(items.expert_slug 投稿,pending 優先) ================= */}
       {tab === "專家文章" && (
-        <div className="rounded-lg border border-dashed border-border-strong bg-surface px-6 py-16 text-center">
-          <p className="font-display text-[17px] font-medium text-text-primary">
-            專家投稿審核 — 即將推出
-          </p>
-          <p className="mx-auto mt-2 max-w-[420px] text-xs leading-relaxed text-text-muted">
-            專家投稿同文章後台需要 submissions 資料表先可以運作。
-            而家 Portal 嘅「我的情報」只存本機草稿(已標明未發佈),
-            後端就位之後,投稿會喺呢度出現待審核。
-          </p>
-        </div>
+        <QueryState
+          loading={loading}
+          error={error ? `載入失敗:${error}` : null}
+          retry={refetch}
+          empty={
+            data && expertItems.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-border-strong bg-surface px-6 py-16 text-center">
+                <p className="font-display text-[17px] font-medium text-text-primary">
+                  暫無專家投稿
+                </p>
+                <p className="mx-auto mt-2 max-w-[420px] text-xs leading-relaxed text-text-muted">
+                  專家喺 Portal「我的情報」提交嘅稿件(expert_slug 非空)會即時出現喺呢度,
+                  待審核嘅排最前。
+                </p>
+              </div>
+            ) : null
+          }
+        >
+          {expertItems.length > 0 && (
+            <ul className="space-y-2">
+              {expertItems.map((item) => (
+                <li
+                  key={item.id}
+                  className={cn(
+                    "rounded-lg border border-border bg-surface p-4 transition-colors",
+                    item.status === "rejected" && "opacity-60"
+                  )}
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-sm bg-lime-soft px-1.5 py-0.5 font-mono text-[11px] font-medium text-lime-text">
+                      {item.expert_slug}
+                    </span>
+                    <span className="rounded-sm bg-card px-1.5 py-0.5 font-mono text-[10px] text-text-secondary">
+                      {item.category ?? "未分類"}
+                    </span>
+                    <span
+                      className={cn(
+                        "rounded-sm px-1.5 py-0.5 text-[11px] font-medium",
+                        statusChip(item.status)
+                      )}
+                    >
+                      {STATUS_LABEL[item.status]}
+                    </span>
+                    <span className="ml-auto font-mono text-[11px] text-text-muted">
+                      {item.published_at
+                        ? `發佈 ${formatDate(item.published_at)}`
+                        : `提交 ${timeAgo(item.fetched_at)}`}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-sm font-medium text-text-primary">
+                    {item.title}
+                  </p>
+                  {item.summary && (
+                    <p className="mt-1 text-xs leading-relaxed text-text-secondary">
+                      {item.summary}
+                    </p>
+                  )}
+                  {item.local_commentary && (
+                    <p className="mt-2 max-h-24 overflow-hidden whitespace-pre-line border-l-2 border-lime pl-3 text-xs leading-relaxed text-text-muted">
+                      {item.local_commentary}
+                    </p>
+                  )}
+                  {item.original_url && (
+                    <p className="mt-2">
+                      <a
+                        href={item.original_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs text-lime-text underline-offset-2 hover:underline"
+                      >
+                        原文連結
+                      </a>
+                    </p>
+                  )}
+                  <div className="mt-3 flex gap-2">
+                    {item.status !== "published" && (
+                      <button
+                        type="button"
+                        disabled={busyId === item.id}
+                        onClick={() => void updateStatus(item, "published")}
+                        className="inline-flex items-center gap-1 rounded-md bg-lime px-3 py-1.5 text-xs font-medium text-on-accent hover:bg-lime-hover disabled:opacity-50"
+                      >
+                        <Check className="h-3 w-3" />
+                        發佈
+                      </button>
+                    )}
+                    {item.status !== "rejected" && (
+                      <button
+                        type="button"
+                        disabled={busyId === item.id}
+                        onClick={() => void updateStatus(item, "rejected")}
+                        className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs text-text-secondary hover:border-border-strong disabled:opacity-50"
+                      >
+                        <X className="h-3 w-3" />
+                        拒絕
+                      </button>
+                    )}
+                    {item.status === "rejected" && (
+                      <button
+                        type="button"
+                        disabled={busyId === item.id}
+                        onClick={() => void updateStatus(item, "pending")}
+                        className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs text-text-secondary hover:border-border-strong disabled:opacity-50"
+                      >
+                        恢復到待審核
+                      </button>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </QueryState>
       )}
 
       {/* ================= 案例管理(誠實狀態 — 虛構案例已全站移除) ================= */}
