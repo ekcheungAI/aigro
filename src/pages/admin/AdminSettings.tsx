@@ -1,204 +1,260 @@
-import { useState } from "react";
-import { RefreshCw } from "lucide-react";
-import AdminToggle from "@/components/admin/AdminToggle";
+import { useEffect, useState } from "react";
+import { RefreshCw, Settings2, Workflow } from "lucide-react";
 import { useAdminToast } from "@/components/admin/AdminToast";
+import QueryState from "@/components/QueryState";
 import { cn } from "@/lib/utils";
-import { aihotSources, mcpVerticals } from "@/data/admin-mock";
+import { supabase, supabaseReady } from "@/lib/supabase";
+import { useArgroHealth } from "@/lib/argroHealth";
+import { countRows, useAdminQuery } from "@/components/admin/adminData";
+
+/** Supabase 連線測試 — head-count 一次 items,驗證 anon key + RLS 生效 */
+async function pingSupabase(): Promise<{ ok: boolean; detail: string }> {
+  if (!supabase) return { ok: false, detail: "未設定 VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY" };
+  try {
+    const n = await countRows("items");
+    return { ok: true, detail: `已連接 · items 表可讀(${n} 行)` };
+  } catch (e) {
+    return { ok: false, detail: e instanceof Error ? e.message : String(e) };
+  }
+}
+
+/** 各表即時行數 — admin 權限下全表可讀 */
+const TABLES = [
+  { table: "items", label: "情報 items" },
+  { table: "sources", label: "來源 sources" },
+  { table: "profiles", label: "會員 profiles" },
+  { table: "conversations", label: "對話 conversations" },
+  { table: "messages", label: "訊息 messages" },
+  { table: "waitlist", label: "名單 waitlist" },
+  { table: "leads", label: "線索 leads" },
+] as const;
+
+async function fetchTableCounts(): Promise<{ label: string; count: number }[]> {
+  const counts = await Promise.all(
+    TABLES.map(async (t) => ({
+      label: t.label,
+      count: await countRows(t.table),
+    }))
+  );
+  return counts;
+}
 
 export default function AdminSettings() {
   const toast = useAdminToast();
+  const argro = useArgroHealth();
+  const {
+    data: counts,
+    loading: countsLoading,
+    error: countsError,
+    refetch: refetchCounts,
+  } = useAdminQuery(fetchTableCounts);
 
-  const [verticals, setVerticals] = useState(mcpVerticals);
-  const [unlimitedQuota, setUnlimitedQuota] = useState(true);
-  const [quota, setQuota] = useState("6551");
-  const [refreshing, setRefreshing] = useState(false);
+  const [ping, setPing] = useState<{ ok: boolean; detail: string } | null>(null);
+  const [pingLoading, setPingLoading] = useState(true);
 
-  const toggleVertical = (key: string) => {
-    setVerticals((list) =>
-      list.map((v) => (v.key === key ? { ...v, enabled: !v.enabled } : v))
-    );
-    const v = verticals.find((x) => x.key === key);
-    if (v) {
-      toast(
-        v.enabled
-          ? `已關閉 ${v.label} MCP server(mock)— 優先名單 ${v.waitlist} 人不受影響`
-          : `已開放 ${v.label} MCP server(mock)— 將通知 ${v.waitlist} 位優先名單會員`
-      );
-    }
+  const runPing = () => {
+    setPingLoading(true);
+    pingSupabase().then((r) => {
+      setPing(r);
+      setPingLoading(false);
+    });
   };
+  useEffect(runPing, []);
 
-  const refreshSources = () => {
-    setRefreshing(true);
-    window.setTimeout(() => {
-      setRefreshing(false);
-      toast("AIHOT 來源已重新整理 — 新增 3 條情報進入審核佇列(mock)");
-    }, 900);
-  };
+  const llmOk = argro.data?.llm.configured ?? false;
 
   return (
     <div className="mx-auto max-w-4xl">
-      <div className="mb-6">
-        <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-lime-text">
-          Settings
-        </p>
-        <h1 className="mt-1 font-display text-[28px] font-medium text-text-primary">
-          設定
-        </h1>
-        <p className="mt-1 text-sm text-text-muted">
-          MCP 開放、免費額度與情報來源狀態。
-        </p>
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-lime-text">
+            Settings
+          </p>
+          <h1 className="mt-1 font-display text-[28px] font-medium text-text-primary">
+            系統設定
+          </h1>
+          <p className="mt-1 text-sm text-text-muted">
+            真實連線狀態同資料表概覽 — 冇任何示範 quota 數字。
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            runPing();
+            argro.refresh();
+            refetchCounts();
+            toast("已重新檢查所有連線");
+          }}
+          className="inline-flex items-center gap-1.5 rounded-md border border-border px-4 py-2 text-sm text-text-secondary transition-colors hover:border-border-strong"
+        >
+          <RefreshCw className="h-4 w-4" />
+          重新檢查
+        </button>
       </div>
 
-      <div className="space-y-4">
-        {/* ---- MCP 開關 ---- */}
-        <section className="rounded-lg border border-border bg-surface p-5">
-          <h2 className="font-display text-[17px] font-medium text-text-primary">
-            MCP 開關(按行業)
-          </h2>
-          <p className="mt-1 text-xs text-text-muted">
-            開放後,該行業情報 MCP server 對外提供 items / daily / hot-topics 端點。
-          </p>
-          <ul className="mt-4 divide-y divide-border">
-            {verticals.map((v) => (
-              <li key={v.key} className="flex items-center gap-4 py-3.5 first:pt-0 last:pb-0">
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-text-primary">
-                    {v.label} 行業情報 MCP
-                  </p>
-                  <p className="mt-0.5 font-mono text-[11px] text-text-muted">
-                    mcp.aigro.hk/{v.key} · 優先名單 {v.waitlist} 人
-                  </p>
-                </div>
-                <span
-                  className={cn(
-                    "rounded-sm px-2 py-0.5 font-mono text-[11px] font-medium",
-                    v.enabled ? "bg-lime-soft text-lime-text" : "bg-card text-text-muted"
-                  )}
-                >
-                  {v.enabled ? "開放中" : "未開放"}
-                </span>
-                <AdminToggle
-                  checked={v.enabled}
-                  onChange={() => toggleVertical(v.key)}
-                  label={`${v.label} MCP 開關`}
-                />
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        {/* ---- 免費額度 ---- */}
-        <section className="rounded-lg border border-border bg-surface p-5">
-          <h2 className="font-display text-[17px] font-medium text-text-primary">
-            免費額度設定
-          </h2>
-          <p className="mt-1 text-xs text-text-muted">
-            免費會員每日 AI 對話 tokens 額度。
-          </p>
-          <div className="mt-4 space-y-4">
-            <div className="flex items-center justify-between rounded-md border border-lime/50 bg-lime-soft px-4 py-3">
-              <div>
-                <p className="text-sm font-medium text-text-primary">
-                  無限 · 限時開放
-                </p>
-                <p className="mt-0.5 text-xs text-text-secondary">
-                  推廣期內免費會員對話不設上限
-                </p>
-              </div>
-              <AdminToggle
-                checked={unlimitedQuota}
-                onChange={(v) => {
-                  setUnlimitedQuota(v);
-                  toast(v ? "已開啟無限額度(限時開放)" : "已恢復每日額度限制");
-                }}
-                label="無限額度限時開放"
-              />
-            </div>
-            <label className="block max-w-xs">
-              <span className="mb-1 block text-xs text-text-muted">
-                每日額度(tokens)
-              </span>
-              <input
-                type="number"
-                value={quota}
-                onChange={(e) => setQuota(e.target.value)}
-                disabled={unlimitedQuota}
+      {/* 連線狀態 */}
+      <section className="rounded-lg border border-border bg-surface p-5">
+        <h2 className="font-display text-[17px] font-medium text-text-primary">
+          連線狀態
+        </h2>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          {/* Supabase */}
+          <div className="rounded-md border border-border bg-card px-4 py-3.5">
+            <p className="flex items-center gap-2 text-sm font-medium text-text-primary">
+              <span
                 className={cn(
-                  "w-full rounded-md border bg-surface px-3 py-2 font-mono text-sm focus:outline-none",
-                  unlimitedQuota
-                    ? "cursor-not-allowed border-border text-text-muted opacity-50"
-                    : "border-border-strong text-text-primary focus:border-lime"
+                  "h-2 w-2 rounded-full",
+                  pingLoading
+                    ? "animate-pulse bg-border-strong"
+                    : ping?.ok
+                      ? "bg-lime"
+                      : "bg-[#A63A30]"
                 )}
               />
-              <span className="mt-1 block text-[11px] text-text-muted">
-                {unlimitedQuota
-                  ? "無限開放期間暫停使用 — 關閉上方開關即可編輯。"
-                  : `目前設定:${Number(quota).toLocaleString("en-US")} tokens/日`}
+              Supabase
+              <span className="ml-auto font-mono text-[11px] text-text-muted">
+                {pingLoading ? "檢查中…" : ping?.ok ? "已連接 ✅" : "異常"}
               </span>
-            </label>
+            </p>
+            <p className="mt-1.5 text-xs leading-relaxed text-text-muted">
+              {pingLoading
+                ? "正在做 head-count 測試查詢…"
+                : (ping?.detail ?? "—")}
+            </p>
           </div>
-        </section>
 
-        {/* ---- AIHOT 來源狀態 ---- */}
-        <section className="rounded-lg border border-border bg-surface p-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 className="font-display text-[17px] font-medium text-text-primary">
-                AIHOT 情報來源
-              </h2>
-              <p className="mt-1 text-xs text-text-muted">
-                抓取狀態與最近更新 — 異常來源會自動暫停。
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={refreshSources}
-              disabled={refreshing}
-              className="inline-flex items-center gap-1.5 rounded-md bg-lime px-4 py-2 text-sm font-medium text-on-accent hover:bg-lime-hover disabled:cursor-wait disabled:opacity-50"
-            >
-              <RefreshCw
-                className={cn("h-4 w-4", refreshing && "animate-spin")}
+          {/* argro API */}
+          <div className="rounded-md border border-border bg-card px-4 py-3.5">
+            <p className="flex items-center gap-2 text-sm font-medium text-text-primary">
+              <span
+                className={cn(
+                  "h-2 w-2 rounded-full",
+                  argro.loading && !argro.data
+                    ? "animate-pulse bg-border-strong"
+                    : argro.data
+                      ? "bg-lime"
+                      : "bg-[#A63A30]"
+                )}
               />
-              重新整理
-            </button>
+              argro 情報管道
+              <span className="ml-auto font-mono text-[11px] text-text-muted">
+                {argro.loading && !argro.data
+                  ? "檢查中…"
+                  : argro.data
+                    ? "online ✅"
+                    : "離線"}
+              </span>
+            </p>
+            <p className="mt-1.5 text-xs leading-relaxed text-text-muted">
+              {argro.data
+                ? `LLM ${llmOk ? "已連接" : "未連接"} · 今日 articles ${argro.data.articles.today} · 來源 ${argro.data.sources.filter((s) => s.is_active).length} 個啟用`
+                : argro.error
+                  ? `連唔到 argro-api.zeabur.app/meta/health — ${argro.error}`
+                  : "檢查中…"}
+            </p>
           </div>
-          <ul className="mt-4 divide-y divide-border">
-            {aihotSources.map((s) => (
-              <li key={s.name} className="flex items-center gap-4 py-3.5 first:pt-0 last:pb-0">
-                <span
-                  className={cn(
-                    "h-2 w-2 shrink-0 rounded-full",
-                    s.ok ? "bg-lime" : "bg-[#A63A30]"
-                  )}
-                  aria-label={s.ok ? "正常" : "異常"}
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-text-primary">{s.name}</p>
-                  <p className="mt-0.5 font-mono text-[11px] text-text-muted">
-                    {s.endpoint}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="font-mono text-xs text-text-secondary">
-                    {s.items} 條
-                  </p>
-                  <p className="mt-0.5 font-mono text-[11px] text-text-muted">
-                    {s.lastFetch}
-                  </p>
-                </div>
-                <span
-                  className={cn(
-                    "rounded-sm px-2 py-0.5 text-[11px] font-medium",
-                    s.ok ? "bg-lime-soft text-lime-text" : "bg-card text-[#A63A30]"
-                  )}
+        </div>
+
+        <dl className="mt-4 divide-y divide-border rounded-md border border-border bg-card/50">
+          <div className="flex items-center justify-between px-4 py-2.5">
+            <dt className="text-xs text-text-muted">Supabase URL</dt>
+            <dd className="font-mono text-xs text-text-primary">
+              {supabaseReady
+                ? "mxjgavuzzpcvazxdnuzg.supabase.co"
+                : "未設定(env 缺失)"}
+            </dd>
+          </div>
+          <div className="flex items-center justify-between px-4 py-2.5">
+            <dt className="text-xs text-text-muted">資料庫 schema</dt>
+            <dd className="font-mono text-xs text-text-primary">
+              supabase/schema.sql(v1.15+)
+            </dd>
+          </div>
+          <div className="flex items-center justify-between px-4 py-2.5">
+            <dt className="text-xs text-text-muted">訪問層</dt>
+            <dd className="font-mono text-xs text-text-primary">
+              anon key + RLS(admin 以 is_admin() 放寬讀取)
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      {/* 資料表即時行數 */}
+      <section className="mt-5 rounded-lg border border-border bg-surface p-5">
+        <h2 className="font-display text-[17px] font-medium text-text-primary">
+          資料表概覽
+        </h2>
+        <p className="mt-1 text-xs text-text-muted">
+          每張表嘅真實行數(即時 head-count)。
+        </p>
+        <QueryState
+          loading={countsLoading}
+          error={countsError ? `載入失敗:${countsError}` : null}
+          retry={refetchCounts}
+          skeletonRows={2}
+        >
+          {counts && (
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {counts.map((c) => (
+                <div
+                  key={c.label}
+                  className="rounded-md border border-border bg-card px-4 py-3"
                 >
-                  {s.ok ? "正常" : "異常"}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      </div>
+                  <p className="font-mono text-[20px] font-medium text-text-primary">
+                    {c.count.toLocaleString("en-US")}
+                  </p>
+                  <p className="mt-0.5 text-xs text-text-muted">{c.label}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </QueryState>
+      </section>
+
+      {/* 整合路線圖(誠實狀態,唔係假數據) */}
+      <section className="mt-5 rounded-lg border border-border bg-surface p-5">
+        <div className="flex items-center gap-2">
+          <Workflow className="h-4 w-4 text-lime-text" />
+          <h2 className="font-display text-[17px] font-medium text-text-primary">
+            整合進度
+          </h2>
+        </div>
+        <ul className="mt-4 space-y-2.5 text-sm">
+          {[
+            { label: "情報管道(argro → items / sources)", done: true },
+            { label: "Ask 分身對話持久化(conversations / messages)", done: true },
+            { label: "會員 magic-link 登入(profiles)", done: true },
+            { label: "Admin 後台 + Expert Portal 真查詢", done: true },
+            { label: "Leads 自動評分(leads 表寫入管道)", done: false },
+            { label: "專家投稿後端(submissions)", done: false },
+            { label: "知識庫蒸餾 pipeline(Storage + distillation)", done: false },
+            { label: "MCP server 輸出端點", done: false },
+          ].map((row) => (
+            <li key={row.label} className="flex items-center gap-2.5">
+              <span
+                className={cn(
+                  "flex h-4 w-4 items-center justify-center rounded-full border",
+                  row.done
+                    ? "border-lime bg-lime-soft text-lime-text"
+                    : "border-border-strong text-transparent"
+                )}
+              >
+                <Settings2 className="h-2.5 w-2.5" />
+              </span>
+              <span
+                className={cn(
+                  row.done ? "text-text-primary" : "text-text-muted"
+                )}
+              >
+                {row.label}
+              </span>
+              <span className="ml-auto font-mono text-[11px] text-text-muted">
+                {row.done ? "Live" : "即將推出"}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
     </div>
   );
 }

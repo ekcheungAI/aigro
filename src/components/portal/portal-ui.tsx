@@ -5,6 +5,9 @@ import { cn } from "@/lib/utils";
 export const PORTAL_FIELD =
   "w-full rounded-md border border-border-strong bg-surface px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:border-lime focus:outline-none";
 
+/** 產品規則:每週情報配額(政策常數,唔係數據)— PortalHome / PortalInsights 共用 */
+export const WEEKLY_INSIGHT_QUOTA = 3;
+
 /** Section header — overline(01 · X)+ Fraunces 標題 + 說明,沿用 AdminStudio 模式 */
 export function PortalSectionHeader({
   overline,

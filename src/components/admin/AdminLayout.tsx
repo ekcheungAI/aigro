@@ -6,12 +6,14 @@ import {
   FileText,
   FlaskConical,
   LayoutDashboard,
+  Lock,
   Mail,
   Menu,
   MessagesSquare,
   Puzzle,
   Radio,
   Settings,
+  ShieldCheck,
   Target,
   UserRound,
   Users,
@@ -19,6 +21,9 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AdminToastProvider } from "@/components/admin/AdminToast";
+import { useMember } from "@/hooks/useMember";
+import { memberInitial } from "@/components/auth/member";
+import { supabaseReady } from "@/lib/supabase";
 
 const NAV = [
   {
@@ -104,14 +109,65 @@ function Wordmark() {
   );
 }
 
+/** 未登入 / 非 admin — 誠實 gate,唔顯示任何後台數據 */
+function AdminGate({ loading }: { loading: boolean }) {
+  return (
+    <div className="flex min-h-[100dvh] items-center justify-center bg-bg px-4 py-16">
+      <div className="w-full max-w-md rounded-lg border border-border bg-surface p-8 text-center shadow-card">
+        <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-lime-soft">
+          <Lock className="h-5 w-5 text-lime-text" />
+        </span>
+        <h1 className="mt-5 font-display text-[24px] font-medium text-text-primary">
+          需要 admin 帳號登入
+        </h1>
+        <p className="mt-2 text-sm leading-relaxed text-text-secondary">
+          Admin 後台而家直接讀 Supabase 真實數據 — 只有管理員帳號
+          (profiles.role = admin)先可以睇到。請用 admin 帳號登入。
+        </p>
+        {loading && (
+          <p className="mt-4 font-mono text-xs text-text-muted">
+            正在檢查登入狀態…
+          </p>
+        )}
+        <Link
+          to="/login"
+          className="mt-5 inline-flex w-full items-center justify-center gap-1.5 rounded-md bg-lime px-4 py-2.5 text-sm font-medium text-on-accent transition-colors hover:bg-lime-hover"
+        >
+          <ShieldCheck className="h-4 w-4" />
+          去登入
+        </Link>
+        <p className="mt-4 text-xs text-text-muted">
+          <Link
+            to="/"
+            className="text-lime-text underline-offset-2 hover:underline"
+          >
+            返回網站
+          </Link>
+        </p>
+      </div>
+    </div>
+  );
+}
+
 /**
  * Admin 後台外殼 — nested-route 模式:本組件渲染 <Outlet/>,
  * App.tsx 須以 <Route path="admin" element={<AdminLayout/>}> + 子路由接入。
  * 左側 240px near-black 側欄(lg+),mobile 收合為頂部 drawer。
  * 內容區 warm paper;不含公開站 Navbar/Footer。
+ * Gate:未登入或 role 唔係 admin → 只顯示登入提示,唔 render 任何數據頁。
  */
 export default function AdminLayout() {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const { member, loading } = useMember();
+  const isAdmin = member !== null && member.role === "admin";
+
+  if (loading || !isAdmin) {
+    return (
+      <AdminToastProvider>
+        <AdminGate loading={loading} />
+      </AdminToastProvider>
+    );
+  }
 
   return (
     <AdminToastProvider>
@@ -126,10 +182,16 @@ export default function AdminLayout() {
           </div>
           <div className="border-t border-[#35302A] px-6 py-4">
             <p className="font-mono text-[10px] uppercase tracking-wider text-[#938D83]">
-              內部後台 · v1.20
+              內部後台 · Live data
             </p>
-            <p className="mt-1 text-xs text-[#938D83]">
-              Mock data · Supabase 即將接入
+            <p className="mt-1 flex items-center gap-1.5 text-xs text-[#938D83]">
+              <span
+                className={cn(
+                  "h-1.5 w-1.5 rounded-full",
+                  supabaseReady ? "bg-lime" : "bg-[#A63A30]"
+                )}
+              />
+              {supabaseReady ? "Supabase 已連接" : "Supabase 未連接"}
             </p>
           </div>
         </aside>
@@ -202,10 +264,11 @@ export default function AdminLayout() {
               </Link>
               <div className="flex items-center gap-2 rounded-full border border-border bg-card py-1 pl-1 pr-3">
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-lime font-mono text-[11px] font-semibold text-on-accent">
-                  E
+                  {memberInitial(member.name)}
                 </span>
                 <span className="text-xs text-text-primary">
-                  Elvin <span className="text-text-muted">· 擁有者</span>
+                  {member.name}{" "}
+                  <span className="text-text-muted">· 管理員</span>
                 </span>
               </div>
             </div>

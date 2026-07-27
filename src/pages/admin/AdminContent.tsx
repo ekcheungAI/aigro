@@ -1,142 +1,119 @@
 import { useMemo, useState } from "react";
-import { Ban, Check, Pencil, Plus, Save, Star, Undo2, X } from "lucide-react";
-import AdminSlideOver from "@/components/admin/AdminSlideOver";
-import AdminToggle from "@/components/admin/AdminToggle";
+import { Check, Star, X } from "lucide-react";
 import { useAdminToast } from "@/components/admin/AdminToast";
+import QueryState from "@/components/QueryState";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
 import {
-  adminCases,
-  contentQueue,
-  expertPosts,
-} from "@/data/admin-mock";
-import type { ExpertPost, QueueItem } from "@/data/admin-mock";
-import {
-  expertSubmissions,
-  homepageQuota,
-  queuePlacements,
-} from "@/data/admin-mock2";
-import type { ExpertSubmission, QueuePlacement } from "@/data/admin-mock2";
+  formatDate,
+  timeAgo,
+  useAdminQuery,
+} from "@/components/admin/adminData";
+import type {
+  AdminItemRow,
+  ItemPlacement,
+  ItemStatus,
+} from "@/components/admin/adminData";
+import { cases } from "@/data/cases";
 
 type ContentTab = "情報佇列" | "專家文章" | "案例管理";
 const TABS: ContentTab[] = ["情報佇列", "專家文章", "案例管理"];
 
-const FIELD =
-  "w-full rounded-md border border-border-strong bg-surface px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:border-lime focus:outline-none";
+type StatusFilter = "全部" | ItemStatus;
+const STATUS_FILTERS: { key: StatusFilter; label: string }[] = [
+  { key: "pending", label: "待審核" },
+  { key: "reviewed", label: "已檢閱" },
+  { key: "published", label: "已發佈" },
+  { key: "rejected", label: "已拒絕" },
+  { key: "全部", label: "全部" },
+];
 
-function statusChip(status: QueueItem["status"] | ExpertPost["status"]) {
-  if (status === "已通過" || status === "已發佈")
-    return "bg-lime-soft text-lime-text";
-  if (status === "已拒絕") return "bg-card text-text-muted line-through";
+const STATUS_LABEL: Record<ItemStatus, string> = {
+  pending: "待審核",
+  reviewed: "已檢閱",
+  published: "已發佈",
+  rejected: "已拒絕",
+};
+
+const PLACEMENTS: { key: ItemPlacement; label: string }[] = [
+  { key: "featured", label: "首頁" },
+  { key: "daily", label: "日報" },
+  { key: "normal", label: "普通" },
+];
+
+function statusChip(status: ItemStatus) {
+  if (status === "published") return "bg-lime-soft text-lime-text";
+  if (status === "rejected") return "bg-card text-text-muted line-through";
+  if (status === "reviewed") return "bg-card text-text-secondary";
   return "bg-card text-[#A36A0F]";
+}
+
+async function fetchItems(): Promise<AdminItemRow[]> {
+  if (!supabase) throw new Error("Supabase 未連接 — 請檢查環境變數。");
+  const { data, error } = await supabase
+    .from("items")
+    .select(
+      "id,title,summary,original_url,category,score,lang,status,placement,published_at,fetched_at,source_id,sources(name)"
+    )
+    .order("fetched_at", { ascending: false })
+    .limit(500);
+  if (error) throw new Error(error.message);
+  return (data ?? []) as unknown as AdminItemRow[];
 }
 
 export default function AdminContent() {
   const toast = useAdminToast();
   const [tab, setTab] = useState<ContentTab>("情報佇列");
+  const { data, loading, error, refetch } = useAdminQuery(fetchItems);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("pending");
+  const [busyId, setBusyId] = useState<string | null>(null);
 
-  /* ---- 情報佇列 ---- */
-  const [queue, setQueue] = useState<QueueItem[]>(contentQueue);
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [queueSubTab, setQueueSubTab] = useState<"佇列" | "專家投稿">("佇列");
-  const [placements, setPlacements] = useState<Record<string, QueuePlacement>>(
+  const items = useMemo(() => data ?? [], [data]);
+  const filtered = useMemo(
     () =>
-      Object.fromEntries(
-        contentQueue.map((q) => [q.id, q.featured ? "首頁" : "普通"])
-      ) as Record<string, QueuePlacement>
+      statusFilter === "全部"
+        ? items
+        : items.filter((i) => i.status === statusFilter),
+    [items, statusFilter]
   );
+  const countOf = (s: ItemStatus) => items.filter((i) => i.status === s).length;
 
-  /* ---- 專家投稿 ---- */
-  const [subs, setSubs] = useState<ExpertSubmission[]>(expertSubmissions);
-  const [returningId, setReturningId] = useState<string | null>(null);
-  const [returnNote, setReturnNote] = useState("");
-
-  const subPendingCount = useMemo(
-    () => subs.filter((s) => s.status === "待審核").length,
-    [subs]
-  );
-
-  const setSubStatus = (id: string, status: ExpertSubmission["status"], note?: string) => {
-    setSubs((list) =>
-      list.map((s) => (s.id === id ? { ...s, status, note } : s))
-    );
-  };
-
-  const approveSub = (s: ExpertSubmission) => {
-    setSubStatus(s.id, "已核准");
-    toast("已核准,將顯示於編輯精選");
-  };
-
-  const returnSub = (s: ExpertSubmission) => {
-    if (!returnNote.trim()) {
-      toast("請先填寫退回備註");
+  const updateStatus = async (item: AdminItemRow, status: ItemStatus) => {
+    if (!supabase || busyId) return;
+    setBusyId(item.id);
+    const patch: Record<string, unknown> = { status };
+    if (status === "published" && !item.published_at) {
+      patch.published_at = new Date().toISOString();
+    }
+    const { error: updateError } = await supabase
+      .from("items")
+      .update(patch)
+      .eq("id", item.id);
+    setBusyId(null);
+    if (updateError) {
+      toast(`更新失敗:${updateError.message}`);
       return;
     }
-    setSubStatus(s.id, "已退回", returnNote.trim());
-    setReturningId(null);
-    setReturnNote("");
-    toast(`已退回「${s.title.slice(0, 14)}…」俾 ${s.expert}(mock)`);
+    toast(`「${item.title.slice(0, 14)}…」已改為${STATUS_LABEL[status]}`);
+    refetch();
   };
 
-  const takedownSub = (s: ExpertSubmission) => {
-    setSubStatus(s.id, "已下架");
-    toast(`已下架「${s.title.slice(0, 14)}…」(mock)`);
-  };
-
-  const pendingCount = useMemo(
-    () => queue.filter((q) => q.status === "待審核").length,
-    [queue]
-  );
-
-  const toggleSelect = (id: string) =>
-    setSelected((s) => {
-      const next = new Set(s);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-
-  const setStatus = (ids: string[], status: QueueItem["status"]) => {
-    setQueue((q) => q.map((item) => (ids.includes(item.id) ? { ...item, status } : item)));
-    setSelected(new Set());
-    toast(
-      status === "已通過"
-        ? `已通過 ${ids.length} 條情報(mock)`
-        : `已拒絕 ${ids.length} 條情報(mock)`
-    );
-  };
-
-  const toggleFeatured = (id: string) => {
-    const item = queue.find((q) => q.id === id);
-    setQueue((q) =>
-      q.map((it) => (it.id === id ? { ...it, featured: !it.featured } : it))
-    );
-    if (item) toast(item.featured ? "已取消精選" : "已標記為精選情報");
-  };
-
-  /* ---- 專家文章 ---- */
-  const [posts, setPosts] = useState<ExpertPost[]>(expertPosts);
-  const [editing, setEditing] = useState<ExpertPost | null>(null);
-  const [isNew, setIsNew] = useState(false);
-
-  const openEditor = (post: ExpertPost, isNewPost: boolean) => {
-    setEditing({ ...post });
-    setIsNew(isNewPost);
-  };
-
-  const savePost = () => {
-    if (!editing) return;
-    if (isNew) {
-      setPosts((p) => [editing, ...p]);
-      toast(`已新增文章「${editing.title}」(mock)`);
-    } else {
-      setPosts((p) => p.map((x) => (x.id === editing.id ? editing : x)));
-      toast(`已儲存「${editing.title}」(mock)`);
+  const updatePlacement = async (item: AdminItemRow, placement: ItemPlacement) => {
+    if (!supabase || busyId) return;
+    setBusyId(item.id);
+    const { error: updateError } = await supabase
+      .from("items")
+      .update({ placement })
+      .eq("id", item.id);
+    setBusyId(null);
+    if (updateError) {
+      toast(`更新失敗:${updateError.message}`);
+      return;
     }
-    setEditing(null);
+    const label = PLACEMENTS.find((p) => p.key === placement)?.label ?? placement;
+    toast(`「${item.title.slice(0, 12)}…」顯示位置已改為${label}`);
+    refetch();
   };
-
-  /* ---- 案例 ---- */
-  const [cases, setCases] = useState(adminCases);
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -148,7 +125,7 @@ export default function AdminContent() {
           內容管理
         </h1>
         <p className="mt-1 text-sm text-text-muted">
-          情報審核佇列、專家文章與案例精選。
+          items 表即時審核佇列 — 狀態同顯示位置嘅修改會直接寫入 Supabase。
         </p>
       </div>
 
@@ -167,10 +144,8 @@ export default function AdminContent() {
             )}
           >
             {t}
-            {t === "情報佇列" && pendingCount + subPendingCount > 0 && (
-              <span className="ml-1.5 font-mono text-xs">
-                {pendingCount + subPendingCount}
-              </span>
+            {t === "情報佇列" && !loading && (
+              <span className="ml-1.5 font-mono text-xs">{countOf("pending")}</span>
             )}
           </button>
         ))}
@@ -179,77 +154,58 @@ export default function AdminContent() {
       {/* ================= 情報佇列 ================= */}
       {tab === "情報佇列" && (
         <div>
-          {/* Sub-tabs: 佇列 / 專家投稿 */}
-          <div className="mb-4 flex gap-1 border-b border-border">
-            {(["佇列", "專家投稿"] as const).map((st) => (
+          {/* Status filter */}
+          <div className="mb-4 flex flex-wrap gap-1.5">
+            {STATUS_FILTERS.map((f) => (
               <button
-                key={st}
+                key={f.key}
                 type="button"
-                onClick={() => setQueueSubTab(st)}
+                onClick={() => setStatusFilter(f.key)}
                 className={cn(
-                  "relative px-4 py-2 text-sm font-medium transition-colors",
-                  queueSubTab === st
-                    ? "text-lime-text after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-lime"
-                    : "text-text-secondary hover:text-text-primary"
+                  "rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors",
+                  statusFilter === f.key
+                    ? "border-lime bg-lime text-on-accent"
+                    : "border-border bg-surface text-text-secondary hover:border-border-strong"
                 )}
               >
-                {st}
-                {st === "專家投稿" && subPendingCount > 0 && (
-                  <span className="ml-1.5 rounded-sm bg-lime-soft px-1.5 py-0.5 font-mono text-[11px] text-lime-text">
-                    {subPendingCount}
-                  </span>
-                )}
+                {f.label}
+                <span className="ml-1 font-mono">
+                  {f.key === "全部" ? items.length : countOf(f.key)}
+                </span>
               </button>
             ))}
           </div>
 
-          {queueSubTab === "佇列" && (
-          <div>
-          {selected.size > 0 && (
-            <div className="mb-3 flex items-center gap-2 rounded-md border border-lime bg-lime-soft px-3 py-2 text-sm">
-              <span className="font-mono text-xs text-lime-text">
-                已選 {selected.size} 條
-              </span>
-              <button
-                type="button"
-                onClick={() => setStatus([...selected], "已通過")}
-                className="ml-auto inline-flex items-center gap-1 rounded-sm bg-lime px-2.5 py-1 text-xs font-medium text-on-accent hover:bg-lime-hover"
-              >
-                <Check className="h-3 w-3" />
-                批次通過
-              </button>
-              <button
-                type="button"
-                onClick={() => setStatus([...selected], "已拒絕")}
-                className="inline-flex items-center gap-1 rounded-sm border border-border bg-surface px-2.5 py-1 text-xs text-text-secondary hover:border-border-strong"
-              >
-                <X className="h-3 w-3" />
-                批次拒絕
-              </button>
-            </div>
-          )}
-          <ul className="space-y-2">
-            {queue.map((item) => (
-              <li
-                key={item.id}
-                className={cn(
-                  "rounded-lg border bg-surface p-4 transition-colors",
-                  selected.has(item.id) ? "border-lime" : "border-border",
-                  item.status === "已拒絕" && "opacity-60"
-                )}
-              >
-                <div className="flex items-start gap-3">
-                  <input
-                    type="checkbox"
-                    checked={selected.has(item.id)}
-                    onChange={() => toggleSelect(item.id)}
-                    aria-label={`選擇 ${item.title}`}
-                    className="mt-1 h-4 w-4 accent-[#43F50E]"
-                  />
-                  <div className="min-w-0 flex-1">
+          <QueryState
+            loading={loading}
+            error={error ? `載入失敗:${error}` : null}
+            retry={refetch}
+            empty={
+              data && filtered.length === 0 ? (
+                <div className="rounded-lg border border-dashed border-border-strong bg-surface px-6 py-14 text-center">
+                  <p className="text-sm text-text-muted">
+                    {items.length === 0
+                      ? "items 表暫時係空 — argro 管道同步嘅情報會即時出現喺呢度。"
+                      : `「${STATUS_FILTERS.find((f) => f.key === statusFilter)?.label}」冇情報 — 切換其他狀態睇睇。`}
+                  </p>
+                </div>
+              ) : null
+            }
+          >
+            {data && filtered.length > 0 && (
+              <ul className="space-y-2">
+                {filtered.map((item) => (
+                  <li
+                    key={item.id}
+                    className={cn(
+                      "rounded-lg border bg-surface p-4 transition-colors",
+                      "border-border",
+                      item.status === "rejected" && "opacity-60"
+                    )}
+                  >
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="rounded-sm bg-card px-1.5 py-0.5 font-mono text-[10px] text-text-secondary">
-                        {item.category}
+                        {item.category ?? "未分類"}
                       </span>
                       <span
                         className={cn(
@@ -257,435 +213,162 @@ export default function AdminContent() {
                           statusChip(item.status)
                         )}
                       >
-                        {item.status}
+                        {STATUS_LABEL[item.status]}
                       </span>
-                      {item.featured && (
+                      {item.placement && item.placement !== "normal" && (
                         <span className="inline-flex items-center gap-1 rounded-sm bg-lime-soft px-1.5 py-0.5 text-[11px] font-medium text-lime-text">
                           <Star className="h-3 w-3 fill-current" />
-                          精選
+                          {PLACEMENTS.find((p) => p.key === item.placement)?.label}
+                        </span>
+                      )}
+                      {item.score !== null && (
+                        <span className="rounded-sm bg-card px-1.5 py-0.5 font-mono text-[11px] text-text-secondary">
+                          評分 {item.score}
                         </span>
                       )}
                       <span className="ml-auto font-mono text-[11px] text-text-muted">
-                        {item.source} · {item.fetchedAt}
+                        {item.sources?.name ?? "未知來源"} ·{" "}
+                        {item.published_at
+                          ? `發佈 ${formatDate(item.published_at)}`
+                          : `抓取 ${timeAgo(item.fetched_at)}`}
                       </span>
                     </div>
                     <p className="mt-2 text-sm font-medium text-text-primary">
-                      {item.title}
+                      {item.original_url ? (
+                        <a
+                          href={item.original_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="hover:text-lime-text hover:underline underline-offset-2"
+                        >
+                          {item.title}
+                        </a>
+                      ) : (
+                        item.title
+                      )}
                     </p>
-                    <p className="mt-1 text-xs leading-relaxed text-text-secondary">
-                      {item.summary}
-                    </p>
-                    {/* 顯示位置 */}
+                    {item.summary && (
+                      <p className="mt-1 text-xs leading-relaxed text-text-secondary">
+                        {item.summary}
+                      </p>
+                    )}
+                    {/* 顯示位置(真 update) */}
                     <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
                       <span className="text-[11px] text-text-muted">顯示位置</span>
-                      {queuePlacements.map((p) => (
+                      {PLACEMENTS.map((p) => (
                         <button
-                          key={p}
+                          key={p.key}
                           type="button"
-                          onClick={() => {
-                            setPlacements((prev) => ({ ...prev, [item.id]: p }));
-                            toast(
-                              p === "首頁"
-                                ? `「${item.title.slice(0, 12)}…」將顯示於首頁(mock)`
-                                : p === "日報"
-                                  ? `「${item.title.slice(0, 12)}…」已編入日報(mock)`
-                                  : `「${item.title.slice(0, 12)}…」已設為普通顯示`
-                            );
-                          }}
+                          disabled={busyId === item.id}
+                          onClick={() => void updatePlacement(item, p.key)}
                           className={cn(
-                            "rounded-sm px-2 py-0.5 text-[11px] font-medium transition-colors",
-                            placements[item.id] === p
-                              ? p === "首頁"
+                            "rounded-sm px-2 py-0.5 text-[11px] font-medium transition-colors disabled:opacity-50",
+                            (item.placement ?? "normal") === p.key
+                              ? p.key === "featured"
                                 ? "bg-lime text-on-accent"
                                 : "bg-lime-soft text-lime-text"
                               : "border border-border bg-surface text-text-muted hover:border-border-strong hover:text-text-secondary"
                           )}
                         >
-                          {p}
+                          {p.label}
                         </button>
                       ))}
                     </div>
-                    {item.status === "待審核" && (
+                    {item.status !== "published" && item.status !== "rejected" && (
                       <div className="mt-3 flex gap-2">
                         <button
                           type="button"
-                          onClick={() => setStatus([item.id], "已通過")}
-                          className="inline-flex items-center gap-1 rounded-md bg-lime px-3 py-1.5 text-xs font-medium text-on-accent hover:bg-lime-hover"
+                          disabled={busyId === item.id}
+                          onClick={() => void updateStatus(item, "published")}
+                          className="inline-flex items-center gap-1 rounded-md bg-lime px-3 py-1.5 text-xs font-medium text-on-accent hover:bg-lime-hover disabled:opacity-50"
                         >
                           <Check className="h-3 w-3" />
-                          通過
+                          發佈
                         </button>
+                        {item.status === "pending" && (
+                          <button
+                            type="button"
+                            disabled={busyId === item.id}
+                            onClick={() => void updateStatus(item, "reviewed")}
+                            className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs text-text-secondary hover:border-border-strong disabled:opacity-50"
+                          >
+                            標記已檢閱
+                          </button>
+                        )}
                         <button
                           type="button"
-                          onClick={() => setStatus([item.id], "已拒絕")}
-                          className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs text-text-secondary hover:border-border-strong"
+                          disabled={busyId === item.id}
+                          onClick={() => void updateStatus(item, "rejected")}
+                          className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs text-text-secondary hover:border-border-strong disabled:opacity-50"
                         >
                           <X className="h-3 w-3" />
                           拒絕
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => toggleFeatured(item.id)}
-                          className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs text-text-secondary hover:border-lime hover:text-lime-text"
-                        >
-                          <Star
-                            className={cn(
-                              "h-3 w-3",
-                              item.featured && "fill-current text-lime-text"
-                            )}
-                          />
-                          精選
-                        </button>
                       </div>
                     )}
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-          </div>
-          )}
-
-          {/* ---- 專家投稿 ---- */}
-          {queueSubTab === "專家投稿" && (
-            <div>
-              {/* 首頁顯示配額 */}
-              <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border border-border bg-card px-4 py-3">
-                <span className="text-xs text-text-muted">首頁顯示配額</span>
-                <span className="text-sm text-text-secondary">
-                  編輯精選{" "}
-                  <span className="font-mono font-medium text-lime-text">
-                    {homepageQuota.used}/{homepageQuota.total}
-                  </span>
-                </span>
-                {homepageQuota.used >= homepageQuota.total ? (
-                  <span className="rounded-sm bg-card px-2 py-0.5 text-[11px] font-medium text-[#A36A0F]">
-                    已滿 — 新核准需替換現有精選
-                  </span>
-                ) : (
-                  <span className="rounded-sm bg-lime-soft px-2 py-0.5 text-[11px] font-medium text-lime-text">
-                    尚有配額
-                  </span>
-                )}
-              </div>
-
-              <ul className="space-y-2">
-                {subs.map((s) => (
-                  <li
-                    key={s.id}
-                    className={cn(
-                      "rounded-lg border border-border bg-surface p-4",
-                      (s.status === "已退回" || s.status === "已下架") && "opacity-60"
-                    )}
-                  >
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="rounded-sm bg-card px-1.5 py-0.5 text-[11px] font-medium text-text-secondary">
-                        {s.expert}
-                      </span>
-                      <span
-                        className={cn(
-                          "rounded-sm px-1.5 py-0.5 text-[11px] font-medium",
-                          s.status === "已核准"
-                            ? "bg-lime-soft text-lime-text"
-                            : s.status === "待審核"
-                              ? "bg-card text-[#A36A0F]"
-                              : "bg-card text-text-muted"
-                        )}
-                      >
-                        {s.status}
-                      </span>
-                      <span className="ml-auto font-mono text-[11px] text-text-muted">
-                        投稿 {s.submittedAt}
-                      </span>
-                    </div>
-                    <p className="mt-2 text-sm font-medium text-text-primary">{s.title}</p>
-                    <p className="mt-1 text-xs leading-relaxed text-text-secondary">
-                      {s.summary}
-                    </p>
-                    {s.status === "已退回" && s.note && (
-                      <p className="mt-2 rounded-md border border-dashed border-border-strong bg-card px-3 py-2 text-[11px] leading-relaxed text-text-secondary">
-                        退回備註:{s.note}
-                      </p>
-                    )}
-                    {s.status === "待審核" && (
-                      <div className="mt-3 space-y-2">
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            type="button"
-                            onClick={() => approveSub(s)}
-                            className="inline-flex items-center gap-1 rounded-md bg-lime px-3 py-1.5 text-xs font-medium text-on-accent hover:bg-lime-hover"
-                          >
-                            <Check className="h-3 w-3" />
-                            核准上首頁
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setReturningId(returningId === s.id ? null : s.id);
-                              setReturnNote("");
-                            }}
-                            className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs text-text-secondary hover:border-border-strong"
-                          >
-                            <Undo2 className="h-3 w-3" />
-                            退回
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => takedownSub(s)}
-                            className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs text-text-secondary hover:border-border-strong"
-                          >
-                            <Ban className="h-3 w-3" />
-                            下架
-                          </button>
-                        </div>
-                        {returningId === s.id && (
-                          <div className="flex items-start gap-2">
-                            <input
-                              value={returnNote}
-                              onChange={(e) => setReturnNote(e.target.value)}
-                              placeholder="退回原因(會連同投稿寄返俾專家)…"
-                              className="flex-1 rounded-md border border-border-strong bg-surface px-3 py-2 text-xs text-text-primary placeholder:text-text-muted focus:border-lime focus:outline-none"
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") returnSub(s);
-                              }}
-                            />
-                            <button
-                              type="button"
-                              onClick={() => returnSub(s)}
-                              className="rounded-md bg-lime px-3 py-2 text-xs font-medium text-on-accent hover:bg-lime-hover"
-                            >
-                              確認退回
-                            </button>
-                          </div>
-                        )}
+                    {item.status === "rejected" && (
+                      <div className="mt-3">
+                        <button
+                          type="button"
+                          disabled={busyId === item.id}
+                          onClick={() => void updateStatus(item, "pending")}
+                          className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs text-text-secondary hover:border-border-strong disabled:opacity-50"
+                        >
+                          恢復到待審核
+                        </button>
                       </div>
                     )}
                   </li>
                 ))}
               </ul>
-            </div>
-          )}
+            )}
+          </QueryState>
         </div>
       )}
 
-      {/* ================= 專家文章 ================= */}
+      {/* ================= 專家文章(後端未接 — 誠實 state) ================= */}
       {tab === "專家文章" && (
-        <div>
-          <div className="mb-3 flex justify-end">
-            <button
-              type="button"
-              onClick={() =>
-                openEditor(
-                  {
-                    id: `p-${Date.now()}`,
-                    title: "",
-                    expert: "Jimmy Lau 劉泰麟",
-                    expertSlug: "jimmy-lau",
-                    status: "草稿",
-                    date: new Date().toISOString().slice(0, 10),
-                    summary: "",
-                    body: "",
-                  },
-                  true
-                )
-              }
-              className="inline-flex items-center gap-1.5 rounded-md bg-lime px-4 py-2 text-sm font-medium text-on-accent hover:bg-lime-hover"
-            >
-              <Plus className="h-4 w-4" />
-              新增文章
-            </button>
-          </div>
-          <div className="overflow-x-auto rounded-lg border border-border bg-surface">
-            <table className="w-full min-w-[680px] text-left text-sm">
-              <thead>
-                <tr className="border-b border-border text-xs text-text-muted">
-                  <th className="px-4 py-3 font-medium">標題</th>
-                  <th className="px-4 py-3 font-medium">專家</th>
-                  <th className="px-4 py-3 font-medium">狀態</th>
-                  <th className="px-4 py-3 font-medium">日期</th>
-                  <th className="px-4 py-3 text-right font-medium">操作</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {posts.map((p) => (
-                  <tr
-                    key={p.id}
-                    onClick={() => openEditor(p, false)}
-                    className="cursor-pointer transition-colors hover:bg-card/60"
-                  >
-                    <td className="max-w-[320px] px-4 py-3">
-                      <p className="truncate font-medium text-text-primary">{p.title}</p>
-                      <p className="mt-0.5 truncate text-xs text-text-muted">{p.summary}</p>
-                    </td>
-                    <td className="px-4 py-3 text-xs text-text-secondary">{p.expert}</td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={cn(
-                          "rounded-sm px-2 py-0.5 text-xs font-medium",
-                          statusChip(p.status)
-                        )}
-                      >
-                        {p.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 font-mono text-xs text-text-secondary">
-                      {p.date}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openEditor(p, false);
-                        }}
-                        className="rounded-md border border-border p-1.5 text-text-secondary transition-colors hover:border-lime hover:text-lime-text"
-                        aria-label={`編輯 ${p.title}`}
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <div className="rounded-lg border border-dashed border-border-strong bg-surface px-6 py-16 text-center">
+          <p className="font-display text-[17px] font-medium text-text-primary">
+            專家投稿審核 — 即將推出
+          </p>
+          <p className="mx-auto mt-2 max-w-[420px] text-xs leading-relaxed text-text-muted">
+            專家投稿同文章後台需要 submissions 資料表先可以運作。
+            而家 Portal 嘅「我的情報」只存本機草稿(已標明未發佈),
+            後端就位之後,投稿會喺呢度出現待審核。
+          </p>
         </div>
       )}
 
-      {/* ================= 案例管理 ================= */}
+      {/* ================= 案例管理(read-only 真站內數據) ================= */}
       {tab === "案例管理" && (
-        <ul className="space-y-2">
-          {cases.map((c) => (
-            <li
-              key={c.slug}
-              className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-surface px-4 py-3"
-            >
-              <span className="rounded-sm bg-card px-1.5 py-0.5 font-mono text-[10px] text-text-secondary">
-                {c.industry}
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-text-primary">{c.title}</p>
-                <p className="mt-0.5 font-mono text-[11px] text-text-muted">
-                  /cases/{c.slug} · 刊登 {c.publishedAt}
-                </p>
-              </div>
-              <label className="flex items-center gap-2 text-xs text-text-secondary">
-                <Star
-                  className={cn(
-                    "h-3.5 w-3.5",
-                    c.featured ? "fill-current text-lime-text" : "text-text-muted"
-                  )}
-                />
-                精選
-                <AdminToggle
-                  checked={c.featured}
-                  onChange={(v) => {
-                    setCases((list) =>
-                      list.map((x) => (x.slug === c.slug ? { ...x, featured: v } : x))
-                    );
-                    toast(v ? `「${c.title.slice(0, 12)}…」已設為精選案例` : "已取消精選");
-                  }}
-                  label={`精選 ${c.title}`}
-                />
-              </label>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {/* 文章編輯 drawer */}
-      <AdminSlideOver
-        open={editing !== null}
-        onClose={() => setEditing(null)}
-        title={isNew ? "新增專家文章" : "編輯文章"}
-        subtitle={editing ? `${editing.expert} · ${editing.status}` : ""}
-      >
-        {editing && (
-          <div className="flex h-full flex-col">
-            <div className="flex-1 space-y-5 px-6 py-5">
-              <label className="block">
-                <span className="mb-1 block text-xs text-text-muted">標題</span>
-                <input
-                  className={FIELD}
-                  value={editing.title}
-                  placeholder="文章標題"
-                  onChange={(e) => setEditing({ ...editing, title: e.target.value })}
-                />
-              </label>
-              <label className="block">
-                <span className="mb-1 block text-xs text-text-muted">專家</span>
-                <select
-                  className={FIELD}
-                  value={editing.expertSlug}
-                  onChange={(e) => {
-                    const slug = e.target.value;
-                    setEditing({
-                      ...editing,
-                      expertSlug: slug,
-                      expert:
-                        slug === "jimmy-lau" ? "Jimmy Lau 劉泰麟" : "Elvin Cheung",
-                    });
-                  }}
-                >
-                  <option value="jimmy-lau">Jimmy Lau 劉泰麟</option>
-                  <option value="elvin-cheung">Elvin Cheung</option>
-                </select>
-              </label>
-              <label className="block">
-                <span className="mb-1 block text-xs text-text-muted">摘要</span>
-                <textarea
-                  className={cn(FIELD, "min-h-[72px] resize-y")}
-                  value={editing.summary}
-                  placeholder="一句摘要,顯示於列表"
-                  onChange={(e) => setEditing({ ...editing, summary: e.target.value })}
-                />
-              </label>
-              <label className="block">
-                <span className="mb-1 block text-xs text-text-muted">正文</span>
-                <textarea
-                  className={cn(FIELD, "min-h-[200px] resize-y leading-relaxed")}
-                  value={editing.body}
-                  placeholder="文章正文…"
-                  onChange={(e) => setEditing({ ...editing, body: e.target.value })}
-                />
-              </label>
-              <div className="flex items-center justify-between rounded-md border border-border bg-card px-4 py-3">
-                <div>
-                  <p className="text-sm font-medium text-text-primary">發佈狀態</p>
-                  <p className="mt-0.5 text-xs text-text-muted">
-                    {editing.status === "已發佈" ? "對外公開" : "草稿 — 僅後台可見"}
+        <div>
+          <p className="mb-3 rounded-md border border-border bg-card/60 px-4 py-2.5 text-xs text-text-muted">
+            案例而家係站內靜態內容(src/data/cases.ts),同公開 /cases 頁一致。
+            精選排序功能需要後端先可以改 — 而家 read-only。
+          </p>
+          <ul className="space-y-2">
+            {cases.map((c) => (
+              <li
+                key={c.slug}
+                className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-surface px-4 py-3"
+              >
+                <span className="rounded-sm bg-card px-1.5 py-0.5 font-mono text-[10px] text-text-secondary">
+                  {c.industry}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-text-primary">
+                    {c.title}
+                  </p>
+                  <p className="mt-0.5 font-mono text-[11px] text-text-muted">
+                    /cases/{c.slug}
                   </p>
                 </div>
-                <AdminToggle
-                  checked={editing.status === "已發佈"}
-                  onChange={(v) =>
-                    setEditing({ ...editing, status: v ? "已發佈" : "草稿" })
-                  }
-                  label="發佈狀態"
-                />
-              </div>
-            </div>
-            <div className="flex items-center justify-end gap-2 border-t border-border px-6 py-4">
-              <button
-                type="button"
-                onClick={() => setEditing(null)}
-                className="rounded-md border border-border px-4 py-2 text-sm text-text-secondary hover:border-border-strong"
-              >
-                取消
-              </button>
-              <button
-                type="button"
-                onClick={savePost}
-                disabled={!editing.title.trim()}
-                className="inline-flex items-center gap-1.5 rounded-md bg-lime px-4 py-2 text-sm font-medium text-on-accent hover:bg-lime-hover disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                <Save className="h-4 w-4" />
-                儲存
-              </button>
-            </div>
-          </div>
-        )}
-      </AdminSlideOver>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
