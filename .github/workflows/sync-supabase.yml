@@ -1,0 +1,36 @@
+name: Sync argro → Supabase items
+
+# 每 30 分鐘將 argro 管道 (Zeabur) 最新情報 upsert 入 Supabase `items`,
+# 令前端 runtime 讀到 live 真實數據(取代 build-time snapshot)。
+# 需要 repo secret: SUPABASE_SECRET_KEY (Supabase service/secret key — server-side only)。
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch: # 手動觸發:Actions → Sync argro → Supabase items → Run workflow
+
+permissions:
+  contents: none
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install deps (opencc-js)
+        run: npm ci --omit=dev --no-audit --no-fund
+
+      - name: Sync argro items → Supabase
+        env:
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          SUPABASE_URL: https://mxjgavuzzpcvazxdnuzg.supabase.co
+          ARGRO_API_BASE: https://argro-api.zeabur.app
+          ARGRO_API_KEY: argro-shared-8f3k2m9x1q
+        run: node scripts/sync-argro-to-supabase.mjs

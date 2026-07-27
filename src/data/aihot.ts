@@ -165,7 +165,7 @@ export interface AihotInsight extends Insight {
   external: true;
 }
 
-function toAihotInsight(raw: AihotRawItem): AihotInsight {
+export function toAihotInsight(raw: AihotRawItem): AihotInsight {
   return {
     slug: raw.id,
     category: mapAihotCategory(raw.category),

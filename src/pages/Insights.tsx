@@ -32,8 +32,10 @@ import {
   aihotHotTopics,
   aihotInsights,
   timeAgo,
+  toAihotInsight,
   type AihotInsight,
 } from "@/data/aihot";
+import { useLiveItems } from "@/data/liveItems";
 import {
   TOPIC_GROUPS,
   TOPIC_TOTAL,
@@ -301,8 +303,16 @@ function FeedTab() {
     setQuery(qParam);
   }, [qParam]);
 
+  /** Supabase live items(argro→Supabase sync)— 成熟時取代 build-time snapshot */
+  const liveRaw = useLiveItems();
+  const liveInsights = useMemo(
+    () => (liveRaw ? liveRaw.map(toAihotInsight) : null),
+    [liveRaw]
+  );
+
   const filtered = useMemo(() => {
-    const source = mode === "all" ? aihotAllInsights : aihotInsights;
+    const snapshotSource = mode === "all" ? aihotAllInsights : aihotInsights;
+    const source = liveInsights ?? snapshotSource;
     const q = query.trim().toLowerCase();
     return source.filter((i) => {
       if (activeCategory && i.category !== activeCategory) return false;
@@ -317,7 +327,7 @@ function FeedTab() {
         return false;
       return true;
     });
-  }, [mode, activeCategory, query]);
+  }, [mode, activeCategory, query, liveInsights]);
 
   const groups = useMemo(() => groupByDay(filtered), [filtered]);
 
