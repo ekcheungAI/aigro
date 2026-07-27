@@ -14,7 +14,6 @@ import type {
   ItemPlacement,
   ItemStatus,
 } from "@/components/admin/adminData";
-import { cases } from "@/data/cases";
 
 type ContentTab = "情報佇列" | "專家文章" | "案例管理";
 const TABS: ContentTab[] = ["情報佇列", "專家文章", "案例管理"];
@@ -340,33 +339,17 @@ export default function AdminContent() {
         </div>
       )}
 
-      {/* ================= 案例管理(read-only 真站內數據) ================= */}
+      {/* ================= 案例管理(誠實狀態 — 虛構案例已全站移除) ================= */}
       {tab === "案例管理" && (
-        <div>
-          <p className="mb-3 rounded-md border border-border bg-card/60 px-4 py-2.5 text-xs text-text-muted">
-            案例而家係站內靜態內容(src/data/cases.ts),同公開 /cases 頁一致。
-            精選排序功能需要後端先可以改 — 而家 read-only。
+        <div className="rounded-lg border border-dashed border-border-strong bg-surface px-6 py-16 text-center">
+          <p className="font-display text-[17px] font-medium text-text-primary">
+            真實案例整理中
           </p>
-          <ul className="space-y-2">
-            {cases.map((c) => (
-              <li
-                key={c.slug}
-                className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-surface px-4 py-3"
-              >
-                <span className="rounded-sm bg-card px-1.5 py-0.5 font-mono text-[10px] text-text-secondary">
-                  {c.industry}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-text-primary">
-                    {c.title}
-                  </p>
-                  <p className="mt-0.5 font-mono text-[11px] text-text-muted">
-                    /cases/{c.slug}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ul>
+          <p className="mx-auto mt-2 max-w-[420px] text-xs leading-relaxed text-text-muted">
+            舊有嘅示範案例(無真實數據支持)已經全站移除,公開 /cases
+            頁而家顯示「整理中」狀態。案例後台(cases 資料表 + 審核流程)就位之後,
+            有真實數據支持、客戶授權嘅案例會喺呢度管理。
+          </p>
         </div>
       )}
     </div>

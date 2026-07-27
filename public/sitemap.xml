@@ -14,16 +14,6 @@
   <url><loc>https://aigro-blue.vercel.app/access</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
   <url><loc>https://aigro-blue.vercel.app/join</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://aigro-blue.vercel.app/login</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>https://aigro-blue.vercel.app/insights/openai-gpt-5-unified</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://aigro-blue.vercel.app/insights/minimax-m2-open-source</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://aigro-blue.vercel.app/insights/hkma-genai-sandbox-2</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://aigro-blue.vercel.app/insights/cursor-2-multi-agent</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://aigro-blue.vercel.app/insights/traditional-chinese-rag-guide</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://aigro-blue.vercel.app/cases/cha-chaan-teng-ai-scheduling</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://aigro-blue.vercel.app/cases/tutorial-centre-ai-grading</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://aigro-blue.vercel.app/cases/property-agency-ai-copywriting</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://aigro-blue.vercel.app/cases/ecommerce-ai-support-automation</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://aigro-blue.vercel.app/cases/accounting-firm-ai-audit</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://aigro-blue.vercel.app/experts/jimmy-lau</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://aigro-blue.vercel.app/experts/elvin-cheung</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
 </urlset>
