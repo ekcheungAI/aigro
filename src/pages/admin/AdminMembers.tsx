@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
-import { Search, UserRound } from "lucide-react";
+import { Pencil, Search, UserRound } from "lucide-react";
 import AdminSlideOver from "@/components/admin/AdminSlideOver";
+import { useAdminToast } from "@/components/admin/AdminToast";
 import QueryState from "@/components/QueryState";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
@@ -18,9 +19,13 @@ import { ROLE_LABELS, TIER_LABEL } from "@/components/auth/member";
 import type { MemberRole, MemberTier } from "@/components/auth/member";
 
 type RoleFilter = "全部" | MemberRole;
+type TierFilter = "全部" | MemberTier;
 const ROLE_FILTERS: RoleFilter[] = ["全部", "free", "founding", "expert", "admin"];
+const TIER_FILTERS: TierFilter[] = ["全部", "free", "pro", "vip"];
 const ROLE_ORDER: MemberRole[] = ["free", "founding", "expert", "admin"];
 const TIER_ORDER: MemberTier[] = ["free", "pro", "vip"];
+/** 已知分身 slug(datalist 建議,自訂都得) */
+const KNOWN_EXPERT_SLUGS = ["jimmy-lau", "elvin-cheung"];
 
 function roleChip(role: string | null) {
   if (role === "admin") return "bg-lime text-on-accent";
@@ -65,25 +70,190 @@ async function fetchMembers(): Promise<MembersData> {
   };
 }
 
+/* ---------------- 會員級別編輯(真 update profiles) ---------------- */
+
+function MemberRoleEditor({
+  member,
+  onSaved,
+  onCancel,
+}: {
+  member: AdminProfileRow;
+  /** 儲存成功後 callback(父層 refetch + 關閉) */
+  onSaved: (role: MemberRole, tier: MemberTier) => void;
+  onCancel: () => void;
+}) {
+  const [role, setRole] = useState<MemberRole>(
+    (member.role as MemberRole) ?? "free"
+  );
+  const [tier, setTier] = useState<MemberTier>(
+    (member.tier as MemberTier) ?? "free"
+  );
+  const [expertSlug, setExpertSlug] = useState(member.expert_slug ?? "");
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  const save = async () => {
+    if (!supabase) {
+      setSaveError("Supabase 未連接 — 請檢查環境變數。");
+      return;
+    }
+    setSaving(true);
+    setSaveError(null);
+    const payload: Record<string, unknown> = {
+      role,
+      tier,
+      // 只有 expert role 先保留 expert_slug;其他級別一律清走,避免殘留連結
+      expert_slug: role === "expert" ? expertSlug.trim() || null : null,
+    };
+    const { error: updateError } = await supabase
+      .from("profiles")
+      .update(payload)
+      .eq("id", member.id);
+    setSaving(false);
+    if (updateError) {
+      setSaveError(
+        `更新失敗:${updateError.message} — 可能係權限未開:請先喺 Supabase SQL Editor 執行 supabase/v2-policies.sql(profiles_admin_update policy)。`
+      );
+      return;
+    }
+    onSaved(role, tier);
+  };
+
+  if (saveError) {
+    return (
+      <div className="flex-1 space-y-4 px-6 py-5">
+        <QueryState error={saveError} retry={() => void save()} />
+        <button
+          type="button"
+          onClick={() => setSaveError(null)}
+          className="inline-flex items-center rounded-md border border-border px-3 py-2 text-sm text-text-secondary transition-colors hover:border-border-strong"
+        >
+          返回修改
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-full flex-col">
+      <div className="flex-1 space-y-5 px-6 py-5">
+        <div>
+          <label
+            htmlFor="me-role"
+            className="font-mono text-[11px] uppercase tracking-[0.14em] text-text-muted"
+          >
+            級別 Role
+          </label>
+          <select
+            id="me-role"
+            value={role}
+            onChange={(e) => setRole(e.target.value as MemberRole)}
+            className="mt-1.5 w-full rounded-md border border-border-strong bg-surface px-3 py-2 text-sm text-text-primary focus:border-lime focus:outline-none"
+          >
+            {ROLE_ORDER.map((r) => (
+              <option key={r} value={r}>
+                {ROLE_LABELS[r]}({r})
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label
+            htmlFor="me-tier"
+            className="font-mono text-[11px] uppercase tracking-[0.14em] text-text-muted"
+          >
+            層級 Tier
+          </label>
+          <select
+            id="me-tier"
+            value={tier}
+            onChange={(e) => setTier(e.target.value as MemberTier)}
+            className="mt-1.5 w-full rounded-md border border-border-strong bg-surface px-3 py-2 text-sm text-text-primary focus:border-lime focus:outline-none"
+          >
+            {TIER_ORDER.map((t) => (
+              <option key={t} value={t}>
+                {TIER_LABEL[t]}({t})
+              </option>
+            ))}
+          </select>
+        </div>
+        {role === "expert" && (
+          <div>
+            <label
+              htmlFor="me-slug"
+              className="font-mono text-[11px] uppercase tracking-[0.14em] text-text-muted"
+            >
+              專家分身 slug
+            </label>
+            <input
+              id="me-slug"
+              list="known-expert-slugs"
+              value={expertSlug}
+              onChange={(e) => setExpertSlug(e.target.value)}
+              placeholder="例:jimmy-lau"
+              className="mt-1.5 w-full rounded-md border border-border-strong bg-surface px-3 py-2 font-mono text-sm text-text-primary placeholder:text-text-muted focus:border-lime focus:outline-none"
+            />
+            <datalist id="known-expert-slugs">
+              {KNOWN_EXPERT_SLUGS.map((s) => (
+                <option key={s} value={s} />
+              ))}
+            </datalist>
+            <p className="mt-1.5 text-xs leading-relaxed text-text-muted">
+              連結佢嘅 AI 分身身份(jimmy-lau / elvin-cheung 或自訂 slug)—
+              設定後佢喺專家平台見到自己嘅分身數據;留空即未連結。
+            </p>
+          </div>
+        )}
+        <p className="rounded-md border border-dashed border-border-strong bg-card/60 px-3.5 py-2.5 text-xs leading-relaxed text-text-muted">
+          儲存會直接寫入 Supabase profiles 表({member.email})—
+          需要 profiles_admin_update policy(v2-policies.sql)先生效。
+        </p>
+      </div>
+      <div className="flex gap-2 border-t border-border px-6 py-4">
+        <button
+          type="button"
+          disabled={saving}
+          onClick={() => void save()}
+          className="inline-flex flex-1 items-center justify-center rounded-md bg-lime px-3 py-2 text-sm font-medium text-on-accent transition-colors hover:bg-lime-hover disabled:opacity-50"
+        >
+          {saving ? "儲存中…" : "儲存變更"}
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="inline-flex items-center rounded-md border border-border px-3 py-2 text-sm text-text-secondary transition-colors hover:border-border-strong"
+        >
+          取消
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminMembers() {
   const { data, loading, error, refetch } = useAdminQuery(fetchMembers);
+  const toast = useAdminToast();
   const [query, setQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("全部");
+  const [tierFilter, setTierFilter] = useState<TierFilter>("全部");
   const [openId, setOpenId] = useState<string | null>(null);
+  const [editId, setEditId] = useState<string | null>(null);
 
   const list = useMemo(() => data?.profiles ?? [], [data]);
   const active = list.find((m) => m.id === openId) ?? null;
+  const editing = list.find((m) => m.id === editId) ?? null;
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return list.filter((m) => {
       if (roleFilter !== "全部" && (m.role ?? "free") !== roleFilter) return false;
+      if (tierFilter !== "全部" && (m.tier ?? "free") !== tierFilter) return false;
       const name = m.name ?? "";
       if (q && !name.toLowerCase().includes(q) && !m.email.toLowerCase().includes(q))
         return false;
       return true;
     });
-  }, [list, query, roleFilter]);
+  }, [list, query, roleFilter, tierFilter]);
 
   const roleCounts = ROLE_ORDER.map((r) => ({
     role: r,
@@ -227,6 +397,24 @@ export default function AdminMembers() {
                   </button>
                 ))}
               </div>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="font-mono text-[11px] text-text-muted">層級</span>
+                {TIER_FILTERS.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setTierFilter(t)}
+                    className={cn(
+                      "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                      tierFilter === t
+                        ? "border-lime bg-lime text-on-accent"
+                        : "border-border bg-surface text-text-secondary hover:border-border-strong"
+                    )}
+                  >
+                    {t === "全部" ? "全部" : TIER_LABEL[t]}
+                  </button>
+                ))}
+              </div>
               <span className="ml-auto font-mono text-xs text-text-muted">
                 {filtered.length} / {list.length} 位
               </span>
@@ -242,6 +430,7 @@ export default function AdminMembers() {
                     <th className="px-4 py-3 font-medium">層級</th>
                     <th className="px-4 py-3 font-medium">興趣</th>
                     <th className="px-4 py-3 font-medium">加入日期</th>
+                    <th className="px-4 py-3 text-right font-medium">操作</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -280,11 +469,24 @@ export default function AdminMembers() {
                       <td className="px-4 py-3 font-mono text-xs text-text-secondary">
                         {formatDate(m.created_at)}
                       </td>
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditId(m.id);
+                          }}
+                          className="inline-flex items-center gap-1 rounded-md border border-border px-2.5 py-1 text-xs font-medium text-text-secondary transition-colors hover:border-lime hover:text-lime-text"
+                        >
+                          <Pencil className="h-3 w-3" />
+                          編輯
+                        </button>
+                      </td>
                     </tr>
                   ))}
                   {filtered.length === 0 && (
                     <tr>
-                      <td colSpan={5} className="px-4 py-10 text-center text-sm text-text-muted">
+                      <td colSpan={6} className="px-4 py-10 text-center text-sm text-text-muted">
                         找不到符合嘅會員。
                       </td>
                     </tr>
@@ -359,7 +561,41 @@ export default function AdminMembers() {
                 </dd>
               </div>
             </dl>
+
+            <button
+              type="button"
+              onClick={() => {
+                setOpenId(null);
+                setEditId(active.id);
+              }}
+              className="inline-flex items-center gap-1.5 rounded-md border border-border px-3.5 py-2 text-sm font-medium text-text-secondary transition-colors hover:border-lime hover:text-lime-text"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+              編輯級別 / 層級
+            </button>
           </div>
+        )}
+      </AdminSlideOver>
+
+      {/* 級別編輯 slide-over(真 update profiles.role/tier/expert_slug) */}
+      <AdminSlideOver
+        open={editing !== null}
+        onClose={() => setEditId(null)}
+        title="編輯會員級別"
+        subtitle={editing ? editing.email : ""}
+      >
+        {editing && (
+          <MemberRoleEditor
+            member={editing}
+            onCancel={() => setEditId(null)}
+            onSaved={(role, tier) => {
+              setEditId(null);
+              toast(
+                `已更新 ${editing.email}:${ROLE_LABELS[role]} · ${TIER_LABEL[tier]}`
+              );
+              refetch();
+            }}
+          />
         )}
       </AdminSlideOver>
     </div>
