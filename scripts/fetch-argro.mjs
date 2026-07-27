@@ -86,7 +86,7 @@ const mapItem = (it, selected) => ({
   category: classify(it),
   score:
     typeof it.hot_score === "number"
-      ? Math.round(it.hot_score * 100)
+      ? Math.min(99, Math.round(it.hot_score * 100))
       : 0,
   selected,
   attribution: null,
