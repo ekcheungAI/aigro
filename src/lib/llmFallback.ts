@@ -1,11 +1,14 @@
 /**
- * Ask guardrail + LLM 一般知識 fallback(v1.21)。
+ * Ask guardrail + LLM 自由答 fallback(v1.21 → chat-10x)。
  *
  * B. Guardrail — `isOffGuard`:明顯 spam/無意義、違規請求、jailbreak/偷 system prompt、
  *    索取他人個人資料 → 分身口吻禮貌 deflect(唔係拒絕模板,唔顯示低信心)。
- * C. LLM fallback — KB 零命中且設定咗 VITE_LLM_* 時,經 OpenAI-compatible
- *    chat-completions 生成分身口吻嘅一般知識回覆(≤150字,唔編造分身本人事實)。
- *    10s timeout + try/catch,失敗 → 上層用內建 graceful 模板,UI 永遠唔會 hang。
+ * C. LLM fallback — KB 零命中時:
+ *    PRIMARY:自家 argro `POST https://argro-api.zeabur.app/chat`(public,rate-limited,
+ *      唔使 key)— 分身語氣自由答,帶近 6 條對話歷史(single-shot 會令追問記憶退化),
+ *      回應 {reply, citations, rag_used};8s timeout。
+ *    SECONDARY:設定咗 VITE_LLM_* 時嘅 OpenAI-compatible chat-completions(≤150字)。
+ *    全部失敗 → throw,上層用內建 graceful 模板,UI 永遠唔會 hang。
  */
 
 import type { AiReply } from "@/components/ask/AiMessage";
@@ -145,7 +148,7 @@ export async function callLlmGeneral(
   }
 }
 
-/** LLM 回覆包裝成 AiReply:無引用(confidence 0.6)+「AI 生成 · 一般知識」chip */
+/** LLM 回覆包裝成 AiReply:無引用(confidence 0.6)+「AI 生成 · 分身語氣」chip */
 export function llmReply(persona: Persona, text: string): AiReply {
   return {
     text,
@@ -154,4 +157,100 @@ export function llmReply(persona: Persona, text: string): AiReply {
     source: "llm",
     followUps: persona.suggestions.slice(0, 2),
   };
+}
+
+/* ---------------- C-PRIMARY. 自家 argro /chat(分身自由答) ---------------- */
+
+const ARGRO_CHAT_URL = "https://argro-api.zeabur.app/chat";
+const ARGRO_TIMEOUT_MS = 8_000;
+/** 帶近 6 條對話歷史 — 評審警告:single-shot 會令追問記憶退化 */
+export const ARGRO_HISTORY_TURNS = 6;
+
+/** 對話歷史格式(argro /chat 同舊 OpenAI 路徑共用) */
+export interface ChatTurn {
+  role: "user" | "assistant";
+  content: string;
+}
+
+interface ArgroChatResponse {
+  reply?: string;
+  citations?: { title?: string; url?: string; source?: string }[];
+  rag_used?: boolean;
+}
+
+/**
+ * 呼叫自家 argro /chat — public endpoint,rate-limited,唔使 key。
+ * 8s AbortController timeout;任何錯誤(含 503 / rate-limit)都 throw,
+ * 上層落 secondary / 內建模板,UI 永遠唔 hang。
+ */
+export async function callArgroChat(
+  persona: Persona,
+  question: string,
+  history: ChatTurn[]
+): Promise<{ text: string; citations: { title: string; href: string }[]; ragUsed: boolean }> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ARGRO_TIMEOUT_MS);
+  try {
+    const res = await fetch(ARGRO_CHAT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        persona: persona.key,
+        message: question,
+        history: history.slice(-ARGRO_HISTORY_TURNS),
+      }),
+      signal: controller.signal,
+    });
+    if (!res.ok) throw new Error(`argro /chat HTTP ${res.status}`);
+    const data = (await res.json()) as ArgroChatResponse;
+    const text = typeof data.reply === "string" ? data.reply.trim() : "";
+    if (!text) throw new Error("argro /chat empty reply");
+    const citations = (Array.isArray(data.citations) ? data.citations : [])
+      .filter((c) => typeof c?.url === "string" && c.url.length > 0)
+      .map((c) => ({
+        title:
+          (typeof c.title === "string" && c.title.trim()) ||
+          (typeof c.source === "string" && c.source.trim()) ||
+          "相關情報",
+        href: c.url as string,
+      }));
+    return { text, citations, ragUsed: data.rag_used === true };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** argro /chat 回覆包裝成 AiReply — citations 顯示做「相關情報」chips(外鏈原文) */
+export function argroReply(
+  persona: Persona,
+  result: { text: string; citations: { title: string; href: string }[]; ragUsed: boolean }
+): AiReply {
+  return {
+    text: result.text,
+    citations: result.citations,
+    confidence: 0.6,
+    source: "llm",
+    ragUsed: result.ragUsed,
+    followUps: persona.suggestions.slice(0, 2),
+  };
+}
+
+/**
+ * LLM 自由答主入口(KB 零命中時由 Ask 呼叫):
+ * PRIMARY argro /chat(帶歷史)→ SECONDARY 舊 VITE_LLM_* OpenAI 路徑(env 有設先用)。
+ * 兩條都失敗 → throw,上層 catch 後用內建一般知識模板。
+ */
+export async function resolveLlmReply(
+  persona: Persona,
+  question: string,
+  history: ChatTurn[]
+): Promise<AiReply> {
+  try {
+    return argroReply(persona, await callArgroChat(persona, question, history));
+  } catch {
+    if (isLlmConfigured()) {
+      return llmReply(persona, await callLlmGeneral(persona, question));
+    }
+    throw new Error("no llm path available");
+  }
 }

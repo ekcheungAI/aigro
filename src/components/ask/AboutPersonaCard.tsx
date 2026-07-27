@@ -34,6 +34,8 @@ import {
 } from "@/components/auth/member";
 import type { AigroMember } from "@/components/auth/member";
 import { captureWaitlist } from "@/lib/waitlist";
+import ClubBookingCapture from "@/components/ask/ClubBookingCapture";
+import { lastUserQuestion } from "@/components/ask/sessions";
 
 /**
  * 「關於此分身」卡 — v1.21 premium speaker card。
@@ -83,10 +85,10 @@ function registerFreeMember(email: string): AigroMember {
 /* ---------------- 匿名 capture strip / 已登入確認 ---------------- */
 
 function CaptureStrip({
-  shortName,
+  persona,
   onToast,
 }: {
-  shortName: string;
+  persona: Persona;
   onToast: (msg: string) => void;
 }) {
   const [member, setMember] = useState<AigroMember | null>(() => loadMember());
@@ -115,10 +117,14 @@ function CaptureStrip({
     }
     setMember(registerFreeMember(email));
     // 真實收集:寫入 Supabase waitlist(無 env / 離線 → 靜默)
+    // G6:vertical = 分身 key,note = 最後一條用戶問題節錄 — 專家跟進有上下文
+    const question = lastUserQuestion(persona.key);
     void captureWaitlist({
       email: email.trim(),
       kind: "newsletter",
       source: "about-persona-capture",
+      vertical: persona.key,
+      note: question ? `對話 capture — 最近問題:「${question}」` : "對話 capture",
     });
     setJustRegistered(true);
     onToast("登記成功 — 專家而家可以跟進你嘅對話。");
@@ -135,7 +141,7 @@ function CaptureStrip({
       ) : (
         <>
           <p className="text-caption font-medium text-text-primary">
-            想{shortName}睇到你嘅問題?
+            想{persona.shortName}睇到你嘅問題?
           </p>
           <p className="mt-0.5 text-caption text-text-muted">
             免費登記,專家可以跟進你嘅對話
@@ -173,6 +179,8 @@ function CaptureStrip({
 function ExpertAboutCard({ persona }: { persona: Persona }) {
   const expert = persona.expert;
   const { toast, showToast } = useToast();
+  // G5:Club 優先預約 — 點擊展開 inline email capture(唔再係空 toast)
+  const [clubOpen, setClubOpen] = useState(false);
   if (!expert) return null;
 
   const hasPhoto = expertHasPhoto(expert);
@@ -230,7 +238,7 @@ function ExpertAboutCard({ persona }: { persona: Persona }) {
         </p>
         <p className="mt-1.5 flex items-center gap-1.5 text-caption text-text-secondary">
           <PresenceDot size={8} />
-          在線 · 而家可以問佢
+          AI 分身 · 隨時可問
         </p>
 
         {/* Signature quote — serif,expert accent left border */}
@@ -303,19 +311,25 @@ function ExpertAboutCard({ persona }: { persona: Persona }) {
             <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} aria-hidden="true" />
           </Link>
           {/* 3. 匿名 → email capture strip;已登入 → 線索確認 */}
-          <CaptureStrip shortName={persona.shortName} onToast={showToast} />
-          {/* 4. Club 優先預約(ghost,toast)— 僅專家 */}
-          <button
-            type="button"
-            aria-disabled="true"
-            onClick={() =>
-              showToast("Club 優先預約將隨會員制開放,敬請期待。")
-            }
-            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-md px-3 text-caption text-text-muted transition-colors duration-150 hover:text-ink"
-          >
-            <CalendarClock className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-            Club 優先預約 — 即將開放
-          </button>
+          <CaptureStrip persona={persona} onToast={showToast} />
+          {/* 4. Club 優先預約 — 展開 inline email capture(G5,唔再係空 toast) */}
+          {clubOpen ? (
+            <ClubBookingCapture
+              persona={persona}
+              idPrefix={`club-${persona.key}`}
+              onSubmitted={() => showToast("已記低 — Club 預約開放即通知你。")}
+            />
+          ) : (
+            <button
+              type="button"
+              aria-expanded={clubOpen}
+              onClick={() => setClubOpen(true)}
+              className="inline-flex h-9 items-center justify-center gap-1.5 rounded-md px-3 text-caption text-text-muted transition-colors duration-150 hover:text-ink"
+            >
+              <CalendarClock className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+              Club 優先預約 — 即將開放
+            </button>
+          )}
         </div>
 
         {/* 授權 transparency line(keep) */}

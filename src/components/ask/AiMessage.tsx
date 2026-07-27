@@ -30,6 +30,13 @@ export interface AiReply {
    * - guardrail = 安全 deflect → 唔顯示信心行(deflect 唔係低信心答案)
    */
   source?: "kb" | "llm" | "general" | "guardrail";
+  /**
+   * KB 命中類型(G11/G12 信任 copy)— pickReply 回傳後由 Ask 附上:
+   * direct/composed → 「授權內容庫回答 · 附來源」;near/continued →「相關話題回答」。
+   */
+  matched?: "direct" | "composed" | "near" | "continued" | "fallback";
+  /** argro /chat 回覆帶即時情報引用 → 顯示「附即時情報引用」chip */
+  ragUsed?: boolean;
 }
 
 interface AiMessageProps {
@@ -161,16 +168,32 @@ export default function AiMessage({
                 show: { opacity: 1, transition: { duration: 0.12 } },
               }}
             >
-              <Link
-                to={c.href}
-                className="group inline-flex h-6 items-center gap-1.5 rounded-sm border bg-surface px-2 text-caption text-text-secondary"
-              >
-                <span aria-hidden="true" className="h-2 w-2 shrink-0 rounded-full bg-ink" />
-                <span className="max-w-[220px] truncate transition-colors duration-120 group-hover:text-ink group-hover:underline">
-                  {c.title}
-                </span>
-                <ArrowUpRight className="h-3 w-3 shrink-0 text-text-muted" strokeWidth={1.5} />
-              </Link>
+              {/* 外鏈(http)→ 原生 <a> 新分頁;站內 → react-router Link */}
+              {/^https?:\/\//.test(c.href) ? (
+                <a
+                  href={c.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group inline-flex h-6 items-center gap-1.5 rounded-sm border bg-surface px-2 text-caption text-text-secondary"
+                >
+                  <span aria-hidden="true" className="h-2 w-2 shrink-0 rounded-full bg-ink" />
+                  <span className="max-w-[220px] truncate transition-colors duration-120 group-hover:text-ink group-hover:underline">
+                    {c.title}
+                  </span>
+                  <ArrowUpRight className="h-3 w-3 shrink-0 text-text-muted" strokeWidth={1.5} />
+                </a>
+              ) : (
+                <Link
+                  to={c.href}
+                  className="group inline-flex h-6 items-center gap-1.5 rounded-sm border bg-surface px-2 text-caption text-text-secondary"
+                >
+                  <span aria-hidden="true" className="h-2 w-2 shrink-0 rounded-full bg-ink" />
+                  <span className="max-w-[220px] truncate transition-colors duration-120 group-hover:text-ink group-hover:underline">
+                    {c.title}
+                  </span>
+                  <ArrowUpRight className="h-3 w-3 shrink-0 text-text-muted" strokeWidth={1.5} />
+                </Link>
+              )}
             </motion.span>
           ))}
         </motion.div>
@@ -179,8 +202,7 @@ export default function AiMessage({
       {/* 一般知識 chip(v1.21)— LLM / 內建模板回覆冊引用,用呢個 chip 標明性質。
           同引用 chips 一樣文字完成後先 fade-in;還原歷史即刻顯示。 */}
       {phase === "done" &&
-        (reply.source === "llm" || reply.source === "general") &&
-        reply.citations.length === 0 && (
+        (reply.source === "llm" || reply.source === "general") && (
           <motion.div
             className="mt-3 flex flex-wrap gap-2"
             initial={animate ? { opacity: 0 } : false}
@@ -189,8 +211,13 @@ export default function AiMessage({
           >
             <span className="inline-flex h-6 items-center gap-1.5 rounded-sm border bg-surface px-2 text-caption text-text-muted">
               <Sparkles className="h-3 w-3 shrink-0" strokeWidth={1.5} aria-hidden="true" />
-              {reply.source === "llm" ? "AI 生成 · 一般知識" : "一般知識回覆"}
+              {reply.source === "llm" ? "AI 生成 · 分身語氣" : "一般知識回覆"}
             </span>
+            {reply.source === "llm" && reply.ragUsed && (
+              <span className="inline-flex h-6 items-center gap-1.5 rounded-sm border bg-surface px-2 text-caption text-text-muted">
+                附即時情報引用
+              </span>
+            )}
           </motion.div>
         )}
 
@@ -240,8 +267,9 @@ export default function AiMessage({
         </motion.div>
       )}
 
-      {/* 信心行 — guardrail deflect 唔顯示(係 deflect 唔係低信心答案);
-          llm / general 回覆標「一般知識回覆」而唔係假精密信心分 */}
+      {/* 信任行(G11/G12)— guardrail deflect 唔顯示;
+          KB →「授權內容庫回答 · 附來源」,bridge/continued →「相關話題回答」,
+          llm →「AI 生成 · 分身語氣」,general →「一般知識回覆」;唔再顯示小數信心分 */}
       {phase === "done" && reply.source !== "guardrail" && (
         <motion.p
           initial={animate ? { opacity: 0 } : false}
@@ -255,9 +283,13 @@ export default function AiMessage({
             lowConfidence ? "text-warning" : "text-text-muted"
           )}
         >
-          {reply.source === "llm" || reply.source === "general"
-            ? "一般知識回覆・回答僅供參考"
-            : `信心分數 ${reply.confidence.toFixed(2)}・回答僅供參考`}
+          {reply.source === "llm"
+            ? "AI 生成 · 分身語氣・回答僅供參考"
+            : reply.source === "general"
+              ? "一般知識回覆・回答僅供參考"
+              : reply.matched === "near" || reply.matched === "continued"
+                ? "相關話題回答・回答僅供參考"
+                : `授權內容庫回答${reply.citations.length > 0 ? " · 附來源" : ""}・回答僅供參考`}
           {lowConfidence && lowConfidenceAction && (
             <>
               {"・"}

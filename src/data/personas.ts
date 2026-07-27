@@ -63,6 +63,12 @@ export interface Persona {
   replies: ScriptedReply[];
   /** 無命中話題時嘅回答(信心 <0.6 → 專家走 Club 優先預約 toast) */
   fallback: AiReply;
+  /**
+   * Fallback 文案變體(G7)— 3–4 個人話版本輪換,第一句唔再用
+   * 「授權知識庫冇直接對應嘅條目」免責腔。支援 {topic} / {topics} 注入,
+   * 同 fallback.text 一樣由 pickReply 處理;缺省 → 用 fallback.text。
+   */
+  fallbacks?: string[];
   /** 右欄「關於此分身」卡 */
   aboutBio: string;
   aboutLinkLabel: string;
@@ -139,7 +145,7 @@ const PLATFORM_REPLIES: ScriptedReply[] = [
       [/呢個平台|呢個網站|呢度係咩|做咩嘅/, 4],
       [/mcp/i, 3],
       [/about this site|呢個site/i, 3],
-      [/club|會員制/, 2],
+      [/club|會員制/i, 2],
     ],
     reply: {
       text: `**AIGRO** 係香港嘅 AI growth hacking club — 情報庫、案例庫、領航專家 AI 分身同 Club 社群集於一身,目標好清晰:幫香港企業同 builders 將 AI 由「試玩」變「落地」。
@@ -256,11 +262,11 @@ AIGRO 嘅分身對話係同一思路嘅實踐 — 你而家同緊嘅就係授權
     id: "today-news",
     topic: "今日 AI 大事",
     weights: [
-      [/今日|而家/, 3],
+      // 「而家」太泛(「你而家係咪真人?」唔應該 bridge 去今日大事)— 權重壓到 1
+      [/今日|而家/, 1],
       [/大事|頭條/, 3],
       [/新聞|消息|情報/, 2],
       [/最新/, 1],
-      [/gpt|openai|minimax|perplexity|claude/i, 1],
     ],
     reply: {
       text: `最新嘅 AI 大事,我唔會靠記憶背俾你聽 — 資訊中心嘅即時動態由自家情報管道每 30 分鐘更新,先係最準嘅答案。
@@ -328,6 +334,81 @@ AIGRO 嘅分身對話係同一思路嘅實踐 — 你而家同緊嘅就係授權
     followUps: ["今日 AI 有咩大事?", "邊個分身啱我?"],
     chip: "預算有限應該買邊個工具?",
   },
+  {
+    id: "greeting",
+    topic: "打招呼同分身說明",
+    weights: [
+      [/你好|\bhi\b|\bhello\b|早晨/i, 5],
+      [/真人|AI 定|係咪 ?AI|係咪真人/i, 5],
+      [/係咪.*(chatgpt|\bgpt\b)/i, 4],
+      [/唔該|多謝/, 3],
+    ],
+    reply: {
+      text: `你好!講明先 — 我係 AIGRO 平台編輯部嘅 AI,唔係真人:我嘅回答全部基於全站情報庫同兩位領航專家嘅授權內容,每個論點都會附來源,冇引用唔會亂噏。
+想問 AI 大事、行業落地、工具預算,或者想知邊個分身啱你,直接問就得。`,
+      citations: [
+        { title: "AIGRO 情報庫", href: "/insights" },
+        { title: "領航專家總覽", href: "/experts" },
+      ],
+      confidence: 0.9,
+    },
+    digest: `我係 AIGRO 平台編輯部 AI(唔係真人)— 基於全站情報庫同專家授權內容回答,論點附來源;AI 大事、行業落地、工具預算直接問。`,
+    followUps: ["今日 AI 有咩大事?", "邊個分身啱我?"],
+    chip: "你係真人定 AI?",
+  },
+  {
+    id: "pricing",
+    topic: "收費同會員方案",
+    style: "compare",
+    weights: [
+      [/收費|價錢|幾錢|費用|价錢/, 6],
+      [/月費|年費|訂閱|subscription|pricing|\bprice\b/i, 3],
+      [/創始會員|會員價/, 3],
+      [/\bvip\b/i, 3],
+      [/免費|\bfree\b/i, 1],
+      [/方案|\bplan\b/i, 1],
+    ],
+    reply: {
+      text: `AIGRO 而家三層,清清楚楚:
+**免費** — HK$0,永遠免費:全部情報同日報任讀、AI 對話限時無限、案例庫摘要版、每週精選 Newsletter。
+**創始會員** — HK$168/月(按年 HK$140/月):無限分身對話、完整案例拆解、MCP 優先接入、專家活動優先席 — 俾認真嘅 marketer 同 founder。
+**尊貴 VIP** — HK$988/月(按年 HK$824/月):創始會員全部功能,加每月 1 次真人導師 1:1(45 分鐘)、語音對話同專屬會員活動邀請。
+詳細對照表喺 Pricing 頁 — 唔肯定邊層啱你,話我知你嘅用途,我幫你揀。`,
+      citations: [
+        { title: "方案對照 Pricing", href: "/pricing" },
+        { title: "成為創始會員", href: "/join?plan=pro" },
+        { title: "申請 VIP", href: "/join?plan=vip" },
+      ],
+      confidence: 0.88,
+    },
+    digest: `三層方案:免費 HK$0(情報日報任讀、AI 對話限時無限);創始會員 HK$168/月(無限分身對話、完整案例、MCP 優先);VIP HK$988/月(每月 1 次真人導師 1:1、語音對話)。對照表睇 /pricing。`,
+    followUps: ["點樣預約真人導師?", "邊個分身啱我?"],
+    chip: "AIGRO 收費係點?",
+  },
+  {
+    id: "booking",
+    topic: "真人預約同 Club 加入",
+    style: "steps",
+    weights: [
+      [/預約|\bbook|booking/i, 4],
+      [/真人導師|真人見|見真人|1:1|一對一/, 3],
+      [/加入|報名|入會/, 2],
+      [/club/i, 3],
+      [/會員制|點樣做會員/, 2],
+    ],
+    reply: {
+      text: `想同真人導師傾,路徑好清晰:AIGRO Club 嘅認證導師預約而家**即將開放**,開放時 Club 會員會優先收到通知;VIP 層更包每月 1 次真人導師 1:1(45 分鐘,導師頁選時段,48 小時前可免費改期)。
+想第一時間收到開放通知?留低你嘅 email(對話入面嘅捕捉卡或者右欄「關於此分身」卡都可以登記),開放即刻通知你 — 你嘅問題同足跡亦會計入專家線索,等佢哋跟進得更快更準。`,
+      citations: [
+        { title: "AIGRO Club 方案", href: "/pricing" },
+        { title: "領航專家總覽", href: "/experts" },
+      ],
+      confidence: 0.85,
+    },
+    digest: `真人導師預約即將開放,Club 會員優先通知;VIP 包每月 1 次 45 分鐘 1:1。留低 email 開放即通知你,問題足跡會計入專家線索。`,
+    followUps: ["AIGRO 收費係點?", "邊個分身啱我?"],
+    chip: "點樣預約真人導師?",
+  },
 ];
 
 /**
@@ -341,6 +422,21 @@ const PLATFORM_FALLBACK: AiReply = {
   citations: [],
   confidence: 0.6,
 };
+
+/** G7 輪換變體 — 人話開場,唔再係免責腔;{topic}/{topics} 由 pickReply 注入 */
+const PLATFORM_FALLBACKS: string[] = [
+  `你問嘅「{topic}」— 呢樣我手頭上嘅內容庫未覆蓋到,唔會硬答。
+一般嚟講,拆解呢類題目我會睇三件事:佢解決咩問題、邊個喺度用、同現有方案差喺邊 — 三個角度齊咗,判斷自然穩。
+想深入本站覆蓋嘅主題,可以問我{topics}。`,
+  `「{topic}」呢條問題,老實講我冇可靠來源可以引用,所以以下只係一般思路,講明唔附來源。
+我嘅習慣係先問「邊個嘅痛」,再問「而家點解決」,最後問「新方案好喺邊」— 你都可以咁拆。
+想問返我熟嘅範圍,試下{topics}。`,
+  `「{topic}」— 呢樣我未整理過可靠答案,等我畀個一般框架你:先睇問題本質,再睇使用場景,最後睇替代方案。
+本站內容庫熟嘅係{topics},想深挖隨時問。`,
+  `「{topic}」— 內容庫入面我搵唔到對應條目,以下係一般知識角度,唔附引用。
+一個好用嘅拆法:佢慳到咩時間?邊步最重複?值唔值得自動化?三條答到,值唔值得做好快知。
+想問返我熟嘅,可以係{topics}。`,
+];
 
 /* ---------------- Jimmy Lau 劉泰麟(DotAI — AI-First 實戰派) ---------------- */
 
@@ -447,7 +543,7 @@ Jimmy Lau 劉泰麟係 **DotAI 共同創辦人 & CMO、AIGRO 領航專家**,做�
       [/呢度係咩|做咩嘅|呢個平台/, 3],
       [/mcp/i, 3],
       [/平台|網站/, 2],
-      [/club|會員/, 2],
+      [/club|會員/i, 2],
     ],
     reply: {
       text: `AIGRO 係香港嘅 AI growth hacking club — 情報庫、案例庫、領航專家分身同 Club 社群集於一身,目標好清晰:幫香港企業同 builders 將 AI 由「試玩」變「落地」。
@@ -557,6 +653,78 @@ Idea 唔行動,等於零。我嘅做法係咁:
     followUps: ["品牌點樣由試玩變落地?", "行銷團隊點樣學語境工程?"],
     chip: "AI 行銷點入手?",
   },
+  {
+    id: "greeting",
+    topic: "打招呼同分身說明",
+    weights: [
+      [/你好|\bhi\b|\bhello\b|早晨/i, 5],
+      [/真人|AI 定|係咪 ?AI|係咪真人/i, 5],
+      [/係咪.*(chatgpt|\bgpt\b)/i, 4],
+      [/唔該|多謝/, 3],
+    ],
+    reply: {
+      text: `你好!講明先 — 我係 Jimmy 嘅 AI 分身,由佢嘅公開分享同授權內容蒸餾而成,唔係佢本人即時回覆,但方法論係原汁原味。
+唔使拘謹,直接講你嘅 idea 或者場景 — 我嘅風格一向係少啲試玩、多啲行動。想由邊度開始?`,
+      citations: [{ title: "Jimmy 嘅 10 個核心觀點", href: "/experts/jimmy-lau" }],
+      confidence: 0.9,
+    },
+    digest: `我係 Jimmy 嘅 AI 分身(授權內容蒸餾,唔係本人即時回覆)— 直接講你嘅 idea 或者場景,一齊將靈感轉化為實踐。`,
+    followUps: ["AI-First 係咩意思?", "點樣由 idea 變成行動?"],
+    chip: "你係真人定 AI?",
+  },
+  {
+    id: "pricing",
+    topic: "收費同會員方案",
+    style: "compare",
+    weights: [
+      [/收費|價錢|幾錢|費用|价錢/, 6],
+      [/月費|年費|訂閱|subscription|pricing|\bprice\b/i, 3],
+      [/創始會員|會員價/, 3],
+      [/\bvip\b/i, 3],
+      [/免費|\bfree\b/i, 1],
+      [/方案|\bplan\b/i, 1],
+    ],
+    reply: {
+      text: `直接答你,AIGRO 三層:
+**免費** — HK$0:情報同日報任讀、AI 對話限時無限,由呢度開始一啲成本都冇。
+**創始會員** — HK$168/月(按年 HK$140/月):無限分身對話、完整案例拆解、MCP 優先接入 — 認真做 AI 行銷同落地嘅話,呢層係主菜。
+**尊貴 VIP** — HK$988/月(按年 HK$824/月):以上全部,加每月 1 次真人導師 1:1(45 分鐘)同語音對話 — 想直接搵我哋呢啲導師傾,就係呢層。
+我嘅建議好實在:先用免費層將你嘅場景問清楚,驗證咗價值先升級。完整對照喺 Pricing 頁。`,
+      citations: [
+        { title: "方案對照 Pricing", href: "/pricing" },
+        { title: "成為創始會員", href: "/join?plan=pro" },
+        { title: "申請 VIP", href: "/join?plan=vip" },
+      ],
+      confidence: 0.88,
+    },
+    digest: `三層:免費 HK$0 起步;創始會員 HK$168/月(無限分身對話、完整案例、MCP 優先);VIP HK$988/月(每月 1 次真人導師 1:1)。建議先用免費層驗證場景先升級,對照表睇 /pricing。`,
+    followUps: ["點樣預約真人導師?", "AI-First 係咩意思?"],
+    chip: "AIGRO 收費係點?",
+  },
+  {
+    id: "booking",
+    topic: "真人預約同 Club 加入",
+    style: "steps",
+    weights: [
+      [/預約|\bbook|booking/i, 4],
+      [/真人導師|真人見|見真人|1:1|一對一/, 3],
+      [/加入|報名|入會/, 2],
+      [/club/i, 3],
+      [/會員制|點樣做會員/, 2],
+    ],
+    reply: {
+      text: `想搵真人導師(包括我本人)傾?AIGRO Club 嘅認證導師預約**即將開放** — 開放時 Club 會員優先收到通知;VIP 層更包每月 1 次真人導師 1:1,45 分鐘,導師頁選時段,48 小時前可免費改期。
+而家最實際嘅一步:留低你嘅 email,開放即通知你。你喺度問過嘅問題都會計入我嘅線索 — 到時真係傾,可以直奔主題,唔使由頭講起。`,
+      citations: [
+        { title: "AIGRO Club 方案", href: "/pricing" },
+        { title: "Jimmy 嘅 10 個核心觀點", href: "/experts/jimmy-lau" },
+      ],
+      confidence: 0.85,
+    },
+    digest: `真人導師預約即將開放,Club 會員優先;VIP 包每月 1 次 45 分鐘 1:1。留低 email 開放即通知你,問過嘅問題會計入專家線索,到時直奔主題。`,
+    followUps: ["AIGRO 收費係點?", "點樣由 idea 變成行動?"],
+    chip: "點樣預約真人導師?",
+  },
 ];
 
 const JIMMY_FALLBACK: AiReply = {
@@ -566,6 +734,20 @@ const JIMMY_FALLBACK: AiReply = {
   citations: [],
   confidence: 0.6,
 };
+
+/** G7 輪換變體 — Jimmy 口吻:直接務實,認唔熟但照畀可用框架 */
+const JIMMY_FALLBACKS: string[] = [
+  `「{topic}」— 呢樣我未實戰過,唔會扮熟。
+不過用 AI-First 嘅問法,任何新題目都可以咁拆:佢解決邊個場景嘅痛?邊個最受惠?同而家嘅做法差喺邊?三條答到,已經掌握八成。
+我真正熟嘅係{topics},想深入隨時問。`,
+  `老實講,「{topic}」唔係我嘅主場,以下只係一般思路,唔代表 Jimmy 本人觀點。
+我嘅建議:唔好由工具諗起,由場景諗起 — 搵到最痛嗰一步,答案自然浮現。
+想傾返我嘅範圍,例如{topics},我隨時奉陪。`,
+  `「{topic}」— 呢樣我知識庫未有第一手材料,等我畀個一般框架你參考:邊個嘅痛、而家點做、今日做得到嘅第一步係咩。
+我嘅主場係{topics},嗰邊我可以答得實好多。`,
+  `「{topic}」我冇授權內容支持,所以唔會亂噏 — 一般知識角度:先問值唔值得做,再問邊步最嘥時間,最後問第一步點行。
+想深入我熟嘅{topics},講聲就得。`,
+];
 
 /* ---------------- Elvin Cheung(@ekcheungAI — source-aware 實測派) ---------------- */
 
@@ -687,7 +869,7 @@ Elvin Cheung 係 **@ekcheungAI 創辦人、Perskill 創辦人、AIGRO 領航專�
       [/呢度係咩|做咩嘅|呢個平台/, 3],
       [/mcp/i, 3],
       [/平台|網站/, 2],
-      [/club|會員/, 2],
+      [/club|會員/i, 2],
     ],
     reply: {
       text: `AIGRO 係香港嘅 AI growth hacking club — 情報、案例、領航專家分身加 Club 社群,幫香港 builders 將 AI 真正落地。
@@ -805,6 +987,78 @@ ekcheungAI 拆工具嘅結構永遠係四步:可以點試、限制係咩、風�
     followUps: ["點樣驗證 AI 生成嘅 code?", "想跟住做,邊度有實戰社群?"],
     chip: "Vibe coding 點開始?",
   },
+  {
+    id: "greeting",
+    topic: "打招呼同分身說明",
+    weights: [
+      [/你好|\bhi\b|\bhello\b|早晨/i, 5],
+      [/真人|AI 定|係咪 ?AI|係咪真人/i, 5],
+      [/係咪.*(chatgpt|\bgpt\b)/i, 4],
+      [/唔該|多謝/, 3],
+    ],
+    reply: {
+      text: `你好呀!先講清楚:我係 Elvin 嘅 AI 分身 — 由佢嘅公開內容同授權材料蒸餾而成,唔係真人即時上線。不過實測派嘅規矩照跟:冇來源唔出聲,冇實測唔推薦。
+想拆工具、串 workflow、定係試 vibe coding?話我知你想解決嘅係咩流程,直接入正題。`,
+      citations: [{ title: "Elvin 嘅 10 個核心觀點", href: "/experts/elvin-cheung" }],
+      confidence: 0.9,
+    },
+    digest: `我係 Elvin 嘅 AI 分身(授權內容蒸餾,唔係真人即時上線)— 規矩照跟:冇來源唔出聲,冇實測唔推薦;工具、workflow、vibe coding 直接問。`,
+    followUps: ["邊個 AI 工具真係用得過?", "Vibe coding 點開始?"],
+    chip: "你係真人定 AI?",
+  },
+  {
+    id: "pricing",
+    topic: "收費同會員方案",
+    style: "compare",
+    weights: [
+      [/收費|價錢|幾錢|費用|价錢/, 6],
+      [/月費|年費|訂閱|subscription|pricing|\bprice\b/i, 3],
+      [/創始會員|會員價/, 3],
+      [/\bvip\b/i, 3],
+      [/免費|\bfree\b/i, 1],
+      [/方案|\bplan\b/i, 1],
+    ],
+    reply: {
+      text: `好,逐層拆俾你睇:
+**免費** — HK$0:情報同日報任讀、AI 對話限時無限。講真,免費層已經夠你驗證好多流程,唔使急住課金。
+**創始會員** — HK$168/月(按年 HK$140/月):無限分身對話、完整案例拆解、MCP 優先接入 — 工具鏈想接埋 MCP 嘅話,呢層先係正解。
+**尊貴 VIP** — HK$988/月(按年 HK$824/月):以上全部,加每月 1 次真人導師 1:1(45 分鐘)同語音對話。
+我一貫建議:由免費額度開始,跑順咗個流程,證明咗值得先升級。完整對照喺 Pricing 頁。`,
+      citations: [
+        { title: "方案對照 Pricing", href: "/pricing" },
+        { title: "成為創始會員", href: "/join?plan=pro" },
+        { title: "申請 VIP", href: "/join?plan=vip" },
+      ],
+      confidence: 0.88,
+    },
+    digest: `三層:免費 HK$0 已夠驗證流程;創始會員 HK$168/月(無限分身對話、完整案例、MCP 優先);VIP HK$988/月(每月 1 次真人導師 1:1)。建議免費開始,跑順先升級,對照表睇 /pricing。`,
+    followUps: ["點樣預約真人導師?", "邊個 AI 工具真係用得過?"],
+    chip: "AIGRO 收費係點?",
+  },
+  {
+    id: "booking",
+    topic: "真人預約同 Club 加入",
+    style: "steps",
+    weights: [
+      [/預約|\bbook|booking/i, 4],
+      [/真人導師|真人見|見真人|1:1|一對一/, 3],
+      [/加入|報名|入會/, 2],
+      [/club/i, 3],
+      [/會員制|點樣做會員/, 2],
+    ],
+    reply: {
+      text: `想搵真人導師傾?AIGRO Club 嘅認證導師預約**即將開放** — 開放時 Club 會員優先收到通知;VIP 層包每月 1 次真人導師 1:1(45 分鐘,導師頁選時段,48 小時前可免費改期)。
+想第一時間知?留低你嘅 email,開放即通知你。你問過嘅問題會計入我嘅線索 — 到時真係約到,我哋已經知你想解決咩流程,唔使浪費時間由頭講。`,
+      citations: [
+        { title: "AIGRO Club 方案", href: "/pricing" },
+        { title: "Elvin 嘅 10 個核心觀點", href: "/experts/elvin-cheung" },
+      ],
+      confidence: 0.85,
+    },
+    digest: `真人導師預約即將開放,Club 會員優先;VIP 包每月 1 次 45 分鐘 1:1。留低 email 開放即通知你,問過嘅問題計入專家線索。`,
+    followUps: ["AIGRO 收費係點?", "點樣幫公司做 AI 自動化?"],
+    chip: "點樣預約真人導師?",
+  },
 ];
 
 const ELVIN_FALLBACK: AiReply = {
@@ -814,6 +1068,21 @@ const ELVIN_FALLBACK: AiReply = {
   citations: [],
   confidence: 0.6,
 };
+
+/** G7 輪換變體 — Elvin 口吻:實測派,未掂過唔會吹 */
+const ELVIN_FALLBACKS: string[] = [
+  `「{topic}」— 呢樣我未實測過,唔會吹。
+一般框架我會咁睇:呢樣嘢可以點試?限制係咩?風險喺邊?下一步點落地?四條問完,hype 定實用好快知。
+我熟嘅係{topics},想聽實測結論問嗰邊。`,
+  `講明先,「{topic}」我冇第一手實測,以下係一般思路,唔係我嘅實測結論。
+我嘅習慣:新嘢第一時間係試,唔係讚 — 你自己都可以搵個免費額度跑一次,睇邊度會斷。
+想問返我實測過嘅,例如{topics},隨時得。`,
+  `「{topic}」— 呢樣我未掂過,等我畀個一般拆法:邊個流程最嘥時間?邊步要人把關?成本係幾多?
+我嘅主場係{topics},嗰啲我有實測有來源,答得硬淨好多。`,
+  `「{topic}」我冇實測冇來源,唔會亂推薦。
+一般角度:工具係為流程服務 — 先搵到你想自動化嘅嗰個流程,再反推邊類工具先啱。
+我熟嘅係{topics},想深入講聲。`,
+];
 
 /* ---------------- Persona 組裝 ---------------- */
 
@@ -837,6 +1106,7 @@ const PLATFORM_PERSONA: Persona = {
   ],
   replies: PLATFORM_REPLIES,
   fallback: PLATFORM_FALLBACK,
+  fallbacks: PLATFORM_FALLBACKS,
   aboutBio:
     "平台編輯部 AI 基於 AIGRO 全站情報庫蒸餾(自家管道每 30 分鐘更新),所有論點附可檢索來源,遵守「no chip, no claim」原則。",
   aboutLinkLabel: "瀏覽全站情報庫",
@@ -854,6 +1124,7 @@ function expertPersona(
     | "suggestions"
     | "replies"
     | "fallback"
+    | "fallbacks"
   >
 ): Persona {
   const expert = experts.find((e) => e.slug === slug && e.verified);
@@ -890,6 +1161,7 @@ export const personas: Persona[] = [
     ],
     replies: JIMMY_REPLIES,
     fallback: JIMMY_FALLBACK,
+    fallbacks: JIMMY_FALLBACKS,
   }),
   expertPersona("elvin-cheung", {
     signature: "Source-aware,實測先行",
@@ -904,6 +1176,7 @@ export const personas: Persona[] = [
     ],
     replies: ELVIN_REPLIES,
     fallback: ELVIN_FALLBACK,
+    fallbacks: ELVIN_FALLBACKS,
   }),
 ];
 
@@ -1090,23 +1363,35 @@ export function pickReply(
   }
 
   // 5. Fallback(v1.21)— 一般知識回覆,唔再拒答:承認 + 軟模板(注入問題節錄)+ 專長 redirect chips。
-  //    source "general" → AiMessage 顯示「一般知識回覆」chip,唔觸發低信心警示。
+  //    G7:3–4 個人話變體按分身輪換(唔好次次同一句);source "general" →
+  //    AiMessage 顯示「一般知識回覆」chip,唔觸發低信心警示。
   const suggest = ranked.slice(0, 2);
   const topicsLine = suggest.map((s) => `「${s.r.topic}」`).join("同");
   const snippet = q.length > 20 ? `${q.slice(0, 20)}…` : q;
+  const templates =
+    persona.fallbacks && persona.fallbacks.length > 0
+      ? persona.fallbacks
+      : [persona.fallback.text];
+  const template = templates[nextFallbackIndex(persona.key, templates.length)];
   return {
     topicId: null,
     matched: "fallback",
     reply: {
       ...persona.fallback,
-      text: persona.fallback.text
-        .replace("{topic}", snippet)
-        .replace("{topics}", topicsLine),
+      text: template.replace("{topic}", snippet).replace("{topics}", topicsLine),
       confidence: 0.6,
       source: "general",
       followUps: suggest.map((s) => s.r.chip),
     },
   };
+}
+
+/** G7 fallback 變體輪換 — 每個分身獨立遞增,繞圈咁轉 */
+const fallbackCursor = new Map<string, number>();
+function nextFallbackIndex(personaKey: string, length: number): number {
+  const cur = fallbackCursor.get(personaKey) ?? 0;
+  fallbackCursor.set(personaKey, cur + 1);
+  return cur % length;
 }
 
 /** Monogram initials,如 "Jimmy Lau" → "JL" */

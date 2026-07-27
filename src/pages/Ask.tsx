@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, ArrowUp, Check, Info, Sparkles } from "lucide-react";
+import { ArrowRight, ArrowUp, Check, History, Info, Sparkles, X } from "lucide-react";
 import AiMessage from "@/components/ask/AiMessage";
 import ThinkingBars from "@/components/ask/ThinkingBars";
-import PersonaPanel from "@/components/ask/PersonaPanel";
+import PersonaPanel, { SessionsList } from "@/components/ask/PersonaPanel";
+import ClubBookingCapture from "@/components/ask/ClubBookingCapture";
 import ContextPanel from "@/components/ask/ContextPanel";
 import QuotaMeter from "@/components/ask/QuotaMeter";
 import PresenceDot from "@/components/ask/PresenceDot";
@@ -14,7 +15,9 @@ import VerifiedBadge from "@/components/VerifiedBadge";
 import MonogramAvatar, { PhotoAvatar } from "@/components/MonogramAvatar";
 import {
   appendRound,
+  buildChatHistory,
   collectCitations,
+  lastUserQuestion,
   loadSessionStore,
   saveSessionStore,
   setActiveSession,
@@ -22,11 +25,9 @@ import {
 import type { SessionStore } from "@/components/ask/sessions";
 import { getPersona, personas, personaInitials, pickReply } from "@/data/personas";
 import {
-  callLlmGeneral,
   guardrailReply,
-  isLlmConfigured,
   isOffGuard,
-  llmReply,
+  resolveLlmReply,
 } from "@/lib/llmFallback";
 import { expertHasPhoto } from "@/data/experts";
 import {
@@ -40,17 +41,45 @@ import { EASE_OUT_STRONG } from "@/components/Reveal";
 import { captureWaitlist } from "@/lib/waitlist";
 import { cn } from "@/lib/utils";
 
-/** 訪客第 3 條訊息後嘅註冊捕捉卡 — dismiss 後永不再顯示 */
+/** 訪客第 3 條訊息後嘅註冊捕捉卡 — dismiss 改 snooze(7 日後可再出一次) */
 const CAPTURE_DISMISS_KEY = "aigro-ask-capture-dismissed";
+/** G13:用戶訊息數改跨 session 全局累計(唔好轉 session 就重新計) */
+const USER_MSG_COUNT_KEY = "aigro-ask-user-msg-count";
+const CAPTURE_SNOOZE_MS = 7 * 24 * 60 * 60 * 1000;
 
 const CAPTURE_BENEFITS = ["無限對話", "歷史同步", "個人化分身推薦"] as const;
 
 function loadCaptureDismissed(): boolean {
   try {
-    return window.localStorage.getItem(CAPTURE_DISMISS_KEY) !== null;
+    const raw = window.localStorage.getItem(CAPTURE_DISMISS_KEY);
+    if (raw === null) return false;
+    // 新格式:snooze 截止 timestamp;過期 → 可以再出
+    const until = Number(raw);
+    if (Number.isFinite(until) && until > 1) return until > Date.now();
+    // 舊格式("1")視為已過期 snooze — 7 日制開始生效
+    return false;
   } catch {
     return false;
   }
+}
+
+function loadGlobalUserCount(): number {
+  try {
+    const n = Number(window.localStorage.getItem(USER_MSG_COUNT_KEY));
+    return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function bumpGlobalUserCount(): number {
+  const next = loadGlobalUserCount() + 1;
+  try {
+    window.localStorage.setItem(USER_MSG_COUNT_KEY, String(next));
+  } catch {
+    /* private mode — in-memory 由 state 頂住 */
+  }
+  return next;
 }
 
 /** 「對話中」mono 計時器 — 每秒 tick,顯示呢個文字對話進行咗幾耐(唔係通話)。
@@ -120,6 +149,12 @@ export default function Ask() {
   const [captureDismissed, setCaptureDismissed] = useState(loadCaptureDismissed);
   const [captureEmail, setCaptureEmail] = useState("");
   const [captureError, setCaptureError] = useState<string | null>(null);
+  // G13:跨 session 全局訊息計數(捕捉卡時機用)
+  const [globalUserCount, setGlobalUserCount] = useState(loadGlobalUserCount);
+  // G5:Club 優先預約 — 低信心 CTA 開 inline email capture(唔再係空 toast)
+  const [clubCaptureOpen, setClubCaptureOpen] = useState(false);
+  // G10:<lg sessions drawer
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   // 限時開放:對話額度無限 — 額度用盡升級態暫時 unreachable(保留程式碼)
   const exhausted = false;
@@ -129,19 +164,15 @@ export default function Ask() {
   const activeSession = sessions.find((s) => s.id === activeSessionId) ?? null;
   const messages = useMemo(() => activeSession?.messages ?? [], [activeSession]);
   const citations = useMemo(() => collectCitations(messages), [messages]);
-  const userMessageCount = useMemo(
-    () => messages.filter((m) => m.role === "user").length,
-    [messages]
-  );
-  // 訪客第 3 條訊息後,喺訊息流插入一張註冊捕捉卡(一次性,可 dismiss)
-  const showCapture = !member && !captureDismissed && userMessageCount >= 3;
+  // 訪客第 3 條訊息後(跨 session 全局累計),喺訊息流插入一張註冊捕捉卡(snooze 7 日)
+  const showCapture = !member && !captureDismissed && globalUserCount >= 3;
 
   // Sessions 持久化 — refresh / 離開後返嚟都仲喺度
   useEffect(() => {
     saveSessionStore(store);
   }, [store]);
 
-  // 切換分身 → 關 popup(避免舊分身內容殘留)
+  // 切換分身 → 關 popup(避免舊分身內容殘留);drawer / Club capture 喺 selectPersona 關
   useEffect(() => {
     setPopupOpen(false);
   }, [persona.key]);
@@ -161,10 +192,13 @@ export default function Ask() {
     }
   }, [reduced]);
 
-  /** 「而家唔使」— 記低 dismissal,之後永不再顯示 */
+  /** 「而家唔使」— snooze 7 日(G13,唔再係永久 dismiss) */
   const dismissCapture = useCallback(() => {
     try {
-      window.localStorage.setItem(CAPTURE_DISMISS_KEY, "1");
+      window.localStorage.setItem(
+        CAPTURE_DISMISS_KEY,
+        String(Date.now() + CAPTURE_SNOOZE_MS)
+      );
     } catch {
       /* private mode — 靜默 */
     }
@@ -190,15 +224,19 @@ export default function Ask() {
     };
     saveMember(next);
     // 真實收集:寫入 Supabase waitlist(無 env / 離線 → 靜默)
+    // G6:vertical = 分身 key,note = 最後一條用戶問題節錄(50字)— 專家跟進有上下文
+    const question = lastUserQuestion(persona.key);
     void captureWaitlist({
       email,
       kind: "newsletter",
       source: "ask-capture",
+      vertical: persona.key,
+      note: question ? `對話 capture — 最近問題:「${question}」` : "對話 capture",
     });
     setMember(next);
     setCaptureError(null);
     showToast("已免費加入 — 對話紀錄會同步到你嘅帳號");
-  }, [captureEmail, showToast]);
+  }, [captureEmail, showToast, persona.key]);
 
   // 還原歷史(頁面載入 / 揀返舊 session / 切換分身)→ 即刻跳去最新訊息;
   // 同一 session 內新訊息 → smooth。新鮮回答打字途中由 onTyped 逐字跟住捲。
@@ -219,6 +257,8 @@ export default function Ask() {
   const selectPersona = useCallback(
     (key: string) => {
       setAnimatingId(null);
+      setDrawerOpen(false);
+      setClubCaptureOpen(false);
       setSearchParams(key === "platform" ? {} : { expert: key });
     },
     [setSearchParams]
@@ -243,6 +283,8 @@ export default function Ask() {
       if (!question || exhausted || pendingLlm) return;
       setInput("");
       if (textareaRef.current) textareaRef.current.style.height = "auto";
+      // G13:全局累計訊息數(捕捉卡時機)
+      setGlobalUserCount(bumpGlobalUserCount());
 
       const personaKey = persona.key;
       /** 即刻入 store + 行打字機(KB / guardrail / 內建模板都係同步路徑) */
@@ -274,18 +316,20 @@ export default function Ask() {
         activeSession?.lastTopicId ?? null
       );
 
-      // KB 命中(含近話題 bridge)→ 直接用;KB 零命中但未設 LLM → 內建一般知識模板
-      if (matched !== "fallback" || !isLlmConfigured()) {
-        commit(reply, topicId);
+      // KB 命中(含近話題 bridge)→ 直接用;matched 附上俾 AiMessage 信任行用
+      if (matched !== "fallback") {
+        commit({ ...reply, matched }, topicId);
         return;
       }
 
-      // C. LLM 一般知識 fallback — 先渲染用戶氣泡 + thinking bars(pendingLlm),
-      //    resolve 後先入 store 行同一條 typewriter 路徑;error/timeout → 內建模板
+      // C. LLM 自由答 — 先渲染用戶氣泡 + thinking bars(pendingLlm),resolve 後先入 store
+      //    行同一條 typewriter 路徑。PRIMARY 自家 argro /chat(帶近 6 條歷史,
+      //    追問記憶唔退化)→ SECONDARY VITE_LLM_* OpenAI(env 有設先用)
+      //    → 全部失敗 → 內建一般知識模板;UI 永遠唔 hang。
       setPendingLlm({ personaKey, question });
-      callLlmGeneral(persona, question)
-        .then((text) => llmReply(persona, text))
-        .catch(() => reply) // 10s timeout / 網絡 / API 錯 → graceful 內建一般知識回覆
+      const history = buildChatHistory(messages, 6);
+      resolveLlmReply(persona, question, history)
+        .catch(() => reply) // timeout / 網絡 / 503 / rate-limit → graceful 內建一般知識回覆
         .then((finalReply) => {
           setPendingLlm((cur) =>
             cur && cur.personaKey === personaKey && cur.question === question ? null : cur
@@ -293,7 +337,7 @@ export default function Ask() {
           commit(finalReply, null);
         });
     },
-    [exhausted, persona, activeSession, pendingLlm]
+    [exhausted, persona, activeSession, pendingLlm, messages]
   );
 
   const autoGrow = (el: HTMLTextAreaElement) => {
@@ -301,13 +345,12 @@ export default function Ask() {
     el.style.height = `${Math.min(el.scrollHeight, 132)}px`; // 1–4 行
   };
 
-  // 專家分身:信心 <0.6 →「Club 優先預約 — 即將開放」toast(唔承諾即時預約)
+  // 專家分身:信心 <0.6 →「Club 優先預約 — 即將開放」→ inline email capture(G5)
   const lowConfidenceAction =
     persona.kind === "expert"
       ? {
           label: "Club 優先預約 — 即將開放",
-          onClick: () =>
-            showToast("Club 優先預約即將開放 — 開放時 Club 會員會優先收到通知。"),
+          onClick: () => setClubCaptureOpen(true),
         }
       : undefined;
 
@@ -481,6 +524,17 @@ export default function Ask() {
               </button>
             );
           })}
+          {/* G10:<lg sessions drawer 觸發(內容 = PersonaPanel 嘅對話紀錄部分) */}
+          <button
+            type="button"
+            onClick={() => setDrawerOpen(true)}
+            aria-label="打開對話紀錄"
+            title="對話紀錄"
+            className="press ml-auto flex shrink-0 items-center gap-1.5 rounded-sm border px-2.5 py-1.5 text-caption text-text-secondary transition-colors duration-150 hover:bg-card"
+          >
+            <History className="h-3.5 w-3.5" strokeWidth={1.5} aria-hidden="true" />
+            紀錄
+          </button>
         </div>
 
         {/* Sections 2–3 — 訊息流(滾動區) */}
@@ -503,6 +557,16 @@ export default function Ask() {
                   className="mt-6 text-body-sm text-text-secondary"
                 >
                   {persona.greetingTitle}
+                </motion.p>
+                {/* G9:greetingBody(personas.ts 已定義)— 分身開場白,唔好浪費 */}
+                <motion.p
+                  key={`${persona.key}-greeting-body`}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.25, delay: reduced ? 0.12 : 0.3 }}
+                  className="mt-2 max-w-lg text-center text-body-sm text-text-muted"
+                >
+                  {persona.greetingBody}
                 </motion.p>
                 <div className="mt-4 flex max-w-lg flex-wrap justify-center gap-2">
                   {persona.suggestions.map((s, i) => (
@@ -812,12 +876,100 @@ export default function Ask() {
         />
       </motion.div>
 
+      {/* G10:<lg sessions drawer — 由分身切換條「紀錄」觸發,內容 = PersonaPanel 嘅對話紀錄部分 */}
+      <AnimatePresence>
+        {drawerOpen && (
+          <>
+            <motion.div
+              key="drawer-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => setDrawerOpen(false)}
+              className="fixed inset-0 z-40 bg-ink-solid/30 lg:hidden"
+              aria-hidden="true"
+            />
+            <motion.div
+              key="drawer-panel"
+              role="dialog"
+              aria-label="對話紀錄"
+              initial={reduced ? { opacity: 0 } : { opacity: 0, transform: "translateX(-16px)" }}
+              animate={{ opacity: 1, transform: "translateX(0px)" }}
+              exit={reduced ? { opacity: 0 } : { opacity: 0, transform: "translateX(-16px)" }}
+              transition={{ duration: 0.25, ease: EASE_OUT_STRONG }}
+              className="fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col bg-surface px-4 pb-3 pt-4 lg:hidden"
+            >
+              <div className="mb-2 flex shrink-0 items-center justify-between">
+                <p className="text-label text-text-primary">{persona.name}</p>
+                <button
+                  type="button"
+                  onClick={() => setDrawerOpen(false)}
+                  aria-label="關閉對話紀錄"
+                  className="press flex h-8 w-8 items-center justify-center rounded-sm border border-border-strong text-text-secondary hover:bg-card hover:text-ink"
+                >
+                  <X className="h-4 w-4" strokeWidth={1.5} />
+                </button>
+              </div>
+              <div className="flex min-h-0 flex-1 flex-col">
+                <SessionsList
+                  sessions={sessions}
+                  activeSessionId={activeSessionId}
+                  activePersona={persona}
+                  onSelectSession={(id) => {
+                    selectSession(id);
+                    setDrawerOpen(false);
+                  }}
+                  onNewSession={() => {
+                    newSession();
+                    setDrawerOpen(false);
+                  }}
+                />
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
       {/* 「關於佢」persona popup — MasterClass 式導師宣傳卡(Esc / backdrop 關閉) */}
       <PersonaPopup
         open={popupOpen}
         persona={persona}
         onClose={() => setPopupOpen(false)}
       />
+
+      {/* G5:Club 優先預約 inline capture — 低信心 CTA / 預約意圖觸發 */}
+      <AnimatePresence>
+        {clubCaptureOpen && persona.kind === "expert" && (
+          <motion.div
+            key="club-capture"
+            role="dialog"
+            aria-label="Club 優先預約登記"
+            initial={{ opacity: 0, transform: "translate(-50%, 12px)" }}
+            animate={{ opacity: 1, transform: "translate(-50%, 0px)" }}
+            exit={{ opacity: 0, transform: "translate(-50%, 12px)" }}
+            transition={{ duration: 0.25 }}
+            className="fixed bottom-24 left-1/2 z-50 w-[min(360px,calc(100vw-2rem))] rounded-md border bg-surface p-4"
+          >
+            <button
+              type="button"
+              onClick={() => setClubCaptureOpen(false)}
+              aria-label="關閉"
+              className="press absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-sm text-text-muted hover:text-ink"
+            >
+              <X className="h-3.5 w-3.5" strokeWidth={1.5} />
+            </button>
+            <ClubBookingCapture
+              persona={persona}
+              idPrefix="ask-club"
+              onSubmitted={() => {
+                setClubCaptureOpen(false);
+                showToast("已記低 — Club 預約開放即通知你。");
+              }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Club 優先預約 toast */}
       <AnimatePresence>

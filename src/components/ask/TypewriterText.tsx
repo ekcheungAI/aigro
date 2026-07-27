@@ -34,6 +34,8 @@ export default function TypewriterText({
   const [cursorVisible, setCursorVisible] = useState(false);
   const done = count >= units.length;
   const completedRef = useRef(false);
+  /** G8 點擊跳過 — 之後嘅 timer tick 唔准再覆寫 count */
+  const skippedRef = useRef(false);
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete;
   const onProgressRef = useRef(onProgress);
@@ -41,6 +43,7 @@ export default function TypewriterText({
 
   useEffect(() => {
     if (!active) return;
+    skippedRef.current = false;
     if (reduced) {
       // §5.4: instant render, no cursor
       setCount(units.length);
@@ -50,6 +53,7 @@ export default function TypewriterText({
     let timer = 0;
     setCursorVisible(true);
     const step = () => {
+      if (skippedRef.current) return;
       i += 1;
       setCount(i);
       onProgressRef.current?.();
@@ -60,6 +64,13 @@ export default function TypewriterText({
     timer = window.setTimeout(step, 1000 / 24);
     return () => window.clearTimeout(timer);
   }, [active, reduced, units]);
+
+  /** G8:打字途中點擊 → 即時揭示全文(timer 經 skippedRef 停止) */
+  const skipToEnd = () => {
+    skippedRef.current = true;
+    setCount(units.length);
+    onProgressRef.current?.();
+  };
 
   // Completion: notify parent; cursor lingers 400ms then disappears (§5.3)
   useEffect(() => {
@@ -80,7 +91,15 @@ export default function TypewriterText({
   const currentParagraph = shown.length > 0 ? shown[shown.length - 1].paragraph : -1;
 
   return (
-    <div className={className} aria-label={text}>
+    // G8:打字途中點擊即揭示全文(唔使等);完成後唔再攔截點擊
+    <div
+      className={className}
+      aria-label={text}
+      onClick={done || reduced ? undefined : skipToEnd}
+      title={done || reduced ? undefined : "點擊顯示全文"}
+      role={done || reduced ? undefined : "button"}
+      style={done || reduced ? undefined : { cursor: "pointer" }}
+    >
       {paragraphs.map((pUnits, pi) => (
         <p key={pi} className={cn(pi > 0 && "mt-4")}>
           {pUnits.map((u, ui) =>

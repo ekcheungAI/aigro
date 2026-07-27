@@ -262,6 +262,8 @@ function logRoundToSupabase(
   round: ChatMessage[]
 ): void {
   if (!supabase || !supabaseReady) return;
+  // G2:每個訪客變 CRM lead — 同 messages 寫入互相獨立,各自靜默
+  void upsertLeadFromRound(personaKey, round);
   void ensureConversationId(sessionId, personaKey, title)
     .then(async (conversationId) => {
       if (!conversationId || !supabase) return;
@@ -272,6 +274,120 @@ function logRoundToSupabase(
     .catch(() => {
       /* 離線靜默 */
     });
+}
+
+/* ================= G2:CRM leads 自動生成 =================
+ * 每輪問答後 upsert `leads` 表(leads_insert_all 允許 anon insert;
+ * leads_anon_update_own 允許 anon_id 非空嘅 row 被 update)。
+ * RLS 限制:anon 唔可以 SELECT,所以採用「本地累積快照 + 絕對值寫入」:
+ * - localStorage 累積 score / questions / signals(每分身一份)
+ * - 先 update(anon_id+persona,count=exact)→ 0 rows → insert
+ * 冇 select 依賴、唔會整出重複 lead;fire-and-forget,失敗靜默。
+ */
+
+const LEAD_STATE_KEY = "aigro-ask-lead-state-v1";
+const LEAD_MAX_QUESTIONS = 20;
+const LEAD_MAX_SIGNALS = 20;
+/** 高意圖關鍵字 — 每中一個 +20 分 + 一條 signal */
+const HIGH_INTENT_RE = /收費|價錢|幾錢|預約|導入|合作|報名|加入/g;
+
+interface LeadSnapshot {
+  score: number;
+  questions: string[];
+  signals: string[];
+}
+
+function highIntentSignal(keyword: string): string {
+  if (/收費|價錢|幾錢/.test(keyword)) return "高意圖:詢問收費";
+  if (keyword === "預約") return "高意圖:預約查詢";
+  if (/導入|合作/.test(keyword)) return "高意圖:合作導入";
+  return "高意圖:報名加入";
+}
+
+function loadLeadStates(): Record<string, LeadSnapshot> {
+  try {
+    const raw = window.localStorage.getItem(LEAD_STATE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as Record<string, LeadSnapshot>;
+      if (parsed && typeof parsed === "object") return parsed;
+    }
+  } catch {
+    /* ignore */
+  }
+  return {};
+}
+
+function saveLeadState(personaKey: string, snap: LeadSnapshot): void {
+  try {
+    const all = loadLeadStates();
+    all[personaKey] = snap;
+    window.localStorage.setItem(LEAD_STATE_KEY, JSON.stringify(all));
+  } catch {
+    /* private mode — 靜默 */
+  }
+}
+
+/** 一輪問答 → 累積 lead 快照(每條用戶訊息 +5;高意圖關鍵字每中一個 +20 + signal) */
+function applyRoundToLead(personaKey: string, round: ChatMessage[]): LeadSnapshot | null {
+  const userTexts = round
+    .filter((m) => m.role === "user" && typeof m.text === "string" && m.text.trim())
+    .map((m) => (m.text as string).trim());
+  if (userTexts.length === 0) return null;
+  const prev = loadLeadStates()[personaKey] ?? { score: 0, questions: [], signals: [] };
+  let delta = 0;
+  const newSignals: string[] = [];
+  for (const text of userTexts) {
+    delta += 5;
+    for (const match of text.matchAll(HIGH_INTENT_RE)) {
+      delta += 20;
+      newSignals.push(highIntentSignal(match[0]));
+    }
+  }
+  const questions = [...prev.questions, ...userTexts].slice(-LEAD_MAX_QUESTIONS);
+  const signals = [...prev.signals];
+  for (const s of newSignals) {
+    if (!signals.includes(s)) signals.push(s);
+  }
+  const snap: LeadSnapshot = {
+    score: prev.score + delta,
+    questions,
+    signals: signals.slice(-LEAD_MAX_SIGNALS),
+  };
+  saveLeadState(personaKey, snap);
+  return snap;
+}
+
+/** fire-and-forget upsert:update 中就用快照絕對值;0 rows → insert 新線索 */
+async function upsertLeadFromRound(personaKey: string, round: ChatMessage[]): Promise<void> {
+  if (!supabase || !supabaseReady) return;
+  const snap = applyRoundToLead(personaKey, round);
+  if (!snap) return;
+  try {
+    const uid = getAuthUserId();
+    const anonId = getAnonId();
+    const base = {
+      score: snap.score,
+      questions: snap.questions,
+      signals: snap.signals,
+      last_activity_at: new Date().toISOString(),
+    };
+    const { count, error } = await supabase
+      .from("leads")
+      .update(base, { count: "exact" })
+      .eq("anon_id", anonId)
+      .eq("persona", personaKey);
+    if (!error && count && count > 0) return;
+    // 未存在(或 update 不可見)→ insert;anon_id 必帶(update policy 需要),登入咗加埋 user_id
+    await supabase.from("leads").insert({
+      anon_id: anonId,
+      user_id: uid,
+      persona: personaKey,
+      stage: "新線索",
+      ...base,
+    });
+  } catch {
+    /* 離線 / RLS 靜默 — 本地快照已記低,下輪再試 */
+  }
 }
 
 /**
@@ -362,6 +478,40 @@ export function collectCitations(messages: ChatMessage[]): { title: string; href
     }
   }
   return out;
+}
+
+/** 最近 n 條對話 → LLM 歷史格式(argro /chat 用;single-shot 會令追問記憶退化) */
+export function buildChatHistory(
+  messages: ChatMessage[],
+  n = 6
+): { role: "user" | "assistant"; content: string }[] {
+  return messages
+    .slice(-n)
+    .map((m) =>
+      m.role === "user"
+        ? { role: "user" as const, content: m.text ?? "" }
+        : { role: "assistant" as const, content: m.reply?.text ?? "" }
+    )
+    .filter((t) => t.content.length > 0);
+}
+
+/**
+ * 呢個分身當前 session 嘅最後一條用戶問題(capture note 用,50 字節錄)。
+ * 直接讀 localStorage store — About 卡等冇 messages prop 嘅位置都用得。
+ */
+export function lastUserQuestion(personaKey: string, maxLen = 50): string | null {
+  const store = loadSessionStore();
+  const activeId = store.active[personaKey];
+  const session = (store.sessions[personaKey] ?? []).find((s) => s.id === activeId);
+  if (!session) return null;
+  for (let i = session.messages.length - 1; i >= 0; i--) {
+    const m = session.messages[i];
+    if (m.role === "user" && m.text) {
+      const clean = m.text.replace(/\s+/g, " ").trim();
+      return clean.length > maxLen ? `${clean.slice(0, maxLen)}…` : clean;
+    }
+  }
+  return null;
 }
 
 /** href → 來源 domain 標籤 */

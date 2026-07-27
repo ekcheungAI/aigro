@@ -34,6 +34,92 @@ function formatTimestamp(ts: number): string {
   return `${d.getMonth() + 1}/${d.getDate()} ${hm}`;
 }
 
+interface SessionsListProps {
+  sessions: ChatSession[];
+  activeSessionId: string | null;
+  activePersona: Persona;
+  onSelectSession: (id: string) => void;
+  onNewSession: () => void;
+}
+
+/**
+ * 「對話紀錄」部分(G10 抽出重用)— 左欄 PersonaPanel 同 <lg mobile drawer 共用。
+ */
+export function SessionsList({
+  sessions,
+  activeSessionId,
+  activePersona,
+  onSelectSession,
+  onNewSession,
+}: SessionsListProps) {
+  const reduced = useReducedMotion();
+  return (
+    <>
+      <div className="flex shrink-0 items-center justify-between">
+        <p className="text-overline text-text-muted">對話紀錄</p>
+        <button
+          type="button"
+          onClick={onNewSession}
+          className="press inline-flex items-center gap-1 rounded-sm border border-border-strong px-2 py-1 text-caption text-ink transition-colors duration-150 hover:bg-ink-soft"
+        >
+          <MessageSquarePlus className="h-3.5 w-3.5" strokeWidth={1.5} aria-hidden="true" />
+          新對話
+        </button>
+      </div>
+      <div className="mt-2 min-h-0 flex-1 overflow-y-auto" data-lenis-prevent>
+        {/* 分身切換:對話紀錄 cross-fade(200ms opacity) */}
+        <motion.div
+          key={activePersona.key}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: reduced ? 0.12 : 0.2 }}
+        >
+        {sessions.length === 0 ? (
+          <p className="pt-2 text-caption text-text-muted">
+            呢個分身暫時未有對話 — 送出第一條問題就會自動記低。
+          </p>
+        ) : (
+          <ul className="flex flex-col gap-0.5 pb-2">
+            {sessions.map((s) => {
+              const active = s.id === activeSessionId;
+              return (
+                <li key={s.id}>
+                  <button
+                    type="button"
+                    onClick={() => onSelectSession(s.id)}
+                    aria-current={active}
+                    className={cn(
+                      "press flex w-full flex-col gap-0.5 rounded-md border px-2.5 py-2 text-left transition-colors duration-150",
+                      active
+                        ? "border-border-strong bg-card"
+                        : "border-transparent hover:bg-card"
+                    )}
+                  >
+                    <span className="flex w-full items-center gap-1.5 text-caption text-text-primary">
+                      {active && (
+                        <span
+                          aria-hidden="true"
+                          className="h-1.5 w-1.5 shrink-0 rounded-full"
+                          style={{ backgroundColor: activePersona.accent }}
+                        />
+                      )}
+                      <span className="truncate">{s.title}</span>
+                    </span>
+                    <span className="text-caption text-text-muted">
+                      {formatTimestamp(s.updatedAt)}・{s.messages.filter((m) => m.role === "user").length} 條問題
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+        </motion.div>
+      </div>
+    </>
+  );
+}
+
 /**
  * Ask 左欄 — 分身選擇(radio-style)+ 對話紀錄 + 額度 meter。
  * Panel header hairline 用當前分身 accent 色。
@@ -48,7 +134,6 @@ export default function PersonaPanel({
   onNewSession,
   anonymous = false,
 }: PersonaPanelProps) {
-  const reduced = useReducedMotion();
   return (
     <aside className="flex h-full w-[260px] shrink-0 flex-col border-r border-border bg-surface">
       {/* 分身選擇 */}
@@ -126,67 +211,13 @@ export default function PersonaPanel({
 
       {/* 對話紀錄 */}
       <div className="flex min-h-0 flex-1 flex-col border-t border-border px-4 pb-3 pt-3">
-        <div className="flex shrink-0 items-center justify-between">
-          <p className="text-overline text-text-muted">對話紀錄</p>
-          <button
-            type="button"
-            onClick={onNewSession}
-            className="press inline-flex items-center gap-1 rounded-sm border border-border-strong px-2 py-1 text-caption text-ink transition-colors duration-150 hover:bg-ink-soft"
-          >
-            <MessageSquarePlus className="h-3.5 w-3.5" strokeWidth={1.5} aria-hidden="true" />
-            新對話
-          </button>
-        </div>
-        <div className="mt-2 min-h-0 flex-1 overflow-y-auto" data-lenis-prevent>
-          {/* 分身切換:對話紀錄 cross-fade(200ms opacity) */}
-          <motion.div
-            key={activePersona.key}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: reduced ? 0.12 : 0.2 }}
-          >
-          {sessions.length === 0 ? (
-            <p className="pt-2 text-caption text-text-muted">
-              呢個分身暫時未有對話 — 送出第一條問題就會自動記低。
-            </p>
-          ) : (
-            <ul className="flex flex-col gap-0.5 pb-2">
-              {sessions.map((s) => {
-                const active = s.id === activeSessionId;
-                return (
-                  <li key={s.id}>
-                    <button
-                      type="button"
-                      onClick={() => onSelectSession(s.id)}
-                      aria-current={active}
-                      className={cn(
-                        "press flex w-full flex-col gap-0.5 rounded-md border px-2.5 py-2 text-left transition-colors duration-150",
-                        active
-                          ? "border-border-strong bg-card"
-                          : "border-transparent hover:bg-card"
-                      )}
-                    >
-                      <span className="flex w-full items-center gap-1.5 text-caption text-text-primary">
-                        {active && (
-                          <span
-                            aria-hidden="true"
-                            className="h-1.5 w-1.5 shrink-0 rounded-full"
-                            style={{ backgroundColor: activePersona.accent }}
-                          />
-                        )}
-                        <span className="truncate">{s.title}</span>
-                      </span>
-                      <span className="text-caption text-text-muted">
-                        {formatTimestamp(s.updatedAt)}・{s.messages.filter((m) => m.role === "user").length} 條問題
-                      </span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-          </motion.div>
-        </div>
+        <SessionsList
+          sessions={sessions}
+          activeSessionId={activeSessionId}
+          activePersona={activePersona}
+          onSelectSession={onSelectSession}
+          onNewSession={onNewSession}
+        />
       </div>
 
       {/* 額度 meter */}
