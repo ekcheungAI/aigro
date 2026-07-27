@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import CategoryChip from "@/components/CategoryChip";
 import Reveal, { REVEAL_EASE } from "@/components/Reveal";
+import UpdatedChip from "@/components/UpdatedChip";
 import { DailyContent } from "@/pages/Daily";
 import {
   INSIGHT_CATEGORIES,
@@ -33,6 +34,7 @@ import {
   type AihotInsight,
 } from "@/data/aihot";
 import {
+  synthesizeWeeklyFromInsights,
   useLiveHotTopics,
   useLiveInsights,
   useLiveItems,
@@ -51,11 +53,12 @@ import { cn } from "@/lib/utils";
 
 /* ============ Tabs ============ */
 
-type TabKey = "feed" | "daily" | "topics";
+type TabKey = "feed" | "daily" | "weekly" | "topics";
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: "feed", label: "即時動態" },
   { key: "daily", label: "每日日報" },
+  { key: "weekly", label: "每週回顧" },
   { key: "topics", label: "主題地圖" },
 ];
 
@@ -197,6 +200,65 @@ function FeedRow({ insight }: { insight: AihotInsight }) {
 
 type FeedMode = "selected" | "all";
 
+/** 全部動態模式下每個日期分組首 10 條,「顯示更多」每次遞增 10 */
+const FEED_PAGE_SIZE = 10;
+
+/**
+ * 日期分組 feed section — paginate=true(mode=all)時首 FEED_PAGE_SIZE 條 +
+ * 「顯示更多」遞增;精選模式全列(數量本身受編輯篩選限制)。
+ */
+function FeedGroupSection({
+  group,
+  paginate,
+}: {
+  group: FeedGroup;
+  paginate: boolean;
+}) {
+  const [visible, setVisible] = useState(FEED_PAGE_SIZE);
+  const shown = paginate ? group.items.slice(0, visible) : group.items;
+  const remaining = group.items.length - shown.length;
+  return (
+    <section className="pt-10">
+      <Reveal y={16} duration={0.4}>
+        <div className="flex items-baseline gap-4 border-b pb-3">
+          <h3 className="font-display text-h3 text-text-primary">
+            {group.label}
+          </h3>
+          <span className="font-mono text-caption text-text-muted">
+            {group.items.length} 則
+          </span>
+        </div>
+      </Reveal>
+      <div className="divide-y">
+        {shown.map((insight, i) => (
+          <Reveal
+            key={insight.slug}
+            y={20}
+            duration={0.45}
+            delay={Math.min(i, 7) * 0.08}
+          >
+            <FeedRow insight={insight} />
+          </Reveal>
+        ))}
+      </div>
+      {remaining > 0 && (
+        <div className="flex justify-center pt-6">
+          <button
+            type="button"
+            onClick={() => setVisible((v) => v + FEED_PAGE_SIZE)}
+            className="press inline-flex h-11 items-center rounded-md border border-border-strong px-6 text-label text-ink hover:bg-ink-soft"
+          >
+            顯示更多
+            <span className="ml-2 font-mono text-caption text-text-muted">
+              尚有 {remaining} 則
+            </span>
+          </button>
+        </div>
+      )}
+    </section>
+  );
+}
+
 const MODE_OPTIONS: { key: FeedMode; label: string }[] = [
   { key: "selected", label: "精選" },
   { key: "all", label: "全部動態" },
@@ -225,8 +287,14 @@ function FeedTab() {
   );
 
   const filtered = useMemo(() => {
-    const snapshotSource = mode === "all" ? aihotAllInsights : aihotInsights;
-    const source = liveInsights ?? snapshotSource;
+    /* live 模式下精選/全部 toggle 都要生效:live 分支按 selected 旗標過濾 */
+    const source = liveInsights
+      ? mode === "selected"
+        ? liveInsights.filter((i) => i.selected)
+        : liveInsights
+      : mode === "all"
+        ? aihotAllInsights
+        : aihotInsights;
     const q = query.trim().toLowerCase();
     return source.filter((i) => {
       if (activeCategory && i.category !== activeCategory) return false;
@@ -234,8 +302,10 @@ function FeedTab() {
         q &&
         !(
           i.title.toLowerCase().includes(q) ||
+          (i.titleEn ?? "").toLowerCase().includes(q) ||
           i.summary.toLowerCase().includes(q) ||
-          i.source.toLowerCase().includes(q)
+          i.source.toLowerCase().includes(q) ||
+          i.tags.some((tag) => tag.toLowerCase().includes(q))
         )
       )
         return false;
@@ -301,7 +371,7 @@ function FeedTab() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="例如 OpenAI、Sora"
-                aria-label="搜尋情報標題、摘要或來源"
+                aria-label="搜尋情報標題、英文標題、標籤、摘要或來源"
                 className="h-11 w-full rounded-md border border-border-strong bg-surface pl-9 pr-3 text-body-sm text-text-primary placeholder:text-text-muted focus:border-ink focus:outline-none"
               />
             </div>
@@ -313,8 +383,11 @@ function FeedTab() {
             </button>
           </form>
 
-          <span className="ml-auto font-mono text-caption text-text-muted">
-            已載入 {filtered.length} 則{mode === "selected" ? "精選" : "動態"}
+          <span className="ml-auto flex flex-wrap items-center gap-x-3 gap-y-2">
+            <UpdatedChip />
+            <span className="font-mono text-caption text-text-muted">
+              已載入 {filtered.length} 則{mode === "selected" ? "精選" : "動態"}
+            </span>
           </span>
         </div>
 
@@ -347,43 +420,46 @@ function FeedTab() {
       <section className="mx-auto max-w-container px-6 pb-24 pt-4 max-md:pb-16">
         {groups.length === 0 && (
           <div className="py-16 text-center">
-            <p className="text-body-sm text-text-muted">
-              沒有符合「{query.trim()}」的情報。
-            </p>
-            <button
-              type="button"
-              onClick={() => setQuery("")}
-              className="press mt-4 inline-flex h-11 items-center rounded-md border border-border-strong px-6 text-label text-ink hover:bg-ink-soft"
-            >
-              清除搜尋
-            </button>
+            {/* 空態 copy 分搜尋 / 分類兩款 — 唔會出現空引號「」 */}
+            {query.trim() ? (
+              <>
+                <p className="text-body-sm text-text-muted">
+                  沒有符合「{query.trim()}」的情報。
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setQuery("")}
+                  className="press mt-4 inline-flex h-11 items-center rounded-md border border-border-strong px-6 text-label text-ink hover:bg-ink-soft"
+                >
+                  清除搜尋
+                </button>
+              </>
+            ) : activeCategory ? (
+              <>
+                <p className="text-body-sm text-text-muted">
+                  「{activeCategory}」分類暫無符合的情報 — 試下其他分類。
+                </p>
+                <button
+                  type="button"
+                  onClick={() => updateParams({ category: null })}
+                  className="press mt-4 inline-flex h-11 items-center rounded-md border border-border-strong px-6 text-label text-ink hover:bg-ink-soft"
+                >
+                  清除分類篩選
+                </button>
+              </>
+            ) : (
+              <p className="text-body-sm text-text-muted">
+                暫無情報 — 數據同步中,稍後再試。
+              </p>
+            )}
           </div>
         )}
         {groups.map((group) => (
-          <section key={group.key} className="pt-10">
-            <Reveal y={16} duration={0.4}>
-              <div className="flex items-baseline gap-4 border-b pb-3">
-                <h3 className="font-display text-h3 text-text-primary">
-                  {group.label}
-                </h3>
-                <span className="font-mono text-caption text-text-muted">
-                  {group.items.length} 則
-                </span>
-              </div>
-            </Reveal>
-            <div className="divide-y">
-              {group.items.map((insight, i) => (
-                <Reveal
-                  key={insight.slug}
-                  y={20}
-                  duration={0.45}
-                  delay={Math.min(i, 7) * 0.08}
-                >
-                  <FeedRow insight={insight} />
-                </Reveal>
-              ))}
-            </div>
-          </section>
+          <FeedGroupSection
+            key={`${group.key}|${mode}|${activeCategory ?? ""}|${query.trim()}`}
+            group={group}
+            paginate={mode === "all"}
+          />
         ))}
       </section>
     </>
@@ -934,6 +1010,193 @@ function TopicsTab() {
   return <TopicMapView />;
 }
 
+/* ============ 每週回顧 tab ============ */
+
+/**
+ * 每週回顧 — 由真實情報按週合成(liveItems.synthesizeWeeklyFromInsights:
+ * 數據時鐘所在週,週一至週日按分數 top 12,按分類分組)。
+ * 唔經 argro API(避免前端暴露 key);live 未成熟時用 snapshot 全庫合成,
+ * 仍然係真數據。版式同日報:頭條 + 分類小標編號列表 + anchor 列。
+ */
+function WeeklyTab() {
+  const liveInsights = useLiveInsights();
+  const pool = liveInsights ?? aihotAllInsights;
+  const weekly = useMemo(() => synthesizeWeeklyFromInsights(pool), [pool]);
+  if (!weekly) return null;
+
+  /* 按 section 分組 + 全刊連續編號(頭條 = 01,其餘 02 起) */
+  let counter = 1;
+  const groups = weekly.sections
+    .map((s) => ({
+      ...s,
+      entries: weekly.items
+        .filter((i) => i.category === s.category)
+        .map((entry) => ({ entry, num: ++counter })),
+    }))
+    .filter((g) => g.entries.length > 0);
+  const lead = weekly.lead;
+
+  return (
+    <section className="mx-auto max-w-container px-6 pb-24 pt-16 max-md:pb-16 max-md:pt-12">
+      <Reveal y={16} duration={0.4}>
+        <p className="flex items-center gap-3 text-overline font-sans uppercase text-text-muted">
+          <span
+            className="inline-block h-px w-6 bg-border-strong"
+            aria-hidden="true"
+          />
+          Weekly Review
+        </p>
+        <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
+          <h2 className="font-display text-h2 text-text-primary">每週回顧</h2>
+          <UpdatedChip />
+        </div>
+        <p className="mt-3 max-w-[640px] text-body-sm text-text-secondary">
+          一週 AI 脈搏,一次過睇晒 — 編輯部從本週 {weekly.itemCount}{" "}
+          則情報揀出 {(lead ? 1 : 0) + weekly.items.length} 條必讀,按分類分組。
+        </p>
+        <p className="mt-3 font-mono text-caption text-text-muted">
+          {weekly.weekStart} – {weekly.weekEnd} · 週一至週日
+        </p>
+      </Reveal>
+
+      {/* 分類 anchor 列 */}
+      {groups.length > 1 && (
+        <nav
+          aria-label="每週回顧分類跳轉"
+          className="mt-8 flex flex-wrap gap-2"
+        >
+          {groups.map((g, gi) => (
+            <a
+              key={g.category}
+              href={`#weekly-sec-${gi}`}
+              className="press rounded-sm border px-3 py-1.5 font-mono text-caption text-text-secondary transition-colors duration-150 hover:border-ink hover:text-ink"
+            >
+              {g.label} · {g.entries.length}
+            </a>
+          ))}
+        </nav>
+      )}
+
+      {/* 本週頭條 */}
+      {lead && (
+        <Reveal y={24} duration={0.5}>
+          <article className="mt-12 rounded-md border bg-surface p-12 max-md:p-6">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="rounded-sm bg-ink-soft px-3 py-1.5 text-overline font-sans uppercase text-ink">
+                {lead.category}
+              </span>
+              <span className="text-overline font-sans uppercase text-ink">
+                本週頭條 Lead
+              </span>
+            </div>
+            <h3 className="mt-4 font-display text-h2 text-text-primary">
+              {lead.title}
+            </h3>
+            <p className="mt-4 max-w-prose text-body-lg text-text-secondary">
+              {lead.summary}
+            </p>
+            <div className="mt-8 flex flex-wrap items-center gap-x-3 gap-y-3 text-caption text-text-muted">
+              <a
+                href={lead.permalink}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 transition-colors duration-150 hover:text-ink"
+              >
+                {lead.source}
+                <ExternalLink
+                  className="h-3 w-3"
+                  strokeWidth={1.5}
+                  aria-hidden="true"
+                />
+              </a>
+              {lead.score !== null && (
+                <span className="font-mono text-ink">{lead.score}</span>
+              )}
+              <a
+                href={lead.permalink}
+                target="_blank"
+                rel="noreferrer"
+                className="group ml-auto inline-flex items-center gap-1.5 text-label text-ink"
+              >
+                閱讀原文
+                <ArrowRight
+                  className="h-4 w-4 transition-transform duration-150 nudge-x"
+                  strokeWidth={1.5}
+                  aria-hidden="true"
+                />
+              </a>
+            </div>
+          </article>
+        </Reveal>
+      )}
+
+      {/* 分類小標編號列表 */}
+      {groups.map((g, gi) => (
+        <section
+          key={g.category}
+          id={`weekly-sec-${gi}`}
+          className="mt-12 scroll-mt-24"
+        >
+          <Reveal y={16} duration={0.4}>
+            <div className="flex items-baseline gap-4 border-b pb-3">
+              <h3 className="font-display text-h3 text-text-primary">
+                {g.label}
+              </h3>
+              <span className="font-mono text-caption text-text-muted">
+                {g.entries.length} 則
+              </span>
+            </div>
+          </Reveal>
+          <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+            {g.entries.map(({ entry, num }, i) => (
+              <Reveal
+                key={entry.permalink}
+                y={20}
+                duration={0.4}
+                delay={Math.min(i, 7) * 0.08}
+              >
+                <a
+                  href={entry.permalink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="card-hover group flex h-full gap-6 rounded-md border bg-surface p-6"
+                >
+                  <span
+                    className="font-mono text-[28px] leading-none text-ink"
+                    aria-hidden="true"
+                  >
+                    {String(num).padStart(2, "0")}
+                  </span>
+                  <div className="min-w-0">
+                    <h4 className="font-display text-h4 text-text-primary transition-colors duration-150 group-hover:text-ink">
+                      {entry.title}
+                    </h4>
+                    <p className="mt-2 line-clamp-2 text-body-sm text-text-secondary">
+                      {entry.summary}
+                    </p>
+                    <span className="mt-3 inline-flex items-center gap-1.5 text-caption text-text-muted">
+                      <span
+                        className="h-2 w-2 rounded-full bg-text-muted"
+                        aria-hidden="true"
+                      />
+                      {entry.source}
+                      <ExternalLink
+                        className="h-3 w-3"
+                        strokeWidth={1.5}
+                        aria-hidden="true"
+                      />
+                    </span>
+                  </div>
+                </a>
+              </Reveal>
+            ))}
+          </div>
+        </section>
+      ))}
+    </section>
+  );
+}
+
 /* ============ 行業切換 Sector Switcher ============ */
 
 type SectorKey =
@@ -1115,7 +1378,7 @@ export default function Insights() {
                 由 AI 開始,逐個行業建起情報網 — 你嘅 AI 工具值得每個行業嘅雷達。
               </p>
               <p className="mt-2 text-caption text-band-text-muted">
-                香港繁體整理 · 編輯部每日更新
+                香港繁體整理 · 每 30 分鐘同步
               </p>
             </div>
           </Reveal>
@@ -1252,6 +1515,7 @@ export default function Insights() {
           <div key={tab}>
             {tab === "feed" && <FeedTab />}
             {tab === "daily" && <DailyContent embedded />}
+            {tab === "weekly" && <WeeklyTab />}
             {tab === "topics" && <TopicsTab />}
           </div>
         </>

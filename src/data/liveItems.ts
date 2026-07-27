@@ -54,6 +54,7 @@ function toRawItem(row: ItemRow): AihotRawItem {
     score: row.score ?? 0,
     selected: row.placement === "featured" || row.placement === "daily",
     attribution: null,
+    tags: row.tags ?? [],
   };
 }
 
@@ -238,6 +239,124 @@ export function useLiveDaily(): AihotDaily | null {
     () => (insights ? synthesizeDailyFromInsights(insights) : null),
     [insights]
   );
+}
+
+/* ============ 香港日期工具 + 往期日報 / 每週回顧合成 ============ */
+
+const HK_YMD = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Asia/Hong_Kong",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+/** ISO 時間 → 香港日期 key(YYYY-MM-DD);無效日期 → null */
+export function hkDayKey(iso: string): string | null {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? null : HK_YMD.format(d);
+}
+
+/** YYYY-MM-DD(視作 UTC 曆日)加 n 日 */
+function shiftDayKey(key: string, days: number): string {
+  const d = new Date(`${key}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+/** key 所在週嘅星期一(週一至週日為一週) */
+function mondayOfWeek(key: string): string {
+  const weekday = new Date(`${key}T00:00:00Z`).getUTCDay(); // 0=日 … 6=六
+  return shiftDayKey(key, -((weekday + 6) % 7));
+}
+
+/**
+ * 由真實情報合成指定香港日期嘅往期日報 — 同 groupByDay 邏輯一致:
+ * 按 hkDayKey 篩出當日情報,再用 synthesizeDailyFromInsights 揀 top 9。
+ * 當日冇數據 → null(consumer 應 disable 該日期,唔好假導航)。
+ */
+export function synthesizeDailyForDate(
+  insights: AihotInsight[],
+  dateKey: string
+): AihotDaily | null {
+  const dayItems = insights.filter((i) => hkDayKey(i.publishedAt) === dateKey);
+  if (dayItems.length === 0) return null;
+  const daily = synthesizeDailyFromInsights(dayItems);
+  return { ...daily, date: dateKey };
+}
+
+export interface AihotWeekly {
+  /** 週一(香港日期 YYYY-MM-DD) */
+  weekStart: string;
+  /** 週日(香港日期 YYYY-MM-DD) */
+  weekEnd: string;
+  lead: AihotDailyEntry | null;
+  items: AihotDailyEntry[];
+  sections: AihotDaily["sections"];
+  itemCount: number;
+}
+
+/**
+ * 由真實情報合成每週回顧 — 唔經 argro API(避免前端暴露 key),
+ * 同 daily 合成邏輯一致:以數據時鐘(最新情報日期)所在週為範圍,
+ * 週一至週日按分數取 top 12,再按 category 分組。
+ */
+export function synthesizeWeeklyFromInsights(
+  insights: AihotInsight[]
+): AihotWeekly | null {
+  if (insights.length === 0) return null;
+  /* 數據時鐘 — 同 LiveStats 做法:以最新情報日期為基準,
+     唔會因為數據日期同訪客「今日」有落差而顯示空週 */
+  const latestKey = insights.reduce<string | null>(
+    (max, i) => {
+      const k = hkDayKey(i.publishedAt);
+      return k && (!max || k > max) ? k : max;
+    },
+    null
+  );
+  if (!latestKey) return null;
+  const weekStart = mondayOfWeek(latestKey);
+  const weekEnd = shiftDayKey(weekStart, 6);
+
+  const inWeek = insights.filter((i) => {
+    const k = hkDayKey(i.publishedAt);
+    return k !== null && k >= weekStart && k <= weekEnd;
+  });
+  if (inWeek.length === 0) return null;
+
+  const top = [...inWeek].sort((a, b) => b.score - a.score).slice(0, 12);
+  const entries = top.map(
+    (i): AihotDailyEntry => ({
+      slug: i.slug,
+      category: i.category,
+      sectionLabel: i.category,
+      title: i.title,
+      summary: i.summary,
+      source: i.source,
+      permalink: i.originalUrl ?? i.permalink,
+      canonical: i.canonical,
+      score: i.score,
+    })
+  );
+
+  const sectionOrder: AihotInsight["category"][] = [];
+  const counts = new Map<string, number>();
+  for (const entry of entries) {
+    if (!counts.has(entry.category)) sectionOrder.push(entry.category);
+    counts.set(entry.category, (counts.get(entry.category) ?? 0) + 1);
+  }
+
+  return {
+    weekStart,
+    weekEnd,
+    lead: entries[0] ?? null,
+    items: entries.slice(1),
+    sections: sectionOrder.map((category) => ({
+      label: category,
+      category,
+      count: counts.get(category) ?? 0,
+    })),
+    itemCount: inWeek.length,
+  };
 }
 
 /** live 熱門話題(未成熟 → null,consumer 回落 aihotHotTopics) */

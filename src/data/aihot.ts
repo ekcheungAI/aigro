@@ -42,6 +42,8 @@ export interface AihotRawItem {
   score: number;
   selected: boolean;
   attribution: AihotAttribution | null;
+  /** 標籤(Supabase items.tags;舊 snapshot 可能缺失) */
+  tags?: string[] | null;
 }
 
 export interface AihotRawDailyItem {
@@ -159,6 +161,8 @@ export interface AihotInsight extends Insight {
   originalUrl: string | null;
   /** 英文標題（如有） */
   titleEn: string | null;
+  /** 標籤(搜尋範圍用;無則空陣列) */
+  tags: string[];
   /** 是否入選 AIHOT 精選（mode=selected）；全部動態中未入選者為 false */
   selected: boolean;
   /** 標記為外部內容（無站內詳情長文） */
@@ -182,6 +186,7 @@ export function toAihotInsight(raw: AihotRawItem): AihotInsight {
     canonical: raw.attribution?.canonical ?? raw.permalink,
     originalUrl: raw.url,
     titleEn: raw.title_en ? clean(raw.title_en) : null,
+    tags: (raw.tags ?? []).map((t) => clean(t)).filter(Boolean),
     selected: raw.selected,
     external: true,
   };

@@ -1,8 +1,12 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { EASE_OUT_STRONG } from "@/components/Reveal";
 import { aihotHotTopics } from "@/data/aihot";
 import { useLiveHotTopics } from "@/data/liveItems";
+
+/* 站內連結用 react-router Link(SPA 導航),唔好 target="_blank" 開新頁 */
+const MotionLink = motion.create(Link);
 
 /**
  * Hero 熱門話題 ticker — 單行垂直輪轉,每 4s 換一條熱門話題。
@@ -57,11 +61,9 @@ export default function HotTopicsTicker() {
       {/* 單行窗口 — fixed height + overflow hidden,absolute 條目上下輪轉 */}
       <div className="relative h-6 min-w-0 flex-1 overflow-hidden">
         <AnimatePresence mode="wait" initial={false}>
-          <motion.a
+          <MotionLink
             key={topic.id}
-            href="/insights?tab=topics"
-            target="_blank"
-            rel="noreferrer"
+            to="/insights?tab=topics"
             className="absolute inset-0 flex items-center font-mono text-caption text-band-text-secondary transition-colors duration-150 hover:text-band-ink"
             initial={
               reduced
@@ -79,7 +81,7 @@ export default function HotTopicsTicker() {
             <span className="truncate">
               熱門: {topic.title} · {topic.sourceCount} 個來源熱議
             </span>
-          </motion.a>
+          </MotionLink>
         </AnimatePresence>
       </div>
     </div>

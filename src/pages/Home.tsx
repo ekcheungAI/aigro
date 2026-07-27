@@ -9,7 +9,7 @@ import {
   Compass,
 } from "lucide-react";
 import Reveal, { REVEAL_EASE } from "@/components/Reveal";
-import { todayInfo } from "@/lib/daily";
+import UpdatedChip from "@/components/UpdatedChip";
 import InsightCard from "@/components/InsightCard";
 import CategoryChip from "@/components/CategoryChip";
 import MonogramAvatar, { PhotoAvatar } from "@/components/MonogramAvatar";
@@ -22,10 +22,11 @@ import { personas } from "@/data/personas";
 import { INSIGHT_CATEGORIES, type InsightCategory } from "@/data/insights";
 import {
   aihotDailyPicks,
+  aihotFetchedAt,
   aihotInsights,
   type AihotDailyPick,
 } from "@/data/aihot";
-import { useLiveInsights } from "@/data/liveItems";
+import { hkDayKey, useLiveFetchedAt, useLiveInsights } from "@/data/liveItems";
 import { expertFullName, expertHasPhoto, experts } from "@/data/experts";
 
 /* ================= Section 1 — Cinematic Dark Hero ================= */
@@ -37,6 +38,12 @@ function Hero() {
 
   /* 今日精選速覽 — Supabase live 成熟時用全站評分最高 5 條,未成熟回落 snapshot */
   const liveInsights = useLiveInsights();
+  const liveFetchedAt = useLiveFetchedAt();
+  /* 速覽 label 用數據時鐘日期(同 LiveStats 做法)— 唔會同展示嘅情報有落差 */
+  const picksDate =
+    hkDayKey(liveFetchedAt ?? aihotFetchedAt) ??
+    hkDayKey(new Date().toISOString()) ??
+    "";
   const dailyPicks = useMemo<AihotDailyPick[]>(() => {
     if (!liveInsights) return aihotDailyPicks;
     return [...liveInsights]
@@ -85,7 +92,7 @@ function Hero() {
             transition={{ duration: 0.4, ease: REVEAL_EASE }}
           >
             <span className="inline-block h-px w-10 bg-band-gold" aria-hidden="true" />
-            香港視角・每日更新 Hong Kong, Daily
+            香港視角・每 30 分鐘同步 Hong Kong, Live
           </motion.p>
 
           {/* H1 — MasterClass-scale Fraunces, slower line reveal
@@ -178,7 +185,7 @@ function Hero() {
                 aria-hidden="true"
               />
               <span className="ml-auto text-caption text-band-text-muted">
-                {todayInfo().date}・5 條
+                {picksDate}・{dailyPicks.length} 條
               </span>
             </button>
             <AnimatePresence initial={false}>
@@ -213,7 +220,7 @@ function Hero() {
                     ))}
                   </ol>
                   <p className="border-t border-band-border px-6 py-3 text-caption text-band-text-muted">
-                    香港繁體整理 · 編輯部每日更新
+                    香港繁體整理 · 每 30 分鐘同步
                   </p>
                 </motion.div>
               )}
@@ -369,9 +376,7 @@ function InsightsWall() {
           >
             <ChevronRight className="h-5 w-5" strokeWidth={1.5} />
           </button>
-          <span className="ml-auto text-caption text-text-muted">
-            香港繁體整理 · 編輯部每日更新
-          </span>
+          <UpdatedChip className="ml-auto" />
         </div>
       </div>
     </section>
