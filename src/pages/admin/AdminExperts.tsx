@@ -10,6 +10,13 @@ import { experts, expertFullName } from "@/data/experts";
 import type { Expert, RadarDimension } from "@/data/experts";
 import { crmLeads } from "@/data/admin-mock";
 import {
+  loadDraftExperts,
+  persistDraftExperts,
+  slugifyExpertName,
+  uniqueExpertSlug,
+} from "@/data/admin-mock";
+import type { DraftExpertInput } from "@/data/admin-mock";
+import {
   expertActivityBySlug,
   expertStatsBySlug,
   personaByExpertSlug,
@@ -42,6 +49,54 @@ function toDraft(e: Expert): ExpertDraft {
   };
 }
 
+/** 草稿 → Expert 形狀,直接混入表格/編輯器渲染 */
+function draftToExpert(d: DraftExpertInput): Expert {
+  return {
+    slug: d.slug,
+    nameEn: d.name,
+    nameZh: "",
+    title: d.credential || "領航導師(草稿)",
+    image: "",
+    verified: false,
+    specialties: d.specialties,
+    quote: d.quote || undefined,
+    brandColor: d.brandColor,
+    credential: d.credential || undefined,
+    kbUpdated: "—",
+    promptVersion: "v0.1(草稿)",
+    pendingNote:
+      "草稿 — 未完成領航認證。下一步:去工作室上載素材做蒸餾,蒸餾完成並通過審批後先可以 Verified 上線。",
+  };
+}
+
+/** brand color presets — 去飽和、金色禁用(同現有專家色同調) */
+const BRAND_PRESETS = [
+  { hex: "#466A5E", label: "霧綠" },
+  { hex: "#8A5A44", label: "陶棕" },
+  { hex: "#3E5A78", label: "灰藍" },
+  { hex: "#5C5470", label: "紫灰" },
+];
+
+interface CreateForm {
+  name: string;
+  slug: string;
+  slugTouched: boolean;
+  credential: string;
+  specialties: string[];
+  brandColor: string;
+  quote: string;
+}
+
+const EMPTY_CREATE: CreateForm = {
+  name: "",
+  slug: "",
+  slugTouched: false,
+  credential: "",
+  specialties: [],
+  brandColor: BRAND_PRESETS[0].hex,
+  quote: "",
+};
+
 const FIELD =
   "w-full rounded-md border border-border-strong bg-surface px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:border-lime focus:outline-none";
 
@@ -69,12 +124,25 @@ export default function AdminExperts() {
   const [draft, setDraft] = useState<ExpertDraft | null>(null);
   const [newTrait, setNewTrait] = useState("");
 
-  const expert = experts.find((e) => e.slug === openSlug) ?? null;
+  /* 新增導師草稿 — localStorage 持久化,reload 後保留 */
+  const [drafts, setDrafts] = useState<DraftExpertInput[]>(() =>
+    loadDraftExperts()
+  );
+  const [createOpen, setCreateOpen] = useState(false);
+  const [form, setForm] = useState<CreateForm>(EMPTY_CREATE);
+  const [newSpecialty, setNewSpecialty] = useState("");
 
-  const openEditor = (e: Expert) => {
+  const draftExperts = drafts.map(draftToExpert);
+  const allExperts = [...experts, ...draftExperts];
+  const draftSlugs = new Set(drafts.map((d) => d.slug));
+
+  const expert = allExperts.find((e) => e.slug === openSlug) ?? null;
+  const expertIsDraft = expert !== null && draftSlugs.has(expert.slug);
+
+  const openEditor = (e: Expert, initialTab: EditorTab = "基本資料") => {
     setOpenSlug(e.slug);
     setDraft(toDraft(e));
-    setTab("基本資料");
+    setTab(initialTab);
     setNewTrait("");
   };
 
@@ -85,6 +153,41 @@ export default function AdminExperts() {
 
   const patch = (p: Partial<ExpertDraft>) =>
     setDraft((d) => (d ? { ...d, ...p } : d));
+
+  const patchForm = (p: Partial<CreateForm>) =>
+    setForm((f) => ({ ...f, ...p }));
+
+  const openCreate = () => {
+    setForm(EMPTY_CREATE);
+    setNewSpecialty("");
+    setCreateOpen(true);
+  };
+
+  const saveCreate = () => {
+    const name = form.name.trim();
+    if (!name) {
+      toast("請填寫導師姓名");
+      return;
+    }
+    const taken = [...experts.map((e) => e.slug), ...drafts.map((d) => d.slug)];
+    const base = slugifyExpertName(form.slug.trim() || name);
+    const next: DraftExpertInput = {
+      slug: uniqueExpertSlug(base, taken),
+      name,
+      credential: form.credential.trim(),
+      specialties: form.specialties,
+      brandColor: form.brandColor,
+      quote: form.quote.trim(),
+      createdAt: new Date().toISOString().slice(0, 10),
+    };
+    const nextDrafts = [...drafts, next];
+    setDrafts(nextDrafts);
+    persistDraftExperts(nextDrafts);
+    setCreateOpen(false);
+    toast("已建立草稿 — 下一步:上載素材做蒸餾");
+    // 直接打開草稿編輯器嘅知識庫 tab — 空狀態提供「去工作室上載素材」quick action
+    openEditor(draftToExpert(next), "知識庫");
+  };
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -102,11 +205,11 @@ export default function AdminExperts() {
         </div>
         <button
           type="button"
-          onClick={() => toast("新專家需先完成領航認證面談 — 已加入邀請清單(mock)")}
+          onClick={openCreate}
           className="inline-flex items-center gap-1.5 rounded-md bg-lime px-4 py-2 text-sm font-medium text-on-accent transition-colors hover:bg-lime-hover"
         >
           <Plus className="h-4 w-4" />
-          邀請專家
+          新增導師
         </button>
       </div>
 
@@ -123,7 +226,7 @@ export default function AdminExperts() {
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {experts.map((e) => (
+            {allExperts.map((e) => (
               <tr
                 key={e.slug}
                 onClick={() => openEditor(e)}
@@ -134,7 +237,11 @@ export default function AdminExperts() {
                     <Avatar expert={e} />
                     <div>
                       <p className="flex items-center gap-1.5 font-medium text-text-primary">
-                        {e.verified ? expertFullName(e) : "領航專家席(待定)"}
+                        {e.verified
+                          ? expertFullName(e)
+                          : draftSlugs.has(e.slug)
+                            ? e.nameEn
+                            : "領航專家席(待定)"}
                         {e.verified && <VerifiedBadge size={16} />}
                       </p>
                       <p className="mt-0.5 max-w-[280px] truncate text-xs text-text-muted">
@@ -165,9 +272,13 @@ export default function AdminExperts() {
                     <span className="inline-flex items-center gap-1.5 rounded-sm bg-lime-soft px-2 py-0.5 text-xs font-medium text-lime-text">
                       Verified
                     </span>
+                  ) : draftSlugs.has(e.slug) ? (
+                    <span className="inline-flex items-center gap-1.5 rounded-sm border border-dashed border-[#A36A0F]/50 bg-card px-2 py-0.5 text-xs font-medium text-[#A36A0F]">
+                      草稿 Draft
+                    </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1.5 rounded-sm bg-card px-2 py-0.5 text-xs font-medium text-[#A36A0F]">
-                      草稿
+                    <span className="inline-flex items-center gap-1.5 rounded-sm bg-card px-2 py-0.5 text-xs font-medium text-text-muted">
+                      邀請中
                     </span>
                   )}
                 </td>
@@ -196,8 +307,21 @@ export default function AdminExperts() {
       <AdminSlideOver
         open={expert !== null && draft !== null}
         onClose={closeEditor}
-        title={expert ? (expert.verified ? expertFullName(expert) : "領航專家席(草稿)") : ""}
-        subtitle={expert?.credential ?? "等待邀請確認 · 未完成領航認證"}
+        title={
+          expert
+            ? expert.verified
+              ? expertFullName(expert)
+              : expertIsDraft
+                ? `${expert.nameEn}(草稿)`
+                : "領航專家席(草稿)"
+            : ""
+        }
+        subtitle={
+          expert?.credential ??
+          (expertIsDraft
+            ? "草稿 · 未完成領航認證 — 下一步上載素材做蒸餾"
+            : "等待邀請確認 · 未完成領航認證")
+        }
         width={560}
       >
         {expert && draft && (
@@ -387,7 +511,37 @@ export default function AdminExperts() {
               )}
 
               {/* ---- 知識庫 ---- */}
-              {tab === "知識庫" && (
+              {tab === "知識庫" &&
+                (!expert.verified ? (
+                  <>
+                    <div className="rounded-md border border-dashed border-border-strong bg-card px-4 py-8 text-center">
+                      <p className="text-sm font-medium text-text-primary">
+                        未有素材 — 去工作室開始收集
+                      </p>
+                      <p className="mx-auto mt-1.5 max-w-[340px] text-xs leading-relaxed text-text-muted">
+                        草稿階段知識庫為空。去專家工作室上載文件、連結或逐字稿,完成蒸餾並通過審批後,分身先可以上線。
+                      </p>
+                      <Link
+                        to="/admin/studio"
+                        onClick={closeEditor}
+                        className="mt-4 inline-flex items-center gap-1.5 rounded-md bg-lime px-4 py-2 text-sm font-medium text-on-accent transition-colors hover:bg-lime-hover"
+                      >
+                        去工作室上載素材
+                        <ArrowUpRight className="h-4 w-4" />
+                      </Link>
+                    </div>
+                    <p className="text-xs leading-relaxed text-text-muted">
+                      建立日期:
+                      <span className="font-mono text-text-secondary">
+                        {drafts.find((d) => d.slug === expert.slug)?.createdAt ?? "—"}
+                      </span>
+                      。Prompt 版本:
+                      <span className="font-mono text-text-secondary">
+                        {expert.promptVersion ?? "v0.1(草稿)"}
+                      </span>
+                    </p>
+                  </>
+                ) : (
                 <>
                   <ul className="divide-y divide-border rounded-md border border-border">
                     {[
@@ -443,7 +597,7 @@ export default function AdminExperts() {
                     重新蒸餾
                   </button>
                 </>
-              )}
+                ))}
 
               {/* ---- 數據 Data ---- */}
               {tab === "數據 Data" && (
@@ -716,6 +870,169 @@ export default function AdminExperts() {
             </div>
           </div>
         )}
+      </AdminSlideOver>
+
+      {/* 新增導師 slide-over */}
+      <AdminSlideOver
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        title="新增導師"
+        subtitle="建立草稿檔案 — 之後去工作室上載素材做蒸餾,審批通過先 Verified 上線"
+        width={480}
+      >
+        <div className="flex h-full flex-col">
+          <div className="flex-1 space-y-5 px-6 py-5">
+            <label className="block">
+              <span className="mb-1 block text-xs text-text-muted">
+                姓名 Display name <span className="text-lime-text">*</span>
+              </span>
+              <input
+                className={FIELD}
+                placeholder="例:Ada Wong 黃雅達"
+                value={form.name}
+                onChange={(e) =>
+                  patchForm(
+                    form.slugTouched
+                      ? { name: e.target.value }
+                      : {
+                          name: e.target.value,
+                          slug: slugifyExpertName(e.target.value),
+                        }
+                  )
+                }
+              />
+            </label>
+
+            <label className="block">
+              <span className="mb-1 block text-xs text-text-muted">
+                slug(由姓名自動生成,可改)
+              </span>
+              <input
+                className={cn(FIELD, "font-mono")}
+                placeholder="ada-wong"
+                value={form.slug}
+                onChange={(e) =>
+                  patchForm({ slug: e.target.value, slugTouched: true })
+                }
+              />
+              <span className="mt-1 block text-[11px] text-text-muted">
+                用於 /experts/&#123;slug&#125; 同知識庫命名 — 小寫英文加連字符
+              </span>
+            </label>
+
+            <label className="block">
+              <span className="mb-1 block text-xs text-text-muted">
+                頭銜 Credential
+              </span>
+              <input
+                className={FIELD}
+                placeholder="例:XX 創辦人 · 前 YY 增長主管"
+                value={form.credential}
+                onChange={(e) => patchForm({ credential: e.target.value })}
+              />
+            </label>
+
+            <div>
+              <span className="mb-1 block text-xs text-text-muted">
+                領域 Specialty chips(Enter 加入,可自訂)
+              </span>
+              <div className="flex flex-wrap items-center gap-1.5">
+                {form.specialties.map((s) => (
+                  <span
+                    key={s}
+                    className="inline-flex items-center gap-1 rounded-sm bg-lime-soft px-2 py-1 text-xs text-lime-text"
+                  >
+                    {s}
+                    <button
+                      type="button"
+                      aria-label={`移除 ${s}`}
+                      onClick={() =>
+                        patchForm({
+                          specialties: form.specialties.filter((x) => x !== s),
+                        })
+                      }
+                      className="text-lime-text/60 hover:text-lime-text"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+                <input
+                  value={newSpecialty}
+                  onChange={(e) => setNewSpecialty(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && newSpecialty.trim()) {
+                      const v = newSpecialty.trim();
+                      if (!form.specialties.includes(v)) {
+                        patchForm({ specialties: [...form.specialties, v] });
+                      }
+                      setNewSpecialty("");
+                    }
+                  }}
+                  placeholder="+ 新增領域"
+                  className="w-24 rounded-sm border border-dashed border-border-strong bg-transparent px-2 py-1 text-xs text-text-primary placeholder:text-text-muted focus:border-lime focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div>
+              <span className="mb-1 block text-xs text-text-muted">
+                專家專屬色 Brand color(去飽和 preset,僅 Expert Profile 頁使用)
+              </span>
+              <div className="flex items-center gap-2">
+                {BRAND_PRESETS.map((c) => (
+                  <button
+                    key={c.hex}
+                    type="button"
+                    aria-label={`選擇${c.label} ${c.hex}`}
+                    title={`${c.label} ${c.hex}`}
+                    onClick={() => patchForm({ brandColor: c.hex })}
+                    className={cn(
+                      "h-10 w-10 rounded-md border transition-all",
+                      form.brandColor === c.hex
+                        ? "border-lime ring-2 ring-lime/40"
+                        : "border-border hover:border-border-strong"
+                    )}
+                    style={{ backgroundColor: c.hex }}
+                  />
+                ))}
+                <span className="ml-1 font-mono text-xs text-text-muted">
+                  {form.brandColor}
+                </span>
+              </div>
+            </div>
+
+            <label className="block">
+              <span className="mb-1 block text-xs text-text-muted">
+                一句話定位 Quote
+              </span>
+              <textarea
+                className={cn(FIELD, "min-h-[80px] resize-y leading-relaxed")}
+                placeholder="例:AI 唔係工具,係你團隊嘅新同事。"
+                value={form.quote}
+                onChange={(e) => patchForm({ quote: e.target.value })}
+              />
+            </label>
+          </div>
+
+          <div className="flex items-center justify-end gap-2 border-t border-border px-6 py-4">
+            <button
+              type="button"
+              onClick={() => setCreateOpen(false)}
+              className="rounded-md border border-border px-4 py-2 text-sm text-text-secondary transition-colors hover:border-border-strong"
+            >
+              取消
+            </button>
+            <button
+              type="button"
+              onClick={saveCreate}
+              className="inline-flex items-center gap-1.5 rounded-md bg-lime px-4 py-2 text-sm font-medium text-on-accent transition-colors hover:bg-lime-hover"
+            >
+              <Plus className="h-4 w-4" />
+              建立草稿
+            </button>
+          </div>
+        </div>
       </AdminSlideOver>
     </div>
   );

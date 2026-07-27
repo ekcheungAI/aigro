@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import {
+  AlertTriangle,
   CheckCircle2,
   ChevronRight,
   Database,
@@ -546,27 +547,105 @@ function PipelineSection({ expert }: { expert: StudioExpert }) {
             素材 → Firecrawl 抓取 → 切塊 embedding → RAG 知識庫 → 專家審批上線。
           </p>
         </div>
-        <button
-          type="button"
-          onClick={startRun}
-          disabled={running}
-          className={cn(
-            "inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-medium transition-colors",
-            running
-              ? "cursor-not-allowed bg-card text-text-muted"
-              : "bg-lime text-on-accent hover:bg-lime-hover"
-          )}
-        >
-          {running ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Play className="h-4 w-4" />
-          )}
-          {running ? "蒸餾中…" : "開始蒸餾"}
-        </button>
+        <div className="flex items-center gap-2.5">
+          <span className="text-[11px] text-text-muted">目前為模擬流程</span>
+          <button
+            type="button"
+            onClick={startRun}
+            disabled={running}
+            title="目前為模擬流程"
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-medium transition-colors",
+              running
+                ? "cursor-not-allowed bg-card text-text-muted"
+                : "bg-lime text-on-accent hover:bg-lime-hover"
+            )}
+          >
+            {running ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Play className="h-4 w-4" />
+            )}
+            {running ? "蒸餾中…" : "開始蒸餾"}
+          </button>
+        </div>
       </div>
 
       <div className="space-y-5 px-5 py-5">
+        {/* 蒸餾就緒度 Readiness — 誠實標示邊步可用、邊步待接駁 */}
+        <div className="overflow-hidden rounded-md border border-border">
+          <div className="border-b border-border bg-card/50 px-4 py-3">
+            <p className="text-sm font-medium text-text-primary">
+              蒸餾就緒度 Readiness
+            </p>
+            <p className="mt-0.5 text-xs text-text-muted">
+              誠實狀態 — 邊步已可用,邊步仲差外部 key / edge function。
+            </p>
+          </div>
+          <ul className="divide-y divide-border">
+            {[
+              {
+                ok: true,
+                title: "① 素材收集",
+                status: "可用",
+                note: "上載文件 / 連結即用(mock storage,Supabase 接入後轉真實儲存)。",
+              },
+              {
+                ok: false,
+                title: "② 切塊與 embedding",
+                status: "需要 embedding provider",
+                note: "DeepSeek 冇 embeddings API — 備註:需要 Moonshot / OpenAI / Jina 其中一個 key。",
+              },
+              {
+                ok: false,
+                title: "③ RAG 檢索回答",
+                status: "待 embedding 後接駁",
+                note: "ask-answer edge function 規劃中 — 依賴 ② 完成先接到。",
+              },
+              {
+                ok: true,
+                title: "④ 導師審批",
+                status: "流程已就位",
+                note: "approval toggle + Prompt 版本管理已有,蒸餾完成即可審批上線。",
+              },
+            ].map((c) => (
+              <li
+                key={c.title}
+                className="flex items-start gap-3 px-4 py-3"
+              >
+                {c.ok ? (
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-lime-text" />
+                ) : (
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[#A36A0F]" />
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-sm font-medium text-text-primary">
+                      {c.title}
+                    </p>
+                    <span
+                      className={cn(
+                        "rounded-sm px-1.5 py-0.5 text-[11px] font-medium",
+                        c.ok
+                          ? "bg-lime-soft text-lime-text"
+                          : "bg-card text-[#A36A0F]"
+                      )}
+                    >
+                      {c.status}
+                    </span>
+                  </div>
+                  <p className="mt-0.5 text-xs leading-relaxed text-text-muted">
+                    {c.note}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <p className="border-t border-border bg-card/50 px-4 py-3 text-xs leading-relaxed text-text-secondary">
+            蒸餾而家係流程模擬 — 補咗 embedding key 之後,②③ 變真,導師就可以自己訓練分身。
+          </p>
+        </div>
+
         {/* Steps */}
         <div className="grid gap-2 md:grid-cols-4 md:gap-0">
           {steps.map((s, i) => {
