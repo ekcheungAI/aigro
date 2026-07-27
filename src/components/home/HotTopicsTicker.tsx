@@ -2,9 +2,12 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { EASE_OUT_STRONG } from "@/components/Reveal";
 import { aihotHotTopics } from "@/data/aihot";
+import { useLiveHotTopics } from "@/data/liveItems";
 
 /**
- * Hero 熱門話題 ticker — 單行垂直輪轉,每 4s 換一條 aihotHotTopics。
+ * Hero 熱門話題 ticker — 單行垂直輪轉,每 4s 換一條熱門話題。
+ * v1.27:Supabase live 成熟時用 live 聚合(關鍵詞群組同 fetch-argro 一致),
+ * 未成熟回落 aihotHotTopics snapshot。
  * 300ms strong ease-out(transform + opacity);hover/focus 暫停;
  * reduced-motion → 靜態顯示第一條,唔輪轉。
  * LIVE 圓點用 warning amber(band-warning)— 金色只屬於 Verified。
@@ -13,17 +16,19 @@ export default function HotTopicsTicker() {
   const reduced = useReducedMotion();
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+  const liveTopics = useLiveHotTopics();
+  const topics = liveTopics ?? aihotHotTopics;
 
   useEffect(() => {
-    if (reduced || paused || aihotHotTopics.length < 2) return;
+    if (reduced || paused || topics.length < 2) return;
     const id = window.setInterval(
-      () => setIndex((i) => (i + 1) % aihotHotTopics.length),
+      () => setIndex((i) => (i + 1) % topics.length),
       4000
     );
     return () => window.clearInterval(id);
-  }, [reduced, paused]);
+  }, [reduced, paused, topics]);
 
-  const topic = aihotHotTopics[reduced ? 0 : index];
+  const topic = topics[reduced ? 0 : index % Math.max(1, topics.length)];
   if (!topic) return null;
 
   return (

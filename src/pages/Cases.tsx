@@ -1,12 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
-import CaseCard from "@/components/CaseCard";
-import CategoryChip from "@/components/CategoryChip";
+import { ArrowRight, Check, ClipboardList } from "lucide-react";
 import Reveal, { REVEAL_EASE } from "@/components/Reveal";
-import { CASE_INDUSTRIES, cases, type CaseIndustry } from "@/data/cases";
-
-type IndustryFilter = CaseIndustry | "全部";
+import { captureWaitlist } from "@/lib/waitlist";
 
 /* ================= Section 1 — Page Header ================= */
 
@@ -56,7 +52,7 @@ function PageHeader() {
             transition={{ duration: 0.45, delay: 0.2, ease: REVEAL_EASE }}
           >
             香港企業用 AI 嘅真實成果 —
-            每個案例附量化數據、工具清單同可複製步驟。無數據，不上架。
+            我哋只發佈有真實數據支持、客戶授權嘅案例。無數據，不上架。
           </motion.p>
         </span>
       </div>
@@ -64,66 +60,89 @@ function PageHeader() {
   );
 }
 
-/* ================= Sections 2–3 — 篩選 + 案例卡格 ================= */
+/* ================= Section 2 — 誠實狀態:真實案例整理中 ================= */
 
-function CaseGrid() {
-  const [industry, setIndustry] = useState<IndustryFilter>("全部");
+/**
+ * v1.27:5 個示範案例全部係虛構,已移除。
+ * 呢個區塊係誠實狀態 — 講明上架標準,登記通知寫入 Supabase waitlist。
+ */
+function HonestState() {
+  const [email, setEmail] = useState("");
+  const [done, setDone] = useState(false);
 
-  const filtered =
-    industry === "全部"
-      ? cases
-      : cases.filter((c) => c.industry === industry);
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    void captureWaitlist({
+      email: email.trim(),
+      kind: "newsletter",
+      note: "案例上架通知",
+      source: "cases-notify",
+    });
+    setDone(true);
+  };
 
   return (
-    <section className="mx-auto max-w-container px-6 pb-24 pt-12 max-md:pb-16">
-      {/* 行業篩選 chips 列 */}
-      <div className="flex flex-wrap items-center gap-2">
-        {(["全部", ...CASE_INDUSTRIES] as IndustryFilter[]).map((c, i) => (
-          <Reveal key={c} delay={i * 0.06} y={12} duration={0.3}>
-            <CategoryChip
-              label={c}
-              active={industry === c}
-              onClick={() => setIndustry(c)}
+    <section className="mx-auto max-w-container px-6 pb-24 pt-16 max-md:pb-16 max-md:pt-12">
+      <Reveal y={20} duration={0.45}>
+        <div className="mx-auto max-w-[640px] rounded-md border bg-surface p-12 text-center shadow-card dark:shadow-none max-md:p-8">
+          <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-md border bg-card">
+            <ClipboardList
+              className="h-7 w-7 text-text-muted"
+              strokeWidth={1.5}
+              aria-hidden="true"
             />
-          </Reveal>
-        ))}
-        <span className="ml-auto text-caption text-text-muted">
-          {filtered.length} 個案例
-        </span>
-      </div>
+          </span>
+          <h2 className="mt-6 font-display text-h3 text-text-primary">
+            真實案例整理中
+          </h2>
+          <p className="mx-auto mt-4 max-w-[480px] text-body-sm text-text-secondary">
+            我哋只發佈有真實數據支持、客戶授權嘅案例 —
+            每個案例要有量化成果、工具清單同可複製步驟,先至會上架。
+            與其放示範數字,不如留空等真案例。
+          </p>
 
-      {/* 卡格 cross-fade 200ms + stagger 60ms 重新進場 */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={industry}
-          className="mt-8 grid gap-6 md:grid-cols-2"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2, ease: REVEAL_EASE }}
-        >
-          {filtered.map((c, i) => (
-            <motion.div
-              key={c.slug}
-              initial={{ opacity: 0, transform: "translateY(24px)" }}
-              whileInView={{ opacity: 1, transform: "translateY(0px)" }}
-              viewport={{ once: true, amount: 0.2 }}
-              transition={{
-                duration: 0.45,
-                delay: Math.min(i, 4) * 0.06,
-                ease: REVEAL_EASE,
-              }}
-            >
-              <CaseCard caseStudy={c} />
-            </motion.div>
-          ))}
-        </motion.div>
-      </AnimatePresence>
+          <div className="mx-auto mt-8 max-w-[440px] border-t pt-8">
+            {done ? (
+              <p
+                role="status"
+                className="inline-flex items-center gap-2 text-label text-success"
+              >
+                <Check className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+                已登記 — 第一個真案例上架即通知你
+              </p>
+            ) : (
+              <form onSubmit={submit} className="flex gap-2 max-sm:flex-col">
+                <label htmlFor="cases-notify-email" className="sr-only">
+                  案例上架通知 email
+                </label>
+                <input
+                  id="cases-notify-email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="你的 email"
+                  className="h-11 min-w-0 flex-1 rounded-md border border-border-strong bg-surface px-3 text-caption text-text-primary placeholder:text-text-muted focus:border-ink focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  className="h-11 shrink-0 rounded-md bg-ink-solid px-5 text-label text-white press hover:bg-ink-hover"
+                >
+                  上架通知我
+                </button>
+              </form>
+            )}
+            <p className="mt-3 text-caption text-text-muted">
+              有真實成果想投稿?用下面「提交案例」留低意向。
+            </p>
+          </div>
+        </div>
+      </Reveal>
     </section>
   );
 }
 
-/* ================= Section 4 — 投稿/授權說明帶 ================= */
+/* ================= Section 3 — 投稿/授權說明帶 ================= */
 
 function SubmitBand() {
   const [toastVisible, setToastVisible] = useState(false);
@@ -141,7 +160,7 @@ function SubmitBand() {
           你都有實戰成果？
         </h4>
         <p className="mx-auto mt-3 max-w-[520px] text-body-sm text-text-secondary">
-          我們歡迎有量化數據的香港 AI 落地案例，經核實後署名刊登。
+          我們歡迎有量化數據的香港 AI 落地案例，經核實同授權後署名刊登。
         </p>
         <button
           type="button"
@@ -178,7 +197,7 @@ export default function Cases() {
   return (
     <>
       <PageHeader />
-      <CaseGrid />
+      <HonestState />
       <SubmitBand />
     </>
   );

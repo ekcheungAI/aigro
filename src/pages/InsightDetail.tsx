@@ -1,338 +1,155 @@
 import { useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowRight, ExternalLink } from "lucide-react";
-import InsightCard from "@/components/InsightCard";
+import { ArrowLeft, ArrowRight, ArrowUpRight } from "lucide-react";
 import Reveal from "@/components/Reveal";
-import {
-  INSIGHT_ARTICLES,
-  insights,
-  type Insight,
-  type InsightArticle,
-} from "@/data/insights";
-import { findAihotInsight } from "@/data/aihot";
+import InsightCard from "@/components/InsightCard";
 import usePageMeta from "@/hooks/usePageMeta";
-
-/** 設計稿中的原型路由別名 (daily.md / insight-detail.md 使用 openai-gpt-5-launch) */
-const SLUG_ALIASES: Record<string, string> = {
-  "openai-gpt-5-launch": "openai-gpt-5-unified",
-};
-
-function formatDateTime(iso: string): string {
-  return `${iso.slice(0, 10)} ${iso.slice(11, 16)}`;
-}
-
-/** 未有長文的情報：以 summary / hkAngle 組裝文章本體 */
-function fallbackArticle(insight: Insight): InsightArticle {
-  return {
-    summaryLong: insight.summary,
-    lead: insight.hkAngle,
-    sections: [],
-    sourceTitle: `${insight.source} 原始報道`,
-    updatedAt: insight.publishedAt.slice(0, 10),
-  };
-}
-
-/** 相關情報：同分類優先（評分排序），不足由全站高分補齊 3 張 */
-function pickRelated(current: Insight): Insight[] {
-  const others = insights.filter((i) => i.slug !== current.slug);
-  const sameCategory = others
-    .filter((i) => i.category === current.category)
-    .sort((a, b) => b.score - a.score);
-  const rest = others
-    .filter((i) => i.category !== current.category)
-    .sort((a, b) => b.score - a.score);
-  return [...sameCategory, ...rest].slice(0, 3);
-}
+import { aihotAllInsights } from "@/data/aihot";
+import { useLiveInsights } from "@/data/liveItems";
 
 /**
- * Insight Detail 單篇情報詳情 (insight-detail.md):
- * 文章頭部（720px）→ AI 摘要 well → 香港視角長評 → 來源信任區
- * → Ask CTA 卡 → 相關情報（1200px，3 欄）→ Footer（全域）。
+ * Insight Detail — v1.27:靜態 mock 長文已移除。
+ * 呢頁處理真實情報:slug 命中 live Supabase items(未成熟回落 argro
+ * snapshot)即顯示摘要卡 + 外鏈原文;否則誠實「找不到此情報」。
+ * 將來有真實內部長文時,可以喺呢度加返 article 分支(InsightArticle 型別仍保留)。
  */
 export default function InsightDetail() {
   const { slug: rawSlug } = useParams<{ slug: string }>();
-  const slug = rawSlug ? (SLUG_ALIASES[rawSlug] ?? rawSlug) : undefined;
-  const insight = insights.find((i) => i.slug === slug);
+  const slug = rawSlug?.trim() ?? "";
 
-  const article = useMemo(
-    () =>
-      insight
-        ? (INSIGHT_ARTICLES[insight.slug] ?? fallbackArticle(insight))
-        : null,
-    [insight]
-  );
-  const related = useMemo(
-    () => (insight ? pickRelated(insight) : []),
-    [insight]
-  );
+  /* live 優先,未成熟回落 snapshot;用全庫(aihotAllInsights)提高命中率 */
+  const liveInsights = useLiveInsights();
+  const pool = liveInsights ?? aihotAllInsights;
+  const item = useMemo(() => pool.find((i) => i.slug === slug), [pool, slug]);
 
-  /* F9:per-article OG — canonical + og:type article + hero 圖(有則用) */
-  usePageMeta(insight?.title, insight?.summary, {
-    canonical: insight ? `/insights/${insight.slug}` : undefined,
+  /* 相關情報:同分類優先,評分排序取 3 則(真數據) */
+  const related = useMemo(() => {
+    if (!item) return [];
+    const others = pool.filter((i) => i.slug !== item.slug);
+    return others
+      .sort((a, b) => {
+        const sameCat = Number(b.category === item.category) - Number(a.category === item.category);
+        return sameCat !== 0 ? sameCat : b.score - a.score;
+      })
+      .slice(0, 3);
+  }, [pool, item]);
+
+  usePageMeta(item?.title, item?.summary, {
+    canonical: item ? `/insights/${item.slug}` : undefined,
     ogType: "article",
-    ogImage: article?.heroImage,
   });
 
-  if (!insight || !article) {
-    /* AIHOT 外部情報：無站內長文，展示摘要卡 + 閱讀原文（不虛構詳情） */
-    const aihot = rawSlug ? findAihotInsight(rawSlug) : undefined;
-    if (aihot) {
-      return (
-        <section className="mx-auto max-w-[720px] px-6 py-24 max-md:py-16">
-          <Reveal>
-            <nav aria-label="麵包屑" className="text-caption text-text-muted">
-              <Link
-                to="/insights"
-                className="transition-colors duration-150 hover:text-ink"
-              >
-                情報 Insights
-              </Link>
-              <span aria-hidden="true"> / </span>
-              <span>{aihot.category}</span>
-            </nav>
-            <div className="mt-6 flex flex-wrap items-center gap-3">
-              <span className="rounded-sm bg-ink-soft px-3 py-1.5 text-overline font-sans uppercase text-ink">
-                {aihot.category}
-              </span>
-              <span className="font-mono text-caption text-ink">
-                {aihot.score}
-              </span>
-              <span className="text-caption text-text-muted">
-                {aihot.timeAgo}
-              </span>
-            </div>
-            <h1 className="mt-4 font-display text-display text-text-primary">
-              {aihot.title}
-            </h1>
-            <div className="mt-8 rounded-md bg-card p-8 max-md:p-6">
-              <p className="text-overline font-sans uppercase text-text-muted">
-                香港繁體整理 · 編輯部每日更新
-              </p>
-              <p className="mt-3 text-body-lg text-text-secondary">
-                {aihot.summary}
-              </p>
-            </div>
-            <p className="mt-6 text-caption text-text-muted">
-              原始來源：{aihot.source}
-            </p>
-            {/* 「閱讀原文」僅在指向原始來源時顯示；移除上游聚合站出處連結 */}
-            {aihot.originalUrl && (
-              <div className="mt-8 flex flex-wrap items-center gap-4">
-                <a
-                  href={aihot.originalUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="group inline-flex h-11 items-center gap-2 rounded-md bg-ink-solid px-6 text-label text-white press hover:bg-ink-hover"
-                >
-                  閱讀原文
-                  <ExternalLink
-                    className="h-4 w-4 transition-transform duration-150 nudge-x"
-                    strokeWidth={1.5}
-                    aria-hidden="true"
-                  />
-                </a>
-              </div>
-            )}
-          </Reveal>
-        </section>
-      );
-    }
+  /* ---- 誠實 not-found:唔扮有內容 ---- */
+  if (!item) {
     return (
-      <section className="mx-auto max-w-container px-6 py-24 max-md:py-16">
-        <Reveal>
-          <p className="text-overline font-sans uppercase text-text-muted">
-            Insight
-          </p>
-          <h1 className="mt-2 font-display text-display text-text-primary">
-            找不到此情報
-          </h1>
-          <p className="mt-4 max-w-[640px] text-body-lg text-text-secondary">
-            此篇情報不存在或已下架。
-          </p>
-          <Link
-            to="/insights"
-            className="group mt-8 inline-flex h-11 items-center gap-2 rounded-md bg-ink-solid px-6 text-label text-white press hover:bg-ink-hover"
-          >
-            返回情報列表
-            <ArrowRight
-              className="h-4 w-4 transition-transform duration-150 nudge-x"
-              strokeWidth={1.5}
-              aria-hidden="true"
-            />
-          </Link>
-        </Reveal>
-      </section>
+      <div className="mx-auto max-w-[720px] px-6 py-32 text-center">
+        <p className="font-display text-display-sm text-text-muted">找不到此情報</p>
+        <p className="mt-4 text-body-sm text-text-secondary">
+          呢條連結冇對應嘅真實情報 — 資訊中心已改用即時動態,
+          情報由自家管道每 30 分鐘更新。
+        </p>
+        <Link
+          to="/insights"
+          className="mt-8 inline-flex items-center gap-2 rounded-sm bg-ink-solid px-5 py-2.5 text-label text-white press hover:bg-ink-hover"
+        >
+          <ArrowLeft className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+          返回資訊中心
+        </Link>
+      </div>
     );
   }
 
   return (
     <>
-      {/* Section 1 — 文章頭部（容器收窄 720px 置中，上方 padding 96px） */}
-      <section className="mx-auto max-w-[720px] px-6 pt-24 max-md:pt-16">
-        <Reveal duration={0.2} y={0}>
-          <nav aria-label="麵包屑" className="text-caption text-text-muted">
-            <Link
-              to="/insights"
-              className="transition-colors duration-150 hover:text-ink"
-            >
-              情報 Insights
-            </Link>
-            <span aria-hidden="true"> / </span>
-            <span>{insight.category}</span>
-          </nav>
-        </Reveal>
+      {/* 返回列 */}
+      <div className="mx-auto max-w-container px-6 pt-8">
+        <Link
+          to="/insights"
+          className="inline-flex items-center gap-1.5 text-label text-text-secondary transition-colors hover:text-ink"
+        >
+          <ArrowLeft className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+          返回資訊中心
+        </Link>
+      </div>
 
-        <Reveal y={24} duration={0.5} delay={0.1}>
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <span className="rounded-sm bg-ink-soft px-3 py-1.5 text-overline font-sans uppercase text-ink">
-              {insight.category}
-            </span>
-            <span className="font-mono text-caption text-ink">
-              {insight.score}
-            </span>
-            <span className="text-caption text-text-muted">
-              {insight.readMinutes} 分鐘閱讀
-            </span>
-          </div>
+      {/* 標頭 — 真實情報元數據 */}
+      <header className="mx-auto max-w-[720px] px-6 pt-12">
+        <Reveal>
+          <span className="inline-block rounded-sm bg-ink-soft px-3 py-1.5 text-overline font-sans uppercase text-ink">
+            {item.category}
+          </span>
         </Reveal>
-
-        <Reveal y={24} duration={0.5} delay={0.2}>
-          <h1 className="mt-4 font-display text-display text-text-primary">
-            {insight.title}
+        <Reveal delay={0.06}>
+          <h1 className="mt-6 font-display text-display-sm text-text-primary">
+            {item.title}
           </h1>
         </Reveal>
-
-        <Reveal duration={0.3} y={0} delay={0.4}>
-          <div className="mt-6 flex flex-wrap items-center gap-x-2 gap-y-1 text-caption text-text-muted">
-            {/* 策展長文為編輯部整理 — 來源只作署名,唔放假連結 */}
-            <span>參考來源：{insight.source}</span>
+        <Reveal delay={0.12}>
+          <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-caption text-text-muted">
+            <span>{item.source}</span>
             <span aria-hidden="true">·</span>
-            <span>{formatDateTime(insight.publishedAt)}</span>
+            <span>{item.timeAgo}</span>
             <span aria-hidden="true">·</span>
-            <span>編輯審核：AIGRO 編輯部</span>
+            <span className="text-ink">評分 {item.score}</span>
           </div>
         </Reveal>
-      </section>
+      </header>
 
-      {/* Section 1.5 — Cinematic hero image（僅編輯精選長文；16:9, max-h-420,
-          rounded-md hairline border, saturate 語言同案例照片） */}
-      {article.heroImage && (
-        <section className="mx-auto max-w-[920px] px-6 pt-10">
-          <Reveal y={20} duration={0.45}>
-            <img
-              src={article.heroImage}
-              alt=""
-              className="aspect-video max-h-[420px] w-full rounded-md border object-cover saturate-[0.85]"
-            />
-          </Reveal>
-        </section>
-      )}
-
-      {/* Section 2 — AI 摘要 well（card 色, padding 32px） */}
-      <section className="mx-auto max-w-[720px] px-6 pt-12">
-        <Reveal y={16} duration={0.4}>
-          <div className="rounded-md bg-card p-8 max-md:p-6">
-            <p className="text-overline font-sans uppercase text-text-muted">
-              AI 摘要 Summary
-            </p>
-            <p className="mt-3 text-body-lg text-text-secondary">
-              {article.summaryLong}
-            </p>
-          </div>
-        </Reveal>
-      </section>
-
-      {/* Section 3 — 香港視角長評（文章本體, 最大行寬 44rem） */}
-      <section className="mx-auto max-w-[720px] px-6 pt-12">
-        <Reveal y={16} duration={0.4}>
-          <p className="text-overline font-sans uppercase text-ink">
-            香港視角 HK Angle — 對香港 marketer / founder 的實際影響
+      {/* AI 摘要 + 原文外鏈 — 本站唔復制全文 */}
+      <Reveal y={16} duration={0.4}>
+        <div className="mx-auto mt-12 max-w-[720px] rounded-md border bg-surface px-8 py-8 shadow-card dark:shadow-none max-md:px-6 max-md:py-6 lg:mx-auto">
+          <p className="text-overline font-sans uppercase text-text-muted">
+            AI 摘要
           </p>
-        </Reveal>
-        <Reveal y={16} duration={0.4} delay={0.06}>
-          <p className="mt-6 border-l-2 border-ink pl-4 text-body-lg text-text-primary">
-            {article.lead}
-          </p>
-        </Reveal>
-        {article.sections.map((section, i) => (
-          <Reveal key={section.heading} y={16} duration={0.4} delay={0.06 * ((i % 6) + 2)}>
-            <h3 className="mt-10 font-display text-h3 text-text-primary">
-              {section.heading}
-            </h3>
-            <p className="mt-4 max-w-prose text-body text-text-secondary">
-              {section.body}
-            </p>
-          </Reveal>
-        ))}
-      </section>
-
-      {/* Section 4 — 來源與信任區塊（上下 1px border 包夾, caption 雙欄） */}
-      <section className="mx-auto max-w-[720px] px-6 pt-12">
-        <Reveal duration={0.3}>
-          <div className="grid gap-8 border-y py-6 sm:grid-cols-2">
-            <div>
-              <p className="text-overline font-sans uppercase text-text-muted">
-                原始來源
-              </p>
-              <p className="mt-2 text-caption text-text-secondary">
-                {article.sourceTitle}
-              </p>
-              {/* 策展長文係 AIGRO 自家整理內容 — 冇外部原文連結,唔放 href="#" */}
-              <p className="mt-3 text-caption text-text-muted">
-                由 AIGRO 編輯部整理
-              </p>
-            </div>
-            <div>
-              <p className="text-overline font-sans uppercase text-text-muted">
-                編輯流程
-              </p>
-              <p className="mt-2 text-caption text-text-secondary">
-                AI 初步摘要 → 編輯核實事實 → 撰寫香港視角 → 上架。最後更新{" "}
-                {article.updatedAt}。
-              </p>
-            </div>
-          </div>
-        </Reveal>
-      </section>
-
-      {/* Section 5 — Ask CTA 卡（ink-soft 底 well, radius-lg） */}
-      <section className="mx-auto max-w-[720px] px-6 pt-12">
-        <Reveal y={20} duration={0.45}>
-          <div className="rounded-md bg-ink-soft p-8 max-md:p-6">
-            <h4 className="font-display text-h4 text-text-primary">
-              想知呢條新聞對你生意嘅具體影響？
-            </h4>
-            <p className="mt-2 text-body-sm text-text-secondary">
-              AI 編輯部會基於全站情報與案例庫，為你的行業即場分析。
-            </p>
-            <Link
-              to="/ask"
-              className="group mt-6 inline-flex h-11 items-center gap-2 rounded-md bg-ink-solid px-6 text-label text-white press hover:bg-ink-hover"
+          <p className="mt-3 text-body-lg text-text-primary">{item.summary}</p>
+          {item.originalUrl && (
+            <a
+              href={item.originalUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-6 inline-flex h-11 items-center gap-2 rounded-sm bg-ink-solid px-6 text-label text-white press hover:bg-ink-hover"
             >
-              問 AI 編輯部
-              <ArrowRight
-                className="h-4 w-4 transition-transform duration-150 nudge-x"
+              閱讀原文
+              <ArrowUpRight
+                className="h-4 w-4"
                 strokeWidth={1.5}
                 aria-hidden="true"
               />
-            </Link>
-          </div>
-        </Reveal>
-      </section>
-
-      {/* Section 6 — 相關情報（1200px 容器, 3 欄卡格） */}
-      <section className="mx-auto max-w-container px-6 py-24 max-md:py-16">
-        <Reveal y={24}>
-          <h3 className="font-display text-h3 text-text-primary">相關情報</h3>
-        </Reveal>
-        <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {related.map((item, i) => (
-            <Reveal key={item.slug} y={24} delay={i * 0.08}>
-              <InsightCard insight={item} />
-            </Reveal>
-          ))}
+            </a>
+          )}
         </div>
-      </section>
+      </Reveal>
+
+      {/* 相關情報(同分類優先,真數據) */}
+      {related.length > 0 && (
+        <section className="mx-auto mt-20 max-w-container px-6 pb-24">
+          <Reveal>
+            <div className="flex items-baseline justify-between border-b pb-4">
+              <h2 className="font-display text-h3 text-text-primary">
+                相關情報
+              </h2>
+              <Link
+                to="/insights"
+                className="inline-flex items-center gap-1 text-label text-ink hover:underline hover:underline-offset-2"
+              >
+                全部情報
+                <ArrowRight
+                  className="h-3.5 w-3.5"
+                  strokeWidth={1.5}
+                  aria-hidden="true"
+                />
+              </Link>
+            </div>
+          </Reveal>
+          <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {related.map((r, i) => (
+              <Reveal key={r.slug} delay={i * 0.08}>
+                <InsightCard insight={r} />
+              </Reveal>
+            ))}
+          </div>
+        </section>
+      )}
     </>
   );
 }

@@ -237,19 +237,18 @@ AIGRO 嘅分身對話係同一思路嘅實踐 — 你而家同緊嘅就係授權
       [/產出|分發/, 1],
     ],
     reply: {
-      text: `根據本平台案例庫同最新情報,香港團隊常見嘅做法係咁:
-第一,內容產出用 GPT-5 或 Claude 起草,但**觀點同本地案例必須人手注入** — 同質化係香港細市場最快被懲罰嘅問題。
-第二,建立『一次生產、多平台分發』嘅工作流:一篇長文拆做 LinkedIn post、IG caption 同 WhatsApp 廣播稿。
-第三,參考補習社案例,用 AI 做咗 2.4 倍內容產出嘅同時,將慳返嘅時間投放喺客戶訪談 — 真實洞察先係差異化。
-想我針對你嘅行業具體拆解,可以話我知你嘅業務類型。`,
+      text: `香港團隊做 AI 內容營銷,編輯部嘅建議係咁:
+第一,起草可以交俾 AI,但**觀點同本地案例必須人手注入** — 同質化係香港細市場最快被懲罰嘅問題。
+第二,建立「一次生產、多平台分發」嘅工作流:一篇長文拆做 LinkedIn post、IG caption 同 WhatsApp 廣播稿。
+第三,將慳返嘅時間投放喺客戶訪談 — 真實洞察先係差異化。
+想我針對你嘅行業具體拆解,可以話我知你嘅業務類型;內容策略想深入,Jimmy 嘅分身係第一手。`,
       citations: [
-        { title: "補習社 AI 批改案例", href: "/cases/tutorial-centre-ai-grading" },
-        { title: "AI 內容工場的三條紅線", href: "/insights/ai-content-factory-red-lines" },
-        { title: "GPT-5 發佈情報", href: "/insights/openai-gpt-5-unified" },
+        { title: "直接問 Jimmy 分身", href: "/ask?expert=jimmy-lau" },
+        { title: "AIGRO 情報庫", href: "/insights" },
       ],
       confidence: 0.82,
     },
-    digest: `AI 內容營銷三點:GPT-5 / Claude 起草但觀點同本地案例必須人手注入;一篇長文拆做 LinkedIn、IG、WhatsApp 多平台分發;慳返嘅時間投放喺客戶訪談,真實洞察先係差異化。`,
+    digest: `AI 內容營銷三點:AI 起草但觀點同本地案例必須人手注入;一篇長文拆做 LinkedIn、IG、WhatsApp 多平台分發;慳返嘅時間投放喺客戶訪談,真實洞察先係差異化。`,
     followUps: ["預算有限應該點樣買工具?", "邊個分身啱我深入問?"],
     chip: "點樣用 AI 做內容營銷?",
   },
@@ -264,19 +263,15 @@ AIGRO 嘅分身對話係同一思路嘅實踐 — 你而家同緊嘅就係授權
       [/gpt|openai|minimax|perplexity|claude/i, 1],
     ],
     reply: {
-      text: `今日編輯部精選三件大事:
-第一,OpenAI 發佈 GPT-5,統一推理與生成,API 價格下調 40%,中小企接入成本大降。
-第二,MiniMax M2 開源,2,300 億參數 MoE,推理成本僅及 Claude 8%,適合私隱敏感行業本地部署。
-第三,Perplexity 推出 Comet 瀏覽器 Agent 模式,直接挑戰傳統搜尋廣告模式。
-想深入了解邊一單?我可以詳細拆解。`,
+      text: `最新嘅 AI 大事,我唔會靠記憶背俾你聽 — 資訊中心嘅即時動態由自家情報管道每 30 分鐘更新,先係最準嘅答案。
+去「即時動態」睇最新情報,或者睇「每日日報」嘅編輯精選;睇完想知邊單對你生意有影響,返嚟話我知,我幫你拆。`,
       citations: [
-        { title: "OpenAI 發佈 GPT-5", href: "/insights/openai-gpt-5-unified" },
-        { title: "MiniMax M2 開源", href: "/insights/minimax-m2-open-source" },
-        { title: "Perplexity Comet Agent 模式", href: "/insights/perplexity-comet-agent-mode" },
+        { title: "即時動態 Intelligence Feed", href: "/insights" },
+        { title: "每日日報 Daily", href: "/insights?tab=daily" },
       ],
       confidence: 0.84,
     },
-    digest: `今日三件大事:GPT-5 發佈(API 價格下調 40%)、MiniMax M2 開源(推理成本僅及 Claude 8%)、Perplexity Comet 瀏覽器 Agent 模式挑戰搜尋廣告。`,
+    digest: `最新 AI 大事以資訊中心為準:即時動態由自家情報管道每 30 分鐘更新,每日日報有編輯精選;想拆解對生意嘅影響可以返嚟問。`,
     followUps: ["香港邊啲行業最用得著 AI?", "預算有限應該買邊個工具?"],
     chip: "今日 AI 有咩大事?",
   },
@@ -291,18 +286,17 @@ AIGRO 嘅分身對話係同一思路嘅實踐 — 你而家同緊嘅就係授權
       [/金融|保險|教育|補習|零售|電商/, 1],
     ],
     reply: {
-      text: `以香港案例嚟講,而家落地最快嘅係三類行業:
-第一,金融同保險 — 金管局生成式 AI 沙盒 2.0 已經有 20 家機構參與,合規路線明朗化。
-第二,教育同補習 — 本地補習社用 AI 批改功課,內容產出提升 2.4 倍。
-第三,零售同電商 — 客服同商品文案自動化,回本週期最短。
-你嘅行業係邊類?我可以搵對應嘅香港案例俾你參考。`,
+      text: `邊啲行業落地最快,我唔會作數字俾你 — 有兩個誠實嘅答案來源:
+第一,資訊中心嘅即時情報:邊啲行業嘅 AI 動態最密,就係訊號最強嘅方向。
+第二,案例庫:我哋只發佈有真實數據支持、客戶授權嘅香港案例,而家整理緊,上架就係最硬嘅參考。
+話我知你嘅行業,我可以幫你諗第一步點行。`,
       citations: [
-        { title: "金管局 AI 沙盒 2.0", href: "/insights/hkma-genai-sandbox-2" },
-        { title: "補習社 AI 批改案例", href: "/cases/tutorial-centre-ai-grading" },
+        { title: "AIGRO 情報庫", href: "/insights" },
+        { title: "實戰案例(整理中)", href: "/cases" },
       ],
       confidence: 0.76,
     },
-    digest: `香港落地最快三類:金融保險(金管局沙盒 2.0 有 20 家機構參與)、教育補習(AI 批改令內容產出升 2.4 倍)、零售電商(客服同文案自動化,回本最快)。`,
+    digest: `邊啲行業落地最快唔作數:即時情報睇邊啲行業動態最密;案例庫只發佈有真實數據、客戶授權嘅香港案例,整理中。話我知你行業,幫你諗第一步。`,
     followUps: ["點樣用 AI 做內容營銷?", "預算有限應該買邊個工具?"],
     chip: "香港邊啲行業最用得著 AI?",
   },
@@ -320,18 +314,17 @@ AIGRO 嘅分身對話係同一思路嘅實踐 — 你而家同緊嘅就係授權
     ],
     reply: {
       text: `預算有限嘅話,我會咁樣排優先:
-第一,寫作同研究用免費額度已經夠起步 — GPT-5 API 價格下調 40%,按用量付費比訂閱更慳。
-第二,需要本地部署或者處理敏感資料,可以睇 MiniMax M2,開源兼推理成本只係 Claude 嘅 8%。
-第三,開發團隊先考慮 Cursor 2.0,多 Agent 並行等於一人團隊有三倍產能。
-話我知你嘅團隊人數同主要用途,我可以再收窄建議。`,
+第一,由免費額度開始 — 主流模型嘅免費 tier 已經夠驗證大部分流程,唔好一開始就課金。
+第二,先自動化最高頻、最重複嘅一個流程,驗證咗值得先逐個加 — 工具係為流程服務。
+第三,訂閱前比較按量付費同月費 — 用量唔穩定嘅話,按量通常更慳。
+話我知你嘅團隊人數同主要用途,我可以再收窄建議;具體工具嘅最新動態,情報庫有即時更新。`,
       citations: [
-        { title: "GPT-5 發佈情報", href: "/insights/openai-gpt-5-unified" },
-        { title: "MiniMax M2 開源", href: "/insights/minimax-m2-open-source" },
-        { title: "Cursor 2.0 多 Agent 開發", href: "/insights/cursor-2-multi-agent" },
+        { title: "AIGRO 情報庫", href: "/insights" },
+        { title: "直接問 Elvin 分身", href: "/ask?expert=elvin-cheung" },
       ],
       confidence: 0.79,
     },
-    digest: `預算有限咁排:寫作研究用免費額度起步(GPT-5 API 降價 40%);敏感資料本地部署睇 MiniMax M2(成本只係 Claude 8%);開發團隊上 Cursor 2.0 多 Agent 並行。`,
+    digest: `預算有限咁排:免費額度起步驗證流程;先自動化最高頻最重複嘅一個流程;訂閱前比較按量付費同月費。工具最新動態睇情報庫。`,
     followUps: ["今日 AI 有咩大事?", "邊個分身啱我?"],
     chip: "預算有限應該買邊個工具?",
   },
@@ -845,7 +838,7 @@ const PLATFORM_PERSONA: Persona = {
   replies: PLATFORM_REPLIES,
   fallback: PLATFORM_FALLBACK,
   aboutBio:
-    "平台編輯部 AI 基於 AIGRO 全站情報、案例同資源庫蒸餾,所有論點附可檢索來源,遵守「no chip, no claim」原則。",
+    "平台編輯部 AI 基於 AIGRO 全站情報庫蒸餾(自家管道每 30 分鐘更新),所有論點附可檢索來源,遵守「no chip, no claim」原則。",
   aboutLinkLabel: "瀏覽全站情報庫",
   aboutLinkHref: "/insights",
   aboutTransparency: "回答經編輯審核流程整理,僅供參考,唔構成任何專業建議。",

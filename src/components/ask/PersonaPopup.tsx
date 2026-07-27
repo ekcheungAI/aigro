@@ -7,7 +7,7 @@ import VerifiedBadge from "@/components/VerifiedBadge";
 import PresenceDot from "@/components/ask/PresenceDot";
 import { EASE_OUT_STRONG } from "@/components/Reveal";
 import { aihotAllInsights } from "@/data/aihot";
-import { cases } from "@/data/cases";
+import { useLiveItems } from "@/data/liveItems";
 import { expertHasPhoto } from "@/data/experts";
 import type { Persona } from "@/data/personas";
 import { personaInitials } from "@/data/personas";
@@ -27,6 +27,11 @@ interface PersonaPopupProps {
 export default function PersonaPopup({ open, persona, onClose }: PersonaPopupProps) {
   const reduced = useReducedMotion();
   const expert = persona.kind === "expert" ? persona.expert : undefined;
+  // 平台知識庫規模 — 真實情報庫數據(live 優先,未成熟回落 snapshot)
+  const liveItems = useLiveItems();
+  const itemPool = liveItems ?? aihotAllInsights;
+  const sourceCount = new Set(itemPool.map((i) => i.source).filter(Boolean))
+    .size;
 
   // Esc 關閉 + 鎖背景滾動
   useEffect(() => {
@@ -181,13 +186,13 @@ export default function PersonaPopup({ open, persona, onClose }: PersonaPopupPro
                   <ul className="mt-3 grid gap-2 sm:grid-cols-2">
                     <li className="rounded-sm border bg-bg px-3 py-2.5">
                       <p className="font-mono text-label text-text-primary">
-                        {aihotAllInsights.length} 則
+                        {itemPool.length} 則
                       </p>
                       <p className="mt-0.5 text-caption text-text-muted">全站情報庫・每日更新</p>
                     </li>
                     <li className="rounded-sm border bg-bg px-3 py-2.5">
-                      <p className="font-mono text-label text-text-primary">{cases.length} 篇</p>
-                      <p className="mt-0.5 text-caption text-text-muted">香港落地案例庫</p>
+                      <p className="font-mono text-label text-text-primary">{sourceCount} 個</p>
+                      <p className="mt-0.5 text-caption text-text-muted">情報來源・持續接入</p>
                     </li>
                   </ul>
                 </section>

@@ -19,12 +19,9 @@ import CategoryChip from "@/components/CategoryChip";
 import Reveal, { REVEAL_EASE } from "@/components/Reveal";
 import { DailyContent } from "@/pages/Daily";
 import {
-  INSIGHT_ARTICLES,
   INSIGHT_CATEGORIES,
   INSIGHT_CATEGORY_SLUGS,
   INSIGHT_SLUG_CATEGORIES,
-  insights,
-  type Insight,
   type InsightCategory,
 } from "@/data/insights";
 import {
@@ -35,7 +32,11 @@ import {
   toAihotInsight,
   type AihotInsight,
 } from "@/data/aihot";
-import { useLiveItems } from "@/data/liveItems";
+import {
+  useLiveHotTopics,
+  useLiveInsights,
+  useLiveItems,
+} from "@/data/liveItems";
 import {
   TOPIC_GROUPS,
   TOPIC_TOTAL,
@@ -115,93 +116,6 @@ function groupByDay(items: AihotInsight[]): FeedGroup[] {
     group.items.push(item);
   }
   return groups;
-}
-
-/* ============ 編輯精選 Editor's Pick ============ */
-
-/**
- * 站內長文精選 — 有完整香港視角長評的編輯部作品（design.md §6.5:
- * 「差異化核心，絕不可埋沒」）。示範真實 HK angle，取代已移除的 placeholder。
- */
-const EDITOR_PICK_SLUGS = ["openai-gpt-5-unified", "hkma-genai-sandbox-2"];
-
-const EDITOR_PICKS: { insight: Insight; lead: string; heroImage?: string }[] =
-  EDITOR_PICK_SLUGS.flatMap((slug) => {
-    const insight = insights.find((i) => i.slug === slug);
-    if (!insight) return [];
-    return [
-      {
-        insight,
-        lead: INSIGHT_ARTICLES[slug]?.lead ?? insight.hkAngle,
-        heroImage: INSIGHT_ARTICLES[slug]?.heroImage,
-      },
-    ];
-  });
-
-/** 編輯精選卡 — 內部長文連結，頂部 cinematic 縮圖 + 真實香港視角節錄 */
-function EditorPickCard({
-  insight,
-  lead,
-  heroImage,
-  index,
-}: {
-  insight: Insight;
-  lead: string;
-  heroImage?: string;
-  index: number;
-}) {
-  return (
-    <Link
-      to={`/insights/${insight.slug}`}
-      className="card-hover group flex h-full flex-col overflow-hidden rounded-md border bg-surface shadow-card dark:shadow-none"
-    >
-      {/* 頂部影像帶（16:9 ≈ 200px）— saturate 語言同案例照片 */}
-      {heroImage && (
-        <img
-          src={heroImage}
-          alt=""
-          loading="lazy"
-          className="aspect-video h-[200px] w-full object-cover saturate-[0.8] transition-[filter] duration-250 group-hover:saturate-100"
-        />
-      )}
-      <div className="flex flex-1 flex-col p-8 pt-6 max-md:p-6 max-md:pt-5">
-        <div className="flex items-center gap-3">
-          <span className="font-mono text-caption text-ink" aria-hidden="true">
-            {String(index + 1).padStart(2, "0")}
-          </span>
-          <span className="rounded-sm bg-ink-soft px-3 py-1.5 text-overline font-sans uppercase text-ink">
-            {insight.category}
-          </span>
-          <span className="ml-auto text-caption text-text-muted">
-            {insight.readMinutes} 分鐘閱讀
-          </span>
-        </div>
-
-        <h4 className="mt-4 font-sans text-h4 text-text-primary transition-colors duration-150 group-hover:text-ink">
-          {insight.title}
-        </h4>
-
-        {/* 真實香港視角節錄 — 差異化核心 */}
-        <div className="mt-4 border-l-2 border-ink pl-3">
-          <p className="text-overline font-sans uppercase text-ink">
-            香港視角 HK Angle
-          </p>
-          <p className="mt-1 line-clamp-3 text-body-sm text-text-secondary">
-            {lead}
-          </p>
-        </div>
-
-        <span className="mt-auto inline-flex items-center gap-1 pt-5 text-label text-ink">
-          閱讀全文
-          <ArrowRight
-            className="h-4 w-4 transition-transform duration-150 nudge-x"
-            strokeWidth={1.5}
-            aria-hidden="true"
-          />
-        </span>
-      </div>
-    </Link>
-  );
 }
 
 /* ============ 即時動態 — Feed row（左 mono rail + 右內容欄，非卡片） ============ */
@@ -342,36 +256,6 @@ function FeedTab() {
 
   return (
     <>
-      {/* 編輯精選 Editor's Pick（站內長文，真實香港視角）— 置於 feed 之上 */}
-      <section className="mx-auto max-w-container px-6 pt-12">
-        <Reveal y={16} duration={0.4}>
-          <p className="flex items-center gap-3 text-overline font-sans uppercase text-text-muted">
-            <span
-              className="inline-block h-px w-6 bg-border-strong"
-              aria-hidden="true"
-            />
-            編輯精選 Editor's Pick
-          </p>
-        </Reveal>
-        <div className="mt-6 grid gap-6 lg:grid-cols-2">
-          {EDITOR_PICKS.map((pick, i) => (
-            <Reveal
-              key={pick.insight.slug}
-              y={20}
-              duration={0.45}
-              delay={i * 0.08}
-            >
-              <EditorPickCard
-                insight={pick.insight}
-                lead={pick.lead}
-                heroImage={pick.heroImage}
-                index={i}
-              />
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
       {/* 工具列：精選/全部動態 + 搜尋 + 分類 chips + 計數 */}
       <section className="mx-auto max-w-container px-6 pt-12">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
@@ -508,13 +392,11 @@ function FeedTab() {
 
 /* ============ 主題地圖 tab ============ */
 
-/** 最新焦點 — aihotInsights 按發佈時間倒序取 5 則（1 lead + 4 small） */
-const FOCUS_ITEMS: AihotInsight[] = [...aihotInsights]
-  .sort(
-    (a, b) =>
-      new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
-  )
-  .slice(0, 5);
+/** 主題地圖數據源 — live 優先,未成熟回落 snapshot(全 tab 共用) */
+function useTopicInsights(): AihotInsight[] {
+  const live = useLiveInsights();
+  return live ?? aihotInsights;
+}
 
 /** 焦點卡共用 metadata 行 — 來源 chip + 分類 · 相對時間 */
 function FocusSourceLine({ item }: { item: AihotInsight }) {
@@ -530,9 +412,20 @@ function FocusSourceLine({ item }: { item: AihotInsight }) {
   );
 }
 
-/** 最新焦點 section — 1 張 lead 大卡 + 4 張小卡，全部外鏈原文 */
+/** 最新焦點 section — 1 張 lead 大卡 + 4 張小卡，全部外鏈原文（live 優先） */
 function FocusSection() {
-  const [lead, ...rest] = FOCUS_ITEMS;
+  const insights = useTopicInsights();
+  const focusItems = useMemo(
+    () =>
+      [...insights]
+        .sort(
+          (a, b) =>
+            new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
+        )
+        .slice(0, 5),
+    [insights]
+  );
+  const [lead, ...rest] = focusItems;
   if (!lead) return null;
   return (
     <div className="mt-8 grid gap-6 lg:grid-cols-2">
@@ -616,8 +509,14 @@ function TopicLogoTile({ topic }: { topic: TopicDef }) {
 }
 
 /** 主題卡 — logo/monogram tile + 名 + 一句描述 + 相關動態計數 + → feed 搜尋/分類 */
-function TopicCard({ topic }: { topic: TopicDef }) {
-  const count = countTopicItems(topic);
+function TopicCard({
+  topic,
+  items,
+}: {
+  topic: TopicDef;
+  items: AihotInsight[];
+}) {
+  const count = countTopicItems(topic, items);
   return (
     <Link
       to={topicHref(topic)}
@@ -652,7 +551,13 @@ function TopicCard({ topic }: { topic: TopicDef }) {
 }
 
 /** 主題群組 section — 髮絲線標頭（名 + 描述 + 計數）+ 卡片 grid */
-function TopicGroupSection({ group }: { group: TopicGroup }) {
+function TopicGroupSection({
+  group,
+  items,
+}: {
+  group: TopicGroup;
+  items: AihotInsight[];
+}) {
   return (
     <section className="mt-16 max-md:mt-12">
       <Reveal y={16} duration={0.4}>
@@ -680,7 +585,7 @@ function TopicGroupSection({ group }: { group: TopicGroup }) {
             delay={Math.min(i, 7) * 0.06}
             className="h-full"
           >
-            <TopicCard topic={topic} />
+            <TopicCard topic={topic} items={items} />
           </Reveal>
         ))}
       </div>
@@ -688,9 +593,11 @@ function TopicGroupSection({ group }: { group: TopicGroup }) {
   );
 }
 
-/** 熱議訊號 — AIHOT 熱門話題訊號條（保留原有數據,收細為底部子 section） */
+/** 熱議訊號 — 熱門話題訊號條（live 聚合優先,未成熟回落 snapshot） */
 function HotSignalsSection() {
-  const maxCount = Math.max(1, ...aihotHotTopics.map((t) => t.sourceCount));
+  const liveTopics = useLiveHotTopics();
+  const hotTopics = liveTopics ?? aihotHotTopics;
+  const maxCount = Math.max(1, ...hotTopics.map((t) => t.sourceCount));
   return (
     <section className="mt-20 max-md:mt-16">
       <Reveal y={16} duration={0.4}>
@@ -703,7 +610,7 @@ function HotSignalsSection() {
               Hot Signals
             </span>
             <span className="ml-auto font-mono text-caption text-text-muted">
-              {aihotHotTopics.length} 個話題
+              {hotTopics.length} 個話題
             </span>
           </div>
           <p className="mt-1 text-caption text-text-secondary">
@@ -713,7 +620,7 @@ function HotSignalsSection() {
       </Reveal>
 
       <div className="divide-y border-b">
-        {aihotHotTopics.map((topic, i) => (
+        {hotTopics.map((topic, i) => (
           <Reveal
             key={topic.id}
             y={16}
@@ -789,6 +696,7 @@ function HotSignalsSection() {
 }
 
 function TopicMapView() {
+  const topicInsights = useTopicInsights();
   return (
     <section className="mx-auto max-w-container px-6 pb-24 pt-16 max-md:pb-16 max-md:pt-12">
       <Reveal y={16} duration={0.4}>
@@ -819,7 +727,7 @@ function TopicMapView() {
               Latest Focus
             </span>
             <span className="ml-auto font-mono text-caption text-text-muted">
-              最近更新 · 顯示 {FOCUS_ITEMS.length} 則焦點
+              最近更新 · 顯示 {Math.min(5, topicInsights.length)} 則焦點
             </span>
           </div>
         </Reveal>
@@ -828,7 +736,7 @@ function TopicMapView() {
 
       {/* 三個主題群組 */}
       {TOPIC_GROUPS.map((group) => (
-        <TopicGroupSection key={group.id} group={group} />
+        <TopicGroupSection key={group.id} group={group} items={topicInsights} />
       ))}
 
       {/* 熱議訊號（底部子 section） */}
@@ -854,8 +762,12 @@ function TopicView({
   group: TopicGroup;
   onBack: () => void;
 }) {
-  /** 過濾邏輯同卡片計數一致（filterTopicItems：分類直取 / keywords 比對） */
-  const items = useMemo(() => filterTopicItems(topic), [topic]);
+  /** 過濾邏輯同卡片計數一致（filterTopicItems：分類直取 / keywords 比對）— live 優先 */
+  const topicInsights = useTopicInsights();
+  const items = useMemo(
+    () => filterTopicItems(topic, topicInsights),
+    [topic, topicInsights]
+  );
   const groups = useMemo(() => groupByDay(items), [items]);
   /** 相關主題 rail — 同群組、排除當前、最多 4 個（保持探索 loop） */
   const related = useMemo(
@@ -985,7 +897,7 @@ function TopicView({
                 delay={Math.min(i, 3) * 0.06}
                 className="h-full"
               >
-                <TopicCard topic={rel} />
+                <TopicCard topic={rel} items={topicInsights} />
               </Reveal>
             ))}
           </div>
