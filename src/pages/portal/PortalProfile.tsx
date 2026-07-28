@@ -1,11 +1,13 @@
-import { useState } from "react";
-import { ArrowRight, Check, Plus, Save, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowRight, Check, Pin, Plus, Save, X } from "lucide-react";
 import { useAdminToast } from "@/components/admin/AdminToast";
 import { usePortalExpert } from "@/components/portal/PortalLayout";
 import { PORTAL_FIELD, PortalSectionHeader } from "@/components/portal/portal-ui";
 import MonogramAvatar, { PhotoAvatar } from "@/components/MonogramAvatar";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
+import { useAdminQuery } from "@/components/admin/adminData";
 import { expertHasPhoto } from "@/data/experts";
 
 /** 品牌色 3 個預設(design.md §2.5 專家專屬色,低飽和、禁金色) */
@@ -20,7 +22,36 @@ const EXPERT_INITIALS: Record<string, string> = {
   "elvin-cheung": "EC",
 };
 
-/** 檔案編輯按專家 slug 持久化(reload 唔會還原)— key:`aigro-portal-profile-<slug>` */
+/** expert_profiles.stats / socials(jsonb)— 動態列表 */
+interface StatLine {
+  label: string;
+  value: string;
+}
+interface SocialLine {
+  label: string;
+  url: string;
+}
+
+/** expert_profiles 表行(v3 SQL;jsonb 欄位防禦性解析) */
+interface ExpertProfileRow {
+  slug: string;
+  headline: string | null;
+  bio: string | null;
+  stats: unknown;
+  socials: unknown;
+  featured_ids: unknown;
+}
+
+/** 自己嘅 published 情報(featured_ids 選擇器用) */
+interface PublishedItem {
+  id: string;
+  title: string;
+}
+
+const MAX_FEATURED = 3;
+
+/** 檔案編輯按專家 slug 持久化(reload 唔會還原)— key:`aigro-portal-profile-<slug>`
+ *  Supabase expert_profiles 為主;localStorage 係離線 / 未跑 v3 SQL 時嘅 fallback。 */
 interface ProfileDraft {
   displayName: string;
   title: string;
@@ -28,10 +59,44 @@ interface ProfileDraft {
   specialties: string[];
   brandColor: string;
   quote: string;
+  stats?: StatLine[];
+  socials?: SocialLine[];
+  featuredIds?: string[];
 }
 
 function profileKey(slug: string) {
   return `aigro-portal-profile-${slug}`;
+}
+
+function cleanStats(input: unknown): StatLine[] {
+  if (!Array.isArray(input)) return [];
+  return input
+    .map((s): StatLine | null => {
+      if (typeof s !== "object" || s === null) return null;
+      const rec = s as Record<string, unknown>;
+      if (typeof rec.label !== "string" || typeof rec.value !== "string")
+        return null;
+      return { label: rec.label, value: rec.value };
+    })
+    .filter((s): s is StatLine => s !== null);
+}
+
+function cleanSocials(input: unknown): SocialLine[] {
+  if (!Array.isArray(input)) return [];
+  return input
+    .map((s): SocialLine | null => {
+      if (typeof s !== "object" || s === null) return null;
+      const rec = s as Record<string, unknown>;
+      if (typeof rec.label !== "string" || typeof rec.url !== "string")
+        return null;
+      return { label: rec.label, url: rec.url };
+    })
+    .filter((s): s is SocialLine => s !== null);
+}
+
+function cleanIds(input: unknown): string[] {
+  if (!Array.isArray(input)) return [];
+  return input.filter((x): x is string => typeof x === "string");
 }
 
 function loadProfileDraft(slug: string): ProfileDraft | null {
@@ -48,16 +113,54 @@ function loadProfileDraft(slug: string): ProfileDraft | null {
       specialties: parsed.specialties.filter((s): s is string => typeof s === "string"),
       brandColor: typeof parsed.brandColor === "string" ? parsed.brandColor : "",
       quote: typeof parsed.quote === "string" ? parsed.quote : "",
+      stats: cleanStats(parsed.stats),
+      socials: cleanSocials(parsed.socials),
+      featuredIds: cleanIds(parsed.featuredIds),
     };
   } catch {
     return null;
   }
 }
 
+/* ---------------- Supabase 查詢 ---------------- */
+
+interface ProfileBundle {
+  profile: ExpertProfileRow | null;
+  published: PublishedItem[];
+}
+
+async function fetchProfileBundle(slug: string): Promise<ProfileBundle> {
+  if (!supabase) throw new Error("Supabase 未連接 — 請檢查環境變數。");
+  const [{ data: profile, error: profileError }, { data: items, error: itemsError }] =
+    await Promise.all([
+      supabase.from("expert_profiles").select("*").eq("slug", slug).maybeSingle(),
+      supabase
+        .from("items")
+        .select("id,title")
+        .eq("expert_slug", slug)
+        .eq("status", "published")
+        .order("published_at", { ascending: false })
+        .limit(50),
+    ]);
+  if (profileError) throw new Error(profileError.message);
+  if (itemsError) throw new Error(itemsError.message);
+  return {
+    profile: (profile as ExpertProfileRow | null) ?? null,
+    published: (items ?? []) as PublishedItem[],
+  };
+}
+
+function rlsHint(message: string): string {
+  return `${message} — 可能係表未建立或權限未開:請先喺 Supabase SQL Editor 執行 supabase/v3-policies.sql(expert_profiles 表 + expert update 自己 policy)。`;
+}
+
 /**
  * PortalProfile `/portal/profile` — 檔案自訂。
- * 左:編輯表單(顯示名稱/頭銜/bio/專長 chips/品牌色/一句觀點);
- * 右:live preview(同公開專家卡一致嘅渲染)。儲存 = 示範模式 toast。
+ * 左:編輯表單(顯示名稱/頭銜 headline/bio/專長 chips/品牌色/一句觀點
+ *    + stats 動態列表 + socials 動態列表 + 置頂情報);
+ * 右:live preview(同公開專家卡一致嘅渲染)。
+ * 儲存 = upsert expert_profiles(slug PK)— 表有數據優先,
+ * 否則 localStorage draft → experts.ts 靜態 fallback。
  */
 export default function PortalProfile() {
   const { slug, expert } = usePortalExpert();
@@ -80,6 +183,45 @@ export default function PortalProfile() {
     saved?.brandColor || expert?.brandColor || BRAND_PRESETS[0].hex
   );
   const [quote, setQuote] = useState(saved?.quote ?? expert?.quote ?? "");
+  const [stats, setStats] = useState<StatLine[]>(
+    saved?.stats && saved.stats.length > 0
+      ? saved.stats
+      : (expert?.metrics ?? []).map((m) => ({ label: m.label, value: m.value }))
+  );
+  const [socials, setSocials] = useState<SocialLine[]>(
+    saved?.socials && saved.socials.length > 0
+      ? saved.socials
+      : (expert?.socials ?? []).map((s) => ({ label: s.label, url: s.url }))
+  );
+  const [featuredIds, setFeaturedIds] = useState<string[]>(
+    saved?.featuredIds ?? []
+  );
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  // expert_profiles + 自己 published 情報(置頂選擇器)
+  const { data: bundle, error: loadError } = useAdminQuery(
+    () => fetchProfileBundle(slug),
+    [slug]
+  );
+
+  // 表有數據優先 — 第一次載入完成時 hydrate(唔會覆寫用戶之後嘅編輯)
+  const hydratedRef = useRef(false);
+  useEffect(() => {
+    if (!bundle || hydratedRef.current) return;
+    hydratedRef.current = true;
+    const row = bundle.profile;
+    if (!row) return; // 表冇 row → 保持 localStorage / experts.ts fallback
+    if (typeof row.headline === "string" && row.headline) setTitle(row.headline);
+    if (typeof row.bio === "string" && row.bio) setBio(row.bio);
+    const remoteStats = cleanStats(row.stats);
+    if (remoteStats.length > 0) setStats(remoteStats);
+    const remoteSocials = cleanSocials(row.socials);
+    if (remoteSocials.length > 0) setSocials(remoteSocials);
+    setFeaturedIds(cleanIds(row.featured_ids).slice(0, MAX_FEATURED));
+  }, [bundle]);
+
+  const publishedItems = bundle?.published ?? [];
 
   const addSpec = () => {
     const v = newSpec.trim();
@@ -95,7 +237,18 @@ export default function PortalProfile() {
   const removeSpec = (s: string) =>
     setSpecialties((list) => list.filter((x) => x !== s));
 
-  const save = () => {
+  const toggleFeatured = (id: string) => {
+    setFeaturedIds((cur) => {
+      if (cur.includes(id)) return cur.filter((x) => x !== id);
+      if (cur.length >= MAX_FEATURED) {
+        toast(`置頂最多 ${MAX_FEATURED} 篇 — 先取消一篇再揀`);
+        return cur;
+      }
+      return [...cur, id];
+    });
+  };
+
+  const save = async () => {
     const draft: ProfileDraft = {
       displayName,
       title,
@@ -103,13 +256,39 @@ export default function PortalProfile() {
       specialties,
       brandColor,
       quote,
+      stats,
+      socials,
+      featuredIds,
     };
+    // 本機持久化 — 離線 / 未跑 v3 SQL 時嘅 fallback(永遠做)
     try {
       window.localStorage.setItem(profileKey(slug), JSON.stringify(draft));
-      toast("已儲存 — 檔案變更已保留,reload 都唔會甩");
     } catch {
-      toast("儲存失敗 — 瀏覽器 localStorage 唔可用");
+      /* private mode — Supabase 仍然會寫 */
     }
+
+    if (!supabase) {
+      setSaveError("Supabase 未連接 — 請檢查環境變數。變更已存喺呢個瀏覽器。");
+      return;
+    }
+    setSaving(true);
+    setSaveError(null);
+    const { error: upsertError } = await supabase
+      .from("expert_profiles")
+      .upsert({
+        slug,
+        headline: title.trim(),
+        bio: bio.trim(),
+        stats: stats.filter((s) => s.label.trim() && s.value.trim()),
+        socials: socials.filter((s) => s.label.trim() && s.url.trim()),
+        featured_ids: featuredIds,
+      });
+    setSaving(false);
+    if (upsertError) {
+      setSaveError(rlsHint(`同步失敗:${upsertError.message}`));
+      return;
+    }
+    toast("已儲存並同步上線 — 公開檔案頁會讀 expert_profiles");
   };
 
   const initials = EXPERT_INITIALS[slug] ?? "·";
@@ -124,9 +303,17 @@ export default function PortalProfile() {
           檔案設定
         </h1>
         <p className="mt-1 text-sm text-text-muted">
-          自訂你喺公開專家頁嘅呈現 — 右邊即時預覽,同訪客見到嘅一致。
+          自訂你喺公開專家頁嘅呈現 — 右邊即時預覽,儲存即寫入 expert_profiles。
         </p>
       </div>
+
+      {loadError && (
+        <p className="rounded-md border border-[#A36A0F]/40 bg-card px-4 py-2.5 text-xs leading-relaxed text-[#A36A0F]">
+          讀取 expert_profiles 失敗:{loadError} —
+          請先喺 Supabase SQL Editor 執行 supabase/v3-policies.sql。
+          而家顯示嘅係 localStorage / 站內靜態 fallback。
+        </p>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* ---- 左:編輯表單 ---- */}
@@ -152,7 +339,7 @@ export default function PortalProfile() {
                 htmlFor="pf-title"
                 className="font-mono text-[11px] uppercase tracking-[0.14em] text-text-muted"
               >
-                頭銜
+                頭銜 Headline
               </label>
               <input
                 id="pf-title"
@@ -224,6 +411,125 @@ export default function PortalProfile() {
                 </button>
               </div>
             </div>
+
+            {/* stats 動態列表(expert_profiles.stats jsonb) */}
+            <div>
+              <label className="font-mono text-[11px] uppercase tracking-[0.14em] text-text-muted">
+                成就數據 Stats(label + value)
+              </label>
+              <div className="mt-1.5 space-y-2">
+                {stats.map((s, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <input
+                      aria-label={`統計 ${i + 1} 標籤`}
+                      className={cn(PORTAL_FIELD, "flex-1")}
+                      placeholder="標籤,如 創辦"
+                      value={s.label}
+                      onChange={(e) =>
+                        setStats((list) =>
+                          list.map((x, j) =>
+                            j === i ? { ...x, label: e.target.value } : x
+                          )
+                        )
+                      }
+                    />
+                    <input
+                      aria-label={`統計 ${i + 1} 數值`}
+                      className={cn(PORTAL_FIELD, "flex-1")}
+                      placeholder="數值,如 DOTAI"
+                      value={s.value}
+                      onChange={(e) =>
+                        setStats((list) =>
+                          list.map((x, j) =>
+                            j === i ? { ...x, value: e.target.value } : x
+                          )
+                        )
+                      }
+                    />
+                    <button
+                      type="button"
+                      aria-label={`移除統計 ${i + 1}`}
+                      onClick={() =>
+                        setStats((list) => list.filter((_, j) => j !== i))
+                      }
+                      className="shrink-0 rounded-md border border-border p-2 text-text-muted transition-colors hover:border-[#A63A30]/50 hover:text-[#A63A30]"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() =>
+                    setStats((list) => [...list, { label: "", value: "" }])
+                  }
+                  className="inline-flex items-center gap-1 rounded-md border border-dashed border-border-strong px-3 py-1.5 text-xs text-text-secondary transition-colors hover:border-lime hover:text-lime-text"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  加一行統計
+                </button>
+              </div>
+            </div>
+
+            {/* socials 動態列表(expert_profiles.socials jsonb) */}
+            <div>
+              <label className="font-mono text-[11px] uppercase tracking-[0.14em] text-text-muted">
+                社交連結 Socials(label + url)
+              </label>
+              <div className="mt-1.5 space-y-2">
+                {socials.map((s, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <input
+                      aria-label={`連結 ${i + 1} 名稱`}
+                      className={cn(PORTAL_FIELD, "w-32 shrink-0")}
+                      placeholder="平台名"
+                      value={s.label}
+                      onChange={(e) =>
+                        setSocials((list) =>
+                          list.map((x, j) =>
+                            j === i ? { ...x, label: e.target.value } : x
+                          )
+                        )
+                      }
+                    />
+                    <input
+                      aria-label={`連結 ${i + 1} URL`}
+                      className={cn(PORTAL_FIELD, "flex-1")}
+                      placeholder="https://"
+                      value={s.url}
+                      onChange={(e) =>
+                        setSocials((list) =>
+                          list.map((x, j) =>
+                            j === i ? { ...x, url: e.target.value } : x
+                          )
+                        )
+                      }
+                    />
+                    <button
+                      type="button"
+                      aria-label={`移除連結 ${i + 1}`}
+                      onClick={() =>
+                        setSocials((list) => list.filter((_, j) => j !== i))
+                      }
+                      className="shrink-0 rounded-md border border-border p-2 text-text-muted transition-colors hover:border-[#A63A30]/50 hover:text-[#A63A30]"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSocials((list) => [...list, { label: "", url: "" }])
+                  }
+                  className="inline-flex items-center gap-1 rounded-md border border-dashed border-border-strong px-3 py-1.5 text-xs text-text-secondary transition-colors hover:border-lime hover:text-lime-text"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  加一條連結
+                </button>
+              </div>
+            </div>
+
             <div>
               <label className="font-mono text-[11px] uppercase tracking-[0.14em] text-text-muted">
                 品牌色(檔案頁專用)
@@ -273,13 +579,22 @@ export default function PortalProfile() {
                 onChange={(e) => setQuote(e.target.value)}
               />
             </div>
+            {saveError && (
+              <p
+                role="alert"
+                className="rounded-md border border-[#A63A30]/40 bg-card px-3.5 py-2.5 text-xs leading-relaxed text-[#A63A30]"
+              >
+                {saveError}
+              </p>
+            )}
             <button
               type="button"
-              onClick={save}
-              className="inline-flex w-full items-center justify-center gap-1.5 rounded-md bg-lime px-4 py-2.5 text-sm font-medium text-on-accent transition-colors hover:bg-lime-hover"
+              onClick={() => void save()}
+              disabled={saving}
+              className="inline-flex w-full items-center justify-center gap-1.5 rounded-md bg-lime px-4 py-2.5 text-sm font-medium text-on-accent transition-colors hover:bg-lime-hover disabled:opacity-50"
             >
               <Save className="h-4 w-4" />
-              儲存
+              {saving ? "儲存中…" : "儲存並同步上線"}
             </button>
           </div>
         </section>
@@ -362,13 +677,89 @@ export default function PortalProfile() {
                 </p>
               </div>
             )}
+
+            {/* Stats preview */}
+            {stats.filter((s) => s.label.trim() && s.value.trim()).length > 0 && (
+              <div className="mt-4 rounded-md border border-border bg-card/50 px-4 py-3.5">
+                <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-text-muted">
+                  Stats(檔案頁成就佐證)
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {stats
+                    .filter((s) => s.label.trim() && s.value.trim())
+                    .map((s, i) => (
+                      <span
+                        key={i}
+                        className="rounded-sm bg-ink-soft px-3 py-1.5 text-overline font-sans text-ink"
+                      >
+                        {s.label} · {s.value}
+                      </span>
+                    ))}
+                </div>
+              </div>
+            )}
             <p className="mt-4 text-xs text-text-muted">
-              預覽為即時渲染 — 儲存後變更會保留喺呢個瀏覽器(localStorage),接
-              Supabase 後同步上線。
+              預覽為即時渲染 — 儲存會 upsert 入 Supabase expert_profiles
+              (headline / bio / stats / socials / featured_ids),
+              同時保留一份本機草稿做離線 fallback。
             </p>
           </div>
         </section>
       </div>
+
+      {/* ---- 置頂情報 featured_ids(最多 3 篇) ---- */}
+      <section className="rounded-lg border border-border bg-surface">
+        <PortalSectionHeader
+          overline="03 · Featured"
+          title="置頂情報"
+          desc={`揀最多 ${MAX_FEATURED} 篇已發佈情報,置頂喺你嘅公開檔案頁。`}
+        />
+        <div className="px-5 py-5">
+          {publishedItems.length === 0 ? (
+            <p className="text-sm text-text-muted">
+              你仲未有已發佈情報 — 去「我的情報」投稿,編輯部發佈後就可以喺度置頂。
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {publishedItems.map((item) => {
+                const checked = featuredIds.includes(item.id);
+                const disabled = !checked && featuredIds.length >= MAX_FEATURED;
+                return (
+                  <label
+                    key={item.id}
+                    className={cn(
+                      "flex cursor-pointer items-center gap-3 rounded-md border px-4 py-3 transition-colors",
+                      checked
+                        ? "border-lime bg-lime-soft/40"
+                        : disabled
+                          ? "cursor-not-allowed border-border opacity-50"
+                          : "border-border hover:border-border-strong"
+                    )}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      disabled={disabled}
+                      onChange={() => toggleFeatured(item.id)}
+                      className="h-4 w-4 shrink-0 accent-lime"
+                    />
+                    <span className="min-w-0 flex-1 truncate text-sm text-text-primary">
+                      {item.title}
+                    </span>
+                    {checked && (
+                      <Pin className="h-3.5 w-3.5 shrink-0 text-lime-text" />
+                    )}
+                  </label>
+                );
+              })}
+              <p className="pt-1 font-mono text-[11px] text-text-muted">
+                已揀 {featuredIds.length}/{MAX_FEATURED} — 儲存後寫入
+                expert_profiles.featured_ids
+              </p>
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 }
