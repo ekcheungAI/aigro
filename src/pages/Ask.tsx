@@ -556,11 +556,14 @@ export default function Ask() {
 
         {/* Sections 2–3 — 訊息流(滾動區) */}
         <div ref={scrollRef} data-lenis-prevent className="flex-1 overflow-y-auto">
-          <div className="mx-auto max-w-[720px] px-6 pb-12">
-            {messages.length === 0 && !showPending ? (
-              /* Empty State — 導師宣傳 spotlight card + 佢嘅 4 條建議問題,
-                 好似導師邀請你入嚟傾,而唔係一張空白表格 */
-              <div className="flex flex-col items-center pt-10 sm:pt-16">
+          {messages.length === 0 && !showPending ? (
+            /* Empty State — 導師宣傳 spotlight card + 佢嘅 4 條建議問題,
+               好似導師邀請你入嚟傾,而唔係一張空白表格。
+               右欄 2:3 editorial 氛圍圖(兩椅一燈)營造「私人對話室」感;
+               只喺 empty state 出現,對話進行中維持原 720px 單欄不變。 */
+            <div className="mx-auto max-w-[1080px] px-6 pb-12">
+              <div className="flex flex-col items-center pt-10 sm:pt-16 lg:flex-row lg:items-start lg:gap-12">
+                <div className="flex w-full min-w-0 flex-1 flex-col items-center">
                 <SpotlightCard
                   key={`${persona.key}-spotlight`}
                   persona={persona}
@@ -609,8 +612,31 @@ export default function Ask() {
                     </motion.button>
                   ))}
                 </div>
+                </div>
+                {/* 氛圍側欄 — ask-ambience(2:3 直度,兩椅一燈);mobile 收埋,
+                    只喺未開始對話時出現 */}
+                <motion.aside
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.3, delay: reduced ? 0.15 : 0.36 }}
+                  className="mt-10 hidden w-[260px] shrink-0 lg:mt-0 lg:block xl:w-[300px]"
+                >
+                  <div className="overflow-hidden rounded-md border">
+                    <img
+                      src="/editorial/ask-ambience.png"
+                      alt="私人對話室 — 兩椅一燈嘅靜謐空間,寓意同 AI 分身嘅單對單對話"
+                      loading="lazy"
+                      className="aspect-[2/3] w-full object-cover"
+                    />
+                  </div>
+                  <p className="mt-3 text-center font-mono text-caption text-text-muted">
+                    私人對話室 · 單對單 · 內容唔會公開
+                  </p>
+                </motion.aside>
               </div>
-            ) : (
+            </div>
+          ) : (
+            <div className="mx-auto max-w-[720px] px-6 pb-12">
               <div className="flex flex-col gap-6 pt-6">
                 {messages.map((m) =>
                   m.role === "user" ? (
@@ -776,8 +802,8 @@ export default function Ask() {
                   )}
                 </AnimatePresence>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Sections 4–5 — 輸入 Dock / 額度用盡態 */}

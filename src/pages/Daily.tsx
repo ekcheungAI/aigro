@@ -320,6 +320,31 @@ export function DailyContent({ embedded = false }: { embedded?: boolean }) {
           <UpdatedChip />
         </motion.div>
 
+        {/* Masthead 視覺帶 — 印刷機 editorial 圖全寬 cover band(刊頭下方);
+            底部漸層保 caption 對比,print-editorial 頭版相片位 */}
+        <motion.div
+          className="mt-8 overflow-hidden rounded-md"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.38, ease: REVEAL_EASE }}
+        >
+          <div className="relative h-[200px] md:h-[280px]">
+            <img
+              src="/editorial/daily-masthead.png"
+              alt="AIGRO 日報刊頭 — 印刷機與飛紙嘅 editorial 視覺"
+              loading="lazy"
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+            <span
+              aria-hidden="true"
+              className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent"
+            />
+            <p className="absolute bottom-3 left-4 font-mono text-caption text-white/85">
+              AIGRO DAILY · PRINT EDITION — 編輯部印刷房
+            </p>
+          </div>
+        </motion.div>
+
         {/* 雙髮絲線分隔：1px border-strong + 3px 間隙 + 1px border，由中心展開 */}
         <motion.div
           className="mt-8"

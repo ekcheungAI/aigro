@@ -5,6 +5,7 @@ import { ArrowRight, Check, Compass } from "lucide-react";
 import Reveal, { REVEAL_EASE } from "@/components/Reveal";
 import MonogramAvatar, { PhotoAvatar } from "@/components/MonogramAvatar";
 import VerifiedBadge from "@/components/VerifiedBadge";
+import { EXPERT_EDITORIAL_PANEL } from "@/components/experts/ExpertIpHero";
 import {
   expertFullName,
   expertHasPhoto,
@@ -106,7 +107,8 @@ function VerifiedExpertCard({
       transition={{ duration: 0.5, delay: index * 0.12, ease: REVEAL_EASE }}
     >
       <div className="flex gap-8 max-md:flex-col max-md:gap-6">
-        {/* 96px 頭像(真實肖像或 monogram):1.5px 金環 + Badge 24px 右上角 */}
+        {/* 96px 頭像(真實肖像 / editorial 品牌畫板 / monogram):
+            1.5px 金環 + Badge 24px 右上角;畫板原色呈現唔加濾鏡 */}
         <div className="relative shrink-0">
           {expertHasPhoto(expert) ? (
             <PhotoAvatar
@@ -115,6 +117,25 @@ function VerifiedExpertCard({
               size={96}
               verified
             />
+          ) : EXPERT_EDITORIAL_PANEL[expert.slug] ? (
+            <span
+              className="relative inline-flex shrink-0 overflow-hidden rounded-full"
+              style={{ width: 96, height: 96 }}
+            >
+              <img
+                src={EXPERT_EDITORIAL_PANEL[expert.slug]}
+                alt={`${expertFullName(expert)} — editorial 品牌肖像畫板`}
+                width={96}
+                height={96}
+                loading="lazy"
+                className="h-full w-full object-cover"
+              />
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 rounded-full"
+                style={{ boxShadow: "inset 0 0 0 1.5px hsl(var(--lime))" }}
+              />
+            </span>
           ) : (
             <MonogramAvatar
               initials={EXPERT_INITIALS[expert.slug] ?? "·"}
