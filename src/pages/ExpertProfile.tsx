@@ -3,22 +3,27 @@ import { Link, useParams } from "react-router-dom";
 import { AnimatePresence, motion, useInView } from "framer-motion";
 import { ArrowRight, AudioLines, CalendarClock, Check, Compass, ExternalLink, ShieldCheck } from "lucide-react";
 import Reveal, { REVEAL_EASE } from "@/components/Reveal";
-import VerifiedBadge from "@/components/VerifiedBadge";
 import ExpertStyleSections from "@/components/expert/ExpertStyleSections";
+import ExpertIpHero from "@/components/experts/ExpertIpHero";
+import ExpertStatsBand from "@/components/experts/ExpertStatsBand";
+import ExpertSocialWall from "@/components/experts/ExpertSocialWall";
+import ExpertTopInsights from "@/components/experts/ExpertTopInsights";
 import {
   expertFirstName,
   expertFullName,
-  expertHasPhoto,
   experts,
   type Expert,
 } from "@/data/experts";
+import {
+  fetchExpertLiveStats,
+  fetchExpertProfile,
+  fetchExpertTopInsights,
+  type ExpertInsight,
+  type ExpertLiveStats,
+  type ExpertProfileRow,
+  type ExpertProfileSocial,
+} from "@/lib/expertProfiles";
 import usePageMeta from "@/hooks/usePageMeta";
-
-/** 領航專家 monogram 字母(data 無此欄位,由 slug 映射) */
-const EXPERT_INITIALS: Record<string, string> = {
-  "jimmy-lau": "JL",
-  "elvin-cheung": "EC",
-};
 
 /* ================= Local toast（頁面級原型提示） ================= */
 
@@ -52,7 +57,7 @@ function MiniToast({ msg }: { msg: string | null }) {
   );
 }
 
-/* ================= Section 2 — 成就佐證 chip（數字 count-up 600ms） ================= */
+/* ================= 成就佐證 chip（數字 count-up 600ms） ================= */
 
 function MetricChip({
   value,
@@ -126,134 +131,7 @@ function MetricChip({
   );
 }
 
-/* ================= Verified 專家 — Section 1 Hero ================= */
-
-function VerifiedHero({ expert }: { expert: Expert }) {
-  const accent = expert.brandColor ?? "#466A5E";
-  return (
-    <section className="relative overflow-hidden">
-      {/* 專家色 10% alpha tint 蓋於 bg（純色疊層，非漸層） */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0"
-        style={{ backgroundColor: `${accent}1A` }}
-      />
-      <div className="relative mx-auto max-w-container px-6 pb-16 pt-24 max-md:pt-16">
-        <div className="flex items-center gap-12 max-md:flex-col max-md:items-start max-md:gap-8">
-          {/* 2:3 cinematic 肖像卡：真實肖像(rounded-md hairline,subtle saturate)
-              或 brand-color monogram 面板(未有肖像嘅專家);Badge A 40px 右下角 */}
-          <motion.div
-            className="relative w-[264px] shrink-0 max-md:w-[208px]"
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: REVEAL_EASE }}
-          >
-            {expertHasPhoto(expert) ? (
-              <div className="group aspect-[2/3] overflow-hidden rounded-md border shadow-card dark:shadow-none">
-                <img
-                  src={expert.portrait ?? expert.image}
-                  alt={expertFullName(expert)}
-                  className="h-full w-full object-cover saturate-[0.85] transition-[filter] duration-250 group-hover:saturate-100"
-                />
-              </div>
-            ) : (
-              <div
-                className="flex aspect-[2/3] items-center justify-center rounded-md border"
-                style={{
-                  backgroundColor: `${accent}2E` /* brand tint 18% */,
-                  borderColor: `${accent}66` /* brand hairline 40% */,
-                }}
-              >
-                <span
-                  aria-hidden="true"
-                  className="font-display select-none"
-                  style={{
-                    color: `color-mix(in srgb, ${accent} 62%, hsl(var(--text-primary)))`,
-                    fontSize: 96,
-                    fontWeight: 550,
-                    letterSpacing: "0.02em",
-                    lineHeight: 1,
-                  }}
-                >
-                  {EXPERT_INITIALS[expert.slug] ?? "·"}
-                </span>
-              </div>
-            )}
-            <VerifiedBadge
-              size={40}
-              ambient
-              className="absolute -bottom-2 -right-2"
-            />
-          </motion.div>
-
-          <div className="min-w-0 flex-1">
-            <motion.p
-              className="text-overline font-sans uppercase text-text-muted"
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1, ease: REVEAL_EASE }}
-            >
-              {expert.credential}
-            </motion.p>
-            <motion.h1
-              className="mt-3 font-display text-display-lg text-text-primary max-md:text-display"
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2, ease: REVEAL_EASE }}
-            >
-              {expertFullName(expert)}
-            </motion.h1>
-            {/* 姓名下劃線：2px × 64px 專家色，scaleX 0→1 由左 300ms */}
-            <motion.span
-              aria-hidden="true"
-              className="mt-2 block h-[2px] w-16 origin-left"
-              style={{ backgroundColor: accent }}
-              initial={{ scaleX: 0 }}
-              animate={{ scaleX: 1 }}
-              transition={{ duration: 0.3, delay: 0.35, ease: REVEAL_EASE }}
-            />
-            <motion.div
-              className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1"
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3, ease: REVEAL_EASE }}
-            >
-              <VerifiedBadge size={16} />
-              <span className="text-caption text-gold">
-                領航專家認證 Leading Expert
-              </span>
-              <span className="text-caption text-text-muted">
-                認證日期 {expert.verifiedDate}
-              </span>
-            </motion.div>
-            {/* 分身檔案 meta(perskill 格式):mono caption,不喧賓奪主 */}
-            {expert.promptVersion && (
-              <motion.p
-                className="mt-3 font-mono text-caption text-text-muted"
-                initial={{ opacity: 0, y: 24 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.38, ease: REVEAL_EASE }}
-              >
-                Prompt {expert.promptVersion} · 公開分享 + 授權內容 · 更新於{" "}
-                {expert.kbUpdated}
-              </motion.p>
-            )}
-            <motion.p
-              className="mt-5 max-w-[560px] text-body-lg text-text-secondary"
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.4, ease: REVEAL_EASE }}
-            >
-              {expert.bio}
-            </motion.p>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ================= Verified 專家 — Sections 2–5 ================= */
+/* ================= Verified 專家 — Expert IP 主頁 ================= */
 
 function VerifiedProfile({ expert }: { expert: Expert }) {
   const toast = useMiniToast();
@@ -263,11 +141,56 @@ function VerifiedProfile({ expert }: { expert: Expert }) {
   const remaining = viewpoints.length - shown.length;
   const askHref = `/ask?expert=${expert.slug}`;
 
+  /* expert_profiles 表(v3 SQL)runtime 數據層:
+     profile(headline/bio/stats/socials/featured_ids)+ 真實動態統計 + top 3 精選情報。
+     全部真查 Supabase;失敗/空 → 回落 experts.ts 已核實靜態資料,唔虛構。 */
+  const [profile, setProfile] = useState<ExpertProfileRow | null>(null);
+  const [liveStats, setLiveStats] = useState<ExpertLiveStats | null>(null);
+  const [topInsights, setTopInsights] = useState<ExpertInsight[] | null>(null);
+
+  /* VerifiedProfile 以 key={expert.slug} 掛載(見頁尾),slug 轉換時整棵樹
+     remount,state 天然重置 — effect 入面唔使同步 setState */
+  useEffect(() => {
+    let alive = true;
+    void (async () => {
+      const p = await fetchExpertProfile(expert.slug);
+      if (!alive) return;
+      setProfile(p);
+      const [stats, insights] = await Promise.all([
+        fetchExpertLiveStats(expert.slug),
+        fetchExpertTopInsights(expert.slug, p?.featuredIds ?? []),
+      ]);
+      if (!alive) return;
+      setLiveStats(stats);
+      setTopInsights(insights);
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [expert.slug]);
+
+  /* 合併數據:expert_profiles 優先,空 → experts.ts 靜態真實資料 */
+  const headline = profile?.headline ?? expert.quote ?? null;
+  const bio = profile?.bio ?? expert.bio ?? null;
+  const socials: ExpertProfileSocial[] =
+    profile && profile.socials.length > 0
+      ? profile.socials
+      : (expert.socials ?? []);
+
   return (
     <div>
-      <VerifiedHero expert={expert} />
+      {/* Section 1 — Cinematic hero(dark band):姓名 / headline / bio / 分身 CTA */}
+      <ExpertIpHero
+        expert={expert}
+        headline={headline}
+        bio={bio}
+        askHref={askHref}
+      />
 
-      {/* Section 2 — 成就佐證 Strip */}
+      {/* Section 2 — Key stats band(dark strip):自訂 stats + 真實動態統計 */}
+      <ExpertStatsBand custom={profile?.stats ?? []} live={liveStats} />
+
+      {/* Section 3 — 成就佐證 Strip(experts.ts 真實身份 chips) */}
       {expert.metrics && expert.metrics.length > 0 && (
         <section className="mx-auto max-w-container px-6 pt-16 max-md:pt-12">
           <div className="flex flex-wrap gap-3">
@@ -284,52 +207,21 @@ function VerifiedProfile({ expert }: { expert: Expert }) {
         </section>
       )}
 
-      {/* Section 2b — 公開平台連結 chips(muted external-link,僅有真實 URL 先渲染) */}
-      {expert.socials && expert.socials.length > 0 && (
-        <section className="mx-auto max-w-container px-6 pt-6">
-          <Reveal y={12} duration={0.35}>
-            <div className="flex flex-wrap items-center gap-2">
-              {expert.socials.map((s) => (
-                <a
-                  key={s.url}
-                  href={s.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-sm border bg-surface px-3 py-1.5 text-caption text-text-muted transition-colors duration-150 hover:border-border-strong hover:text-ink"
-                >
-                  {s.label}
-                  <ExternalLink
-                    className="h-3 w-3"
-                    strokeWidth={1.5}
-                    aria-hidden="true"
-                  />
-                </a>
-              ))}
-            </div>
-          </Reveal>
-        </section>
-      )}
+      {/* Section 4 — Social IP 牆(expert_profiles.socials 驅動,fallback experts.ts) */}
+      <ExpertSocialWall socials={socials} firstName={firstName} />
+
+      {/* Section 5 — Top 3 精選情報(items 真查;零 published → 誠實空態) */}
+      <ExpertTopInsights
+        insights={topInsights}
+        firstName={firstName}
+        askHref={askHref}
+      />
 
       {/* Sections B–E — 風格雷達 / 核心特質 / 工作風格 / 決策原則
-          （成就佐證之後、授權透明度之前；僅 verified 專家有數據） */}
+          （保留現有 perskill-grade 深度檔案,僅 verified 專家有數據） */}
       <ExpertStyleSections expert={expert} />
 
-      {/* Section 3 — 授權透明度（強制置於對話入口之上） */}
-      <section className="mx-auto max-w-[720px] px-6 pt-16 max-md:pt-12">
-        <Reveal y={16} duration={0.4}>
-          <div className="rounded-md bg-card p-8">
-            <p className="flex items-center gap-2 text-overline font-sans uppercase text-text-muted">
-              <ShieldCheck className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-              授權來源說明 Transparency
-            </p>
-            <p className="mt-4 text-body-sm text-text-secondary">
-              {expert.transparency}
-            </p>
-          </div>
-        </Reveal>
-      </section>
-
-      {/* Section 4 — 核心觀點 Grid */}
+      {/* Section 6 — 核心觀點 Grid(保留現有 10 觀點內容) */}
       <section className="mx-auto max-w-container px-6 pt-24 max-md:pt-16">
         <Reveal>
           <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
@@ -386,7 +278,22 @@ function VerifiedProfile({ expert }: { expert: Expert }) {
         </div>
       </section>
 
-      {/* Section 5 — AI 分身入口 Band */}
+      {/* Section 7 — 授權透明度（強制置於對話入口之上） */}
+      <section className="mx-auto max-w-[720px] px-6 pt-24 max-md:pt-16">
+        <Reveal y={16} duration={0.4}>
+          <div className="rounded-md bg-card p-8">
+            <p className="flex items-center gap-2 text-overline font-sans uppercase text-text-muted">
+              <ShieldCheck className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+              授權來源說明 Transparency
+            </p>
+            <p className="mt-4 text-body-sm text-text-secondary">
+              {expert.transparency}
+            </p>
+          </div>
+        </Reveal>
+      </section>
+
+      {/* Section 8 — AI 分身入口 Band */}
       <section className="mt-24 border-y bg-surface max-md:mt-16">
         <div className="mx-auto max-w-container px-6 py-16 text-center">
           <Reveal>
@@ -406,11 +313,11 @@ function VerifiedProfile({ expert }: { expert: Expert }) {
             viewport={{ once: true, amount: 0.4 }}
             transition={{ duration: 0.4, delay: 0.15, ease: REVEAL_EASE }}
           >
-            {/* Primary — 標準墨藍實心 (design.md §6.3)；專家色僅留 hero 染色 /
-                姓名下劃線 / Ask 氣泡邊框三處 (§2.5) */}
+            {/* Primary — 電光綠實心 + near-black 字(on-accent);專家色僅留
+                hero monogram 面板一處 */}
             <Link
               to={askHref}
-              className="inline-flex h-11 items-center gap-1.5 rounded-md bg-ink-solid px-6 text-label text-white press hover:bg-ink-hover"
+              className="inline-flex h-11 items-center gap-1.5 rounded-md bg-ink-solid px-6 text-label text-on-accent press hover:bg-ink-hover"
             >
               與 AI 分身對話
               <ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
@@ -455,7 +362,7 @@ function VerifiedProfile({ expert }: { expert: Expert }) {
   );
 }
 
-/* ================= Section 6 — 待用態變體 ================= */
+/* ================= 待用態變體(pending 專家 — 維持現有「敬請期待」體驗) ================= */
 
 function PendingProfile({ expert }: { expert: Expert }) {
   const [email, setEmail] = useState("");
@@ -582,7 +489,7 @@ function PendingProfile({ expert }: { expert: Expert }) {
                   />
                   <button
                     type="submit"
-                    className="h-12 shrink-0 rounded-md bg-ink-solid px-6 text-label text-white press hover:bg-ink-hover"
+                    className="h-12 shrink-0 rounded-md bg-ink-solid px-6 text-label text-on-accent press hover:bg-ink-hover"
                   >
                     通知我
                   </button>
@@ -625,7 +532,7 @@ export default function ExpertProfile() {
         </p>
         <Link
           to="/experts"
-          className="mt-8 inline-flex h-11 items-center rounded-md bg-ink-solid px-6 text-label text-white press hover:bg-ink-hover"
+          className="mt-8 inline-flex h-11 items-center rounded-md bg-ink-solid px-6 text-label text-on-accent press hover:bg-ink-hover"
         >
           返回領航專家總覽
         </Link>
@@ -637,15 +544,15 @@ export default function ExpertProfile() {
     <div
       style={
         {
-          /* 專家專屬色（design.md §2.5）— 頁面級 CSS var，僅本頁三處使用 */
+          /* 專家專屬色（design.md §2.5）— 頁面級 CSS var */
           "--expert-accent": expert.brandColor ?? "transparent",
         } as CSSProperties
       }
     >
       {expert.verified ? (
-        <VerifiedProfile expert={expert} />
+        <VerifiedProfile key={expert.slug} expert={expert} />
       ) : (
-        <PendingProfile expert={expert} />
+        <PendingProfile key={expert.slug} expert={expert} />
       )}
     </div>
   );
