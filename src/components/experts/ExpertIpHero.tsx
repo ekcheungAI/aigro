@@ -16,6 +16,15 @@ const EXPERT_INITIALS: Record<string, string> = {
   "elvin-cheung": "EC",
 };
 
+/**
+ * 未有真實肖像嘅領航專家 — editorial 品牌肖像畫板(public/editorial,
+ * matte black + 電光綠,由 slug 映射)。有畫板就取代 monogram 面板;
+ * Experts 列表頁同步用(冇濾鏡,唔改圖片色調)。
+ */
+export const EXPERT_EDITORIAL_PANEL: Record<string, string> = {
+  "jimmy-lau": "/editorial/jimmy-panel.png",
+};
+
 interface ExpertIpHeroProps {
   expert: Expert;
   /** expert_profiles.headline(無 → consumer 傳 expert.quote) */
@@ -42,6 +51,7 @@ export default function ExpertIpHero({
   const firstName = expertFirstName(expert);
   const fullName = expertFullName(expert);
   const initials = EXPERT_INITIALS[expert.slug] ?? "·";
+  const editorialPanel = EXPERT_EDITORIAL_PANEL[expert.slug] ?? null;
 
   return (
     <section className="relative isolate overflow-hidden bg-band-bg">
@@ -75,6 +85,16 @@ export default function ExpertIpHero({
                   src={expert.portrait ?? expert.image}
                   alt={fullName}
                   className="h-full w-full object-cover saturate-[0.85] transition-[filter] duration-250 group-hover:saturate-100"
+                />
+              </div>
+            ) : editorialPanel ? (
+              /* editorial 品牌肖像畫板(hero 位,唔 lazy)— 幾何剪影 + lime rim light,
+                 原色呈現唔加濾鏡 */
+              <div className="aspect-[2/3] overflow-hidden rounded-md border border-band-border-strong">
+                <img
+                  src={editorialPanel}
+                  alt={`${fullName} — editorial 品牌肖像畫板`}
+                  className="h-full w-full object-cover"
                 />
               </div>
             ) : (

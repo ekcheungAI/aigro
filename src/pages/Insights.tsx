@@ -1041,24 +1041,42 @@ function WeeklyTab() {
   return (
     <section className="mx-auto max-w-container px-6 pb-24 pt-16 max-md:pb-16 max-md:pt-12">
       <Reveal y={16} duration={0.4}>
-        <p className="flex items-center gap-3 text-overline font-sans uppercase text-text-muted">
-          <span
-            className="inline-block h-px w-6 bg-border-strong"
+        {/* 刊頭背景帶 — daily-masthead editorial 圖 cover + 左深右淺漸層,
+            白字疊上保證對比(theme-independent,dark band 自成一格) */}
+        <div className="relative isolate overflow-hidden rounded-md">
+          <div
             aria-hidden="true"
-          />
-          Weekly Review
-        </p>
-        <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
-          <h2 className="font-display text-h2 text-text-primary">每週回顧</h2>
+            className="pointer-events-none absolute inset-0 -z-10 select-none"
+          >
+            <img
+              src="/editorial/daily-masthead.png"
+              alt=""
+              loading="lazy"
+              className="h-full w-full object-cover"
+            />
+            <span className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/30" />
+          </div>
+          <div className="px-8 py-10 max-md:px-6 max-md:py-8">
+            <p className="flex items-center gap-3 text-overline font-sans uppercase text-white/70">
+              <span
+                className="inline-block h-px w-6 bg-white/50"
+                aria-hidden="true"
+              />
+              Weekly Review
+            </p>
+            <h2 className="mt-4 font-display text-h2 text-white">每週回顧</h2>
+            <p className="mt-3 max-w-[640px] text-body-sm text-white/80">
+              一週 AI 脈搏,一次過睇晒 — 編輯部從本週 {weekly.itemCount}{" "}
+              則情報揀出 {(lead ? 1 : 0) + weekly.items.length} 條必讀,按分類分組。
+            </p>
+            <p className="mt-3 font-mono text-caption text-white/60">
+              {weekly.weekStart} – {weekly.weekEnd} · 週一至週日
+            </p>
+          </div>
+        </div>
+        <div className="mt-3 flex justify-end">
           <UpdatedChip />
         </div>
-        <p className="mt-3 max-w-[640px] text-body-sm text-text-secondary">
-          一週 AI 脈搏,一次過睇晒 — 編輯部從本週 {weekly.itemCount}{" "}
-          則情報揀出 {(lead ? 1 : 0) + weekly.items.length} 條必讀,按分類分組。
-        </p>
-        <p className="mt-3 font-mono text-caption text-text-muted">
-          {weekly.weekStart} – {weekly.weekEnd} · 週一至週日
-        </p>
       </Reveal>
 
       {/* 分類 anchor 列 */}
@@ -1341,8 +1359,8 @@ export default function Insights() {
 
   return (
     <>
-      {/* Page Header — cinematic dark band: editorial image layer (opacity-45
-          saturate-[0.85]) + solid band overlay, band text tokens. Theme-
+      {/* Page Header — cinematic dark band: insights-hero editorial image layer
+          (opacity-45,無濾鏡改色) + solid band overlay, band text tokens. Theme-
           independent (band tokens fixed near-black in both themes). */}
       <section className="relative isolate overflow-hidden border-b border-band-border bg-band-bg">
         <div
@@ -1350,9 +1368,9 @@ export default function Insights() {
           className="pointer-events-none absolute inset-0 -z-10 select-none"
         >
           <img
-            src="/editorial/newsroom.jpg"
+            src="/editorial/insights-hero.png"
             alt=""
-            className="h-full w-full object-cover opacity-45 saturate-[0.85]"
+            className="h-full w-full object-cover opacity-45"
           />
           <span className="absolute inset-0 bg-band-bg/60" />
         </div>
