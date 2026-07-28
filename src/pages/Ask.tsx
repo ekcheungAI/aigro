@@ -24,6 +24,7 @@ import {
 } from "@/components/ask/sessions";
 import type { SessionStore } from "@/components/ask/sessions";
 import { getPersona, personas, personaInitials, pickReply } from "@/data/personas";
+import { useLiveItems } from "@/data/liveItems";
 import {
   guardrailReply,
   isOffGuard,
@@ -115,6 +116,22 @@ function SessionTimer() {
 export default function Ask() {
   const [searchParams, setSearchParams] = useSearchParams();
   const persona = getPersona(searchParams.get("expert"));
+
+  // Live 開場建議:Supabase items 成熟時,取今日 top 3 情報標題生成
+  // 「『標題』點關我事?」chips,排喺 personas.ts 靜態建議前面;未成熟 → 淨靜態
+  const liveItems = useLiveItems();
+  const openingSuggestions = useMemo(() => {
+    const live = liveItems
+      ? [...liveItems]
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 3)
+          .map(
+            (i) =>
+              `「${i.title.length > 25 ? `${i.title.slice(0, 25)}…` : i.title}」點關我事?`
+          )
+      : [];
+    return [...live, ...persona.suggestions];
+  }, [liveItems, persona]);
 
   const reduced = useReducedMotion();
   const [store, setStore] = useState<SessionStore>(loadSessionStore);
@@ -569,7 +586,7 @@ export default function Ask() {
                   {persona.greetingBody}
                 </motion.p>
                 <div className="mt-4 flex max-w-lg flex-wrap justify-center gap-2">
-                  {persona.suggestions.map((s, i) => (
+                  {openingSuggestions.map((s, i) => (
                     <motion.button
                       key={s}
                       type="button"
