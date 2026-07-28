@@ -28,7 +28,7 @@ const STEPS: Step[] = [
   {
     num: "03",
     title: "跟 Playbook 做實驗",
-    desc: "案例拆解附量化數據、工具清單同可複製步驟 — 跟住 Club 嘅 playbook,將情報變成實驗。",
+    desc: "真實案例整理中 — 首批有真實數據支持嘅案例即將上架。",
     cta: "睇實戰案例",
     to: "/cases",
   },
