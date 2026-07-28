@@ -11,10 +11,9 @@ import { memberInitial } from "@/components/auth/member";
 export const NAV_LINKS = [
   { to: "/insights", en: "Insights", zh: "情報" },
   { to: "/skills", en: "Skills", zh: "技能庫" },
-  { to: "/data", en: "Data", zh: "數據" },
+  { to: "/insights?tab=data", en: "Data", zh: "數據" },
   { to: "/experts", en: "Experts", zh: "專家" },
   { to: "/ask", en: "Ask", zh: "問答" },
-  { to: "/pricing", en: "Pricing", zh: "方案" },
 ] as const;
 
 /**

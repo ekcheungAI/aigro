@@ -17,7 +17,6 @@ import Join from "@/pages/Join";
 import Account from "@/pages/Account";
 import Skills from "@/pages/Skills";
 import Sources from "@/pages/Sources";
-import DataPartnership from "@/pages/DataPartnership";
 import Access from "@/pages/Access";
 import AdminLayout from "@/components/admin/AdminLayout";
 import Dashboard from "@/pages/admin/Dashboard";
@@ -47,7 +46,7 @@ function RouteMeta() {
     [/^\/$/, "", ""],
     [/^\/insights\/daily/, "每日精選日報", "編輯部每日精選 5 條必讀 AI・增長情報 — 3 分鐘掌握全球脈搏的香港意義。"],
     [/^\/insights\/[^/]+/, "情報詳情", "AI 摘要 + 香港視角長評 + 來源連結。"],
-    [/^\/insights/, "資訊中心 Insights", "即時動態 feed、每日日報、主題地圖與資源庫 — 每日 AI・增長情報，附香港視角解讀。"],
+    [/^\/insights/, "資訊中心 Insights", "即時動態 feed、每日日報、主題地圖與數據合作 — 每日 AI・增長情報，附香港視角解讀。"],
     [/^\/cases\/[^/]+/, "案例深度拆解", "背景 → 工具/方法 → 成果數據 → 可複製步驟。"],
     [/^\/cases/, "實戰案例 Cases", "香港本地 AI 落地案例庫 — 數據化成果，可複製的做法拆解。"],
     [/^\/experts\/[^/]+/, "專家檔案", "領航專家個人頁 — 成就佐證、授權透明度、AI 分身對話入口。"],
@@ -57,7 +56,6 @@ function RouteMeta() {
     [/^\/developers/, "AIGRO MCP Network", "行業情報 MCP server — 你嘅 AI 工具一連接,即刻有行業雷達。AI 行業優先名單開放中。"],
     [/^\/sources/, "情報渠道", "AIGRO 情報渠道 — 公開透明嘅來源牆、數據流程與免費任用方式。"],
     [/^\/skills/, "Skills", "AIGRO Skills — 俾你嘅 AI agent 裝上專業能力。"],
-    [/^\/data/, "AIGRO Data", "行業情報基建 — 來源伙伴、數據伙伴、行業伙伴合作。"],
     [/^\/access/, "全級別入口", "AIGRO 全級別入口 — 訪客、會員、創始會員、領航專家、管理員示範登入。"],
     [/^\/login/, "登入", "登入 AIGRO Club — 無限分身對話、完整案例拆解、MCP 優先接入。"],
     [/^\/join/, "加入 Club", "加入 AIGRO Club — 三步成為會員,免費開始,隨時升級。"],
@@ -97,7 +95,11 @@ export default function App() {
         <Route path="developers" element={<Developers />} />
         <Route path="skills" element={<Skills />} />
         <Route path="sources" element={<Sources />} />
-        <Route path="data" element={<DataPartnership />} />
+        {/* /data 併入 Insights 數據合作 tab — 舊連結 redirect 唔會死 */}
+        <Route
+          path="data"
+          element={<Navigate to="/insights?tab=data" replace />}
+        />
         <Route path="access" element={<Access />} />
         <Route path="login" element={<Login />} />
         <Route path="join" element={<Join />} />

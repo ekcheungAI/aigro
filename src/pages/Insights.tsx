@@ -19,6 +19,7 @@ import CategoryChip from "@/components/CategoryChip";
 import Reveal, { REVEAL_EASE } from "@/components/Reveal";
 import UpdatedChip from "@/components/UpdatedChip";
 import { DailyContent } from "@/pages/Daily";
+import DataPartnership from "@/pages/DataPartnership";
 import {
   INSIGHT_CATEGORIES,
   INSIGHT_CATEGORY_SLUGS,
@@ -53,13 +54,14 @@ import { cn } from "@/lib/utils";
 
 /* ============ Tabs ============ */
 
-type TabKey = "feed" | "daily" | "weekly" | "topics";
+type TabKey = "feed" | "daily" | "weekly" | "topics" | "data";
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: "feed", label: "即時動態" },
   { key: "daily", label: "每日日報" },
   { key: "weekly", label: "每週回顧" },
   { key: "topics", label: "主題地圖" },
+  { key: "data", label: "數據合作" },
 ];
 
 const TAB_KEYS = TABS.map((t) => t.key) as string[];
@@ -1517,6 +1519,13 @@ export default function Insights() {
             {tab === "daily" && <DailyContent embedded />}
             {tab === "weekly" && <WeeklyTab />}
             {tab === "topics" && <TopicsTab />}
+            {tab === "data" && (
+              /* /data 併入 — DataPartnership 內容原封不動,僅外包一層
+                 tab 容器收緊頂部間距(原頁面 pt-24 為獨立頁設計) */
+              <div className="[&>section:first-child]:pt-16 [&>section:first-child]:max-md:pt-12">
+                <DataPartnership />
+              </div>
+            )}
           </div>
         </>
       )}

@@ -65,7 +65,7 @@ export default function Footer() {
               MCP Network 優先名單
             </Link>
             <Link
-              to="/data"
+              to="/insights?tab=data"
               className="mt-3 block text-label text-band-ink transition-colors duration-150 hover:text-band-text"
             >
               Data 合作
