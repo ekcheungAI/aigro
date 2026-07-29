@@ -227,9 +227,11 @@ export function clearMember(): void {
     /* noop */
   }
   notifyMember();
-  // 真 magic-link session 都一齊登出;fire-and-forget
+  // 真 session 都一齊登出 — scope:'local' 保證本機 session 即時清除,
+  // 即使網絡/伺服器唔順都唔會下次 load 又自動登入返(之前 signOut() 預設
+  // 要伺服器回應先清,失敗時 session 留底 → 用戶「登出唔到」)。
   if (supabase) {
-    supabase.auth.signOut().catch(() => {
+    supabase.auth.signOut({ scope: "local" }).catch(() => {
       /* 離線靜默 */
     });
   }

@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Menu, Moon, Sun, X } from "lucide-react";
+import { LogOut, Menu, Moon, Sun, X } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { useMember } from "@/hooks/useMember";
 import { cn } from "@/lib/utils";
 import { REVEAL_EASE } from "@/components/Reveal";
-import { memberInitial } from "@/components/auth/member";
+import { clearMember, memberInitial } from "@/components/auth/member";
 
 export const NAV_LINKS = [
   { to: "/insights", en: "Insights", zh: "情報" },
@@ -126,7 +126,7 @@ export default function Navbar() {
                 <Moon className="h-5 w-5 transition-transform duration-200" strokeWidth={1.5} />
               )}
             </button>
-            {member ? (
+            {member && (
               /* 已登入:頭像 chip — expert → /portal,admin → /admin,其他 → /account;
                  創始會員喺名下面加「創始會員」caption */
               <Link
@@ -167,7 +167,25 @@ export default function Navbar() {
                   )}
                 </span>
               </Link>
-            ) : (
+            )}
+            {member && (
+              /* 登出 — 任何頁面一撳即用;clearMember 清快取 + local-scope signOut */
+              <button
+                type="button"
+                onClick={() => clearMember()}
+                aria-label="登出"
+                title="登出"
+                className={cn(
+                  "press hidden h-10 w-10 items-center justify-center rounded-md border sm:inline-flex",
+                  overHero
+                    ? "border-band-border-strong text-band-text-secondary hover:bg-band-ink-soft hover:text-band-text"
+                    : "border-border-strong text-text-secondary hover:bg-ink-soft hover:text-ink"
+                )}
+              >
+                <LogOut className="h-4 w-4" strokeWidth={1.5} />
+              </button>
+            )}
+            {!member && (
               /* 未登入:登入 ghost + 加入 Club lime primary */
               <div className="hidden items-center gap-2 sm:flex">
                 <Link
