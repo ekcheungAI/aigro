@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, ArrowUp, Check, History, Info, Sparkles, X } from "lucide-react";
+import { ArrowRight, ArrowUp, Check, History, Info, X } from "lucide-react";
 import AiMessage from "@/components/ask/AiMessage";
 import ThinkingBars from "@/components/ask/ThinkingBars";
 import PersonaPanel, { SessionsList } from "@/components/ask/PersonaPanel";
@@ -9,6 +9,7 @@ import ClubBookingCapture from "@/components/ask/ClubBookingCapture";
 import ContextPanel from "@/components/ask/ContextPanel";
 import QuotaMeter from "@/components/ask/QuotaMeter";
 import PresenceDot from "@/components/ask/PresenceDot";
+import PlatformDp from "@/components/ask/PlatformDp";
 import SpotlightCard from "@/components/ask/SpotlightCard";
 import PersonaPopup from "@/components/ask/PersonaPopup";
 import VerifiedBadge from "@/components/VerifiedBadge";
@@ -464,9 +465,7 @@ export default function Ask() {
                   aria-label="關於平台編輯部 AI"
                   className="press relative shrink-0 rounded-md"
                 >
-                  <span className="flex h-8 w-8 items-center justify-center rounded-md bg-ink-soft">
-                    <Sparkles className="h-4 w-4 text-ink" strokeWidth={1.5} />
-                  </span>
+                  <PlatformDp size={32} />
                   <PresenceDot
                     size={10}
                     className="absolute -bottom-0.5 -right-0.5"
@@ -531,7 +530,7 @@ export default function Ask() {
                 }
               >
                 {p.kind === "platform" ? (
-                  <Sparkles className="h-3.5 w-3.5 text-ink" strokeWidth={1.5} aria-hidden="true" />
+                  <PlatformDp size={16} />
                 ) : p.expert && expertHasPhoto(p.expert) ? (
                   <PhotoAvatar src={p.expert.image} alt={p.name} size={16} />
                 ) : (

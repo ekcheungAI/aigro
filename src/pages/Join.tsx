@@ -255,6 +255,17 @@ export default function Join() {
         animate={reduced ? { opacity: 1 } : { opacity: 1, y: 0 }}
         transition={{ duration: 0.45, ease: [0.4, 0, 0.2, 1] }}
       >
+        {/* 頁首品牌 band — 會員沙龍 16:9 crop + 40% black overlay */}
+        <div className="relative mb-8 h-40 overflow-hidden rounded-md">
+          <img
+            src="/editorial/login-salon.png"
+            alt="AIGRO 會員沙龍"
+            width={720}
+            height={405}
+            className="h-full w-full object-cover"
+          />
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-black/40" />
+        </div>
         <p className="text-overline uppercase tracking-[0.12em] text-ink">Join AIGRO Club</p>
         <h1 className="mt-3 font-display text-h2 text-text-primary">加入 Club</h1>
         <p className="mt-2 text-body-sm text-text-secondary">

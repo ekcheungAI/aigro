@@ -1,9 +1,10 @@
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
-import { MessageSquarePlus, Sparkles } from "lucide-react";
+import { MessageSquarePlus } from "lucide-react";
 import MonogramAvatar, { PhotoAvatar } from "@/components/MonogramAvatar";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import QuotaMeter from "@/components/ask/QuotaMeter";
+import PlatformDp from "@/components/ask/PlatformDp";
 import type { ChatSession } from "@/components/ask/sessions";
 import { expertHasPhoto } from "@/data/experts";
 import type { Persona } from "@/data/personas";
@@ -164,9 +165,7 @@ export default function PersonaPanel({
                 )}
               >
                 {p.kind === "platform" ? (
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-ink-soft">
-                    <Sparkles className="h-3.5 w-3.5 text-ink" strokeWidth={1.5} />
-                  </span>
+                  <PlatformDp size={28} />
                 ) : p.expert && expertHasPhoto(p.expert) ? (
                   <PhotoAvatar src={p.expert.image} alt={p.name} size={28} />
                 ) : (

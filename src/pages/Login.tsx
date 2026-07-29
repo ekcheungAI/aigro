@@ -135,6 +135,14 @@ export default function Login() {
       >
         {/* ---- 左:品牌板(永遠深色 band,同 hero/footer 同族) ---- */}
         <div className="relative flex flex-col justify-between gap-10 overflow-hidden bg-band-bg p-8 text-band-text md:p-10">
+          {/* 會員沙龍品牌圖 — cover + 40% black overlay 保文字對比 */}
+          <img
+            src="/editorial/login-salon.png"
+            alt=""
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+          />
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-black/40" />
           <div className="relative">
             <p className="text-overline uppercase tracking-[0.12em] text-band-ink">
               AIGRO Club

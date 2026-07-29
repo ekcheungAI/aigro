@@ -1,9 +1,10 @@
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, Quote, Sparkles } from "lucide-react";
+import { ArrowRight, Quote } from "lucide-react";
 import MonogramAvatar, { PhotoAvatar } from "@/components/MonogramAvatar";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import PresenceDot from "@/components/ask/PresenceDot";
+import PlatformDp from "@/components/ask/PlatformDp";
 import { EASE_OUT_STRONG } from "@/components/Reveal";
 import { aihotAllInsights } from "@/data/aihot";
 import { useLiveItems } from "@/data/liveItems";
@@ -73,9 +74,7 @@ export default function SpotlightCard({
       <motion.div {...rise(0)} className="flex items-center gap-4">
         <span className="relative shrink-0">
           {persona.kind === "platform" ? (
-            <span className="flex h-16 w-16 items-center justify-center rounded-md bg-ink-soft">
-              <Sparkles className="h-7 w-7 text-ink" strokeWidth={1.5} />
-            </span>
+            <PlatformDp size={64} />
           ) : expert && expertHasPhoto(expert) ? (
             <PhotoAvatar src={expert.image} alt={persona.name} size={64} verified />
           ) : (

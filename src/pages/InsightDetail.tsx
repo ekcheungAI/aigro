@@ -119,55 +119,70 @@ export default function InsightDetail() {
 
   return (
     <>
-      {/* 返回列 */}
-      <div className="mx-auto max-w-container px-6 pt-8">
-        <Link
-          to={backTo}
-          className="inline-flex items-center gap-1.5 text-label text-text-secondary transition-colors hover:text-ink"
+      {/* 頁首 band — detail-band editorial 背景(opacity-45 + 實色 overlay,
+          同 Insights 刊頭做法一致);band text tokens 保標題對比,theme-independent */}
+      <section className="relative isolate overflow-hidden border-b border-band-border bg-band-bg">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 -z-10 select-none"
         >
-          <ArrowLeft className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-          返回資訊中心
-        </Link>
-      </div>
+          <img
+            src="/editorial/detail-band.png"
+            alt=""
+            className="h-full w-full object-cover opacity-45"
+          />
+          <span className="absolute inset-0 bg-band-bg/60" />
+        </div>
 
-      {/* 標頭 — 真實情報元數據 */}
-      <header className="mx-auto max-w-[720px] px-6 pt-12">
-        <Reveal>
-          <span className="inline-block rounded-sm bg-ink-soft px-3 py-1.5 text-overline font-sans uppercase text-ink">
-            {item.category}
-          </span>
-        </Reveal>
-        <Reveal delay={0.06}>
-          <h1 className="mt-6 font-display text-display-sm text-text-primary">
-            {item.title}
-          </h1>
-        </Reveal>
-        <Reveal delay={0.12}>
-          <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-caption text-text-muted">
-            <span>{item.source}</span>
-            {publishedDate && (
-              <>
-                <span aria-hidden="true">·</span>
-                <span>{publishedDate}</span>
-              </>
-            )}
-            <span aria-hidden="true">·</span>
-            <span>{item.timeAgo}</span>
-            <span aria-hidden="true">·</span>
-            <span>{item.readMinutes} 分鐘閱讀</span>
-            <span aria-hidden="true">·</span>
-            <span className="text-ink">評分 {item.score}</span>
-          </div>
-        </Reveal>
+        {/* 返回列 */}
+        <div className="mx-auto max-w-container px-6 pt-8">
+          <Link
+            to={backTo}
+            className="inline-flex items-center gap-1.5 text-label text-band-text-secondary transition-colors hover:text-band-ink"
+          >
+            <ArrowLeft className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+            返回資訊中心
+          </Link>
+        </div>
 
-        {/* 行動列 — 分享 + 問分身呢條情報 */}
-        <Reveal delay={0.18}>
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              onClick={share}
-              className="press inline-flex h-11 items-center gap-2 rounded-md border border-border-strong px-5 text-label text-ink hover:bg-ink-soft"
-            >
+        {/* 標頭 — 真實情報元數據 */}
+        <header className="mx-auto max-w-[720px] px-6 pb-12 pt-12">
+          <Reveal>
+            <span className="inline-block rounded-sm bg-band-ink-soft px-3 py-1.5 text-overline font-sans uppercase text-band-ink">
+              {item.category}
+            </span>
+          </Reveal>
+          <Reveal delay={0.06}>
+            <h1 className="mt-6 font-display text-display-sm text-band-text">
+              {item.title}
+            </h1>
+          </Reveal>
+          <Reveal delay={0.12}>
+            <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-caption text-band-text-muted">
+              <span>{item.source}</span>
+              {publishedDate && (
+                <>
+                  <span aria-hidden="true">·</span>
+                  <span>{publishedDate}</span>
+                </>
+              )}
+              <span aria-hidden="true">·</span>
+              <span>{item.timeAgo}</span>
+              <span aria-hidden="true">·</span>
+              <span>{item.readMinutes} 分鐘閱讀</span>
+              <span aria-hidden="true">·</span>
+              <span className="text-band-ink">評分 {item.score}</span>
+            </div>
+          </Reveal>
+
+          {/* 行動列 — 分享 + 問分身呢條情報 */}
+          <Reveal delay={0.18}>
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={share}
+                className="press inline-flex h-11 items-center gap-2 rounded-md border border-band-border-strong px-5 text-label text-band-ink hover:bg-band-ink-soft"
+              >
               {copied ? (
                 <Check className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
               ) : (
@@ -186,9 +201,10 @@ export default function InsightDetail() {
               />
               問分身呢條情報
             </Link>
-          </div>
-        </Reveal>
-      </header>
+            </div>
+          </Reveal>
+        </header>
+      </section>
 
       {/* AI 摘要 + 原文外鏈 — 本站唔復制全文 */}
       <Reveal y={16} duration={0.4}>
