@@ -60,6 +60,14 @@ export default function Navbar() {
           {/* Wordmark — wordmark IS the logo (design.md §1.2); lime period
               per business-card reference (「brand name.」) */}
           <Link to="/" className="flex items-baseline gap-2" aria-label="AIGRO 首頁">
+            <img
+              src="/brand/a-mark.png"
+              alt=""
+              aria-hidden="true"
+              width={28}
+              height={28}
+              className="h-7 w-7 shrink-0 self-center"
+            />
             <span
               className={cn(
                 "font-display text-[20px] font-medium uppercase tracking-[0.04em]",

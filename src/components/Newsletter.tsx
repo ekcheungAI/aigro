@@ -13,8 +13,16 @@ export default function Newsletter() {
   const [subscribed, setSubscribed] = useState(false);
 
   return (
-    <section className="border-y bg-surface">
-      <div className="mx-auto flex max-w-container flex-col gap-8 px-6 py-16 lg:flex-row lg:items-center lg:justify-between">
+    <section className="relative overflow-hidden border-y bg-surface">
+      {/* letterpress 肌理背景 — 15% 不透明度,唔影響內容對比 */}
+      <img
+        src="/editorial/newsletter-texture.png"
+        alt=""
+        aria-hidden="true"
+        loading="lazy"
+        className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-15"
+      />
+      <div className="relative mx-auto flex max-w-container flex-col gap-8 px-6 py-16 lg:flex-row lg:items-center lg:justify-between">
         <Reveal className="max-w-md">
           <h3 className="font-display text-h3 text-text-primary">
             每週精選，直達信箱

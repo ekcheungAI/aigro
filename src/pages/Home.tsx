@@ -6,7 +6,6 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  Compass,
 } from "lucide-react";
 import Reveal, { REVEAL_EASE } from "@/components/Reveal";
 import UpdatedChip from "@/components/UpdatedChip";
@@ -417,6 +416,14 @@ function CasesFeatured() {
               與其放示範數字,不如留空等真案例。
             </p>
           </div>
+          <img
+            src="/editorial/cases-empty.png"
+            alt="排版台上嘅空白案例版面"
+            width={320}
+            height={200}
+            loading="lazy"
+            className="hidden aspect-[16/10] w-56 shrink-0 rounded-md object-cover opacity-40 md:block"
+          />
           <Link
             to="/cases"
             className="group inline-flex h-12 shrink-0 items-center gap-2 rounded-md bg-ink-solid px-8 text-label text-white press hover:bg-ink-hover"
@@ -512,13 +519,14 @@ function ExpertsWall() {
                     )}
                   </span>
                 ) : (
-                  <span className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-surface bg-card opacity-60 shadow-[0_0_0_1px_hsl(var(--border))]">
-                    <Compass
-                      className="h-5 w-5 text-text-muted"
-                      strokeWidth={1.5}
-                      aria-hidden="true"
-                    />
-                  </span>
+                  <img
+                    src="/editorial/pending-expert.png"
+                    alt={`${expertFullName(expert)} — 即將加盟`}
+                    width={64}
+                    height={64}
+                    loading="lazy"
+                    className="h-16 w-16 rounded-full border-2 border-surface object-cover opacity-60 shadow-[0_0_0_1px_hsl(var(--border))]"
+                  />
                 )}
                 {expert.verified && (
                   <VerifiedBadge

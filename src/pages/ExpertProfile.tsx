@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Link, useParams } from "react-router-dom";
 import { AnimatePresence, motion, useInView } from "framer-motion";
-import { ArrowRight, AudioLines, CalendarClock, Check, Compass, ExternalLink, ShieldCheck } from "lucide-react";
+import { ArrowRight, AudioLines, CalendarClock, Check, ExternalLink, ShieldCheck } from "lucide-react";
 import Reveal, { REVEAL_EASE } from "@/components/Reveal";
 import ExpertStyleSections from "@/components/expert/ExpertStyleSections";
 import ExpertIpHero from "@/components/experts/ExpertIpHero";
@@ -379,13 +379,13 @@ function PendingProfile({ expert }: { expert: Expert }) {
             animate={{ opacity: 0.6, scale: 1 }}
             transition={{ duration: 0.5, ease: REVEAL_EASE }}
           >
-            <div className="flex h-[120px] w-[120px] items-center justify-center rounded-full border-2 border-dashed border-border-strong">
-              <Compass
-                className="h-10 w-10 text-text-muted"
-                strokeWidth={1.5}
-                aria-hidden="true"
-              />
-            </div>
+            <img
+              src="/editorial/pending-expert.png"
+              alt={`${expertFullName(expert)} — 即將加盟領航專家剪影`}
+              width={120}
+              height={180}
+              className="aspect-[2/3] w-[120px] rounded-md border-2 border-dashed border-border-strong object-cover"
+            />
           </motion.div>
 
           <div className="min-w-0">

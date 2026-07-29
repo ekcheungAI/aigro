@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, Check, Compass } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 import Reveal, { REVEAL_EASE } from "@/components/Reveal";
 import MonogramAvatar, { PhotoAvatar } from "@/components/MonogramAvatar";
 import VerifiedBadge from "@/components/VerifiedBadge";
@@ -222,11 +222,14 @@ function PendingExpertCard({ expert, index }: { expert: Expert; index: number })
     >
       {/* 待用內容 60% 不透明度,唯 CTA 正常 */}
       <div className="opacity-60">
-        <div className="flex h-[72px] w-[72px] items-center justify-center rounded-full border border-dashed border-border-strong">
-          <Compass
-            className="h-6 w-6 text-text-muted"
-            strokeWidth={1.5}
-            aria-hidden="true"
+        <div className="flex h-[72px] w-[72px] items-center justify-center overflow-hidden rounded-full border border-dashed border-border-strong">
+          <img
+            src="/editorial/pending-expert.png"
+            alt="即將加盟領航專家剪影"
+            width={72}
+            height={72}
+            loading="lazy"
+            className="h-full w-full rounded-full object-cover"
           />
         </div>
         <h3 className="mt-4 text-h4 font-sans text-text-primary">

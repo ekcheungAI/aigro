@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, Check, ClipboardList } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 import Reveal, { REVEAL_EASE } from "@/components/Reveal";
 import { captureWaitlist } from "@/lib/waitlist";
 
@@ -85,13 +85,14 @@ function HonestState() {
     <section className="mx-auto max-w-container px-6 pb-24 pt-16 max-md:pb-16 max-md:pt-12">
       <Reveal y={20} duration={0.45}>
         <div className="mx-auto max-w-[640px] rounded-md border bg-surface p-12 text-center shadow-card dark:shadow-none max-md:p-8">
-          <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-md border bg-card">
-            <ClipboardList
-              className="h-7 w-7 text-text-muted"
-              strokeWidth={1.5}
-              aria-hidden="true"
-            />
-          </span>
+          <img
+            src="/editorial/cases-empty.png"
+            alt="排版台上嘅空白案例版面 — 等待真實案例上架"
+            width={640}
+            height={400}
+            loading="lazy"
+            className="mx-auto aspect-[16/10] w-full max-w-[400px] rounded-md object-cover"
+          />
           <h2 className="mt-6 font-display text-h3 text-text-primary">
             真實案例整理中
           </h2>

@@ -11,7 +11,6 @@ import {
   Linkedin,
   MessageCircle,
   Send,
-  Sparkles,
   Twitter,
   Youtube,
 } from "lucide-react";
@@ -19,6 +18,7 @@ import type { LucideIcon } from "lucide-react";
 import MonogramAvatar, { PhotoAvatar } from "@/components/MonogramAvatar";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import PresenceDot from "@/components/ask/PresenceDot";
+import PlatformDp from "@/components/ask/PlatformDp";
 import Toast, { useToast } from "@/components/auth/Toast";
 import { aihotAllInsights } from "@/data/aihot";
 import { useLiveItems } from "@/data/liveItems";
@@ -353,9 +353,7 @@ function PlatformAboutCard({ persona }: { persona: Persona }) {
   return (
     <div className="mt-3 rounded-md border bg-bg p-4">
       <div className="flex items-center gap-2.5">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-ink-soft">
-          <Sparkles className="h-4 w-4 text-ink" strokeWidth={1.5} aria-hidden="true" />
-        </span>
+        <PlatformDp size={32} />
         <div className="min-w-0">
           <p className="truncate text-label text-text-primary">{persona.name}</p>
           <p className="truncate text-caption text-text-muted">
