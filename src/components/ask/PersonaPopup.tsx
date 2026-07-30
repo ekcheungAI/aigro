@@ -81,7 +81,7 @@ export default function PersonaPopup({ open, persona, onClose }: PersonaPopupPro
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
             onClick={onClose}
-            className="absolute inset-0 cursor-default bg-[#0D0D0C]/50"
+            className="absolute inset-0 cursor-default bg-[#02122C]/50"
           />
           {/* Panel */}
           <motion.div

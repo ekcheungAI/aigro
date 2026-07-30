@@ -672,7 +672,7 @@ export default function AdminExperts() {
                                 next[i] = { ...r, score: Number(e.target.value) };
                                 patch({ radar: next });
                               }}
-                              className="mt-1 w-full accent-[#43F50E]"
+                              className="mt-1 w-full accent-[#42CAAC]"
                             />
                           </div>
                         ))}

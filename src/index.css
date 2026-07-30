@@ -5,28 +5,28 @@
 @layer base {
   /* ============ AIGRO Design Tokens (design.md §2) ============ */
   :root {
-    /* Light mode — warm paper */
-    --bg: 45 29% 97%;            /* #FAF9F6 */
+    /* Light mode — cool paper */
+    --bg: 216 33% 97%;           /* #F5F7FA */
     --surface: 0 0% 100%;        /* #FFFFFF */
-    --card: 43 23% 94%;          /* #F3F1EC */
+    --card: 210 29% 95%;         /* #EDF1F5 */
     --overlay: 0 0% 100%;        /* #FFFFFF @ 92% (use with /92 alpha) */
-    --text-primary: 40 6% 10%;   /* #1C1B19 */
-    --text-secondary: 40 6% 31%; /* #54514B */
-    --text-muted: 39 6% 51%;     /* #8A857C */
-    --border: 40 18% 87%;        /* #E4E0D8 */
-    --border-strong: 39 14% 75%; /* #C9C3B8 */
+    --text-primary: 218 50% 13%; /* #101C30 navy-ink */
+    --text-secondary: 216 17% 35%; /* #4A5668 */
+    --text-muted: 216 12% 54%;   /* #7C8798 */
+    --border: 212 24% 89%;       /* #DDE3EA */
+    --border-strong: 213 20% 78%; /* #BCC6D2 */
 
-    /* ---- Electric lime accent system (rebrand: near-black + lime) ----
-       Lime is the ONE accent. Interactive fills = lime + near-black text.
-       Text/link on paper uses the deep green variant (neon fails AA on light). */
-    --lime: 106 92% 51%;         /* #43F50E electric lime (on dark) */
-    --lime-hover: 107 89% 45%;   /* #3AD60D dimmed lime (fill hover) */
-    --lime-text: 107 91% 25%;    /* #1F7A06 deep green — 5.2:1 on #FAF9F6 (AA) */
-    --lime-soft: 102 77% 92%;    /* #E3FAD9 tint — chips / AI bubble on light */
-    --on-accent: 60 4% 5%;       /* #0D0D0C near-black text on lime fills */
+    /* ---- Brand green accent system (rebrand: navy + brand green) ----
+       Green is the ONE accent. Interactive fills = brand green + navy text.
+       Text/link on paper uses the deep green variant (bright green fails AA on light). */
+    --lime: 167 56% 53%;         /* #42CAAC brand green (on dark) */
+    --lime-hover: 166 55% 46%;   /* #35B598 dimmed green (fill hover) */
+    --lime-text: 171 84% 34%;    /* #0E9F8A deep brand green — text accent on light */
+    --lime-soft: 166 48% 91%;    /* #DDF3EE tint — chips / AI bubble on light */
+    --on-accent: 217 91% 9%;     /* #02122C deep navy text on green fills */
 
     /* Legacy aliases — cascade the rebrand to every page without page edits.
-       `ink` now reads lime-green; `gold` (ex-Verified/VIP accent) reads lime. */
+       `ink` now reads brand-green; `gold` (ex-Verified/VIP accent) reads green. */
     --ink: var(--lime-text);        /* text/link accent on light */
     --ink-hover: var(--lime-hover); /* hover of solid lime fills */
     --ink-solid: var(--lime);       /* solid primary button = lime */
@@ -35,7 +35,7 @@
     --gold-soft: var(--lime-soft);  /* premium wells → green tint */
 
     /* Stripe motif color (hard-stop pattern, theme-aware) */
-    --stripe-color: hsl(107 91% 25% / 0.10); /* deep green @ 10% on paper */
+    --stripe-color: hsl(171 84% 34% / 0.10); /* deep brand green @ 10% on paper */
 
     --success: 140 33% 36%;      /* #3E7A52 */
     --warning: 37 83% 35%;       /* #A36A0F */
@@ -59,7 +59,7 @@
     --popover: var(--surface);
     --popover-foreground: var(--text-primary);
     --primary: var(--ink);
-    --primary-foreground: var(--on-accent); /* near-black on lime/green fills */
+    --primary-foreground: var(--on-accent); /* deep navy on green fills */
     --secondary: var(--card);
     --secondary-foreground: var(--text-primary);
     --muted: var(--card);
@@ -83,45 +83,45 @@
     --sheen-opacity: 0.22;
 
     /* ---- Cinematic dark band (hero + inverted footer) ----
-       Near-black canvas (#0D0D0C family) reused verbatim from dark theme so
-       the band reads identical in BOTH page themes. Lime is the only accent
-       on the band — business-card reference: black + electric green. */
-    --band-bg: 60 4% 5%;              /* #0D0D0C near-black */
-    --band-surface: 60 8% 8%;         /* #151512 */
-    --band-card: 60 6% 10%;           /* #1C1C19 */
-    --band-text: 40 24% 93%;          /* #F1EEE8 (AAA on band) */
-    --band-text-secondary: 39 11% 75%;/* #C6C1B8 (AAA) */
-    --band-text-muted: 38 7% 55%;     /* #938D83 (AA) */
-    --band-border: 33 12% 19%;        /* #35302A */
-    --band-border-strong: 36 11% 27%; /* #4C463D */
-    --band-ink: var(--lime);          /* lime text/link on band (13:1) */
-    --band-ink-solid: var(--lime);    /* solid button on band = lime + black text */
-    --band-ink-hover: var(--lime-hover); /* dimmed lime hover on band */
-    --band-ink-soft: 102 44% 11%;     /* #16270F green-tint chip bg on band */
-    --band-gold: var(--lime);         /* ex-gold hairline accents → lime */
+       Deep navy canvas (#02122C family) reused verbatim from dark theme so
+       the band reads identical in BOTH page themes. Brand green is the only
+       accent on the band. */
+    --band-bg: 217 91% 9%;            /* #02122C deep navy */
+    --band-surface: 216 71% 14%;      /* #0A1E3C */
+    --band-card: 216 67% 17%;         /* #0E2547 */
+    --band-text: 210 40% 94%;         /* #EAF0F6 (AAA on band) */
+    --band-text-secondary: 210 20% 77%;/* #B8C4D0 (AAA) */
+    --band-text-muted: 214 15% 58%;   /* #8593A5 (AA) */
+    --band-border: 216 50% 22%;       /* #1C3355 */
+    --band-border-strong: 215 45% 31%;/* #2C4A73 */
+    --band-ink: var(--lime);          /* brand green text/link on band (9.1:1) */
+    --band-ink-solid: var(--lime);    /* solid button on band = green + navy text */
+    --band-ink-hover: var(--lime-hover); /* dimmed green hover on band */
+    --band-ink-soft: 170 59% 14%;     /* #0F3A33 green-tint chip bg on band */
+    --band-gold: var(--lime);         /* ex-gold hairline accents → brand green */
     --band-warning: 38 67% 54%;       /* #D9A03C — amber LIVE dot (semantic status, not accent) */
   }
 
   .dark {
-    /* Dark mode — near-black warm canvas (#0D0D0C family, still warm-neutral) */
-    --bg: 60 4% 5%;              /* #0D0D0C */
-    --surface: 60 8% 8%;         /* #151512 */
-    --card: 60 6% 10%;           /* #1C1C19 */
-    --overlay: 60 8% 8%;         /* #151512 @ 92% */
-    --text-primary: 40 24% 93%;  /* #F1EEE8 */
-    --text-secondary: 39 11% 75%;/* #C6C1B8 */
-    --text-muted: 38 7% 55%;     /* #938D83 */
-    --border: 33 12% 19%;        /* #35302A */
-    --border-strong: 36 11% 27%; /* #4C463D */
+    /* Dark mode — deep navy canvas (#02122C family, cool-neutral) */
+    --bg: 217 91% 9%;            /* #02122C */
+    --surface: 216 71% 14%;      /* #0A1E3C */
+    --card: 216 67% 17%;         /* #0E2547 */
+    --overlay: 216 71% 14%;      /* #0A1E3C @ 92% */
+    --text-primary: 210 40% 94%; /* #EAF0F6 */
+    --text-secondary: 210 20% 77%;/* #B8C4D0 */
+    --text-muted: 214 15% 58%;   /* #8593A5 */
+    --border: 216 50% 22%;       /* #1C3355 */
+    --border-strong: 215 45% 31%;/* #2C4A73 */
 
-    /* Dark lime aliases — on near-black the full neon passes AAA (13.3:1),
-       so text accent = fills = pure lime; legacy tokens flip automatically. */
-    --lime-text: var(--lime);    /* text/link accent = electric lime */
-    --lime-soft: 102 44% 11%;    /* #16270F green tint — chips / AI bubble */
-    --gold: var(--lime);         /* Verified/VIP accent → lime */
+    /* Dark green aliases — on deep navy the full brand green passes AAA (9.1:1),
+       so text accent = fills = pure brand green; legacy tokens flip automatically. */
+    --lime-text: var(--lime);    /* text/link accent = brand green */
+    --lime-soft: 170 59% 14%;    /* #0F3A33 green tint — chips / AI bubble */
+    --gold: var(--lime);         /* Verified/VIP accent → brand green */
     --gold-soft: var(--lime-soft);
 
-    --stripe-color: hsl(106 92% 51% / 0.14); /* lime @ 14% on near-black */
+    --stripe-color: hsl(167 56% 53% / 0.14); /* brand green @ 14% on navy */
 
     --success: 141 28% 56%;      /* #6FAE85 */
     --warning: 38 67% 54%;       /* #D9A03C */
@@ -174,9 +174,9 @@
   }
 
   /* Focus rings on always-dark band surfaces (hero / MCP band / page headers /
-     footer / login panel): --ink reads deep green on light theme, which is
-     ~1.6:1 on near-black — effectively invisible. Band contexts override to
-     lime (13.3:1 on #0D0D0C) so keyboard focus stays visible in both themes. */
+     footer / login panel): --ink reads deep brand green on light theme, which
+     is too low-contrast on navy. Band contexts override to brand green
+     (9.1:1 on #02122C) so keyboard focus stays visible in both themes. */
   .bg-band-bg :focus-visible,
   .bg-band-bg:focus-visible {
     outline-color: hsl(var(--band-ink));
@@ -216,7 +216,7 @@
      Hard-stop PATTERNS, not gradients: repeating-linear-gradient with hard
      color stops only — no blending, no soft fades. Restraint: max ~3 stripe
      moments per page, quiet alphas. */
-  /* Theme-aware 45° diagonal stripes (deep green 10% on paper / lime 14% on near-black) */
+  /* Theme-aware 45° diagonal stripes (deep green 10% on paper / brand green 14% on navy) */
   .stripe-block {
     background-image: repeating-linear-gradient(
       45deg,
@@ -242,7 +242,7 @@
     background-repeat: repeat-x, repeat-x;
   }
 
-  /* Verified badge sheen sweep — lime ring only, transform-only (design.md §5.3) */
+  /* Verified badge sheen sweep — green ring only, transform-only (design.md §5.3) */
   .badge-sheen {
     position: relative;
     overflow: hidden;
@@ -314,10 +314,10 @@
   }
 }
 
-/* Rebrand cascade bridge: lime fills ALWAYS carry near-black text (business-card
-   reference: black on green). Pages still pairing bg-ink-solid / bg-band-ink-solid
-   with text-white inherit the correct color without page edits. Unlayered on
-   purpose so it wins over the text-white utility. */
+/* Rebrand cascade bridge: brand green fills ALWAYS carry deep navy text.
+   Pages still pairing bg-ink-solid / bg-band-ink-solid with text-white
+   inherit the correct color without page edits. Unlayered on purpose so
+   it wins over the text-white utility. */
 .bg-ink-solid,
 .bg-band-ink-solid {
   color: hsl(var(--on-accent));
@@ -375,7 +375,7 @@
   100% { transform: translateX(120%); }
 }
 
-/* Brand period pulse — the lime 「.」in「AIGRO.」breathes like the Ask
+/* Brand period pulse — the brand green 「.」in「AIGRO.」breathes like the Ask
    typewriter caret (brand blink precedent, design.md §5.3). Opacity-only,
    3.6s, low amplitude; reduced-motion → solid. Applied sparingly: navbar
    wordmark, mobile drawer wordmark, footer wordmark. */

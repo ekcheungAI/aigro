@@ -50,7 +50,7 @@ export default function AdminSlideOver({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             onClick={onClose}
-            className="fixed inset-0 z-[100] bg-[#0D0D0C]/40"
+            className="fixed inset-0 z-[100] bg-[#02122C]/40"
           />
           <motion.aside
             key="panel"
