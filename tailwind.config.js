@@ -20,14 +20,14 @@ module.exports = {
           DEFAULT: "hsl(var(--gold) / <alpha-value>)",
           soft: "hsl(var(--gold-soft) / <alpha-value>)",
         },
-        /* Electric lime accent (rebrand) — lime = the ONE accent */
+        /* Brand green accent (rebrand) — token names kept; lime = the ONE accent */
         lime: {
           DEFAULT: "hsl(var(--lime) / <alpha-value>)",
           hover: "hsl(var(--lime-hover) / <alpha-value>)",
           text: "hsl(var(--lime-text) / <alpha-value>)",
           soft: "hsl(var(--lime-soft) / <alpha-value>)",
         },
-        /* Near-black text on lime fills (black-on-green, business-card ref) */
+        /* Deep navy text on brand green fills (navy-on-green) */
         "on-accent": "hsl(var(--on-accent) / <alpha-value>)",
         /* Cinematic dark band (hero + inverted footer, theme-independent) */
         band: {
@@ -126,7 +126,7 @@ module.exports = {
         xl: "16px",
       },
       boxShadow: {
-        card: "0 1px 2px rgba(28,27,25,0.04)",
+        card: "0 1px 2px rgba(2,18,44,0.04)",
       },
       maxWidth: {
         container: "1200px",

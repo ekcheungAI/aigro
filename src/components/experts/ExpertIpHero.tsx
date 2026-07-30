@@ -36,7 +36,7 @@ interface ExpertIpHeroProps {
 
 /**
  * Expert IP cinematic hero — MasterClass 級編排:
- * 全寬 near-black band(#0D0D0C)+ 電光綠 accent、超大 Fraunces 姓名、
+ * 全寬 deep navy band(#02122C)+ brand green accent、超大 Fraunces 姓名、
  * 2:3 肖像卡(真實肖像 / brand monogram 面板)、分身 CTA。
  * Band tokens(theme-independent)同 Home hero / Footer 一致;
  * 無 -mt-16(Navbar overHero 透明模式只限首頁,其他頁係實心 sticky)。
@@ -47,7 +47,7 @@ export default function ExpertIpHero({
   bio,
   askHref,
 }: ExpertIpHeroProps) {
-  const accent = expert.brandColor ?? "#43F50E";
+  const accent = expert.brandColor ?? "#42CAAC";
   const firstName = expertFirstName(expert);
   const fullName = expertFullName(expert);
   const initials = EXPERT_INITIALS[expert.slug] ?? "·";

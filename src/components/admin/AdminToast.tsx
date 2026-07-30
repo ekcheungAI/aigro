@@ -40,7 +40,7 @@ export function AdminToastProvider({ children }: { children: ReactNode }) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 8 }}
               transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
-              className="pointer-events-auto flex items-start gap-2.5 rounded-lg border border-border bg-[#0D0D0C] px-4 py-3 text-sm text-[#F1EEE8] shadow-lg"
+              className="pointer-events-auto flex items-start gap-2.5 rounded-lg border border-border bg-[#02122C] px-4 py-3 text-sm text-[#EAF0F6] shadow-lg"
             >
               <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-lime" />
               <span>{t.message}</span>

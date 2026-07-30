@@ -84,7 +84,7 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
               "group flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors",
               isActive
                 ? "bg-lime text-on-accent"
-                : "text-[#C6C1B8] hover:bg-[#1C1C19] hover:text-[#F1EEE8]"
+                : "text-[#B8C4D0] hover:bg-[#0E2547] hover:text-[#EAF0F6]"
             )
           }
         >
@@ -93,14 +93,14 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
               <item.icon
                 className={cn(
                   "h-4 w-4 shrink-0",
-                  isActive ? "text-on-accent" : "text-[#938D83]"
+                  isActive ? "text-on-accent" : "text-[#8593A5]"
                 )}
               />
               <span className="font-medium">{item.zh}</span>
               <span
                 className={cn(
                   "ml-auto font-mono text-[10px] uppercase tracking-wider",
-                  isActive ? "text-on-accent/70" : "text-[#938D83]"
+                  isActive ? "text-on-accent/70" : "text-[#8593A5]"
                 )}
               >
                 {item.en}
@@ -117,14 +117,14 @@ function Wordmark() {
   return (
     <div className="px-3">
       <div className="flex items-baseline gap-2">
-        <span className="font-display text-[18px] font-medium uppercase tracking-[0.04em] text-[#F1EEE8]">
+        <span className="font-display text-[18px] font-medium uppercase tracking-[0.04em] text-[#EAF0F6]">
           AIGRO<span className="text-lime">.</span>
         </span>
-        <span className="text-[11px] tracking-wide text-[#938D83]">
+        <span className="text-[11px] tracking-wide text-[#8593A5]">
           專家平台
         </span>
       </div>
-      <p className="mt-1.5 font-mono text-[10px] uppercase tracking-wider text-[#938D83]">
+      <p className="mt-1.5 font-mono text-[10px] uppercase tracking-wider text-[#8593A5]">
         領航專家後台 · Live data
       </p>
     </div>
@@ -278,20 +278,20 @@ export default function PortalLayout() {
     <AdminToastProvider>
       <div className="min-h-[100dvh] bg-bg text-text-primary">
         {/* ---- Desktop sidebar ---- */}
-        <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-[#35302A] bg-[#0D0D0C] lg:flex">
-          <div className="border-b border-[#35302A] py-5">
+        <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-[#1C3355] bg-[#02122C] lg:flex">
+          <div className="border-b border-[#1C3355] py-5">
             <Wordmark />
           </div>
           <div className="flex-1 overflow-y-auto py-4">
             <SidebarNav />
           </div>
-          <div className="border-t border-[#35302A] px-3 py-4">
-            <div className="rounded-md border border-[#35302A] bg-[#161614] px-3 py-2.5">
-              <p className="flex items-center gap-1.5 text-xs text-[#C6C1B8]">
+          <div className="border-t border-[#1C3355] px-3 py-4">
+            <div className="rounded-md border border-[#1C3355] bg-[#0E2547] px-3 py-2.5">
+              <p className="flex items-center gap-1.5 text-xs text-[#B8C4D0]">
                 <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-lime" />
                 分身狀態
               </p>
-              <p className="mt-1 font-mono text-[10px] uppercase tracking-wider text-[#938D83]">
+              <p className="mt-1 font-mono text-[10px] uppercase tracking-wider text-[#8593A5]">
                 {expert?.promptVersion
                   ? `${expert.promptVersion} · ${slug}`
                   : `slug:${slug}`}
@@ -311,7 +311,7 @@ export default function PortalLayout() {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
                 onClick={() => setDrawerOpen(false)}
-                className="fixed inset-0 z-[90] bg-[#0D0D0C]/50 lg:hidden"
+                className="fixed inset-0 z-[90] bg-[#02122C]/50 lg:hidden"
               />
               <motion.aside
                 key="nav-drawer"
@@ -319,15 +319,15 @@ export default function PortalLayout() {
                 animate={{ y: 0 }}
                 exit={{ y: "-100%" }}
                 transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-                className="fixed inset-x-0 top-0 z-[95] border-b border-[#35302A] bg-[#0D0D0C] pb-4 lg:hidden"
+                className="fixed inset-x-0 top-0 z-[95] border-b border-[#1C3355] bg-[#02122C] pb-4 lg:hidden"
               >
-                <div className="flex items-center justify-between border-b border-[#35302A] px-3 py-4">
+                <div className="flex items-center justify-between border-b border-[#1C3355] px-3 py-4">
                   <Wordmark />
                   <button
                     type="button"
                     aria-label="關閉選單"
                     onClick={() => setDrawerOpen(false)}
-                    className="rounded-md p-2 text-[#C6C1B8] hover:bg-[#1C1C19]"
+                    className="rounded-md p-2 text-[#B8C4D0] hover:bg-[#0E2547]"
                   >
                     <X className="h-5 w-5" />
                   </button>

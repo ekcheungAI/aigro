@@ -6,7 +6,7 @@ import { useTheme } from "@/hooks/useTheme";
 /**
  * Footer (elevated §6.2): inverted near-black band in BOTH themes —
  * cinematic, premium closing act. Thin lime stripe band + 1px lime hairline
- * top accent, band text tokens (AA+ on #0D0D0C), 64px vertical padding,
+ * top accent, band text tokens (AA+ on #02122C), 64px vertical padding,
  * 4 columns (AIGRO / 內容 / 平台 / Developers) + bottom bar with theme toggle.
  */
 export default function Footer() {

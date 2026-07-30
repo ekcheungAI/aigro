@@ -33,7 +33,7 @@ export default function MonogramAvatar({
   muted = false,
   className,
 }: MonogramAvatarProps) {
-  const brand = color ?? "#8A857C"; /* fallback: text-muted-ish neutral */
+  const brand = color ?? "#7C8798"; /* fallback: text-muted-ish neutral */
   return (
     <span
       aria-hidden="true"
