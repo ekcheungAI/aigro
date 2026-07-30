@@ -260,24 +260,40 @@ function SourceInterestForm() {
 export default function Sources() {
   return (
     <>
-      {/* Hero */}
-      <section className="mx-auto max-w-container px-6 pb-16 pt-24 max-md:pt-16">
-        <Reveal>
-          <p className="flex items-center gap-3 text-overline font-sans uppercase text-text-muted">
-            <span
-              className="inline-block h-px w-6 bg-border-strong"
-              aria-hidden="true"
-            />
-            AIGRO Sources
-          </p>
-          <h1 className="mt-3 max-w-[760px] font-display text-display text-text-primary">
-            情報渠道,公開透明
-          </h1>
-          <p className="mt-6 max-w-[680px] text-body-lg text-text-secondary">
-            每一條情報都有名有姓嘅來源。我哋將渠道公開 —
-            因為可信賴嘅情報,由可信賴嘅來源開始。
-          </p>
-        </Reveal>
+      {/* Hero — dark band:sources-band 媒體報頭疊影背景層
+          (opacity-45 + 實色 band overlay,同 insights-hero/skills-band 做法;
+          深淺色主題皆為 dark band) */}
+      <section className="relative isolate overflow-hidden border-b border-band-border bg-band-bg">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 -z-10 select-none"
+        >
+          <img
+            src="/editorial/sources-band.png"
+            alt=""
+            loading="lazy"
+            className="h-full w-full object-cover opacity-45"
+          />
+          <span className="absolute inset-0 bg-band-bg/60" />
+        </div>
+        <div className="mx-auto max-w-container px-6 pb-16 pt-24 max-md:pt-16">
+          <Reveal>
+            <p className="flex items-center gap-3 text-overline font-sans uppercase text-band-text-muted">
+              <span
+                className="inline-block h-px w-6 bg-band-border-strong"
+                aria-hidden="true"
+              />
+              AIGRO Sources
+            </p>
+            <h1 className="mt-3 max-w-[760px] font-display text-display text-band-text">
+              情報渠道,公開透明
+            </h1>
+            <p className="mt-6 max-w-[680px] text-body-lg text-band-text-secondary">
+              每一條情報都有名有姓嘅來源。我哋將渠道公開 —
+              因為可信賴嘅情報,由可信賴嘅來源開始。
+            </p>
+          </Reveal>
+        </div>
       </section>
 
       {/* 渠道牆 — grouped source wall */}
