@@ -36,6 +36,8 @@ function readSignup(): SignupRecord | null {
 
 interface VerticalMcp {
   icon: typeof Cpu;
+  /** editorial 圖示（同 Insights sector mapping;有即用 <img>,無 fallback 去 lucide icon） */
+  iconSrc?: string;
   title: string;
   status: string;
   statusKind: "open" | "planning";
@@ -45,6 +47,7 @@ interface VerticalMcp {
 const VERTICALS: VerticalMcp[] = [
   {
     icon: Cpu,
+    iconSrc: "/editorial/icon-ai.png",
     title: "AI 情報 MCP",
     status: "優先名單開放中",
     statusKind: "open",
@@ -55,6 +58,7 @@ const VERTICALS: VerticalMcp[] = [
   },
   {
     icon: Sparkles,
+    iconSrc: "/editorial/icon-beauty.png",
     title: "Beauty 美妝情報",
     status: "規劃中 Planning",
     statusKind: "planning",
@@ -62,6 +66,7 @@ const VERTICALS: VerticalMcp[] = [
   },
   {
     icon: Wrench,
+    iconSrc: "/editorial/icon-technology.png",
     title: "Technology 科技情報",
     status: "規劃中 Planning",
     statusKind: "planning",
@@ -339,7 +344,12 @@ export default function Developers() {
           <Reveal className="bg-bg p-8">
             <div className="flex h-full flex-col">
               <div className="flex items-center gap-2">
-                <Cpu className="h-4 w-4 text-text-muted" strokeWidth={1.5} aria-hidden="true" />
+                <img
+                  src={VERTICALS[0].iconSrc}
+                  alt={`${VERTICALS[0].title}圖標`}
+                  loading="lazy"
+                  className="h-10 w-10"
+                />
                 <span className="inline-flex items-center rounded-sm bg-ink-soft px-3 py-1.5 text-overline font-sans uppercase text-ink">
                   優先名單開放中
                 </span>
@@ -388,7 +398,20 @@ export default function Developers() {
             >
               <div className="flex h-full flex-col">
                 <div className="flex items-center gap-2">
-                  <v.icon className="h-4 w-4 text-text-muted" strokeWidth={1.5} aria-hidden="true" />
+                  {v.iconSrc ? (
+                    <img
+                      src={v.iconSrc}
+                      alt={`${v.title}圖標`}
+                      loading="lazy"
+                      className="h-10 w-10 opacity-40 grayscale"
+                    />
+                  ) : (
+                    <v.icon
+                      className="h-4 w-4 text-text-muted"
+                      strokeWidth={1.5}
+                      aria-hidden="true"
+                    />
+                  )}
                   <span className="inline-flex items-center rounded-sm border border-border-strong px-3 py-1.5 text-overline font-sans uppercase text-text-muted">
                     {v.status}
                   </span>
