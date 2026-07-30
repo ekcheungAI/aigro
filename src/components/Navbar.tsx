@@ -70,11 +70,11 @@ export default function Navbar() {
             />
             <span
               className={cn(
-                "font-display text-[20px] font-medium uppercase tracking-[0.04em]",
+                "font-display text-[22px] font-semibold lowercase tracking-[0.01em]",
                 overHero ? "text-band-text" : "text-text-primary"
               )}
             >
-              AIGRO
+              aigro
               <span
                 className={cn("brand-period", overHero ? "text-band-ink" : "text-ink")}
               >
@@ -242,8 +242,8 @@ export default function Navbar() {
             transition={{ duration: 0.2 }}
           >
             <div className="flex h-16 items-center justify-between border-b px-6">
-              <span className="font-display text-[20px] font-medium uppercase tracking-[0.04em]">
-                AIGRO<span className="brand-period text-ink">.</span>
+              <span className="font-display text-[22px] font-semibold lowercase tracking-[0.01em]">
+                aigro<span className="brand-period text-ink">.</span>
               </span>
               <button
                 type="button"

@@ -21,7 +21,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}
           <div>
-            <p className="flex items-center gap-2.5 font-display text-[20px] font-medium uppercase tracking-[0.04em] text-band-text">
+            <p className="flex items-center gap-2.5 font-display text-[22px] font-semibold lowercase tracking-[0.01em] text-band-text">
               <img
                 src="/brand/a-mark.png"
                 alt=""
@@ -32,7 +32,7 @@ export default function Footer() {
                 className="h-7 w-7 shrink-0"
               />
               <span>
-                AIGRO<span className="brand-period text-band-ink">.</span>
+                aigro<span className="brand-period text-band-ink">.</span>
               </span>
             </p>
             <p className="mt-3 max-w-[240px] text-body-sm text-band-text-secondary">
