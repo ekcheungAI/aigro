@@ -1233,6 +1233,8 @@ interface SectorDef {
   /** 芯片顯示名（如「AI 情報」「Beauty 美妝」） */
   name: string;
   icon: LucideIcon;
+  /** editorial 圖示（有即用 <img>,無 fallback 去 lucide icon） */
+  iconSrc?: string;
   live: boolean;
 }
 
@@ -1241,30 +1243,70 @@ interface SectorDef {
  * 「情報即將推出」+ 空狀態，空狀態文案由 SectorDef 驅動）。
  */
 const SECTORS: SectorDef[] = [
-  { key: "ai", name: "AI 情報", icon: Radar, live: true },
-  { key: "beauty", name: "Beauty 美妝", icon: Flower2, live: false },
-  { key: "tech", name: "Technology 科技", icon: Cpu, live: false },
-  { key: "finance", name: "Finance 金融", icon: Landmark, live: false },
-  { key: "property", name: "Property 地產", icon: Building2, live: false },
-  { key: "retail", name: "Retail 零售", icon: ShoppingBag, live: false },
-  { key: "more", name: "更多行業", icon: Plus, live: false },
+  {
+    key: "ai",
+    name: "AI 情報",
+    icon: Radar,
+    iconSrc: "/editorial/icon-ai.png",
+    live: true,
+  },
+  {
+    key: "beauty",
+    name: "Beauty 美妝",
+    icon: Flower2,
+    iconSrc: "/editorial/icon-beauty.png",
+    live: false,
+  },
+  {
+    key: "tech",
+    name: "Technology 科技",
+    icon: Cpu,
+    iconSrc: "/editorial/icon-technology.png",
+    live: false,
+  },
+  {
+    key: "finance",
+    name: "Finance 金融",
+    icon: Landmark,
+    iconSrc: "/editorial/icon-finance.png",
+    live: false,
+  },
+  {
+    key: "property",
+    name: "Property 地產",
+    icon: Building2,
+    iconSrc: "/editorial/icon-property.png",
+    live: false,
+  },
+  {
+    key: "retail",
+    name: "Retail 零售",
+    icon: ShoppingBag,
+    iconSrc: "/editorial/icon-retail.png",
+    live: false,
+  },
+  {
+    key: "more",
+    name: "更多行業",
+    icon: Plus,
+    iconSrc: "/editorial/icon-more.png",
+    live: false,
+  },
 ];
 
 const SECTOR_KEYS = SECTORS.map((s) => s.key) as string[];
 
 /** 非 AI 行業嘅優雅空狀態（非錯誤頁）— URL 可分享（?sector=beauty） */
 function SectorEmptyState({ sector }: { sector: SectorDef }) {
-  const Icon = sector.icon;
   return (
     <section className="mx-auto flex max-w-container flex-col items-center px-6 py-24 text-center max-md:py-16">
       <Reveal y={20} duration={0.45}>
-        <span className="flex h-16 w-16 items-center justify-center rounded-md border bg-surface shadow-card dark:shadow-none">
-          <Icon
-            className="h-7 w-7 text-text-muted"
-            strokeWidth={1.5}
-            aria-hidden="true"
-          />
-        </span>
+        <img
+          src="/editorial/sector-printing.png"
+          alt={`${sector.name}情報整緊插畫`}
+          loading="lazy"
+          className="w-full max-w-sm rounded-md"
+        />
       </Reveal>
       <Reveal y={20} duration={0.45} delay={0.08}>
         <p className="mt-8 text-overline font-sans uppercase text-text-muted">
@@ -1438,7 +1480,20 @@ export default function Insights() {
                       : "border-border-strong bg-surface text-ink hover:border-ink"
                   )}
                 >
-                  <Icon className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+                  {s.iconSrc ? (
+                    <img
+                      src={s.iconSrc}
+                      alt={`${s.name}圖標`}
+                      loading="lazy"
+                      className="h-10 w-10"
+                    />
+                  ) : (
+                    <Icon
+                      className="h-4 w-4"
+                      strokeWidth={1.5}
+                      aria-hidden="true"
+                    />
+                  )}
                   {s.name}
                   <span
                     className={cn(
@@ -1468,7 +1523,20 @@ export default function Insights() {
                     : "border-border-strong text-text-muted opacity-60 hover:text-text-secondary hover:opacity-100"
                 )}
               >
-                <Icon className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+                {s.iconSrc ? (
+                  <img
+                    src={s.iconSrc}
+                    alt={`${s.name}圖標`}
+                    loading="lazy"
+                    className="h-10 w-10 opacity-40 grayscale"
+                  />
+                ) : (
+                  <Icon
+                    className="h-4 w-4"
+                    strokeWidth={1.5}
+                    aria-hidden="true"
+                  />
+                )}
                 {s.name}
                 <span className="rounded-sm border border-current px-1.5 py-0.5 text-overline font-sans">
                   情報即將推出

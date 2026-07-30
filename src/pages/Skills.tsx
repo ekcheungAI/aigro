@@ -171,23 +171,38 @@ export default function Skills() {
 
   return (
     <>
-      {/* Header — 目錄頁首 */}
-      <section className="mx-auto max-w-container px-6 pb-10 pt-24 max-md:pt-16">
-        <Reveal>
-          <p className="flex items-center gap-3 text-overline font-sans uppercase text-text-muted">
-            <span
-              className="inline-block h-px w-6 bg-border-strong"
-              aria-hidden="true"
-            />
-            AIGRO Directory
-          </p>
-          <h1 className="mt-3 max-w-[760px] font-display text-display text-text-primary">
-            Skills 技能庫
-          </h1>
-          <p className="mt-6 max-w-[680px] text-body-lg text-text-secondary">
-            俾你嘅 AI agent 裝上專業能力 — 由 AIGRO 策劃嘅開源技能目錄。
-          </p>
-        </Reveal>
+      {/* Header — 目錄頁首 dark band:skills-band 幾何方塊背景層
+          (opacity-45 + 實色 band overlay,同 insights-hero 做法;深淺色主題皆為 dark band) */}
+      <section className="relative isolate overflow-hidden border-b border-band-border bg-band-bg">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 -z-10 select-none"
+        >
+          <img
+            src="/editorial/skills-band.png"
+            alt=""
+            loading="lazy"
+            className="h-full w-full object-cover opacity-45"
+          />
+          <span className="absolute inset-0 bg-band-bg/60" />
+        </div>
+        <div className="mx-auto max-w-container px-6 pb-10 pt-24 max-md:pt-16">
+          <Reveal>
+            <p className="flex items-center gap-3 text-overline font-sans uppercase text-band-text-muted">
+              <span
+                className="inline-block h-px w-6 bg-band-border-strong"
+                aria-hidden="true"
+              />
+              AIGRO Directory
+            </p>
+            <h1 className="mt-3 max-w-[760px] font-display text-display text-band-text">
+              Skills 技能庫
+            </h1>
+            <p className="mt-6 max-w-[680px] text-body-lg text-band-text-secondary">
+              俾你嘅 AI agent 裝上專業能力 — 由 AIGRO 策劃嘅開源技能目錄。
+            </p>
+          </Reveal>
+        </div>
       </section>
 
       {/* Directory toolbar — search + tag chips + count */}
