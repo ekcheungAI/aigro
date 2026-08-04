@@ -29,6 +29,15 @@ module.exports = {
         },
         /* Deep navy text on brand green fills (navy-on-green) */
         "on-accent": "hsl(var(--on-accent) / <alpha-value>)",
+        /* Source palette of the supplied three-dot AIGRO logo. These tokens
+           are documentation/logo-only; product actions remain `lime`. */
+        logo: {
+          navy: "hsl(var(--logo-navy) / <alpha-value>)",
+          paper: "hsl(var(--logo-paper) / <alpha-value>)",
+          green: "hsl(var(--logo-green) / <alpha-value>)",
+          blue: "hsl(var(--logo-blue) / <alpha-value>)",
+          gray: "hsl(var(--logo-gray) / <alpha-value>)",
+        },
         /* Cinematic dark band (hero + inverted footer, theme-independent) */
         band: {
           bg: "hsl(var(--band-bg) / <alpha-value>)",

@@ -25,6 +25,17 @@
     --lime-soft: 166 48% 91%;    /* #DDF3EE tint — chips / AI bubble on light */
     --on-accent: 217 91% 9%;     /* #02122C deep navy text on green fills */
 
+    /* ---- Logo-source palette (three-dot identity reference only) ----
+       These values reproduce the supplied AIGRO mark and its documentation.
+       They are restricted to logo artwork, colour-reference swatches, and
+       explanatory diagrams. Product interaction continues to use the green
+       accent system above, so the public UI retains one action colour. */
+    --logo-navy: 222 60% 11%;    /* #0B132B */
+    --logo-paper: 220 14% 97%;   /* #F6F7F9 */
+    --logo-green: 160 84% 39%;   /* #10B981 */
+    --logo-blue: 219 83% 56%;    /* #2F6FEB */
+    --logo-gray: 220 9% 46%;     /* #6B7280 */
+
     /* Legacy aliases — cascade the rebrand to every page without page edits.
        `ink` now reads brand-green; `gold` (ex-Verified/VIP accent) reads green. */
     --ink: var(--lime-text);        /* text/link accent on light */

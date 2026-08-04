@@ -38,6 +38,7 @@ import PortalLeads from "@/pages/portal/PortalLeads";
 import AdminStudio from "@/pages/admin/AdminStudio";
 import AdminCRM from "@/pages/admin/AdminCRM";
 import Placeholder from "@/pages/Placeholder";
+import Branding from "@/pages/Branding";
 
 /** Per-page <title> + meta（v1.1 SEO 基建） */
 function RouteMeta() {
@@ -56,6 +57,7 @@ function RouteMeta() {
     [/^\/developers/, "AIGRO MCP Network", "行業情報 MCP server — 你嘅 AI 工具一連接,即刻有行業雷達。AI 行業優先名單開放中。"],
     [/^\/sources/, "情報渠道", "AIGRO 情報渠道 — 公開透明嘅來源牆、數據流程與免費任用方式。"],
     [/^\/skills/, "Skills", "AIGRO Skills — 俾你嘅 AI agent 裝上專業能力。"],
+    [/^\/branding/, "品牌指南 Branding", "AIGRO 品牌識別、標誌、色彩、字體、語氣與應用規範。"],
     [/^\/access/, "全級別入口", "AIGRO 全級別入口 — 訪客、會員、創始會員、領航專家、管理員示範登入。"],
     [/^\/login/, "登入", "登入 AIGRO Club — 無限分身對話、完整案例拆解、MCP 優先接入。"],
     [/^\/join/, "加入 Club", "加入 AIGRO Club — 三步成為會員,免費開始,隨時升級。"],
@@ -94,6 +96,7 @@ export default function App() {
         <Route path="pricing" element={<Pricing />} />
         <Route path="developers" element={<Developers />} />
         <Route path="skills" element={<Skills />} />
+        <Route path="branding" element={<Branding />} />
         <Route path="sources" element={<Sources />} />
         {/* /data 併入 Insights 數據合作 tab — 舊連結 redirect 唔會死 */}
         <Route
