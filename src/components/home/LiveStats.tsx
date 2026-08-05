@@ -59,10 +59,7 @@ function CountUp({ value, delay }: { value: number; delay: number }) {
 
   useEffect(() => {
     if (!inView) return;
-    if (reduced) {
-      setDisplay(value);
-      return;
-    }
+    if (reduced) return;
     let raf = 0;
     let start = 0;
     const tick = (t: number) => {
@@ -76,9 +73,11 @@ function CountUp({ value, delay }: { value: number; delay: number }) {
     return () => cancelAnimationFrame(raf);
   }, [inView, value, delay, reduced]);
 
+  const visibleDisplay = reduced && inView ? value : display;
+
   return (
     <span ref={ref} className="font-mono text-label text-band-text">
-      {display}
+      {visibleDisplay}
     </span>
   );
 }

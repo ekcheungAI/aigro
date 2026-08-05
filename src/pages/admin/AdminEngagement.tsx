@@ -33,7 +33,7 @@ async function fetchEngagement(): Promise<EngagementData> {
       .limit(500),
     supabase
       .from("messages")
-      .select("id,conversation_id,role,content,source,confidence,created_at")
+      .select("id,conversation_id,role,content,source,answer_basis,coverage,created_at")
       .order("created_at", { ascending: true })
       .limit(2000),
   ]);
@@ -45,11 +45,18 @@ async function fetchEngagement(): Promise<EngagementData> {
   };
 }
 
-function confidenceColor(c: number | null) {
-  if (c === null) return "text-text-muted";
-  if (c < 0.6) return "text-[#A36A0F]";
-  if (c < 0.8) return "text-text-secondary";
-  return "text-lime-text";
+function coverageLabel(value: AdminMessageRow["coverage"]): string {
+  if (value === "high") return "高覆蓋";
+  if (value === "medium") return "部分覆蓋";
+  if (value === "none") return "需補知識";
+  return "—";
+}
+
+function coverageColor(value: AdminMessageRow["coverage"]): string {
+  if (value === "high") return "text-lime-text";
+  if (value === "medium") return "text-text-secondary";
+  if (value === "none") return "text-destructive";
+  return "text-text-muted";
 }
 
 export default function AdminEngagement() {
@@ -73,13 +80,10 @@ export default function AdminEngagement() {
   const active = conversations.find((c) => c.id === openId) ?? null;
   const activeMessages = active ? (msgByConv.get(active.id) ?? []) : [];
 
-  /** 每段對話嘅平均信心(只計 assistant 有 confidence 嘅訊息) */
-  const avgConfidenceOf = (convId: string): number | null => {
-    const vals = (msgByConv.get(convId) ?? [])
-      .map((m) => m.confidence)
-      .filter((c): c is number => typeof c === "number");
-    if (vals.length === 0) return null;
-    return vals.reduce((s, c) => s + c, 0) / vals.length;
+  /** 用最新一則 assistant 回覆顯示實際 retrieval coverage，唔再製造信心分數。 */
+  const latestCoverageOf = (convId: string): AdminMessageRow["coverage"] => {
+    const assistant = (msgByConv.get(convId) ?? []).filter((m) => m.role === "assistant");
+    return assistant.at(-1)?.coverage ?? null;
   };
 
   const personas = useMemo(() => {
@@ -260,12 +264,12 @@ export default function AdminEngagement() {
                     <th className="px-4 py-3 font-medium">標題</th>
                     <th className="px-4 py-3 font-medium">開始時間</th>
                     <th className="px-4 py-3 text-right font-medium">訊息數</th>
-                    <th className="px-4 py-3 text-right font-medium">平均信心</th>
+                    <th className="px-4 py-3 text-right font-medium">知識覆蓋</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {filtered.map((c) => {
-                    const conf = avgConfidenceOf(c.id);
+                    const coverage = latestCoverageOf(c.id);
                     return (
                       <tr
                         key={c.id}
@@ -292,10 +296,10 @@ export default function AdminEngagement() {
                         <td
                           className={cn(
                             "px-4 py-3 text-right font-mono text-xs font-medium",
-                            confidenceColor(conf)
+                            coverageColor(coverage)
                           )}
                         >
-                          {conf === null ? "—" : conf.toFixed(2)}
+                          {coverageLabel(coverage)}
                         </td>
                       </tr>
                     );
@@ -346,7 +350,7 @@ export default function AdminEngagement() {
                   <p>{m.content}</p>
                   <p className="mt-1.5 text-right font-mono text-[10px] text-text-muted">
                     {m.role === "user" ? "訪客" : personaLabel(active.persona)}
-                    {m.confidence !== null && ` · 信心 ${m.confidence.toFixed(2)}`} ·{" "}
+                    {m.role === "assistant" && ` · ${coverageLabel(m.coverage)} · ${m.answer_basis === "knowledge" ? "已發佈知識" : "一般知識"}`} ·{" "}
                     {timeAgo(m.created_at)}
                   </p>
                 </div>

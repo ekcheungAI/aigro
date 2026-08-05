@@ -212,13 +212,18 @@ export default function PortalProfile() {
     hydratedRef.current = true;
     const row = bundle.profile;
     if (!row) return; // 表冇 row → 保持 localStorage / experts.ts fallback
-    if (typeof row.headline === "string" && row.headline) setTitle(row.headline);
-    if (typeof row.bio === "string" && row.bio) setBio(row.bio);
-    const remoteStats = cleanStats(row.stats);
-    if (remoteStats.length > 0) setStats(remoteStats);
-    const remoteSocials = cleanSocials(row.socials);
-    if (remoteSocials.length > 0) setSocials(remoteSocials);
-    setFeaturedIds(cleanIds(row.featured_ids).slice(0, MAX_FEATURED));
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      if (typeof row.headline === "string" && row.headline) setTitle(row.headline);
+      if (typeof row.bio === "string" && row.bio) setBio(row.bio);
+      const remoteStats = cleanStats(row.stats);
+      if (remoteStats.length > 0) setStats(remoteStats);
+      const remoteSocials = cleanSocials(row.socials);
+      if (remoteSocials.length > 0) setSocials(remoteSocials);
+      setFeaturedIds(cleanIds(row.featured_ids).slice(0, MAX_FEATURED));
+    });
+    return () => { cancelled = true; };
   }, [bundle]);
 
   const publishedItems = bundle?.published ?? [];
@@ -657,7 +662,7 @@ export default function PortalProfile() {
                     <p className="font-mono text-caption text-text-muted">
                       {expert?.achievements ?? ""}
                     </p>
-                    <span className="ml-auto inline-flex h-11 items-center gap-1.5 rounded-md bg-ink-solid px-6 text-label text-white">
+                    <span className="ml-auto inline-flex h-11 items-center gap-1.5 rounded-md bg-ink-solid px-6 text-label text-on-accent">
                       查看領航檔案
                       <ArrowRight className="h-4 w-4" strokeWidth={1.5} />
                     </span>

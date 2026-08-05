@@ -16,10 +16,11 @@ import VerifiedBadge from "@/components/VerifiedBadge";
 import MonogramAvatar, { PhotoAvatar } from "@/components/MonogramAvatar";
 import {
   appendRound,
-  buildChatHistory,
   collectCitations,
+  ensureConversationId,
   lastUserQuestion,
   loadSessionStore,
+  prepareSession,
   saveSessionStore,
   setActiveSession,
 } from "@/components/ask/sessions";
@@ -29,7 +30,7 @@ import { useLiveItems } from "@/data/liveItems";
 import {
   guardrailReply,
   isOffGuard,
-  resolveLlmReply,
+  streamInstructorReply,
 } from "@/lib/llmFallback";
 import { expertHasPhoto } from "@/data/experts";
 import {
@@ -42,6 +43,7 @@ import type { AigroMember } from "@/components/auth/member";
 import { EASE_OUT_STRONG } from "@/components/Reveal";
 import { captureWaitlist } from "@/lib/waitlist";
 import { cn } from "@/lib/utils";
+import { getTurnstileToken } from "@/lib/turnstile";
 
 /** 訪客第 3 條訊息後嘅註冊捕捉卡 — dismiss 改 snooze(7 日後可再出一次) */
 const CAPTURE_DISMISS_KEY = "aigro-ask-capture-dismissed";
@@ -154,6 +156,7 @@ export default function Ask() {
   const [pendingLlm, setPendingLlm] = useState<{
     personaKey: string;
     question: string;
+    streamedText: string;
   } | null>(null);
   // 最新 store 嘅 ref — async LLM resolve 時喺最新狀態上 append,唔會冧咗中途嘅新訊息
   const storeRef = useRef(store);
@@ -189,11 +192,6 @@ export default function Ask() {
   useEffect(() => {
     saveSessionStore(store);
   }, [store]);
-
-  // 切換分身 → 關 popup(避免舊分身內容殘留);drawer / Club capture 喺 selectPersona 關
-  useEffect(() => {
-    setPopupOpen(false);
-  }, [persona.key]);
 
   // Toast 自動消失
   useEffect(() => () => window.clearTimeout(toastTimer.current), []);
@@ -277,6 +275,7 @@ export default function Ask() {
       setAnimatingId(null);
       setDrawerOpen(false);
       setClubCaptureOpen(false);
+      setPopupOpen(false);
       setSearchParams(key === "platform" ? {} : { expert: key });
     },
     [setSearchParams]
@@ -306,13 +305,18 @@ export default function Ask() {
 
       const personaKey = persona.key;
       /** 即刻入 store + 行打字機(KB / guardrail / 內建模板都係同步路徑) */
-      const commit = (reply: Parameters<typeof appendRound>[3], topicId: string | null) => {
+      const commit = (
+        reply: Parameters<typeof appendRound>[3],
+        topicId: string | null,
+        skipRemoteLog = false
+      ) => {
         const { store: next, aiMessageId } = appendRound(
           storeRef.current,
           personaKey,
           question,
           reply,
-          topicId
+          topicId,
+          skipRemoteLog
         );
         storeRef.current = next;
         setStore(next);
@@ -334,28 +338,57 @@ export default function Ask() {
         activeSession?.lastTopicId ?? null
       );
 
-      // KB 命中(含近話題 bridge)→ 直接用;matched 附上俾 AiMessage 信任行用
-      if (matched !== "fallback") {
+      // 平台 FAQ 可用已審核靜態答案；專家分身一律走 CMS/RAG，避免 code
+      // 內答案同導師已發佈知識版本不一致。
+      if (persona.kind === "platform" && matched !== "fallback") {
         commit({ ...reply, matched }, topicId);
         return;
       }
 
-      // C. LLM 自由答 — 先渲染用戶氣泡 + thinking bars(pendingLlm),resolve 後先入 store
-      //    行同一條 typewriter 路徑。PRIMARY 自家 argro /chat(帶近 6 條歷史,
-      //    追問記憶唔退化)→ SECONDARY VITE_LLM_* OpenAI(env 有設先用)
-      //    → 全部失敗 → 內建一般知識模板;UI 永遠唔 hang。
-      setPendingLlm({ personaKey, question });
-      const history = buildChatHistory(messages, 6);
-      resolveLlmReply(persona, question, history)
-        .catch(() => reply) // timeout / 網絡 / 503 / rate-limit → graceful 內建一般知識回覆
-        .then((finalReply) => {
-          setPendingLlm((cur) =>
-            cur && cur.personaKey === personaKey && cur.question === question ? null : cur
+      // Grounded streaming chat:先建立 auth-owned conversation；history、retrieval、
+      // citations 同 persistence 全部由 Edge Function 處理。
+      const prepared = prepareSession(storeRef.current, personaKey, question);
+      storeRef.current = prepared.store;
+      setStore(prepared.store);
+      setPendingLlm({ personaKey, question, streamedText: "" });
+      void ensureConversationId(prepared.session.id, personaKey, prepared.session.title)
+        .then(async (conversationId) => {
+          if (!conversationId) throw new Error("conversation_unavailable");
+          const requestId = crypto.randomUUID();
+          const turnstileToken = await getTurnstileToken("instructor_chat");
+          return streamInstructorReply(
+            persona,
+            conversationId,
+            question,
+            requestId,
+            (streamedText) => {
+              setPendingLlm((current) =>
+                current && current.personaKey === personaKey && current.question === question
+                  ? { ...current, streamedText }
+                  : current
+              );
+              scrollToBottom();
+            },
+            turnstileToken
           );
-          commit(finalReply, null);
+        })
+        .catch(() => ({
+          ...reply,
+          source: "general" as const,
+          coverage: "none" as const,
+          answerBasis: "general" as const,
+          confidence: 0,
+        }))
+        .then((finalReply) => {
+          setPendingLlm((current) =>
+            current && current.personaKey === personaKey && current.question === question
+              ? null
+              : current
+          );
+          commit(finalReply, null, true);
         });
     },
-    [exhausted, persona, activeSession, pendingLlm, messages]
+    [exhausted, persona, activeSession, pendingLlm, scrollToBottom]
   );
 
   const autoGrow = (el: HTMLTextAreaElement) => {
@@ -363,11 +396,11 @@ export default function Ask() {
     el.style.height = `${Math.min(el.scrollHeight, 132)}px`; // 1–4 行
   };
 
-  // 專家分身:信心 <0.6 →「Club 優先預約 — 即將開放」→ inline email capture(G5)
+  // 專家分身:知識覆蓋不足 → 真人導師預約入口。
   const lowConfidenceAction =
     persona.kind === "expert"
       ? {
-          label: "Club 優先預約 — 即將開放",
+          label: "預約真人導師",
           onClick: () => setClubCaptureOpen(true),
         }
       : undefined;
@@ -377,6 +410,7 @@ export default function Ask() {
       className="flex h-[calc(100dvh-4rem)] bg-bg"
       style={{ "--ask-accent": persona.accent } as React.CSSProperties}
     >
+      <h1 className="sr-only">Ask 問答</h1>
       {/* ---------- 左欄(≥lg):分身選擇 & 對話管理 ----------
           首次 mount slide-in(x -12px,250ms,一次性;reduced-motion → 純 fade) */}
       <motion.div
@@ -711,7 +745,13 @@ export default function Ask() {
                               : undefined
                           }
                         >
-                          <ThinkingBars />
+                          {pendingLlm.streamedText ? (
+                            <p className="whitespace-pre-wrap text-body-lg text-text-primary">
+                              {pendingLlm.streamedText}
+                            </p>
+                          ) : (
+                            <ThinkingBars />
+                          )}
                         </div>
                       </div>
                     </div>
@@ -827,7 +867,7 @@ export default function Ask() {
                   <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
                     <Link
                       to="/pricing"
-                      className="group inline-flex h-11 items-center gap-1.5 rounded-md bg-ink-solid px-6 text-label text-white press hover:bg-ink-hover"
+                      className="group inline-flex h-11 items-center gap-1.5 rounded-md bg-ink-solid px-6 text-label text-on-accent press hover:bg-ink-hover"
                     >
                       升級會員
                       <ArrowRight
@@ -883,7 +923,7 @@ export default function Ask() {
                       onClick={() => send(input)}
                       disabled={!input.trim() || pendingLlm !== null}
                       aria-label="送出問題"
-                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-ink-solid text-white press hover:bg-ink-hover disabled:pointer-events-none disabled:opacity-40"
+                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-ink-solid text-on-accent press hover:bg-ink-hover disabled:pointer-events-none disabled:opacity-40"
                     >
                       <ArrowUp className="h-5 w-5" strokeWidth={1.5} />
                     </button>
@@ -980,13 +1020,13 @@ export default function Ask() {
         onClose={() => setPopupOpen(false)}
       />
 
-      {/* G5:Club 優先預約 inline capture — 低信心 CTA / 預約意圖觸發 */}
+      {/* 知識覆蓋不足／預約意圖：打開真實導師時段 */}
       <AnimatePresence>
         {clubCaptureOpen && persona.kind === "expert" && (
           <motion.div
             key="club-capture"
             role="dialog"
-            aria-label="Club 優先預約登記"
+            aria-label="真人導師預約"
             initial={{ opacity: 0, transform: "translate(-50%, 12px)" }}
             animate={{ opacity: 1, transform: "translate(-50%, 0px)" }}
             exit={{ opacity: 0, transform: "translate(-50%, 12px)" }}
@@ -1006,14 +1046,14 @@ export default function Ask() {
               idPrefix="ask-club"
               onSubmitted={() => {
                 setClubCaptureOpen(false);
-                showToast("已記低 — Club 預約開放即通知你。");
+                showToast("預約申請已送出 — 導師確認後會提供會面連結。");
               }}
             />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Club 優先預約 toast */}
+      {/* 預約狀態 toast */}
       <AnimatePresence>
         {toast && (
           <motion.div

@@ -4,3 +4,9 @@ dist
 # local env with real credentials — never commit
 .env.local
 .env
+.vercel
+.env*.local
+coverage
+playwright-report
+test-results
+supabase/.temp

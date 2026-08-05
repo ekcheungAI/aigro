@@ -1,0 +1,35 @@
+project_id = "aigrow"
+
+[api]
+port = 54331
+
+[db]
+port = 54332
+shadow_port = 54330
+major_version = 15
+
+[studio]
+port = 54333
+
+[inbucket]
+port = 54334
+smtp_port = 54335
+pop3_port = 54336
+
+[analytics]
+port = 54337
+backend = "postgres"
+
+[functions.ask-answer]
+# Visitors sign in with Supabase Anonymous Auth, so every chat has a real JWT
+# and auth.uid() owner. This must stay enabled in every deployed environment.
+verify_jwt = true
+
+[functions.knowledge-worker]
+# The durable worker is invoked by an internal scheduler/webhook and authenticates
+# with x-worker-secret. Never expose KNOWLEDGE_WORKER_SECRET to the browser.
+verify_jwt = false
+
+[functions.booking-notify]
+# Database webhook handler; authenticated with x-webhook-secret.
+verify_jwt = false

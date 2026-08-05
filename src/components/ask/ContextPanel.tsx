@@ -35,7 +35,9 @@ export default function ContextPanel({
   const liveFetchedAt = useLiveFetchedAt();
   const itemCount = liveItems?.length ?? aihotAllInsights.length;
   const knowledgeSource = isPlatform
-    ? `全站情報庫 ${itemCount} 則 · 自家管道每 30 分鐘更新`
+    ? liveItems
+      ? `全站情報庫 ${itemCount} 則 · 自家管道每 30 分鐘更新`
+      : `全站情報庫 ${itemCount} 則 · 目前顯示資料快照`
     : `公開分享 + 授權內容 · ${persona.expert?.viewpoints?.length ?? 10} 個核心觀點 · Prompt v1.0`;
   const updatedDate = isPlatform
     ? (liveFetchedAt ?? aihotFetchedAt).slice(0, 10)

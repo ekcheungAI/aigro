@@ -10,6 +10,12 @@ import { cn } from "@/lib/utils";
 export interface Citation {
   title: string;
   href: string;
+  excerpt?: string;
+  revision_id?: string;
+  section?: string;
+  page?: number;
+  start_seconds?: number;
+  end_seconds?: number;
 }
 
 export interface AiReply {
@@ -35,8 +41,10 @@ export interface AiReply {
    * direct/composed → 「授權內容庫回答 · 附來源」;near/continued →「相關話題回答」。
    */
   matched?: "direct" | "composed" | "near" | "continued" | "fallback";
-  /** argro /chat 回覆帶即時情報引用 → 顯示「附即時情報引用」chip */
+  /** Server-side RAG 回覆帶即時情報引用 → 顯示「附即時情報引用」chip */
   ragUsed?: boolean;
+  answerBasis?: "knowledge" | "general";
+  coverage?: "high" | "medium" | "none";
 }
 
 interface AiMessageProps {
@@ -104,24 +112,23 @@ export default function AiMessage({
   onFollowUp,
 }: AiMessageProps) {
   const reduced = useReducedMotion();
-  const [phase, setPhase] = useState<Phase>(animate ? "waiting" : "done");
+  const [phase, setPhase] = useState<Phase>("waiting");
 
   // Simulate waiting for the first token (ThinkingBars); reduced motion skips the wait.
   // 還原歷史(animate=false)直接 done — 唔經 thinking / 打字機。
   useEffect(() => {
-    if (!animate) {
-      setPhase("done");
-      return;
-    }
-    if (reduced) {
-      setPhase("typing");
-      return;
-    }
+    if (!animate || reduced) return;
     const t = window.setTimeout(() => setPhase("typing"), 900);
     return () => window.clearTimeout(t);
   }, [reduced, animate]);
 
-  const lowConfidence = reply.confidence < 0.6;
+  const visiblePhase: Phase = !animate
+    ? "done"
+    : reduced && phase === "waiting"
+    ? "typing"
+    : phase;
+
+  const lowConfidence = reply.coverage === "none" || reply.confidence < 0.6;
   const followUps = onFollowUp ? (reply.followUps ?? []) : [];
 
   return (
@@ -136,7 +143,7 @@ export default function AiMessage({
       >
         {!animate ? (
           <StaticReplyText text={reply.text} />
-        ) : phase === "waiting" ? (
+        ) : visiblePhase === "waiting" ? (
           <ThinkingBars />
         ) : (
           <TypewriterText
@@ -153,7 +160,7 @@ export default function AiMessage({
 
       {/* Citation chips — fade-in 120ms, stagger 60ms, only after text completes
           (還原歷史 animate=false → initial={false} 即刻顯示,無進場動畫) */}
-      {phase === "done" && reply.citations.length > 0 && (
+      {visiblePhase === "done" && reply.citations.length > 0 && (
         <motion.div
           className="mt-3 flex flex-wrap gap-2"
           initial={animate ? "hidden" : false}
@@ -201,7 +208,7 @@ export default function AiMessage({
 
       {/* 一般知識 chip(v1.21)— LLM / 內建模板回覆冊引用,用呢個 chip 標明性質。
           同引用 chips 一樣文字完成後先 fade-in;還原歷史即刻顯示。 */}
-      {phase === "done" &&
+      {visiblePhase === "done" &&
         (reply.source === "llm" || reply.source === "general") && (
           <motion.div
             className="mt-3 flex flex-wrap gap-2"
@@ -223,7 +230,7 @@ export default function AiMessage({
 
       {/* 追問 chips — 引用之後,分身口吻邀請深入;點擊直接送出。
           同引用一樣 fade-in stagger 60ms;還原歷史(animate=false)即刻顯示。 */}
-      {phase === "done" && followUps.length > 0 && (
+      {visiblePhase === "done" && followUps.length > 0 && (
         <motion.div
           className="mt-3 flex flex-wrap items-center gap-2"
           initial={animate ? "hidden" : false}
@@ -270,7 +277,7 @@ export default function AiMessage({
       {/* 信任行(G11/G12)— guardrail deflect 唔顯示;
           KB →「授權內容庫回答 · 附來源」,bridge/continued →「相關話題回答」,
           llm →「AI 生成 · 分身語氣」,general →「一般知識回覆」;唔再顯示小數信心分 */}
-      {phase === "done" && reply.source !== "guardrail" && (
+      {visiblePhase === "done" && reply.source !== "guardrail" && (
         <motion.p
           initial={animate ? { opacity: 0 } : false}
           animate={{ opacity: 1 }}

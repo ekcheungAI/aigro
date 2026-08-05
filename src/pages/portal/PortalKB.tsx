@@ -2,17 +2,18 @@ import { useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import {
   Archive,
-  ArchiveRestore,
   BookOpen,
+  Check,
   Clapperboard,
+  Clock3,
   FileText,
   Link2,
+  LoaderCircle,
   NotebookPen,
-  Pencil,
   Plus,
-  Save,
-  Sparkles,
-  Workflow,
+  RotateCcw,
+  ShieldCheck,
+  X,
 } from "lucide-react";
 import AdminSlideOver from "@/components/admin/AdminSlideOver";
 import { useAdminToast } from "@/components/admin/AdminToast";
@@ -23,604 +24,470 @@ import { timeAgo, useAdminQuery } from "@/components/admin/adminData";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 
-/* ---------------- 型別 ---------------- */
+type SourceType = "manual" | "url" | "pdf" | "youtube";
+type RevisionStatus =
+  | "queued"
+  | "processing"
+  | "review"
+  | "approved"
+  | "rejected"
+  | "failed"
+  | "archived";
 
-/** expert_knowledge.kind — 五種素材類型(v3 SQL CHECK) */
-type KnowledgeKind = "note" | "link" | "file" | "video" | "playbook";
-type KnowledgeStatus = "active" | "archived";
-
-/** expert_knowledge 表行(updated_at / created_at 由 v3 SQL 提供,防禦性 optional) */
-interface KnowledgeRow {
+interface RevisionRow {
   id: string;
-  expert_slug: string;
-  kind: KnowledgeKind;
-  title: string;
-  content: string | null;
-  url: string | null;
-  tags: string[] | null;
-  status: KnowledgeStatus;
-  created_at?: string | null;
-  updated_at?: string | null;
+  revision_no: number;
+  extracted_text: string | null;
+  distilled_json: Record<string, unknown> | null;
+  status: RevisionStatus;
+  error_message: string | null;
+  approved_at: string | null;
+  created_at: string;
+  distillation_jobs?: Array<{
+    stage: string;
+    status: string;
+    attempts: number;
+    error_message: string | null;
+  }>;
 }
 
-/** editor 欄位 */
-interface KBFields {
-  kind: KnowledgeKind;
+interface SourceRow {
+  id: string;
+  source_type: SourceType;
   title: string;
-  content: string;
-  url: string;
-  tags: string;
+  source_url: string | null;
+  tags: string[];
+  published_revision_id: string | null;
+  archived_at: string | null;
+  created_at: string;
+  updated_at: string;
+  knowledge_revisions: RevisionRow[];
 }
 
-const EMPTY_FIELDS: KBFields = {
-  kind: "note",
-  title: "",
-  content: "",
-  url: "",
-  tags: "",
-};
-
-const KIND_META: Record<
-  KnowledgeKind,
-  { label: string; desc: string; icon: typeof NotebookPen; chip: string }
+const SOURCE_META: Record<
+  SourceType,
+  { label: string; description: string; icon: typeof NotebookPen }
 > = {
-  note: {
-    label: "觀點 note",
-    desc: "觀點 / 心得 — 你嘅第一手睇法,分身答相關問題會引用",
+  manual: {
+    label: "文字",
+    description: "第一手觀點、方法、例子或完整筆記",
     icon: NotebookPen,
-    chip: "bg-lime-soft text-lime-text",
   },
-  link: {
-    label: "文章 link",
-    desc: "文章連結 + 摘要 — 分身會用你寫嘅摘要,唔係齋條 URL",
+  url: {
+    label: "網頁 URL",
+    description: "系統會抽取主要文章內容，再交俾你審批",
     icon: Link2,
-    chip: "bg-card text-text-secondary",
   },
-  video: {
-    label: "影片 video",
-    desc: "影片連結 + 重點 — 內容重點先係分身讀嘅部分",
-    icon: Clapperboard,
-    chip: "bg-card text-text-secondary",
-  },
-  playbook: {
-    label: "方法論 playbook",
-    desc: "方法論 / SOP — 分身指導訪客時照你嘅步驟行",
-    icon: Workflow,
-    chip: "bg-ink-soft text-ink",
-  },
-  file: {
-    label: "文件 file",
-    desc: "文件內容直接貼上 — 全文會注入分身上下文",
+  pdf: {
+    label: "PDF",
+    description: "私人上傳；原檔不會公開",
     icon: FileText,
-    chip: "bg-card text-text-secondary",
+  },
+  youtube: {
+    label: "YouTube",
+    description: "先讀字幕，沒有字幕時使用語音轉錄",
+    icon: Clapperboard,
   },
 };
 
-const KIND_ORDER: KnowledgeKind[] = ["note", "link", "video", "playbook", "file"];
+const STATUS_LABEL: Record<RevisionStatus, string> = {
+  queued: "等待處理",
+  processing: "蒸餾中",
+  review: "等待審批",
+  approved: "已批准",
+  rejected: "已拒絕",
+  failed: "處理失敗",
+  archived: "已封存",
+};
 
-/* ---------------- 查詢 + helpers ---------------- */
-
-async function fetchMyKnowledge(slug: string): Promise<KnowledgeRow[]> {
-  if (!supabase) throw new Error("Supabase 未連接 — 請檢查環境變數。");
-  // select("*"):v3 SQL 嘅 timestamp 欄位名以最終 migration 為準,客戶端排序
+async function fetchKnowledge(slug: string): Promise<SourceRow[]> {
+  if (!supabase) throw new Error("Supabase 未連接");
+  const { data: expert, error: expertError } = await supabase
+    .from("experts")
+    .select("id")
+    .eq("slug", slug)
+    .single();
+  if (expertError || !expert) throw new Error(expertError?.message ?? "專家身份未建立");
   const { data, error } = await supabase
-    .from("expert_knowledge")
-    .select("*")
-    .eq("expert_slug", slug)
-    .limit(200);
-  if (error) throw new Error(error.message);
-  const rows = (data ?? []) as KnowledgeRow[];
-  return rows.sort((a, b) =>
-    (b.updated_at ?? b.created_at ?? "").localeCompare(
-      a.updated_at ?? a.created_at ?? ""
+    .from("knowledge_sources")
+    .select(
+      "id,source_type,title,source_url,tags,published_revision_id,archived_at,created_at,updated_at,knowledge_revisions(id,revision_no,extracted_text,distilled_json,status,error_message,approved_at,created_at,distillation_jobs(stage,status,attempts,error_message))"
     )
-  );
+    .eq("expert_id", expert.id)
+    .order("updated_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as unknown as SourceRow[];
 }
 
-function rlsHint(message: string): string {
-  return `${message} — 可能係權限未開或表未建立:請先喺 Supabase SQL Editor 執行 supabase/v3-policies.sql(expert_knowledge 表 + expert CRUD policy)。`;
+function latestRevision(source: SourceRow): RevisionRow | null {
+  return [...(source.knowledge_revisions ?? [])]
+    .sort((a, b) => b.revision_no - a.revision_no)[0] ?? null;
 }
 
-function fieldsToTags(tags: string): string[] {
-  return tags
-    .split(/[,，、]/)
-    .map((t) => t.trim())
-    .filter(Boolean);
+function safeFilename(name: string): string {
+  const extension = name.toLowerCase().endsWith(".pdf") ? ".pdf" : "";
+  const base = name
+    .replace(/\.pdf$/i, "")
+    .normalize("NFKD")
+    .replace(/[^a-zA-Z0-9-_]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80) || "document";
+  return `${base}${extension}`;
 }
 
-/* ---------------- 新增 / 編輯 editor ---------------- */
-
-function KBEditor({
-  mode,
-  initial,
-  onSubmit,
-  onCancel,
-}: {
-  mode: "new" | "edit";
-  initial: KBFields;
-  /** 回傳 null = 成功;否則係誠實 error 訊息 */
-  onSubmit: (fields: KBFields) => Promise<string | null>;
-  onCancel: () => void;
-}) {
-  const [kind, setKind] = useState<KnowledgeKind>(initial.kind);
-  const [title, setTitle] = useState(initial.title);
-  const [content, setContent] = useState(initial.content);
-  const [url, setUrl] = useState(initial.url);
-  const [tags, setTags] = useState(initial.tags);
+function SourceEditor({ slug, onDone }: { slug: string; onDone: () => void }) {
+  const toast = useAdminToast();
+  const [sourceType, setSourceType] = useState<SourceType>("manual");
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [url, setUrl] = useState("");
+  const [tags, setTags] = useState("");
+  const [file, setFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const valid = title.trim() !== "" && content.trim() !== "";
+  const valid = title.trim().length >= 2 && (
+    (sourceType === "manual" && content.trim().length >= 20) ||
+    ((sourceType === "url" || sourceType === "youtube") && /^https:\/\//i.test(url.trim())) ||
+    (sourceType === "pdf" && file?.type === "application/pdf")
+  );
 
-  const submit = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!valid || saving) return;
+  const submit = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!valid || saving || !supabase) return;
     setSaving(true);
     setError(null);
-    const err = await onSubmit({ kind, title, content, url, tags });
-    setSaving(false);
-    if (err) setError(err);
+    let storagePath: string | null = null;
+    try {
+      if (sourceType === "pdf" && file) {
+        storagePath = `${slug}/${crypto.randomUUID()}-${safeFilename(file.name)}`;
+        const { error: uploadError } = await supabase.storage
+          .from("expert-kb")
+          .upload(storagePath, file, { contentType: "application/pdf", upsert: false });
+        if (uploadError) throw uploadError;
+      }
+      const { error: rpcError } = await supabase.rpc("create_knowledge_source", {
+        p_expert_slug: slug,
+        p_source_type: sourceType,
+        p_title: title.trim(),
+        p_source_url: url.trim() || null,
+        p_raw_text: sourceType === "manual" ? content.trim() : null,
+        p_storage_path: storagePath,
+        p_tags: tags.split(/[,，、]/).map((tag) => tag.trim()).filter(Boolean),
+      });
+      if (rpcError) {
+        if (storagePath) await supabase.storage.from("expert-kb").remove([storagePath]);
+        throw rpcError;
+      }
+      toast("素材已進入蒸餾佇列；完成後要審批先會發佈");
+      onDone();
+    } catch (caught) {
+      const message = caught instanceof Error ? caught.message : "未能建立素材";
+      setError(message.includes("cms_ingestion_disabled")
+        ? "CMS 尚未為呢位導師開啟，請由 admin Studio 啟用。"
+        : message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
-    <form onSubmit={(e) => void submit(e)} className="flex h-full flex-col">
-      <div className="flex-1 space-y-4 px-6 py-5">
-        <div>
-          <label
-            htmlFor="kb-kind"
-            className="font-mono text-[11px] uppercase tracking-[0.14em] text-text-muted"
-          >
-            素材類型 *
-          </label>
-          <select
-            id="kb-kind"
-            value={kind}
-            onChange={(e) => setKind(e.target.value as KnowledgeKind)}
-            className={cn(PORTAL_FIELD, "mt-1.5")}
-          >
-            {KIND_ORDER.map((k) => (
-              <option key={k} value={k}>
-                {KIND_META[k].label}
-              </option>
-            ))}
-          </select>
-          <p className="mt-1.5 text-xs leading-relaxed text-text-muted">
-            {KIND_META[kind].desc}
-          </p>
+    <form onSubmit={(event) => void submit(event)} className="flex h-full flex-col">
+      <div className="flex-1 space-y-5 overflow-y-auto px-6 py-5">
+        <div className="grid grid-cols-2 gap-2">
+          {(Object.keys(SOURCE_META) as SourceType[]).map((type) => {
+            const meta = SOURCE_META[type];
+            return (
+              <button
+                key={type}
+                type="button"
+                onClick={() => setSourceType(type)}
+                className={cn(
+                  "press rounded-md border px-3 py-3 text-left transition-colors",
+                  sourceType === type ? "border-lime bg-lime-soft" : "border-border bg-surface"
+                )}
+              >
+                <meta.icon className="h-4 w-4 text-lime-text" strokeWidth={1.5} />
+                <span className="mt-1.5 block text-sm font-medium text-text-primary">{meta.label}</span>
+                <span className="mt-0.5 block text-[11px] leading-relaxed text-text-muted">
+                  {meta.description}
+                </span>
+              </button>
+            );
+          })}
         </div>
-        <div>
-          <label
-            htmlFor="kb-title"
-            className="font-mono text-[11px] uppercase tracking-[0.14em] text-text-muted"
-          >
-            標題 *
-          </label>
+
+        <label className="block text-xs text-text-muted">
+          標題
           <input
-            id="kb-title"
-            className={cn(PORTAL_FIELD, "mt-1.5")}
-            placeholder="例:香港中小企導入 AI 客服嘅三個坑"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-        </div>
-        <div>
-          <label
-            htmlFor="kb-content"
-            className="font-mono text-[11px] uppercase tracking-[0.14em] text-text-muted"
-          >
-            內容 / 重點摘要 *
-          </label>
-          <textarea
-            id="kb-content"
-            rows={8}
-            className={cn(PORTAL_FIELD, "mt-1.5 resize-none leading-relaxed")}
-            placeholder="分身會原句讀呢段 — 寫重點、立場、數字、步驟。越具體,分身答得越似你。"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-          />
-          <p className="mt-1 text-right font-mono text-[11px] text-text-muted">
-            {content.length} 字
-          </p>
-        </div>
-        <div>
-          <label
-            htmlFor="kb-url"
-            className="font-mono text-[11px] uppercase tracking-[0.14em] text-text-muted"
-          >
-            連結(可選)
-          </label>
-          <div className="relative mt-1.5">
-            <Link2 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
-            <input
-              id="kb-url"
-              className={cn(PORTAL_FIELD, "pl-9")}
-              placeholder="https://(原文 / 影片 / 文件連結)"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-            />
-          </div>
-        </div>
-        <div>
-          <label
-            htmlFor="kb-tags"
-            className="font-mono text-[11px] uppercase tracking-[0.14em] text-text-muted"
-          >
-            標籤
-          </label>
-          <input
-            id="kb-tags"
+            onChange={(event) => setTitle(event.target.value)}
             className={cn(PORTAL_FIELD, "mt-1.5")}
-            placeholder="逗號分隔:AI 客服, 中小企"
-            value={tags}
-            onChange={(e) => setTags(e.target.value)}
+            placeholder="例：香港中小企導入 AI 客服嘅三個坑"
           />
-        </div>
-        <p className="rounded-md border border-dashed border-border-strong bg-card/60 px-3.5 py-2.5 text-xs leading-relaxed text-text-muted">
-          儲存後即時生效 — active 狀態嘅知識會喺下一次對話注入你嘅 AI 分身,
-          訪客問相關問題時分身會用呢啲第一手資料回答。
-        </p>
-        {error && (
-          <p
-            role="alert"
-            className="rounded-md border border-[#A63A30]/40 bg-card px-3.5 py-2.5 text-xs leading-relaxed text-[#A63A30]"
-          >
-            {error}
-          </p>
+        </label>
+
+        {sourceType === "manual" && (
+          <label className="block text-xs text-text-muted">
+            原文
+            <textarea
+              value={content}
+              onChange={(event) => setContent(event.target.value)}
+              rows={12}
+              className={cn(PORTAL_FIELD, "mt-1.5 resize-y leading-relaxed")}
+              placeholder="寫低觀點、證據、數字、步驟同適用界線。"
+            />
+            <span className="mt-1 block text-right font-mono text-[11px]">{content.length} 字</span>
+          </label>
         )}
+
+        {(sourceType === "url" || sourceType === "youtube") && (
+          <label className="block text-xs text-text-muted">
+            {sourceType === "youtube" ? "YouTube URL" : "文章 URL"}
+            <input
+              type="url"
+              value={url}
+              onChange={(event) => setUrl(event.target.value)}
+              className={cn(PORTAL_FIELD, "mt-1.5")}
+              placeholder="https://"
+            />
+          </label>
+        )}
+
+        {sourceType === "pdf" && (
+          <label className="block rounded-md border border-dashed border-border-strong bg-card p-5 text-xs text-text-muted">
+            PDF（最多 25 MB）
+            <input
+              type="file"
+              accept="application/pdf,.pdf"
+              onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+              className="mt-2 block w-full text-xs"
+            />
+          </label>
+        )}
+
+        <label className="block text-xs text-text-muted">
+          標籤
+          <input
+            value={tags}
+            onChange={(event) => setTags(event.target.value)}
+            className={cn(PORTAL_FIELD, "mt-1.5")}
+            placeholder="AI 客服, 中小企"
+          />
+        </label>
+
+        <p className="rounded-md border border-border bg-card px-4 py-3 text-xs leading-relaxed text-text-muted">
+          素材會先經抽取、蒸餾和切塊。只有你或 admin 明確批准嘅 revision，先會成為分身回答來源。
+        </p>
+        {error && <p role="alert" className="text-xs text-destructive">{error}</p>}
       </div>
-      <div className="flex gap-2 border-t border-border px-6 py-4">
+      <div className="border-t border-border px-6 py-4">
         <button
           type="submit"
           disabled={!valid || saving}
-          className={cn(
-            "inline-flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-            valid && !saving
-              ? "bg-lime text-on-accent hover:bg-lime-hover"
-              : "cursor-not-allowed bg-card text-text-muted"
-          )}
+          className="press inline-flex w-full items-center justify-center gap-2 rounded-md bg-lime px-4 py-2.5 text-sm font-medium text-on-accent disabled:cursor-not-allowed disabled:opacity-40"
         >
-          <Save className="h-4 w-4" />
-          {saving ? "儲存中…" : mode === "edit" ? "儲存變更" : "加入知識庫"}
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="inline-flex items-center rounded-md border border-border px-3 py-2 text-sm text-text-secondary transition-colors hover:border-border-strong"
-        >
-          取消
+          {saving ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+          {saving ? "建立中…" : "加入蒸餾佇列"}
         </button>
       </div>
     </form>
   );
 }
 
-/* ---------------- Page ---------------- */
+function RevisionPreview({ source, revision }: { source: SourceRow; revision: RevisionRow }) {
+  const distilled = revision.distilled_json;
+  return (
+    <div className="space-y-5 px-6 py-5">
+      <div>
+        <p className="font-mono text-[11px] uppercase tracking-wider text-text-muted">Revision {revision.revision_no}</p>
+        <h2 className="mt-1 font-display text-xl text-text-primary">{source.title}</h2>
+      </div>
+      {revision.error_message && (
+        <p className="rounded-md border border-border bg-card px-4 py-3 text-xs text-destructive">
+          {revision.error_message}
+        </p>
+      )}
+      {distilled && (
+        <section>
+          <h3 className="text-sm font-medium text-text-primary">蒸餾結果</h3>
+          <pre className="mt-2 max-h-72 overflow-auto whitespace-pre-wrap rounded-md border border-border bg-card p-4 font-mono text-[11px] leading-relaxed text-text-secondary">
+            {JSON.stringify(distilled, null, 2)}
+          </pre>
+        </section>
+      )}
+      <section>
+        <h3 className="text-sm font-medium text-text-primary">抽取原文</h3>
+        <div className="mt-2 max-h-[420px] overflow-auto whitespace-pre-wrap rounded-md border border-border bg-surface p-4 text-xs leading-relaxed text-text-secondary">
+          {revision.extracted_text || "仍在處理，暫未有可預覽內容。"}
+        </div>
+      </section>
+    </div>
+  );
+}
 
-/**
- * PortalKB `/portal/kb` — 分身知識庫(真產品)。
- * CRUD 全走 Supabase `expert_knowledge`(RLS:expert 管自己 slug);
- * active 知識由 argro /chat 即時注入分身 persona context — 上傳即用得上。
- */
 export default function PortalKB() {
   const { slug, expert } = usePortalExpert();
   const toast = useAdminToast();
-  const firstName = expert?.nameEn.split(" ")[0] ?? slug;
-
-  const { data, loading, error, refetch } = useAdminQuery(
-    () => fetchMyKnowledge(slug),
-    [slug]
-  );
-  const [editorMode, setEditorMode] = useState<"new" | "edit" | null>(null);
-  const [editingRow, setEditingRow] = useState<KnowledgeRow | null>(null);
+  const { data, loading, error, refetch } = useAdminQuery(() => fetchKnowledge(slug), [slug]);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [preview, setPreview] = useState<{ source: SourceRow; revision: RevisionRow } | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
-
   const rows = useMemo(() => data ?? [], [data]);
-  const activeCount = rows.filter((r) => r.status === "active").length;
+  const publishedCount = rows.filter((row) => row.published_revision_id && !row.archived_at).length;
+  const reviewCount = rows.filter((row) => latestRevision(row)?.status === "review").length;
 
-  const submitNew = async (fields: KBFields): Promise<string | null> => {
-    if (!supabase) return "Supabase 未連接 — 請檢查環境變數。";
-    const { error: insertError } = await supabase
-      .from("expert_knowledge")
-      .insert({
-        expert_slug: slug,
-        kind: fields.kind,
-        title: fields.title.trim(),
-        content: fields.content.trim(),
-        url: fields.url.trim() || null,
-        tags: fieldsToTags(fields.tags),
-        status: "active",
-      });
-    if (insertError) return rlsHint(`新增失敗:${insertError.message}`);
-    setEditorMode(null);
-    toast("已加入知識庫 — 分身下一次對話即時用得上");
-    refetch();
-    return null;
-  };
-
-  const submitEdit = async (
-    row: KnowledgeRow,
-    fields: KBFields
-  ): Promise<string | null> => {
-    if (!supabase) return "Supabase 未連接 — 請檢查環境變數。";
-    const { error: updateError } = await supabase
-      .from("expert_knowledge")
-      .update({
-        kind: fields.kind,
-        title: fields.title.trim(),
-        content: fields.content.trim(),
-        url: fields.url.trim() || null,
-        tags: fieldsToTags(fields.tags),
-      })
-      .eq("id", row.id);
-    if (updateError) return rlsHint(`更新失敗:${updateError.message}`);
-    setEditorMode(null);
-    setEditingRow(null);
-    toast("已更新 — 分身上下文同步更新");
-    refetch();
-    return null;
-  };
-
-  /** archive / restore(軟刪)— status 切換,行保留 */
-  const toggleStatus = async (row: KnowledgeRow) => {
-    if (!supabase) {
-      toast("Supabase 未連接 — 請檢查環境變數");
-      return;
-    }
-    const next: KnowledgeStatus = row.status === "active" ? "archived" : "active";
-    setBusyId(row.id);
-    const { error: updateError } = await supabase
-      .from("expert_knowledge")
-      .update({ status: next })
-      .eq("id", row.id);
+  const reviewRevision = async (revision: RevisionRow, decision: "approve" | "reject") => {
+    if (!supabase) return;
+    setBusyId(revision.id);
+    const { error: reviewError } = await supabase.rpc("review_knowledge_revision", {
+      p_revision_id: revision.id,
+      p_decision: decision,
+      p_notes: null,
+    });
     setBusyId(null);
-    if (updateError) {
-      toast(rlsHint(`狀態切換失敗:${updateError.message}`));
+    if (reviewError) {
+      toast(`審批失敗：${reviewError.message}`);
       return;
     }
-    toast(
-      next === "archived"
-        ? "已封存 — 分身唔會再用呢條(隨時可還原)"
-        : "已還原 — 分身即刻用得返"
-    );
+    toast(decision === "approve" ? "Revision 已批准並發佈" : "Revision 已拒絕");
     refetch();
   };
 
-  const editorInitial: KBFields =
-    editorMode === "edit" && editingRow
-      ? {
-          kind: editingRow.kind,
-          title: editingRow.title,
-          content: editingRow.content ?? "",
-          url: editingRow.url ?? "",
-          tags: (editingRow.tags ?? []).join(", "),
-        }
-      : EMPTY_FIELDS;
+  const archiveSource = async (source: SourceRow) => {
+    if (!supabase) return;
+    setBusyId(source.id);
+    const archived = !source.archived_at;
+    const { error: archiveError } = await supabase
+      .from("knowledge_sources")
+      .update({ archived_at: archived ? new Date().toISOString() : null })
+      .eq("id", source.id);
+    setBusyId(null);
+    if (archiveError) toast(`狀態更新失敗：${archiveError.message}`);
+    else {
+      toast(archived ? "素材已封存；已發佈 revision 不再列入管理工作流" : "素材已還原");
+      refetch();
+    }
+  };
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      {/* Header + CTA */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-lime-text">
-            Knowledge Base
-          </p>
-          <h1 className="mt-1 font-display text-[28px] font-medium text-text-primary">
-            分身知識庫
-          </h1>
+          <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-lime-text">Knowledge Studio</p>
+          <h1 className="mt-1 font-display text-[28px] font-medium text-text-primary">分身知識蒸餾</h1>
           <p className="mt-1 text-sm text-text-muted">
-            {firstName} 嘅 AI 分身嘅第一手知識來源 — 你上傳,分身即刻用。
+            {expert?.nameEn ?? slug} 嘅素材會經處理及審批，唔會未經確認直接進入分身。
           </p>
         </div>
         <button
           type="button"
-          onClick={() => {
-            setEditingRow(null);
-            setEditorMode("new");
-          }}
-          className="inline-flex items-center gap-1.5 rounded-md bg-lime px-4 py-2 text-sm font-medium text-on-accent transition-colors hover:bg-lime-hover"
+          onClick={() => setEditorOpen(true)}
+          className="press inline-flex items-center gap-2 rounded-md bg-lime px-4 py-2 text-sm font-medium text-on-accent"
         >
-          <Plus className="h-4 w-4" />
-          新增知識
+          <Plus className="h-4 w-4" /> 新增素材
         </button>
       </div>
 
-      {/* 說明卡 — 後端已接通,呢段係真嘅 */}
-      <div className="rounded-lg border border-lime/40 bg-lime-soft/50 px-5 py-4">
-        <p className="flex items-start gap-2.5 text-sm leading-relaxed text-text-primary">
-          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-lime-text" />
-          <span>
-            你上傳嘅內容會<span className="font-medium">即時注入你嘅 AI 分身</span>
-            — 訪客問相關問題時,分身會用你嘅第一手資料回答。
-            而家有 <span className="font-mono font-medium">{activeCount}</span> 條
-            active 知識喺分身上下文。
-          </span>
-        </p>
+      <div className="grid gap-3 sm:grid-cols-3">
+        {[
+          { label: "素材", value: rows.length, icon: BookOpen },
+          { label: "待審批", value: reviewCount, icon: Clock3 },
+          { label: "已發佈", value: publishedCount, icon: ShieldCheck },
+        ].map((item) => (
+          <div key={item.label} className="rounded-lg border border-border bg-surface p-4">
+            <item.icon className="h-4 w-4 text-lime-text" strokeWidth={1.5} />
+            <p className="mt-3 font-mono text-2xl text-text-primary">{item.value}</p>
+            <p className="mt-1 text-xs text-text-muted">{item.label}</p>
+          </div>
+        ))}
       </div>
 
-      {/* kind 指引 */}
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
-        {KIND_ORDER.map((k) => {
-          const meta = KIND_META[k];
-          return (
-            <div
-              key={k}
-              className="rounded-md border border-border bg-surface px-3.5 py-3"
-            >
-              <p className="flex items-center gap-1.5 text-sm font-medium text-text-primary">
-                <meta.icon className="h-3.5 w-3.5 text-lime-text" />
-                {meta.label}
-              </p>
-              <p className="mt-1 text-[11px] leading-relaxed text-text-muted">
-                {meta.desc}
-              </p>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* 列表(expert_knowledge 真數據) */}
       <QueryState
         loading={loading}
-        error={
-          error
-            ? `載入失敗:${error} — 可能係表未建立或權限未開:請先喺 Supabase SQL Editor 執行 supabase/v3-policies.sql。`
-            : null
-        }
+        error={error ? `載入失敗：${error}` : null}
         retry={refetch}
-        empty={
-          data && rows.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-border-strong px-6 py-14 text-center">
-              <BookOpen className="mx-auto h-6 w-6 text-text-muted" />
-              <p className="mt-3 text-sm font-medium text-text-primary">
-                知識庫仲係空
-              </p>
-              <p className="mx-auto mt-1.5 max-w-[400px] text-xs leading-relaxed text-text-muted">
-                用「新增知識」上傳你嘅觀點、文章摘要、方法論 —
-                第一條加入之後,分身答相關問題就會引用你嘅資料。
-              </p>
-            </div>
-          ) : null
-        }
-      >
-        {rows.length > 0 && (
-          <div className="space-y-3">
-            {rows.map((row) => {
-              const meta = KIND_META[row.kind] ?? KIND_META.note;
-              const archived = row.status === "archived";
-              const stamp = row.updated_at ?? row.created_at ?? null;
-              return (
-                <article
-                  key={row.id}
-                  className={cn(
-                    "rounded-lg border border-border bg-surface px-5 py-4 transition-colors hover:border-border-strong",
-                    archived && "opacity-60"
-                  )}
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span
-                          className={cn(
-                            "inline-flex items-center gap-1 rounded-sm px-2 py-0.5 text-xs font-medium",
-                            meta.chip
-                          )}
-                        >
-                          <meta.icon className="h-3 w-3" />
-                          {meta.label}
-                        </span>
-                        <h2 className="font-display text-[17px] font-medium text-text-primary">
-                          {row.title}
-                        </h2>
-                        {archived && (
-                          <span className="rounded-sm border border-dashed border-border-strong bg-card px-2 py-0.5 text-xs font-medium text-text-muted">
-                            已封存
-                          </span>
-                        )}
-                      </div>
-                      {row.content && (
-                        <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-text-secondary">
-                          {row.content}
-                        </p>
-                      )}
-                      {row.tags && row.tags.length > 0 && (
-                        <div className="mt-2 flex flex-wrap gap-1.5">
-                          {row.tags.map((t) => (
-                            <span
-                              key={t}
-                              className="rounded-sm border border-lime/40 bg-lime-soft px-2 py-0.5 font-mono text-[11px] text-lime-text"
-                            >
-                              {t}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    <div className="shrink-0 text-right">
-                      {stamp && (
-                        <p className="font-mono text-xs text-text-muted">
-                          更新於 {timeAgo(stamp)}
-                        </p>
-                      )}
-                      {row.url && (
-                        <p className="mt-1.5">
-                          <a
-                            href={row.url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1 text-xs text-lime-text underline-offset-2 hover:underline"
-                          >
-                            <Link2 className="h-3 w-3" />
-                            連結
-                          </a>
-                        </p>
-                      )}
-                      <div className="mt-1.5 flex justify-end gap-3">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setEditingRow(row);
-                            setEditorMode("edit");
-                          }}
-                          className="inline-flex items-center gap-1 text-xs text-text-secondary underline-offset-2 hover:text-lime-text hover:underline"
-                        >
-                          <Pencil className="h-3 w-3" />
-                          編輯
-                        </button>
-                        <button
-                          type="button"
-                          disabled={busyId === row.id}
-                          onClick={() => void toggleStatus(row)}
-                          className="inline-flex items-center gap-1 text-xs text-text-secondary underline-offset-2 hover:text-[#A36A0F] hover:underline disabled:opacity-40"
-                        >
-                          {archived ? (
-                            <>
-                              <ArchiveRestore className="h-3 w-3" />
-                              還原
-                            </>
-                          ) : (
-                            <>
-                              <Archive className="h-3 w-3" />
-                              封存
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </article>
-              );
-            })}
+        empty={data && rows.length === 0 ? (
+          <div className="rounded-lg border border-dashed border-border-strong px-6 py-16 text-center">
+            <BookOpen className="mx-auto h-6 w-6 text-text-muted" />
+            <p className="mt-3 text-sm font-medium text-text-primary">知識庫仲係空</p>
+            <p className="mt-1 text-xs text-text-muted">新增文字、URL、PDF 或 YouTube 開始蒸餾。</p>
           </div>
-        )}
+        ) : null}
+      >
+        <div className="space-y-3">
+          {rows.map((source) => {
+            const revision = latestRevision(source);
+            const status = revision?.status ?? "queued";
+            const meta = SOURCE_META[source.source_type];
+            const archived = Boolean(source.archived_at);
+            return (
+              <article key={source.id} className={cn("rounded-lg border border-border bg-surface p-5", archived && "opacity-60")}>
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="inline-flex items-center gap-1.5 rounded-sm bg-card px-2 py-1 text-xs text-text-secondary">
+                        <meta.icon className="h-3.5 w-3.5" strokeWidth={1.5} /> {meta.label}
+                      </span>
+                      <span className={cn(
+                        "rounded-sm border px-2 py-1 font-mono text-[10px] uppercase tracking-wider",
+                        status === "approved" ? "border-lime bg-lime-soft text-lime-text" : "border-border text-text-muted"
+                      )}>
+                        {archived ? "已封存" : STATUS_LABEL[status]}
+                      </span>
+                      {source.published_revision_id && (
+                        <span className="inline-flex items-center gap-1 text-[11px] text-lime-text">
+                          <Check className="h-3 w-3" /> 已上線
+                        </span>
+                      )}
+                    </div>
+                    <h2 className="mt-2 font-display text-lg text-text-primary">{source.title}</h2>
+                    <p className="mt-1 text-xs text-text-muted">
+                      {revision ? `Revision ${revision.revision_no} · ${timeAgo(revision.created_at)}` : "等待建立 revision"}
+                      {revision?.distillation_jobs?.[0]
+                        ? ` · ${revision.distillation_jobs[0].stage} · 嘗試 ${revision.distillation_jobs[0].attempts}/3`
+                        : ""}
+                    </p>
+                    {revision?.error_message && <p className="mt-2 text-xs text-destructive">{revision.error_message}</p>}
+                    {source.tags.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        {source.tags.map((tag) => <span key={tag} className="rounded-sm border border-border px-2 py-0.5 text-[11px] text-text-muted">{tag}</span>)}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    {revision && (
+                      <button type="button" onClick={() => setPreview({ source, revision })} className="press rounded-md border border-border px-3 py-1.5 text-xs text-text-secondary">
+                        預覽
+                      </button>
+                    )}
+                    {revision?.status === "review" && (
+                      <>
+                        <button disabled={busyId === revision.id} type="button" onClick={() => void reviewRevision(revision, "approve")} className="press inline-flex items-center gap-1 rounded-md bg-lime px-3 py-1.5 text-xs font-medium text-on-accent disabled:opacity-40">
+                          <Check className="h-3.5 w-3.5" /> 批准
+                        </button>
+                        <button disabled={busyId === revision.id} type="button" onClick={() => void reviewRevision(revision, "reject")} className="press inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs text-text-secondary disabled:opacity-40">
+                          <X className="h-3.5 w-3.5" /> 拒絕
+                        </button>
+                      </>
+                    )}
+                    <button disabled={busyId === source.id} type="button" onClick={() => void archiveSource(source)} className="press inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs text-text-muted disabled:opacity-40">
+                      {archived ? <RotateCcw className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />}
+                      {archived ? "還原" : "封存"}
+                    </button>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </div>
       </QueryState>
 
-      {/* Editor slide-over */}
-      <AdminSlideOver
-        open={editorMode !== null}
-        onClose={() => {
-          setEditorMode(null);
-          setEditingRow(null);
-        }}
-        title={editorMode === "edit" ? "編輯知識" : "新增知識"}
-        subtitle="儲存後即時注入分身上下文(active 狀態先會注入)"
-        width={520}
-      >
-        {editorMode !== null && (
-          <KBEditor
-            key={editorMode === "edit" ? editingRow?.id : "new"}
-            mode={editorMode}
-            initial={editorInitial}
-            onSubmit={async (fields) =>
-              editorMode === "edit" && editingRow
-                ? submitEdit(editingRow, fields)
-                : submitNew(fields)
-            }
-            onCancel={() => {
-              setEditorMode(null);
-              setEditingRow(null);
-            }}
-          />
-        )}
+      <AdminSlideOver open={editorOpen} onClose={() => setEditorOpen(false)} title="新增知識素材">
+        <SourceEditor slug={slug} onDone={() => { setEditorOpen(false); refetch(); }} />
+      </AdminSlideOver>
+      <AdminSlideOver open={preview !== null} onClose={() => setPreview(null)} title="Revision 預覽">
+        {preview && <RevisionPreview source={preview.source} revision={preview.revision} />}
       </AdminSlideOver>
     </div>
   );

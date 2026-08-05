@@ -53,7 +53,7 @@ async function fetchMembers(): Promise<MembersData> {
     countRows("profiles"),
     supabase
       .from("profiles")
-      .select("id,email,name,role,tier,persona,interests,expert_slug,created_at")
+      .select("id,email,name,persona,interests,created_at,account_access(app_role,tier,expert_id,experts(slug))")
       .order("created_at", { ascending: false })
       .limit(500),
     supabase
@@ -64,7 +64,34 @@ async function fetchMembers(): Promise<MembersData> {
   if (profilesRes.error) throw new Error(profilesRes.error.message);
   if (waitlistRes.error) throw new Error(waitlistRes.error.message);
   return {
-    profiles: (profilesRes.data ?? []) as AdminProfileRow[],
+    profiles: (profilesRes.data ?? []).map((row) => {
+      const accessRaw = Array.isArray(row.account_access) ? row.account_access[0] : row.account_access;
+      const access = accessRaw as {
+        app_role?: string;
+        tier?: string;
+        experts?: { slug?: string } | Array<{ slug?: string }> | null;
+      } | null;
+      const expertRaw = access?.experts;
+      const expert = Array.isArray(expertRaw) ? expertRaw[0] : expertRaw;
+      const role = access?.app_role === "admin"
+        ? "admin"
+        : access?.app_role === "expert"
+        ? "expert"
+        : access?.tier && access.tier !== "free"
+        ? "founding"
+        : "free";
+      return {
+        id: row.id,
+        email: row.email,
+        name: row.name,
+        persona: row.persona,
+        interests: row.interests,
+        created_at: row.created_at,
+        role,
+        tier: access?.tier ?? "free",
+        expert_slug: expert?.slug ?? null,
+      } as AdminProfileRow;
+    }),
     total,
     mcpWaitlist: (waitlistRes.data ?? []) as AdminWaitlistRow[],
   };
@@ -99,20 +126,28 @@ function MemberRoleEditor({
     }
     setSaving(true);
     setSaveError(null);
-    const payload: Record<string, unknown> = {
-      role,
+    let expertId: string | null = null;
+    if (role === "expert" && expertSlug.trim()) {
+      const { data: expert, error: expertError } = await supabase.from("experts")
+        .select("id").eq("slug", expertSlug.trim()).maybeSingle();
+      if (expertError || !expert) {
+        setSaving(false);
+        setSaveError(expertError?.message ?? "找不到呢個專家 slug");
+        return;
+      }
+      expertId = expert.id;
+    }
+    const appRole = role === "admin" ? "admin" : role === "expert" ? "expert" : "member";
+    const { error: updateError } = await supabase.from("account_access").upsert({
+      user_id: member.id,
+      app_role: appRole,
       tier,
-      // 只有 expert role 先保留 expert_slug;其他級別一律清走,避免殘留連結
-      expert_slug: role === "expert" ? expertSlug.trim() || null : null,
-    };
-    const { error: updateError } = await supabase
-      .from("profiles")
-      .update(payload)
-      .eq("id", member.id);
+      expert_id: expertId,
+    });
     setSaving(false);
     if (updateError) {
       setSaveError(
-        `更新失敗:${updateError.message} — 可能係權限未開:請先喺 Supabase SQL Editor 執行 supabase/v2-policies.sql(profiles_admin_update policy)。`
+        `更新失敗:${updateError.message} — 請確認 distillation migration 同 account_access admin policy 已套用。`
       );
       return;
     }
@@ -205,8 +240,8 @@ function MemberRoleEditor({
           </div>
         )}
         <p className="rounded-md border border-dashed border-border-strong bg-card/60 px-3.5 py-2.5 text-xs leading-relaxed text-text-muted">
-          儲存會直接寫入 Supabase profiles 表({member.email})—
-          需要 profiles_admin_update policy(v2-policies.sql)先生效。
+          Role、tier 同 expert 關係會寫入受保護嘅 account_access({member.email})；
+          會員唔可以自行修改。
         </p>
       </div>
       <div className="flex gap-2 border-t border-border px-6 py-4">

@@ -40,7 +40,7 @@ async function fetchPortalHome(slug: string): Promise<PortalHomeData> {
   if (ids.length > 0) {
     const msgRes = await supabase
       .from("messages")
-      .select("id,conversation_id,role,content,source,confidence,created_at")
+      .select("id,conversation_id,role,content,source,answer_basis,coverage,created_at")
       .in("conversation_id", ids)
       .limit(2000);
     if (msgRes.error) throw new Error(msgRes.error.message);
@@ -68,13 +68,10 @@ export default function PortalHome() {
   const weekConvos = convos.filter(
     (c) => c.created_at && c.created_at >= daysAgoUtcStartIso(6)
   );
-  const confVals = msgs
-    .map((m) => m.confidence)
-    .filter((c): c is number => typeof c === "number");
-  const avgConfidence =
-    confVals.length > 0
-      ? confVals.reduce((s, c) => s + c, 0) / confVals.length
-      : null;
+  const answered = msgs.filter((m) => m.role === "assistant" && m.answer_basis);
+  const groundedRate = answered.length
+    ? Math.round((answered.filter((m) => m.answer_basis === "knowledge").length / answered.length) * 100)
+    : null;
 
   /* 7 日趨勢(冇數據嘅日 = 0) */
   const buckets = last7DayBuckets();
@@ -86,18 +83,11 @@ export default function PortalHome() {
     }
   }
 
-  /* 每段對話嘅平均信心(最近對話列表用) */
-  const confByConv = new Map<string, number>();
+  /* 每段對話最新 retrieval coverage(最近對話列表用) */
+  const coverageByConv = new Map<string, AdminMessageRow["coverage"]>();
   {
-    const grouped = new Map<string, number[]>();
     for (const m of msgs) {
-      if (typeof m.confidence !== "number") continue;
-      const arr = grouped.get(m.conversation_id) ?? [];
-      arr.push(m.confidence);
-      grouped.set(m.conversation_id, arr);
-    }
-    for (const [id, arr] of grouped) {
-      confByConv.set(id, arr.reduce((s, c) => s + c, 0) / arr.length);
+      if (m.role === "assistant" && m.coverage) coverageByConv.set(m.conversation_id, m.coverage);
     }
   }
 
@@ -106,8 +96,8 @@ export default function PortalHome() {
     { label: "本週對話", value: loading ? "…" : weekConvos.length.toLocaleString() },
     { label: "累計訊息", value: loading ? "…" : msgs.length.toLocaleString() },
     {
-      label: "平均信心",
-      value: loading ? "…" : avgConfidence === null ? "—" : avgConfidence.toFixed(2),
+      label: "知識回覆比例",
+      value: loading ? "…" : groundedRate === null ? "—" : `${groundedRate}%`,
     },
   ];
 
@@ -206,7 +196,7 @@ export default function PortalHome() {
                 {convos.length > 0 ? (
                   <ul className="divide-y divide-border">
                     {convos.slice(0, 5).map((c) => {
-                      const conf = confByConv.get(c.id) ?? null;
+                      const coverage = coverageByConv.get(c.id) ?? null;
                       return (
                         <li
                           key={c.id}
@@ -227,16 +217,22 @@ export default function PortalHome() {
                           <span
                             className={cn(
                               "shrink-0 rounded-sm px-2 py-0.5 font-mono text-xs",
-                              conf === null
+                              coverage === null
                                 ? "bg-card text-text-muted"
-                                : conf >= 0.8
+                                : coverage === "high"
                                   ? "bg-lime-soft text-lime-text"
-                                  : conf >= 0.6
+                                  : coverage === "medium"
                                     ? "bg-card text-text-secondary"
-                                    : "bg-card text-[#A36A0F]"
+                                    : "bg-card text-destructive"
                             )}
                           >
-                            {conf === null ? "—" : conf.toFixed(2)}
+                            {coverage === "high"
+                              ? "高覆蓋"
+                              : coverage === "medium"
+                                ? "部分覆蓋"
+                                : coverage === "none"
+                                  ? "需補知識"
+                                  : "—"}
                           </span>
                         </li>
                       );
@@ -281,8 +277,8 @@ export default function PortalHome() {
                     </span>
                   </div>
                   <p className="rounded-md border border-dashed border-border px-3.5 py-3 text-xs leading-relaxed text-text-muted">
-                    知識庫蒸餾(素材、切塊、版本管理)需要 distillation pipeline,
-                    即將推出 — 到時蒸餾時間同片段數會喺呢度顯示真實數字。
+                    知識庫已接通蒸餾、切塊、審批同版本發佈。只有已批准版本會提供畀 AI
+                    分身檢索，低覆蓋問題會自動加入知識缺口。
                   </p>
                   <Link
                     to="/portal/kb"

@@ -26,7 +26,7 @@ export default function AskPreview() {
             有咩 AI 問題?問我哋嘅 AI 編輯部。
           </h3>
           <p className="mt-4 max-w-[520px] text-body-sm text-text-secondary">
-            基於全站情報庫回答,每個論點附來源引用 —
+            基於已批准情報庫回答，命中來源時可直接核實 —
             無引用,不下結論。
           </p>
           <div className="mt-8">

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { AnimatePresence, motion, useInView, useReducedMotion } from "framer-motion";
 import { ArrowRight, Check, Lock } from "lucide-react";
@@ -157,14 +157,10 @@ function CountUp({ value, skip, onCounted }: CountUpProps) {
   const inView = useInView(ref, { once: true, amount: 0.6 });
   const reduced = useReducedMotion();
   const [display, setDisplay] = useState(skip ? value : 0);
-  const onCountedRef = useRef(onCounted);
-  onCountedRef.current = onCounted;
 
   useEffect(() => {
     if (!inView) return;
     if (skip || reduced) {
-      setDisplay(value);
-      onCountedRef.current?.();
       return;
     }
     let raf = 0;
@@ -176,14 +172,15 @@ function CountUp({ value, skip, onCounted }: CountUpProps) {
       if (p < 1) {
         raf = requestAnimationFrame(tick);
       } else {
-        onCountedRef.current?.();
+        onCounted?.();
       }
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [inView, value, skip, reduced]);
+  }, [inView, value, skip, reduced, onCounted]);
 
-  return <span ref={ref}>{display.toLocaleString("en-HK")}</span>;
+  const renderedDisplay = skip || reduced ? value : display;
+  return <span ref={ref}>{renderedDisplay.toLocaleString("en-HK")}</span>;
 }
 
 /* ---------- 方案卡 ---------- */
@@ -294,6 +291,7 @@ function TierCard({ tier, billing, counted, onCounted }: TierCardProps) {
 
   return (
     <div
+      id={isPro ? "founding-plan" : undefined}
       className={cn(
         "card-hover rounded-md bg-surface p-8",
         isPro ? "border-[1.5px] border-ink ring-2 ring-lime" : "border"
@@ -325,10 +323,8 @@ function CompareCell({ cell }: { cell: CellValue }) {
 export default function Pricing() {
   const [billing, setBilling] = useState<Billing>("monthly");
   // 價格 count-up 只播一次（§5.1）；切換月費/年費時改為 cross-fade 即時值
-  const countedRef = useRef(false);
-  const markCounted = () => {
-    countedRef.current = true;
-  };
+  const [counted, setCounted] = useState(false);
+  const markCounted = useCallback(() => setCounted(true), []);
 
   return (
     <>
@@ -387,7 +383,7 @@ export default function Pricing() {
               <TierCard
                 tier={tier}
                 billing={billing}
-                counted={countedRef.current}
+                counted={counted}
                 onCounted={markCounted}
               />
             </Reveal>

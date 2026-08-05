@@ -19,5 +19,26 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      'react-refresh/only-export-components': ['error', {
+        allowConstantExport: true,
+        allowExportNames: [
+          'useAdminToast',
+          'usePortalExpert',
+          'useToast',
+          'EASE_OUT_STRONG',
+          'EASE_IN_OUT_STRONG',
+          'REVEAL_EASE',
+          'EXPERT_EDITORIAL_PANEL',
+        ],
+      }],
+    },
+  },
+  {
+    files: ['src/components/ui/**/*.{ts,tsx}'],
+    rules: {
+      // shadcn primitives intentionally co-locate variants/helpers with components.
+      'react-refresh/only-export-components': 'off',
+    },
   },
 ])

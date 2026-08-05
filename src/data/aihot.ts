@@ -17,7 +17,8 @@ import rawSnapshot from "./aihot-snapshot.json";
 const clean = (s: string): string =>
   s
     ? s
-        .replace(/[\u{1F000}-\u{1FAFF}\u2600-\u27BF\u2B00-\u2BFF\uFE0F]/gu, "")
+        .replace(/[\u{1F000}-\u{1FAFF}\u2600-\u27BF\u2B00-\u2BFF]/gu, "")
+        .replace(/\uFE0F/gu, "")
         .replace(/[ \t]+\n/g, "\n")
         .trim()
     : s;

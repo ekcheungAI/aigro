@@ -59,7 +59,15 @@ export default function AdminSettings() {
       setPingLoading(false);
     });
   };
-  useEffect(runPing, []);
+  useEffect(() => {
+    let cancelled = false;
+    void pingSupabase().then((result) => {
+      if (cancelled) return;
+      setPing(result);
+      setPingLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, []);
 
   const llmOk = argro.data?.llm.configured ?? false;
 

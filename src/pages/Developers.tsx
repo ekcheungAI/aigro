@@ -77,18 +77,13 @@ const VERTICALS: VerticalMcp[] = [
 /* ================= Signup flow(the star) ================= */
 
 function SignupCard({ initialInterests = [] }: { initialInterests?: string[] }) {
-  const [record, setRecord] = useState<SignupRecord | null>(null);
+  const [record, setRecord] = useState<SignupRecord | null>(readSignup);
   const [step, setStep] = useState<1 | 2>(1);
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
   const [interests, setInterests] = useState<string[]>(initialInterests);
   const [role, setRole] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-
-  // Returning users see the success state
-  useEffect(() => {
-    setRecord(readSignup());
-  }, []);
 
   const toggleInterest = (label: string) =>
     setInterests((prev) =>

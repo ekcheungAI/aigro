@@ -5,8 +5,11 @@
  */
 
 import type { AiReply } from "./AiMessage";
-import { supabase, supabaseReady, getAnonId } from "@/lib/supabase";
-import { getAuthUserId } from "@/components/auth/member";
+import {
+  ensureAuthenticatedUser,
+  supabase,
+  supabaseReady,
+} from "@/lib/supabase";
 
 export interface ChatMessage {
   id: number;
@@ -188,7 +191,7 @@ function mapMessageSource(source: AiReply["source"]): string {
 }
 
 /** 取得(或建立)呢個 session 嘅 conversations.id;失敗 / 無 env → null */
-function ensureConversationId(
+export function ensureConversationId(
   sessionId: string,
   personaKey: string,
   title: string
@@ -201,13 +204,23 @@ function ensureConversationId(
 
   const p = (async (): Promise<string | null> => {
     try {
-      const uid = getAuthUserId();
+      const uid = await ensureAuthenticatedUser();
+      if (!uid) return null;
+      const { data: expert, error: expertError } = await supabase
+        .from("experts")
+        .select("id")
+        .eq("slug", personaKey)
+        .eq("status", "active")
+        .maybeSingle();
+      if (expertError || !expert) return null;
       const { data, error } = await supabase
         .from("conversations")
         .insert({
+          owner_id: uid,
           user_id: uid,
-          anon_id: uid ? null : getAnonId(),
+          anon_id: null,
           persona: personaKey,
+          expert_id: expert.id,
           title,
         })
         .select("id")
@@ -363,8 +376,8 @@ async function upsertLeadFromRound(personaKey: string, round: ChatMessage[]): Pr
   const snap = applyRoundToLead(personaKey, round);
   if (!snap) return;
   try {
-    const uid = getAuthUserId();
-    const anonId = getAnonId();
+    const uid = await ensureAuthenticatedUser();
+    if (!uid) return;
     const base = {
       score: snap.score,
       questions: snap.questions,
@@ -374,12 +387,13 @@ async function upsertLeadFromRound(personaKey: string, round: ChatMessage[]): Pr
     const { count, error } = await supabase
       .from("leads")
       .update(base, { count: "exact" })
-      .eq("anon_id", anonId)
+      .eq("owner_id", uid)
       .eq("persona", personaKey);
     if (!error && count && count > 0) return;
     // 未存在(或 update 不可見)→ insert;anon_id 必帶(update policy 需要),登入咗加埋 user_id
     await supabase.from("leads").insert({
-      anon_id: anonId,
+      owner_id: uid,
+      anon_id: null,
       user_id: uid,
       persona: personaKey,
       stage: "新線索",
@@ -400,7 +414,9 @@ export function appendRound(
   question: string,
   reply: AiReply,
   /** 命中話題 id — 寫入 session memory;null(fallback)時保留舊 topic,唔洗走條 thread */
-  topicId: string | null = null
+  topicId: string | null = null,
+  /** ask-answer already persisted this round; avoid duplicate client writes. */
+  skipRemoteLog = false
 ): { store: SessionStore; aiMessageId: number } {
   const aiMessage: ChatMessage = { id: nextMessageId(), role: "ai", reply };
   const round: ChatMessage[] = [
@@ -425,7 +441,9 @@ export function appendRound(
     };
     const nextList = [updated, ...list.filter((_, i) => i !== idx)];
     // P0:fire-and-forget 寫入 Supabase(離線 / 無 env 靜默)
-    void logRoundToSupabase(updated.id, personaKey, updated.title, round);
+    if (!skipRemoteLog) {
+      void logRoundToSupabase(updated.id, personaKey, updated.title, round);
+    }
     return {
       aiMessageId,
       store: {
@@ -444,7 +462,9 @@ export function appendRound(
     ...(topicId ? { lastTopicId: topicId } : {}),
   };
   // P0:第一條訊息 — fire-and-forget 建 conversations row + 寫 messages
-  void logRoundToSupabase(created.id, personaKey, created.title, round);
+  if (!skipRemoteLog) {
+    void logRoundToSupabase(created.id, personaKey, created.title, round);
+  }
   return {
     aiMessageId,
     store: {
@@ -453,6 +473,39 @@ export function appendRound(
         [personaKey]: [created, ...list].slice(0, MAX_SESSIONS_PER_PERSONA),
       },
       active: { ...store.active, [personaKey]: created.id },
+    },
+  };
+}
+
+/**
+ * Create an empty local session before a streamed server request. This gives the
+ * browser and database one stable conversation mapping before the first token.
+ */
+export function prepareSession(
+  store: SessionStore,
+  personaKey: string,
+  question: string
+): { store: SessionStore; session: ChatSession } {
+  const list = store.sessions[personaKey] ?? [];
+  const activeId = store.active[personaKey];
+  const active = activeId ? list.find((session) => session.id === activeId) : null;
+  if (active) return { store, session: active };
+  const now = Date.now();
+  const session: ChatSession = {
+    id: newSessionId(),
+    title: sessionTitle(question),
+    createdAt: now,
+    updatedAt: now,
+    messages: [],
+  };
+  return {
+    session,
+    store: {
+      sessions: {
+        ...store.sessions,
+        [personaKey]: [session, ...list].slice(0, MAX_SESSIONS_PER_PERSONA),
+      },
+      active: { ...store.active, [personaKey]: session.id },
     },
   };
 }
@@ -480,7 +533,7 @@ export function collectCitations(messages: ChatMessage[]): { title: string; href
   return out;
 }
 
-/** 最近 n 條對話 → LLM 歷史格式(argro /chat 用;single-shot 會令追問記憶退化) */
+/** 最近 n 條對話 → MiniMax-M3 function 歷史格式，避免追問記憶退化。 */
 export function buildChatHistory(
   messages: ChatMessage[],
   n = 6

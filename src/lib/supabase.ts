@@ -32,6 +32,29 @@ export const supabase: SupabaseClient | null = supabaseReady
     })
   : null;
 
+let anonymousSignIn: Promise<string | null> | null = null;
+
+/**
+ * Ensure every visitor has a Supabase JWT. Anonymous Auth creates a real
+ * auth.users row, so RLS can use auth.uid() instead of a spoofable browser id.
+ */
+export async function ensureAuthenticatedUser(): Promise<string | null> {
+  if (!supabase) return null;
+  const { data } = await supabase.auth.getSession();
+  if (data.session?.user.id) return data.session.user.id;
+  if (anonymousSignIn) return anonymousSignIn;
+  anonymousSignIn = supabase.auth
+    .signInAnonymously()
+    .then(({ data: signedIn, error }) => {
+      if (error) throw error;
+      return signedIn.user?.id ?? null;
+    })
+    .finally(() => {
+      anonymousSignIn = null;
+    });
+  return anonymousSignIn;
+}
+
 /* ---------------- 匿名訪客 id(未登入對話歸屬) ---------------- */
 
 const ANON_KEY_STORAGE = "aigro-anon-id";

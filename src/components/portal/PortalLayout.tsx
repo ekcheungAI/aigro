@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowUpRight,
+  CalendarDays,
   FlaskConical,
   LayoutDashboard,
   Link2,
@@ -50,6 +51,7 @@ export function usePortalExpert(): PortalExpertCtx {
 const NAV = [
   { to: "/portal", end: true, zh: "總覽", en: "Overview", icon: LayoutDashboard },
   { to: "/portal/kb", zh: "分身知識庫", en: "Knowledge", icon: FlaskConical },
+  { to: "/portal/bookings", zh: "真人預約", en: "Bookings", icon: CalendarDays },
   { to: "/portal/insights", zh: "我的情報", en: "Insights", icon: Newspaper },
   { to: "/portal/profile", zh: "檔案設定", en: "Profile", icon: UserRound },
   { to: "/portal/socials", zh: "社交連結", en: "Socials", icon: Share2 },

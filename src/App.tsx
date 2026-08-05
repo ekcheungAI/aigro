@@ -1,48 +1,52 @@
+import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import Layout from "@/components/Layout";
 import usePageMeta from "@/hooks/usePageMeta";
-import Home from "@/pages/Home";
-import Insights from "@/pages/Insights";
-import Daily from "@/pages/Daily";
-import InsightDetail from "@/pages/InsightDetail";
-import Cases from "@/pages/Cases";
-import CaseDetail from "@/pages/CaseDetail";
-import Experts from "@/pages/Experts";
-import ExpertProfile from "@/pages/ExpertProfile";
-import Ask from "@/pages/Ask";
-import Pricing from "@/pages/Pricing";
-import Developers from "@/pages/Developers";
-import Login from "@/pages/Login";
-import Join from "@/pages/Join";
-import Account from "@/pages/Account";
-import Skills from "@/pages/Skills";
-import Sources from "@/pages/Sources";
-import Access from "@/pages/Access";
-import AdminLayout from "@/components/admin/AdminLayout";
-import Dashboard from "@/pages/admin/Dashboard";
-import AdminExperts from "@/pages/admin/AdminExperts";
-import AdminContent from "@/pages/admin/AdminContent";
-import AdminEngagement from "@/pages/admin/AdminEngagement";
-import AdminMembers from "@/pages/admin/AdminMembers";
-import AdminSettings from "@/pages/admin/AdminSettings";
-import AdminEmails from "@/pages/admin/AdminEmails";
-import AdminSkills from "@/pages/admin/AdminSkills";
-import AdminSources from "@/pages/admin/AdminSources";
-import PortalLayout from "@/components/portal/PortalLayout";
-import PortalHome from "@/pages/portal/PortalHome";
-import PortalKB from "@/pages/portal/PortalKB";
-import PortalInsights from "@/pages/portal/PortalInsights";
-import PortalProfile from "@/pages/portal/PortalProfile";
-import PortalSocials from "@/pages/portal/PortalSocials";
-import PortalLeads from "@/pages/portal/PortalLeads";
-import AdminStudio from "@/pages/admin/AdminStudio";
-import AdminCRM from "@/pages/admin/AdminCRM";
-import Placeholder from "@/pages/Placeholder";
-import Branding from "@/pages/Branding";
+
+const Home = lazy(() => import("@/pages/Home"));
+const Insights = lazy(() => import("@/pages/Insights"));
+const Daily = lazy(() => import("@/pages/Daily"));
+const InsightDetail = lazy(() => import("@/pages/InsightDetail"));
+const Cases = lazy(() => import("@/pages/Cases"));
+const CaseDetail = lazy(() => import("@/pages/CaseDetail"));
+const Experts = lazy(() => import("@/pages/Experts"));
+const ExpertProfile = lazy(() => import("@/pages/ExpertProfile"));
+const Ask = lazy(() => import("@/pages/Ask"));
+const Pricing = lazy(() => import("@/pages/Pricing"));
+const Developers = lazy(() => import("@/pages/Developers"));
+const Login = lazy(() => import("@/pages/Login"));
+const Join = lazy(() => import("@/pages/Join"));
+const Account = lazy(() => import("@/pages/Account"));
+const Skills = lazy(() => import("@/pages/Skills"));
+const Sources = lazy(() => import("@/pages/Sources"));
+const Access = lazy(() => import("@/pages/Access"));
+const Branding = lazy(() => import("@/pages/Branding"));
+const UXPreview = lazy(() => import("@/pages/UXPreview"));
+const Placeholder = lazy(() => import("@/pages/Placeholder"));
+const AdminLayout = lazy(() => import("@/components/admin/AdminLayout"));
+const Dashboard = lazy(() => import("@/pages/admin/Dashboard"));
+const AdminExperts = lazy(() => import("@/pages/admin/AdminExperts"));
+const AdminContent = lazy(() => import("@/pages/admin/AdminContent"));
+const AdminEngagement = lazy(() => import("@/pages/admin/AdminEngagement"));
+const AdminMembers = lazy(() => import("@/pages/admin/AdminMembers"));
+const AdminSettings = lazy(() => import("@/pages/admin/AdminSettings"));
+const AdminEmails = lazy(() => import("@/pages/admin/AdminEmails"));
+const AdminSkills = lazy(() => import("@/pages/admin/AdminSkills"));
+const AdminSources = lazy(() => import("@/pages/admin/AdminSources"));
+const AdminStudio = lazy(() => import("@/pages/admin/AdminStudio"));
+const AdminCRM = lazy(() => import("@/pages/admin/AdminCRM"));
+const PortalLayout = lazy(() => import("@/components/portal/PortalLayout"));
+const PortalHome = lazy(() => import("@/pages/portal/PortalHome"));
+const PortalKB = lazy(() => import("@/pages/portal/PortalKB"));
+const PortalInsights = lazy(() => import("@/pages/portal/PortalInsights"));
+const PortalProfile = lazy(() => import("@/pages/portal/PortalProfile"));
+const PortalSocials = lazy(() => import("@/pages/portal/PortalSocials"));
+const PortalLeads = lazy(() => import("@/pages/portal/PortalLeads"));
+const PortalBookings = lazy(() => import("@/pages/portal/PortalBookings"));
 
 /** Per-page <title> + meta（v1.1 SEO 基建） */
 function RouteMeta() {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const map: [RegExp, string, string?][] = [
     [/^\/$/, "", ""],
     [/^\/insights\/daily/, "每日精選日報", "編輯部每日精選 5 條必讀 AI・增長情報 — 3 分鐘掌握全球脈搏的香港意義。"],
@@ -52,19 +56,23 @@ function RouteMeta() {
     [/^\/cases/, "實戰案例 Cases", "香港本地 AI 落地案例庫 — 數據化成果，可複製的做法拆解。"],
     [/^\/experts\/[^/]+/, "專家檔案", "領航專家個人頁 — 成就佐證、授權透明度、AI 分身對話入口。"],
     [/^\/experts/, "領航專家 Experts", "由領航專家帶領嘅 growth hacking club — AI 分身基於授權內容蒸餾。"],
-    [/^\/ask/, "Ask 問答", "問 AI 編輯部任何 AI、增長、營銷問題 — 每個論點附來源引用。"],
+    [/^\/ask/, "Ask 問答", "問 AI 編輯部任何 AI、增長、營銷問題 — 命中已批准知識時顯示可核實來源。"],
     [/^\/pricing/, "方案 Pricing", "免費/進階/VIP 三層會員方案 — 解鎖無限 AI 對話與領航專家分身。"],
     [/^\/developers/, "AIGRO MCP Network", "行業情報 MCP server — 你嘅 AI 工具一連接,即刻有行業雷達。AI 行業優先名單開放中。"],
     [/^\/sources/, "情報渠道", "AIGRO 情報渠道 — 公開透明嘅來源牆、數據流程與免費任用方式。"],
     [/^\/skills/, "Skills", "AIGRO Skills — 俾你嘅 AI agent 裝上專業能力。"],
     [/^\/branding/, "品牌指南 Branding", "AIGRO 品牌識別、標誌、色彩、字體、語氣與應用規範。"],
+    [/^\/ux-preview/, "UX Direction Preview", "AIGRO 全站體驗優化概念預覽。"],
     [/^\/access/, "全級別入口", "AIGRO 全級別入口 — 訪客、會員、創始會員、領航專家、管理員示範登入。"],
     [/^\/login/, "登入", "登入 AIGRO Club — 無限分身對話、完整案例拆解、MCP 優先接入。"],
     [/^\/join/, "加入 Club", "加入 AIGRO Club — 三步成為會員,免費開始,隨時升級。"],
     [/^\/account/, "會員專區", "你嘅 AIGRO 會員專區 — 層級、對話紀錄、MCP 名單與設定。"],
     [/^\/admin/, "AIGRO Admin", "內部管理後台。"],
   ];
-  const hit = map.find(([re]) => re.test(pathname));
+  const dailyTab = pathname === "/insights" && new URLSearchParams(search).get("tab") === "daily";
+  const hit = dailyTab
+    ? map.find(([re]) => re.test("/insights/daily"))
+    : map.find(([re]) => re.test(pathname));
   usePageMeta(hit?.[1] || undefined, hit?.[2] || undefined);
   return null;
 }
@@ -76,7 +84,7 @@ function RouteMeta() {
  */
 export default function App() {
   return (
-    <>
+    <Suspense fallback={<div className="min-h-[40vh] bg-bg" aria-label="載入頁面" />}>
       <RouteMeta />
       <Routes>
       <Route element={<Layout />}>
@@ -118,6 +126,7 @@ export default function App() {
           }
         />
       </Route>
+      <Route path="ux-preview" element={<UXPreview />} />
       <Route path="admin" element={<AdminLayout />}>
         <Route index element={<Dashboard />} />
         <Route path="experts" element={<AdminExperts />} />
@@ -138,8 +147,9 @@ export default function App() {
         <Route path="profile" element={<PortalProfile />} />
         <Route path="socials" element={<PortalSocials />} />
         <Route path="leads" element={<PortalLeads />} />
+        <Route path="bookings" element={<PortalBookings />} />
       </Route>
       </Routes>
-    </>
+    </Suspense>
   );
 }

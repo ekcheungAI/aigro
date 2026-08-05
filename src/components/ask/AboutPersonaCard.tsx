@@ -162,7 +162,7 @@ function CaptureStrip({
             <button
               type="submit"
               aria-label="免費登記"
-              className="press inline-flex h-8 shrink-0 items-center gap-1 rounded-sm bg-ink-solid px-2.5 text-caption text-white hover:bg-ink-hover"
+              className="press inline-flex min-h-11 shrink-0 items-center gap-1 rounded-sm bg-ink-solid px-2.5 text-caption text-on-accent hover:bg-ink-hover"
             >
               <Send className="h-3 w-3" strokeWidth={1.5} aria-hidden="true" />
               登記

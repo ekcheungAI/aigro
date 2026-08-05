@@ -261,6 +261,15 @@ interface ProfileRow {
   notifications: Partial<MemberNotifications> | null;
   expert_slug: string | null;
   created_at: string | null;
+  account_access?: {
+    app_role: "member" | "expert" | "admin";
+    tier: MemberTier;
+    experts?: { slug: string } | null;
+  } | Array<{
+    app_role: "member" | "expert" | "admin";
+    tier: MemberTier;
+    experts?: { slug: string } | null;
+  }> | null;
 }
 
 /* ---------------- 事件廣播(Navbar / Account 重render) ---------------- */
@@ -337,8 +346,6 @@ function memberToProfile(member: AigroMember, userId: string): Record<string, un
     id: userId,
     email: member.email,
     name: member.name,
-    role: member.role,
-    tier: member.tier,
     persona: member.persona,
     interests: member.interests,
     goals: member.goals ?? [],
@@ -353,13 +360,24 @@ function memberToProfile(member: AigroMember, userId: string): Record<string, un
 }
 
 function profileToMember(row: ProfileRow): AigroMember {
+  const access = Array.isArray(row.account_access)
+    ? row.account_access[0]
+    : row.account_access;
+  const tier = access?.tier ?? "free";
+  const role: MemberRole = access?.app_role === "admin"
+    ? "admin"
+    : access?.app_role === "expert"
+    ? "expert"
+    : tier === "free"
+    ? "free"
+    : "founding";
   const clean = sanitize({
     name: row.name ?? undefined,
     email: row.email,
     interests: row.interests ?? [],
     persona: row.persona ?? undefined,
-    role: row.role ?? undefined,
-    tier: row.tier ?? undefined,
+    role,
+    tier,
     joinedAt: row.created_at ? Date.parse(row.created_at) : Date.now(),
     notifications: row.notifications ?? undefined,
     company: row.company ?? undefined,
@@ -416,10 +434,11 @@ async function syncProfileToSupabase(member: AigroMember): Promise<void> {
 /** 登入後 fetch(或建立)profiles row → 寫入 local 快取 + 廣播 */
 async function hydrateProfile(user: User): Promise<void> {
   if (!supabase) return;
+  if (user.is_anonymous) return;
   try {
     const { data: row } = await supabase
       .from("profiles")
-      .select("*")
+      .select("*,account_access(app_role,tier,experts(slug))")
       .eq("id", user.id)
       .maybeSingle();
     const pending = readPendingProfile();
@@ -430,12 +449,12 @@ async function hydrateProfile(user: User): Promise<void> {
       const seed = sanitize({
         interests: [],
         persona: null,
-        role: "free",
-        tier: "free",
         joinedAt: Date.now(),
         notifications: { ...DEFAULT_NOTIFICATIONS },
         ...pending,
         email,
+        role: "free",
+        tier: "free",
       });
       if (!seed) return;
       await supabase
@@ -449,7 +468,13 @@ async function hydrateProfile(user: User): Promise<void> {
     // 已有 profile:食埋 pending(如有)再更新,然後快取
     let member = profileToMember(row as ProfileRow);
     if (pending) {
-      member = sanitize({ ...member, ...pending, email: member.email }) ?? member;
+      member = sanitize({
+        ...member,
+        ...pending,
+        email: member.email,
+        role: member.role,
+        tier: member.tier,
+      }) ?? member;
       await supabase
         .from("profiles")
         .upsert(memberToProfile(member, user.id), { onConflict: "id" });
@@ -511,6 +536,15 @@ export async function sendMagicLink(
 ): Promise<{ ok: boolean; error?: string }> {
   if (!supabase || !supabaseReady) return { ok: false, error: "offline" };
   try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (sessionData.session?.user.is_anonymous) {
+      const { error: upgradeError } = await supabase.auth.updateUser(
+        { email: email.trim() },
+        { emailRedirectTo: window.location.origin }
+      );
+      if (upgradeError) return { ok: false, error: upgradeError.message };
+      return { ok: true };
+    }
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
       options: { emailRedirectTo: window.location.origin },

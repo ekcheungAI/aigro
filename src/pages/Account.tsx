@@ -1,8 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   ArrowRight,
+  CalendarDays,
   Check,
   Lock,
   LogOut,
@@ -31,7 +32,7 @@ import {
 import type { AigroMember, MemberRole } from "@/components/auth/member";
 import { loadSessionStore } from "@/components/ask/sessions";
 import { getPersona } from "@/data/personas";
-import { supabaseReady } from "@/lib/supabase";
+import { ensureAuthenticatedUser, supabase, supabaseReady } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 
 const MCP_KEY = "aigro-mcp-signup";
@@ -43,6 +44,28 @@ interface SessionRow {
   title: string;
   updatedAt: number;
   to: string;
+}
+
+interface MemberBookingRow {
+  id: string;
+  starts_at: string;
+  ends_at: string;
+  status: string;
+  meeting_url: string | null;
+  experts: { display_name: string; slug: string } | null;
+}
+
+interface AvailableSlot {
+  starts_at: string;
+  ends_at: string;
+}
+
+function bookingTime(value: string): string {
+  return new Intl.DateTimeFormat("zh-HK", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "Asia/Hong_Kong",
+  }).format(new Date(value));
 }
 
 /** 跨分身合併 sessions,按 updatedAt 倒序 */
@@ -96,7 +119,7 @@ function RoleChip({ role }: { role: MemberRole }) {
       className={cn(
         "inline-flex items-center rounded-full px-2.5 py-0.5 text-caption",
         role === "founding" && "bg-lime text-on-accent",
-        role === "admin" && "bg-ink-solid text-white",
+        role === "admin" && "bg-ink-solid text-on-accent",
         role === "free" && "border border-border-strong text-text-muted"
       )}
     >
@@ -146,6 +169,11 @@ export default function Account() {
   // 會員態 — useMember 響應式(saveMember/clearMember 廣播即時更新)
   const { member } = useMember();
   const [editing, setEditing] = useState(false);
+  const [bookings, setBookings] = useState<MemberBookingRow[]>([]);
+  const [bookingsError, setBookingsError] = useState<string | null>(null);
+  const [bookingBusy, setBookingBusy] = useState<string | null>(null);
+  const [rescheduleId, setRescheduleId] = useState<string | null>(null);
+  const [rescheduleSlots, setRescheduleSlots] = useState<AvailableSlot[]>([]);
   const sessions = useMemo(collectSessions, []);
   const mcpSignedUp = useMemo(() => {
     try {
@@ -154,6 +182,81 @@ export default function Account() {
       return false;
     }
   }, []);
+
+  const loadBookings = async () => {
+    if (!supabase || !member) return;
+    try {
+      const uid = await ensureAuthenticatedUser();
+      if (!uid) return;
+      const { data, error } = await supabase.from("bookings")
+        .select("id,starts_at,ends_at,status,meeting_url,experts(display_name,slug)")
+        .eq("member_id", uid)
+        .order("starts_at", { ascending: false });
+      if (error) throw error;
+      setBookings((data ?? []) as unknown as MemberBookingRow[]);
+      setBookingsError(null);
+    } catch (caught) {
+      setBookingsError(caught instanceof Error ? caught.message : "未能載入預約");
+    }
+  };
+
+  useEffect(() => {
+    void loadBookings();
+    // member identity is the relevant subscription boundary.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [member?.email]);
+
+  const cancelBooking = async (id: string) => {
+    if (!supabase) return;
+    setBookingBusy(id);
+    const { error } = await supabase.rpc("cancel_booking", { p_booking_id: id });
+    setBookingBusy(null);
+    if (error) {
+      showToast(error.message.includes("cancellation_window_closed")
+        ? "距離預約少於 48 小時，請直接聯絡導師。"
+        : `取消失敗：${error.message}`);
+    } else {
+      showToast("預約已取消");
+      void loadBookings();
+    }
+  };
+
+  const openReschedule = async (booking: MemberBookingRow) => {
+    if (!supabase || !booking.experts?.slug) return;
+    setBookingBusy(booking.id);
+    const { data, error } = await supabase.rpc("list_available_slots", {
+      p_expert_slug: booking.experts.slug,
+      p_from_date: new Date().toISOString().slice(0, 10),
+      p_to_date: new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10),
+    });
+    setBookingBusy(null);
+    if (error) {
+      showToast(`未能載入時段：${error.message}`);
+      return;
+    }
+    setRescheduleSlots((data ?? []) as AvailableSlot[]);
+    setRescheduleId(booking.id);
+  };
+
+  const rescheduleBooking = async (id: string, startsAt: string) => {
+    if (!supabase) return;
+    setBookingBusy(id);
+    const { error } = await supabase.rpc("reschedule_booking", {
+      p_booking_id: id,
+      p_starts_at: startsAt,
+    });
+    setBookingBusy(null);
+    if (error) {
+      showToast(error.message.includes("reschedule_window_closed")
+        ? "距離原預約少於 48 小時，請直接聯絡導師。"
+        : `改期失敗：${error.message}`);
+      return;
+    }
+    setRescheduleId(null);
+    setRescheduleSlots([]);
+    showToast("已送出新時段，等候導師重新確認");
+    void loadBookings();
+  };
 
   /* ---------------- 未登入態 ---------------- */
   if (!member) {
@@ -497,6 +600,60 @@ export default function Account() {
                 </li>
               ))}
             </ul>
+          )}
+        </section>
+
+        {/* ---- 真人導師預約 ---- */}
+        <section className="mt-12">
+          <div className="flex items-baseline justify-between">
+            <h2 className="font-display text-h3 text-text-primary">真人導師預約</h2>
+            <Link to="/experts" className="link-underline text-label text-ink">查看導師</Link>
+          </div>
+          {bookingsError && <p className="mt-4 text-xs text-error">{bookingsError}</p>}
+          {bookings.length === 0 ? (
+            <div className="mt-6 rounded-md border bg-surface p-8 text-center">
+              <CalendarDays className="mx-auto h-5 w-5 text-text-muted" strokeWidth={1.5} />
+              <p className="mt-3 text-body-sm text-text-secondary">未有預約。當 AI 分身知識覆蓋不足時，你可以直接揀真人時段。</p>
+            </div>
+          ) : (
+            <div className="mt-6 space-y-3">
+              {bookings.map((booking) => (
+                <article key={booking.id} className="rounded-md border bg-surface p-5">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-label text-text-primary">{booking.experts?.display_name ?? "AIGRO 導師"}</p>
+                      <p className="mt-1 text-caption text-text-muted">{bookingTime(booking.starts_at)} · {booking.status}</p>
+                    </div>
+                    {(booking.status === "requested" || booking.status === "confirmed") && (
+                      <div className="flex gap-2">
+                        <button type="button" disabled={bookingBusy === booking.id} onClick={() => void openReschedule(booking)} className="press rounded-md border border-border px-3 py-1.5 text-xs text-text-secondary disabled:opacity-40">改期</button>
+                        <button type="button" disabled={bookingBusy === booking.id} onClick={() => void cancelBooking(booking.id)} className="press rounded-md border border-border px-3 py-1.5 text-xs text-text-secondary disabled:opacity-40">取消預約</button>
+                      </div>
+                    )}
+                  </div>
+                  {rescheduleId === booking.id && (
+                    <div className="mt-4 border-t border-border pt-4">
+                      <p className="text-xs font-medium text-text-primary">選擇新時段</p>
+                      {rescheduleSlots.length === 0 ? (
+                        <p className="mt-2 text-caption text-text-muted">未來 30 日暫無可用時段。</p>
+                      ) : (
+                        <div className="mt-2 flex max-h-32 flex-wrap gap-2 overflow-y-auto">
+                          {rescheduleSlots.slice(0, 40).map((slot) => (
+                            <button key={slot.starts_at} type="button" disabled={bookingBusy === booking.id} onClick={() => void rescheduleBooking(booking.id, slot.starts_at)} className="press rounded-md border border-border px-2.5 py-1.5 text-xs text-text-secondary disabled:opacity-40">
+                              {bookingTime(slot.starts_at)}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {booking.meeting_url && booking.status === "confirmed" && (
+                    <a href={booking.meeting_url} target="_blank" rel="noreferrer" className="mt-3 inline-block text-xs text-lime-text underline-offset-2 hover:underline">打開會面連結</a>
+                  )}
+                  <p className="mt-3 text-caption text-text-muted">開始前 48 小時內不設自助取消或改期。</p>
+                </article>
+              ))}
+            </div>
           )}
         </section>
 

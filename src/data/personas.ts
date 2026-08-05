@@ -344,7 +344,7 @@ AIGRO 嘅分身對話係同一思路嘅實踐 — 你而家同緊嘅就係授權
       [/唔該|多謝/, 3],
     ],
     reply: {
-      text: `你好!講明先 — 我係 AIGRO 平台編輯部嘅 AI,唔係真人:我嘅回答全部基於全站情報庫同兩位領航專家嘅授權內容,每個論點都會附來源,冇引用唔會亂噏。
+      text: `你好!講明先 — 我係 AIGRO 平台編輯部嘅 AI,唔係真人:我會先搜尋已批准嘅全站情報同領航專家授權內容；命中時附來源，資料不足會標明一般知識。
 想問 AI 大事、行業落地、工具預算,或者想知邊個分身啱你,直接問就得。`,
       citations: [
         { title: "AIGRO 情報庫", href: "/insights" },
@@ -352,7 +352,7 @@ AIGRO 嘅分身對話係同一思路嘅實踐 — 你而家同緊嘅就係授權
       ],
       confidence: 0.9,
     },
-    digest: `我係 AIGRO 平台編輯部 AI(唔係真人)— 基於全站情報庫同專家授權內容回答,論點附來源;AI 大事、行業落地、工具預算直接問。`,
+    digest: `我係 AIGRO 平台編輯部 AI(唔係真人)— 優先用已批准情報庫同專家授權內容回答；命中時附來源，資料不足會講明。`,
     followUps: ["今日 AI 有咩大事?", "邊個分身啱我?"],
     chip: "你係真人定 AI?",
   },
@@ -1090,12 +1090,12 @@ const PLATFORM_PERSONA: Persona = {
   name: "平台編輯部 AI",
   shortName: "編輯部",
   domainCaption: "基於全站內容庫",
-  signature: "每個論點附來源,無引用唔會亂噏",
+  signature: "命中已批准知識即附來源；資料不足會講明",
   accent: INK_ACCENT,
   headerCaption: "基於 Insights / Cases 內容庫回答",
   greetingTitle: "有咩想知?",
   greetingBody:
-    "問 AI 編輯部任何 AI、增長、營銷問題 — 每個論點附來源引用,無引用唔會亂噏。",
+    "問 AI 編輯部任何 AI、增長、營銷問題 — 命中已批准知識會附來源，資料不足會清楚標明。",
   suggestions: [
     "今日 AI 有咩大事?",
     "香港邊啲行業最用得著 AI?",

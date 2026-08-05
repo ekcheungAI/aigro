@@ -63,12 +63,23 @@ export function useAdminQuery<T>(
 }
 
 /** head-count 查詢 — 冇 rows 返 0;supabase 未 ready 时报错(由 caller error state 處理) */
+interface CountResult {
+  count: number | null;
+  error: { message: string } | null;
+}
+
+interface CountQuery extends PromiseLike<CountResult> {
+  eq(column: string, value: unknown): CountQuery;
+  gte(column: string, value: unknown): CountQuery;
+}
+
 export async function countRows(
   table: string,
-  apply?: (q: any) => any
+  apply?: (query: CountQuery) => CountQuery
 ): Promise<number> {
   if (!supabase) throw new Error("Supabase 未連接");
-  let q: any = supabase.from(table).select("id", { count: "exact", head: true });
+  let q = supabase.from(table)
+    .select("id", { count: "exact", head: true }) as unknown as CountQuery;
   if (apply) q = apply(q);
   const { count, error } = await q;
   if (error) throw new Error(error.message);
@@ -134,7 +145,8 @@ export interface AdminMessageRow {
   role: "user" | "assistant";
   content: string;
   source: string | null;
-  confidence: number | null;
+  answer_basis: "knowledge" | "general" | null;
+  coverage: "high" | "medium" | "none" | null;
   created_at: string | null;
 }
 
