@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(9);
+select plan(11);
 
 set local role postgres;
 
@@ -55,6 +55,15 @@ select '40000000-0000-0000-0000-000000000004', e.id, 'manual', 'private source',
 from public.experts e where e.slug = 'elvin-cheung';
 select is((select count(*) from public.knowledge_sources), 1::bigint, 'expert can read own raw source');
 
+set local role postgres;
+insert into public.persona_synthesis_jobs (expert_id, source_revision_ids, status)
+select id, array[]::uuid[], 'failed' from public.experts where slug = 'elvin-cheung';
+set local role authenticated;
+select set_config('request.jwt.claims',
+  '{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}', true);
+select is((select count(*) from public.persona_synthesis_jobs), 1::bigint,
+  'expert can read own persona synthesis and fidelity record');
+
 set local role authenticated;
 select set_config('request.jwt.claims',
   '{"sub":"20000000-0000-0000-0000-000000000002","role":"authenticated"}', true);
@@ -62,6 +71,8 @@ select set_config('request.jwt.claims',
 select is((select count(*) from public.conversations), 0::bigint, 'another member cannot read private conversation');
 select is((select count(*) from public.messages), 0::bigint, 'another member cannot read private messages');
 select is((select count(*) from public.knowledge_sources), 0::bigint, 'another member cannot read expert raw sources');
+select is((select count(*) from public.persona_synthesis_jobs), 0::bigint,
+  'member cannot read an instructor persona synthesis evidence');
 
 update public.account_access set app_role = 'admin' where user_id = auth.uid();
 select is(

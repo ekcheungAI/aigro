@@ -30,6 +30,11 @@ verify_jwt = true
 # with x-worker-secret. Never expose KNOWLEDGE_WORKER_SECRET to the browser.
 verify_jwt = false
 
+[functions.persona-compiler]
+# Internal durable worker. It compiles only published instructor evidence and
+# authenticates with x-worker-secret; never expose PERSONA_COMPILER_SECRET.
+verify_jwt = false
+
 [functions.booking-notify]
 # Database webhook handler; authenticated with x-webhook-secret.
 verify_jwt = false

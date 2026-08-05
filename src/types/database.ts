@@ -426,11 +426,18 @@ export type Database = {
           boundaries: Json
           created_at: string
           created_by: string | null
+          evidence_manifest: Json
           expert_id: string
+          fidelity_report: Json
+          fidelity_score: number | null
+          fidelity_status: string
           greeting: string
           id: string
+          persona_blueprint: Json
           published_at: string | null
+          research_cutoff_at: string | null
           sample_dialogues: Json
+          source_revision_ids: string[]
           status: string
           version: number
           voice_rules: Json
@@ -440,11 +447,18 @@ export type Database = {
           boundaries?: Json
           created_at?: string
           created_by?: string | null
+          evidence_manifest?: Json
           expert_id: string
+          fidelity_report?: Json
+          fidelity_score?: number | null
+          fidelity_status?: string
           greeting?: string
           id?: string
+          persona_blueprint?: Json
           published_at?: string | null
+          research_cutoff_at?: string | null
           sample_dialogues?: Json
+          source_revision_ids?: string[]
           status?: string
           version: number
           voice_rules?: Json
@@ -454,11 +468,18 @@ export type Database = {
           boundaries?: Json
           created_at?: string
           created_by?: string | null
+          evidence_manifest?: Json
           expert_id?: string
+          fidelity_report?: Json
+          fidelity_score?: number | null
+          fidelity_status?: string
           greeting?: string
           id?: string
+          persona_blueprint?: Json
           published_at?: string | null
+          research_cutoff_at?: string | null
           sample_dialogues?: Json
+          source_revision_ids?: string[]
           status?: string
           version?: number
           voice_rules?: Json
@@ -847,6 +868,190 @@ export type Database = {
           },
         ]
       }
+      persona_evaluation_questions: {
+        Row: {
+          active: boolean
+          category: string
+          created_at: string
+          created_by: string | null
+          expected: Json
+          expert_id: string
+          id: string
+          question: string
+          source_revision_ids: string[]
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          category: string
+          created_at?: string
+          created_by?: string | null
+          expected?: Json
+          expert_id: string
+          id?: string
+          question: string
+          source_revision_ids?: string[]
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          expected?: Json
+          expert_id?: string
+          id?: string
+          question?: string
+          source_revision_ids?: string[]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "persona_evaluation_questions_expert_id_fkey"
+            columns: ["expert_id"]
+            isOneToOne: false
+            referencedRelation: "experts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      persona_evaluation_runs: {
+        Row: {
+          created_at: string
+          evaluator_model: string
+          generator_model: string
+          id: string
+          probe_responses: Json
+          report: Json
+          score: number
+          status: string
+          synthesis_job_id: string
+        }
+        Insert: {
+          created_at?: string
+          evaluator_model: string
+          generator_model: string
+          id?: string
+          probe_responses?: Json
+          report?: Json
+          score: number
+          status: string
+          synthesis_job_id: string
+        }
+        Update: {
+          created_at?: string
+          evaluator_model?: string
+          generator_model?: string
+          id?: string
+          probe_responses?: Json
+          report?: Json
+          score?: number
+          status?: string
+          synthesis_job_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "persona_evaluation_runs_synthesis_job_id_fkey"
+            columns: ["synthesis_job_id"]
+            isOneToOne: false
+            referencedRelation: "persona_synthesis_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      persona_synthesis_jobs: {
+        Row: {
+          attempts: number
+          created_at: string
+          created_by: string | null
+          error_message: string | null
+          evidence_manifest: Json
+          expert_id: string
+          fidelity_report: Json
+          fidelity_score: number | null
+          fidelity_status: string
+          id: string
+          locked_at: string | null
+          locked_by: string | null
+          model: string | null
+          next_retry_at: string
+          output_blueprint: Json
+          persona_version_id: string | null
+          research_cutoff_at: string
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source_revision_ids: string[]
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          created_by?: string | null
+          error_message?: string | null
+          evidence_manifest?: Json
+          expert_id: string
+          fidelity_report?: Json
+          fidelity_score?: number | null
+          fidelity_status?: string
+          id?: string
+          locked_at?: string | null
+          locked_by?: string | null
+          model?: string | null
+          next_retry_at?: string
+          output_blueprint?: Json
+          persona_version_id?: string | null
+          research_cutoff_at?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_revision_ids: string[]
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          created_by?: string | null
+          error_message?: string | null
+          evidence_manifest?: Json
+          expert_id?: string
+          fidelity_report?: Json
+          fidelity_score?: number | null
+          fidelity_status?: string
+          id?: string
+          locked_at?: string | null
+          locked_by?: string | null
+          model?: string | null
+          next_retry_at?: string
+          output_blueprint?: Json
+          persona_version_id?: string | null
+          research_cutoff_at?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_revision_ids?: string[]
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "persona_synthesis_jobs_expert_id_fkey"
+            columns: ["expert_id"]
+            isOneToOne: false
+            referencedRelation: "experts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "persona_synthesis_jobs_persona_version_id_fkey"
+            columns: ["persona_version_id"]
+            isOneToOne: false
+            referencedRelation: "expert_persona_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           analysis: string | null
@@ -1196,6 +1401,16 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      claim_persona_synthesis_jobs: {
+        Args: { p_limit?: number; p_worker_id: string }
+        Returns: Database["public"]["Tables"]["persona_synthesis_jobs"]["Row"][]
+        SetofOptions: {
+          from: "*"
+          to: "persona_synthesis_jobs"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       create_booking: {
         Args: {
           p_expert_slug: string
@@ -1219,6 +1434,7 @@ export type Database = {
         Returns: Json
       }
       invoke_knowledge_worker: { Args: never; Returns: number }
+      invoke_persona_compiler: { Args: never; Returns: number }
       is_admin: { Args: never; Returns: boolean }
       list_available_slots: {
         Args: {
@@ -1281,14 +1497,29 @@ export type Database = {
         }
         Returns: string
       }
+      publish_compiled_persona: {
+        Args: { p_greeting: string; p_job_id: string; p_sample_dialogues?: Json }
+        Returns: string
+      }
+      queue_persona_synthesis: { Args: { p_expert_id: string }; Returns: string }
       purge_expired_anonymous_chats: { Args: never; Returns: number }
       requeue_stuck_distillation_jobs: { Args: never; Returns: undefined }
+      requeue_stuck_persona_synthesis_jobs: { Args: never; Returns: undefined }
       reschedule_booking: {
         Args: { p_booking_id: string; p_starts_at: string }
         Returns: undefined
       }
       review_knowledge_revision: {
         Args: { p_decision: string; p_notes?: string; p_revision_id: string }
+        Returns: undefined
+      }
+      review_persona_synthesis: {
+        Args: {
+          p_decision: string
+          p_job_id: string
+          p_notes?: string
+          p_override_fidelity?: boolean
+        }
         Returns: undefined
       }
       rollback_knowledge_source: {

@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(16);
+select plan(25);
 
 set local role postgres;
 insert into auth.users (
@@ -123,6 +123,100 @@ select is(
     ('[' || '1,' || repeat('0,', 1534) || '0]')::extensions.halfvec(1536), 6, 0.70
   ) where content = 'Jimmy only'), 1::bigint,
   'retrieval does not leak another instructor content'
+);
+
+-- Persona Compiler: published evidence -> synthesis -> fidelity gate -> approval -> immutable publish.
+insert into public.knowledge_sources (id, expert_id, source_type, title)
+select '64000000-0000-0000-0000-000000000004', id, 'manual', 'Elvin second published'
+from public.experts where slug = 'elvin-cheung';
+insert into public.knowledge_revisions (id, source_id, revision_no, status, content_hash, approved_at) values
+  ('74000000-0000-0000-0000-000000000004', '64000000-0000-0000-0000-000000000004', 1, 'approved', 'hash-elvin-two', now());
+update public.knowledge_sources set published_revision_id = '74000000-0000-0000-0000-000000000004'
+where id = '64000000-0000-0000-0000-000000000004';
+update public.account_access set app_role = 'admin'
+where user_id = '51000000-0000-0000-0000-000000000001';
+
+set local role authenticated;
+select set_config('request.jwt.claims',
+  '{"sub":"51000000-0000-0000-0000-000000000001","role":"authenticated"}', true);
+select ok(
+  public.queue_persona_synthesis((select id from public.experts where slug = 'elvin-cheung')) is not null,
+  'expert or admin can queue persona synthesis from published knowledge'
+);
+select is(
+  (select cardinality(source_revision_ids) from public.persona_synthesis_jobs
+   where expert_id = (select id from public.experts where slug = 'elvin-cheung')),
+  2,
+  'persona synthesis snapshots only the two published approved revisions'
+);
+
+set local role postgres;
+update public.persona_synthesis_jobs set
+  status = 'review',
+  output_blueprint = '{"mental_models":[{"name":"驗證優先"}],"expression_dna":{"tone":["直接"]},"honest_boundaries":[{"boundary":"唔虛構"}]}'::jsonb,
+  evidence_manifest = '{"source_count":2,"evidence_count":4}'::jsonb,
+  fidelity_report = '{"breakdown":{"edge_honesty":15,"source_transparency":14}}'::jsonb,
+  fidelity_score = 84,
+  fidelity_status = 'failed'
+where expert_id = (select id from public.experts where slug = 'elvin-cheung');
+
+set local role authenticated;
+select set_config('request.jwt.claims',
+  '{"sub":"51000000-0000-0000-0000-000000000001","role":"authenticated"}', true);
+select throws_ok(
+  $$select public.review_persona_synthesis(
+    (select id from public.persona_synthesis_jobs where expert_id = (select id from public.experts where slug = 'elvin-cheung')),
+    'approve', 'should fail'
+  )$$,
+  'P0001', 'persona_fidelity_gate_failed',
+  'failed fidelity cannot be approved without an explicit admin override'
+);
+
+set local role postgres;
+update public.persona_synthesis_jobs set
+  fidelity_report = '{"breakdown":{"stance_consistency":25,"style_distinctiveness":17,"edge_honesty":18,"source_transparency":13,"structural_completeness":12}}'::jsonb,
+  fidelity_score = 85,
+  fidelity_status = 'passed'
+where expert_id = (select id from public.experts where slug = 'elvin-cheung');
+set local role authenticated;
+select set_config('request.jwt.claims',
+  '{"sub":"51000000-0000-0000-0000-000000000001","role":"authenticated"}', true);
+select lives_ok(
+  $$select public.review_persona_synthesis(
+    (select id from public.persona_synthesis_jobs where expert_id = (select id from public.experts where slug = 'elvin-cheung')),
+    'approve', 'verified in workflow test'
+  )$$,
+  'passed persona synthesis can receive human approval'
+);
+select ok(
+  public.publish_compiled_persona(
+    (select id from public.persona_synthesis_jobs where expert_id = (select id from public.experts where slug = 'elvin-cheung')),
+    '你好，我係 Elvin 嘅授權 AI 導師。'
+  ) is not null,
+  'approved compiled persona can be published as an immutable version'
+);
+select is(
+  (select fidelity_status from public.expert_persona_versions
+   where id = (select published_persona_version_id from public.experts where slug = 'elvin-cheung')),
+  'passed',
+  'published persona preserves the fidelity gate result'
+);
+select is(
+  (select persona_blueprint->'mental_models'->0->>'name' from public.expert_persona_versions
+   where id = (select published_persona_version_id from public.experts where slug = 'elvin-cheung')),
+  '驗證優先',
+  'published persona preserves the reviewed blueprint'
+);
+select is(
+  (select status from public.persona_synthesis_jobs
+   where expert_id = (select id from public.experts where slug = 'elvin-cheung')),
+  'published',
+  'persona synthesis job records its terminal published state'
+);
+select isnt(
+  has_function_privilege('authenticated', 'public.publish_persona_version(uuid,text,jsonb,jsonb,jsonb)', 'EXECUTE'),
+  true,
+  'browser roles cannot bypass Persona Compiler with the legacy publisher'
 );
 
 insert into public.availability_rules (expert_id, weekday, start_time, end_time, timezone, slot_minutes)
