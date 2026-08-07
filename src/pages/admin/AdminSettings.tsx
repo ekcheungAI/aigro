@@ -122,7 +122,7 @@ export default function AdminSettings() {
               />
               Supabase
               <span className="ml-auto font-mono text-[11px] text-text-muted">
-                {pingLoading ? "檢查中…" : ping?.ok ? "已連接 ✅" : "異常"}
+                {pingLoading ? "檢查中…" : ping?.ok ? "已連接" : "異常"}
               </span>
             </p>
             <p className="mt-1.5 text-xs leading-relaxed text-text-muted">
@@ -150,7 +150,7 @@ export default function AdminSettings() {
                 {argro.loading && !argro.data
                   ? "檢查中…"
                   : argro.data
-                    ? "online ✅"
+                    ? "online"
                     : "離線"}
               </span>
             </p>
