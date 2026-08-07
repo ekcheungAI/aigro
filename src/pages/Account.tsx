@@ -9,6 +9,7 @@ import {
   LogOut,
   MessageSquare,
   PenLine,
+  ShieldCheck,
   Zap,
 } from "lucide-react";
 import Toast, { useToast } from "@/components/auth/Toast";
@@ -17,6 +18,7 @@ import ProfileEditor from "@/components/auth/ProfileEditor";
 import useMember from "@/hooks/useMember";
 import {
   clearMember,
+  adminEntryPath,
   greeting,
   hasFullPlatformAccess,
   isFoundingTier,
@@ -317,6 +319,7 @@ export default function Account() {
   const completion = profileCompletion(member);
   const founding = isFoundingTier(member);
   const fullPlatformAccess = hasFullPlatformAccess(member);
+  const masterAdminPath = adminEntryPath(member);
   const milestones = milestonesFor(member);
 
   const stats = [
@@ -383,7 +386,17 @@ export default function Account() {
               </p>
             )}
           </div>
-          {!fullPlatformAccess && member.tier !== "vip" && (
+          {masterAdminPath && (
+            <Link
+              to={masterAdminPath}
+              className="press inline-flex h-12 shrink-0 items-center gap-2 self-start rounded-md bg-ink-solid px-6 text-label text-on-accent hover:bg-ink-solid/90 sm:self-center"
+            >
+              <ShieldCheck className="h-4 w-4" strokeWidth={1.5} />
+              Master Admin 管理後台
+              <ArrowRight className="h-4 w-4" strokeWidth={1.5} />
+            </Link>
+          )}
+          {!masterAdminPath && !fullPlatformAccess && member.tier !== "vip" && (
             <Link
               to="/pricing"
               className="press inline-flex h-12 shrink-0 items-center gap-2 self-start rounded-md bg-lime px-6 text-label text-on-accent hover:bg-lime-hover sm:self-center"

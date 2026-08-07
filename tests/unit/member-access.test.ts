@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  adminEntryPath,
   hasFullPlatformAccess,
   hasHumanBookingAccess,
   memberRoleLabel,
@@ -37,5 +38,11 @@ describe("member entitlements", () => {
 
   it("labels the platform owner as the highest administrator", () => {
     expect(memberRoleLabel(member({ role: "super_admin" }))).toBe("最高管理員");
+  });
+
+  it("exposes the one-click master admin entry only to the platform owner", () => {
+    expect(adminEntryPath(member({ role: "super_admin" }))).toBe("/admin");
+    expect(adminEntryPath(member({ role: "admin" }))).toBeNull();
+    expect(adminEntryPath(member({ role: "free" }))).toBeNull();
   });
 });

@@ -63,12 +63,16 @@ interface StudioData {
   personaJobs: PersonaJobRow[];
 }
 
+/** Both tables point at each other, so PostgREST needs the source_id FK hint. */
+export const STUDIO_REVIEW_SELECT =
+  "id,status,created_at,knowledge_sources!knowledge_revisions_source_id_fkey(id,title,expert_id,experts(display_name,slug))";
+
 async function fetchStudio(): Promise<StudioData> {
   if (!supabase) throw new Error("Supabase 未連接");
   const [experts, reviews, gaps, personaJobs] = await Promise.all([
     supabase.from("experts").select("id,slug,display_name,status,feature_flags,published_persona_version_id").order("display_name"),
     supabase.from("knowledge_revisions")
-      .select("id,status,created_at,knowledge_sources(id,title,expert_id,experts(display_name,slug))")
+      .select(STUDIO_REVIEW_SELECT)
       .eq("status", "review")
       .order("created_at", { ascending: true }),
     supabase.from("knowledge_gaps")

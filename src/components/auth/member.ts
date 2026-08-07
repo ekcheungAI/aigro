@@ -139,6 +139,11 @@ export function hasFullPlatformAccess(member: Pick<AigroMember, "role">): boolea
   return member.role === "super_admin";
 }
 
+/** Account page one-click entry for the platform owner control plane. */
+export function adminEntryPath(member: Pick<AigroMember, "role">): "/admin" | null {
+  return hasFullPlatformAccess(member) ? "/admin" : null;
+}
+
 export function hasHumanBookingAccess(
   member: Pick<AigroMember, "role" | "tier">
 ): boolean {

@@ -1,22 +1,11 @@
 import { useState } from "react";
-import { Link, NavLink, Outlet } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowUpRight,
-  FileText,
-  FlaskConical,
-  LayoutDashboard,
   Lock,
-  Mail,
   Menu,
-  MessagesSquare,
-  Puzzle,
-  Radio,
-  Settings,
   ShieldCheck,
-  Target,
-  UserRound,
-  Users,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -24,45 +13,34 @@ import { AdminToastProvider } from "@/components/admin/AdminToast";
 import { useMember } from "@/hooks/useMember";
 import { memberInitial, memberRoleLabel } from "@/components/auth/member";
 import { supabaseReady } from "@/lib/supabase";
+import {
+  ADMIN_MODULES,
+  adminModuleForPath,
+} from "@/components/admin/adminModules";
 
-const NAV = [
-  {
-    to: "/admin",
-    end: true,
-    zh: "總覽",
-    en: "Dashboard",
-    icon: LayoutDashboard,
-  },
-  { to: "/admin/experts", zh: "專家管理", en: "Experts", icon: Users },
-  {
-    to: "/admin/studio",
-    zh: "專家工作室",
-    en: "Studio",
-    icon: FlaskConical,
-  },
-  { to: "/admin/crm", zh: "CRM", en: "CRM", icon: Target },
-  { to: "/admin/content", zh: "內容管理", en: "Content", icon: FileText },
-  { to: "/admin/sources", zh: "來源", en: "Sources", icon: Radio },
-  { to: "/admin/skills", zh: "技能", en: "Skills", icon: Puzzle },
-  {
-    to: "/admin/engagement",
-    zh: "對話參與",
-    en: "Engagement",
-    icon: MessagesSquare,
-  },
-  { to: "/admin/members", zh: "會員管理", en: "Members", icon: UserRound },
-  { to: "/admin/emails", zh: "郵件", en: "Emails", icon: Mail },
-  { to: "/admin/settings", zh: "設定", en: "Settings", icon: Settings },
-] as const;
+function BetaBadge({ active = false }: { active?: boolean }) {
+  return (
+    <span
+      className={cn(
+        "rounded-full border px-1.5 py-0.5 font-mono text-[8px] font-semibold uppercase tracking-[0.1em]",
+        active
+          ? "border-on-accent/30 text-on-accent"
+          : "border-lime/40 text-lime"
+      )}
+    >
+      Beta
+    </span>
+  );
+}
 
 function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <nav className="flex flex-col gap-0.5 px-3">
-      {NAV.map((item) => (
+      {ADMIN_MODULES.map((item) => (
         <NavLink
           key={item.to}
           to={item.to}
-          end={"end" in item && item.end}
+          end={item.end}
           onClick={onNavigate}
           className={({ isActive }) =>
             cn(
@@ -82,13 +60,16 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
                 )}
               />
               <span className="font-medium">{item.zh}</span>
-              <span
-                className={cn(
-                  "ml-auto font-mono text-[10px] uppercase tracking-wider",
-                  isActive ? "text-on-accent/70" : "text-[#8593A5]"
-                )}
-              >
-                {item.en}
+              <span className="ml-auto flex items-center gap-1.5">
+                {item.status === "beta" && <BetaBadge active={isActive} />}
+                <span
+                  className={cn(
+                    "font-mono text-[10px] uppercase tracking-wider",
+                    isActive ? "text-on-accent/70" : "text-[#8593A5]"
+                  )}
+                >
+                  {item.en}
+                </span>
               </span>
             </>
           )}
@@ -158,7 +139,9 @@ function AdminGate({ loading }: { loading: boolean }) {
  */
 export default function AdminLayout() {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const location = useLocation();
   const { member, loading } = useMember();
+  const currentModule = adminModuleForPath(location.pathname);
   const isAdmin = member !== null &&
     (member.role === "admin" || member.role === "super_admin");
 
@@ -183,7 +166,7 @@ export default function AdminLayout() {
           </div>
           <div className="border-t border-[#1C3355] px-6 py-4">
             <p className="font-mono text-[10px] uppercase tracking-wider text-[#8593A5]">
-              內部後台 · Live data
+              內部後台 · Module status
             </p>
             <p className="mt-1 flex items-center gap-1.5 text-xs text-[#8593A5]">
               <span
@@ -192,7 +175,7 @@ export default function AdminLayout() {
                   supabaseReady ? "bg-lime" : "bg-[#A63A30]"
                 )}
               />
-              {supabaseReady ? "Supabase 已連接" : "Supabase 未連接"}
+              {supabaseReady ? "Supabase client 已設定" : "Supabase 未設定"}
             </p>
           </div>
         </aside>
@@ -252,8 +235,9 @@ export default function AdminLayout() {
             <span className="font-display text-[15px] font-medium uppercase tracking-[0.04em] text-text-primary lg:hidden">
               AIGRO<span className="text-lime-text">.</span> Admin
             </span>
-            <span className="hidden text-sm text-text-muted lg:block">
-              AIGRO Admin — 內部管理後台
+            <span className="hidden items-center gap-2 text-sm text-text-muted lg:flex">
+              Master Admin · {currentModule.zh} / {currentModule.en}
+              {currentModule.status === "beta" && <BetaBadge />}
             </span>
             <div className="ml-auto flex items-center gap-3">
               <Link
@@ -277,6 +261,17 @@ export default function AdminLayout() {
 
           {/* Content */}
           <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+            {currentModule.status === "beta" && (
+              <div className="mx-auto mb-5 flex max-w-6xl items-start gap-3 rounded-md border border-lime/35 bg-lime-soft px-4 py-3">
+                <BetaBadge />
+                <p className="text-xs leading-relaxed text-text-secondary">
+                  <span className="font-medium text-text-primary">
+                    {currentModule.zh}
+                  </span>
+                  ：{currentModule.betaReason}
+                </p>
+              </div>
+            )}
             <Outlet />
           </main>
         </div>
