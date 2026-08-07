@@ -379,7 +379,7 @@ export default function Account() {
             </p>
             {fullPlatformAccess && (
               <p className="mt-2 font-mono text-[11px] uppercase tracking-[0.12em] text-lime-text">
-                Billing tier: {member.tier} · Effective access: unrestricted
+                Platform owner · Effective access: unrestricted
               </p>
             )}
           </div>
