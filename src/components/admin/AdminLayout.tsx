@@ -121,8 +121,8 @@ function AdminGate({ loading }: { loading: boolean }) {
           需要 admin 帳號登入
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-text-secondary">
-          Admin 後台而家直接讀 Supabase 真實數據 — 只有管理員帳號
-          (profiles.role = admin)先可以睇到。請用 admin 帳號登入。
+          Admin 後台直接讀 Supabase 真實數據 — 只有管理員或最高管理員帳號
+          先可以睇到。請用獲授權帳號登入。
         </p>
         {loading && (
           <p className="mt-4 font-mono text-xs text-text-muted">
@@ -154,12 +154,13 @@ function AdminGate({ loading }: { loading: boolean }) {
  * App.tsx 須以 <Route path="admin" element={<AdminLayout/>}> + 子路由接入。
  * 左側 240px near-black 側欄(lg+),mobile 收合為頂部 drawer。
  * 內容區 warm paper;不含公開站 Navbar/Footer。
- * Gate:未登入或 role 唔係 admin → 只顯示登入提示,唔 render 任何數據頁。
+ * Gate:未登入或 role 唔係 admin/super_admin → 只顯示登入提示,唔 render 數據頁。
  */
 export default function AdminLayout() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { member, loading } = useMember();
-  const isAdmin = member !== null && member.role === "admin";
+  const isAdmin = member !== null &&
+    (member.role === "admin" || member.role === "super_admin");
 
   if (loading || !isAdmin) {
     return (

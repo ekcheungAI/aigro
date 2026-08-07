@@ -15,8 +15,8 @@ import type { User } from "@supabase/supabase-js";
 
 export type MemberTier = "free" | "pro" | "vip";
 
-/** 4 級用戶制度:免費 / 創始會員 / 領航專家 / 管理員 */
-export type MemberRole = "free" | "founding" | "expert" | "admin";
+/** 用戶顯示級別：免費 / 創始會員 / 領航專家 / 管理員 / 最高管理員 */
+export type MemberRole = "free" | "founding" | "expert" | "admin" | "super_admin";
 /** 入口角色 alias(專家平台 gate /portal 用)— 與 MemberRole 同型 */
 export type MemberPortalRole = MemberRole;
 
@@ -115,10 +115,11 @@ export const ROLE_LABELS: Record<MemberRole, string> = {
   founding: "創始會員",
   expert: "領航專家",
   admin: "管理員",
+  super_admin: "最高管理員",
 };
 
 /** 級別排序(權限由低至高) */
-export const TIER_ORDER: MemberRole[] = ["free", "founding", "expert", "admin"];
+export const TIER_ORDER: MemberRole[] = ["free", "founding", "expert", "admin", "super_admin"];
 
 export const TIER_LABEL: Record<MemberTier, string> = {
   free: "免費會員",
@@ -126,7 +127,7 @@ export const TIER_LABEL: Record<MemberTier, string> = {
   vip: "VIP 會員",
 };
 
-const MEMBER_ROLES: MemberRole[] = ["free", "founding", "expert", "admin"];
+const MEMBER_ROLES: MemberRole[] = ["free", "founding", "expert", "admin", "super_admin"];
 
 function isMemberRole(v: unknown): v is MemberRole {
   return typeof v === "string" && (MEMBER_ROLES as string[]).includes(v);
@@ -179,6 +180,7 @@ function sanitize(raw: unknown): AigroMember | null {
       m.portalRole === "founding" ||
       m.portalRole === "expert" ||
       m.portalRole === "admin" ||
+      m.portalRole === "super_admin" ||
       m.portalRole === "free"
         ? m.portalRole
         : isMemberRole(m.role)
@@ -262,11 +264,11 @@ interface ProfileRow {
   expert_slug: string | null;
   created_at: string | null;
   account_access?: {
-    app_role: "member" | "expert" | "admin";
+    app_role: "member" | "expert" | "admin" | "super_admin";
     tier: MemberTier;
     experts?: { slug: string } | null;
   } | Array<{
-    app_role: "member" | "expert" | "admin";
+    app_role: "member" | "expert" | "admin" | "super_admin";
     tier: MemberTier;
     experts?: { slug: string } | null;
   }> | null;
@@ -364,7 +366,9 @@ function profileToMember(row: ProfileRow): AigroMember {
     ? row.account_access[0]
     : row.account_access;
   const tier = access?.tier ?? "free";
-  const role: MemberRole = access?.app_role === "admin"
+  const role: MemberRole = access?.app_role === "super_admin"
+    ? "super_admin"
+    : access?.app_role === "admin"
     ? "admin"
     : access?.app_role === "expert"
     ? "expert"

@@ -119,7 +119,7 @@ function RoleChip({ role }: { role: MemberRole }) {
       className={cn(
         "inline-flex items-center rounded-full px-2.5 py-0.5 text-caption",
         role === "founding" && "bg-lime text-on-accent",
-        role === "admin" && "bg-ink-solid text-on-accent",
+        (role === "admin" || role === "super_admin") && "bg-ink-solid text-on-accent",
         role === "free" && "border border-border-strong text-text-muted"
       )}
     >

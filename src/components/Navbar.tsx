@@ -43,7 +43,7 @@ export default function Navbar() {
   const memberChipTo = member
     ? member.role === "expert"
       ? "/portal"
-      : member.role === "admin"
+      : member.role === "admin" || member.role === "super_admin"
         ? "/admin"
         : "/account"
     : "/account";
@@ -142,7 +142,7 @@ export default function Navbar() {
                 aria-label={
                   member.role === "expert"
                     ? `${member.name} 嘅專家平台`
-                    : member.role === "admin"
+                    : member.role === "admin" || member.role === "super_admin"
                       ? `${member.name} 嘅管理後台`
                       : `${member.name} 嘅會員專區`
                 }
@@ -298,7 +298,7 @@ export default function Navbar() {
                     </span>
                     {member.role === "expert"
                       ? "專家平台"
-                      : member.role === "admin"
+                      : member.role === "admin" || member.role === "super_admin"
                         ? "管理後台"
                         : "會員專區"}
                   </Link>

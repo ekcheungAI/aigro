@@ -5,6 +5,7 @@ import { useAdminToast } from "@/components/admin/AdminToast";
 import QueryState from "@/components/QueryState";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
+import { useMember } from "@/hooks/useMember";
 import {
   countRows,
   formatDate,
@@ -20,15 +21,16 @@ import type { MemberRole, MemberTier } from "@/components/auth/member";
 
 type RoleFilter = "全部" | MemberRole;
 type TierFilter = "全部" | MemberTier;
-const ROLE_FILTERS: RoleFilter[] = ["全部", "free", "founding", "expert", "admin"];
+const ROLE_FILTERS: RoleFilter[] = ["全部", "free", "founding", "expert", "admin", "super_admin"];
 const TIER_FILTERS: TierFilter[] = ["全部", "free", "pro", "vip"];
-const ROLE_ORDER: MemberRole[] = ["free", "founding", "expert", "admin"];
+const ROLE_ORDER: MemberRole[] = ["free", "founding", "expert", "admin", "super_admin"];
 const TIER_ORDER: MemberTier[] = ["free", "pro", "vip"];
 /** 已知分身 slug(datalist 建議,自訂都得) */
 const KNOWN_EXPERT_SLUGS = ["jimmy-lau", "elvin-cheung"];
 
 function roleChip(role: string | null) {
-  if (role === "admin") return "bg-lime text-on-accent";
+  if (role === "super_admin") return "bg-lime text-on-accent";
+  if (role === "admin") return "bg-ink-solid text-on-accent";
   if (role === "expert" || role === "founding") return "bg-lime-soft text-lime-text";
   return "bg-card text-text-secondary";
 }
@@ -73,7 +75,9 @@ async function fetchMembers(): Promise<MembersData> {
       } | null;
       const expertRaw = access?.experts;
       const expert = Array.isArray(expertRaw) ? expertRaw[0] : expertRaw;
-      const role = access?.app_role === "admin"
+      const role = access?.app_role === "super_admin"
+        ? "super_admin"
+        : access?.app_role === "admin"
         ? "admin"
         : access?.app_role === "expert"
         ? "expert"
@@ -103,11 +107,13 @@ function MemberRoleEditor({
   member,
   onSaved,
   onCancel,
+  canManageAdmins,
 }: {
   member: AdminProfileRow;
   /** 儲存成功後 callback(父層 refetch + 關閉) */
   onSaved: (role: MemberRole, tier: MemberTier) => void;
   onCancel: () => void;
+  canManageAdmins: boolean;
 }) {
   const [role, setRole] = useState<MemberRole>(
     (member.role as MemberRole) ?? "free"
@@ -137,7 +143,13 @@ function MemberRoleEditor({
       }
       expertId = expert.id;
     }
-    const appRole = role === "admin" ? "admin" : role === "expert" ? "expert" : "member";
+    const appRole = role === "super_admin"
+      ? "super_admin"
+      : role === "admin"
+      ? "admin"
+      : role === "expert"
+      ? "expert"
+      : "member";
     const { error: updateError } = await supabase.from("account_access").upsert({
       user_id: member.id,
       app_role: appRole,
@@ -185,7 +197,7 @@ function MemberRoleEditor({
             onChange={(e) => setRole(e.target.value as MemberRole)}
             className="mt-1.5 w-full rounded-md border border-border-strong bg-surface px-3 py-2 text-sm text-text-primary focus:border-lime focus:outline-none"
           >
-            {ROLE_ORDER.map((r) => (
+            {ROLE_ORDER.filter((r) => canManageAdmins || (r !== "admin" && r !== "super_admin")).map((r) => (
               <option key={r} value={r}>
                 {ROLE_LABELS[r]}({r})
               </option>
@@ -266,6 +278,8 @@ function MemberRoleEditor({
 }
 
 export default function AdminMembers() {
+  const { member: currentMember } = useMember();
+  const canManageAdmins = currentMember?.role === "super_admin";
   const { data, loading, error, refetch } = useAdminQuery(fetchMembers);
   const toast = useAdminToast();
   const [query, setQuery] = useState("");
@@ -599,11 +613,15 @@ export default function AdminMembers() {
 
             <button
               type="button"
+              disabled={!canManageAdmins && (active.role === "admin" || active.role === "super_admin")}
               onClick={() => {
                 setOpenId(null);
                 setEditId(active.id);
               }}
-              className="inline-flex items-center gap-1.5 rounded-md border border-border px-3.5 py-2 text-sm font-medium text-text-secondary transition-colors hover:border-lime hover:text-lime-text"
+              title={!canManageAdmins && (active.role === "admin" || active.role === "super_admin")
+                ? "只有最高管理員可以修改管理員權限"
+                : undefined}
+              className="inline-flex items-center gap-1.5 rounded-md border border-border px-3.5 py-2 text-sm font-medium text-text-secondary transition-colors hover:border-lime hover:text-lime-text disabled:cursor-not-allowed disabled:opacity-40"
             >
               <Pencil className="h-3.5 w-3.5" />
               編輯級別 / 層級
@@ -622,6 +640,7 @@ export default function AdminMembers() {
         {editing && (
           <MemberRoleEditor
             member={editing}
+            canManageAdmins={canManageAdmins}
             onCancel={() => setEditId(null)}
             onSaved={(role, tier) => {
               setEditId(null);

@@ -230,7 +230,11 @@ export default function PortalLayout() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { member, loading: memberLoading } = useMember();
   const authorized =
-    member !== null && (member.role === "expert" || member.role === "admin");
+    member !== null && (
+      member.role === "expert" ||
+      member.role === "admin" ||
+      member.role === "super_admin"
+    );
 
   const {
     data: slug,
