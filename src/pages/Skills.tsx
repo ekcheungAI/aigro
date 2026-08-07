@@ -116,7 +116,7 @@ function InstallSnippet({ cmd }: { cmd: string }) {
 
 function SkillCard({ s }: { s: SkillEntry }) {
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full min-w-0 flex-col">
       <div className="flex flex-wrap items-center gap-2">
         <StatusChip status={s.status} />
         <TagChips tags={s.tags} />
@@ -171,18 +171,18 @@ export default function Skills() {
 
   return (
     <>
-      {/* Header — 目錄頁首 dark band:skills-band 幾何方塊背景層
-          (opacity-45 + 實色 band overlay,同 insights-hero 做法;深淺色主題皆為 dark band) */}
+      {/* Header — theme-aware editorial band; light mode uses cool paper,
+          dark mode keeps the cinematic navy treatment. */}
       <section className="relative isolate overflow-hidden border-b border-band-border bg-band-bg">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 -z-10 select-none"
         >
           <img
-            src="/editorial/skills-band.png"
+            src="/editorial/thumbnails/prompt-workflow.jpg"
             alt=""
             loading="lazy"
-            className="h-full w-full object-cover opacity-45"
+            className="h-full w-full object-cover opacity-30"
           />
           <span className="absolute inset-0 bg-band-bg/60" />
         </div>
@@ -252,9 +252,9 @@ export default function Skills() {
       {/* Directory grid — 2-3 col hairline grid */}
       <section className="mx-auto max-w-container px-6 pb-24 max-md:pb-16">
         {filtered.length > 0 ? (
-          <div className="grid gap-px border-y bg-border md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-px border-y bg-border md:grid-cols-2 lg:grid-cols-3">
             {filtered.map((s, i) => (
-              <Reveal key={s.id} delay={(i % 3) * 0.08} className="bg-bg p-6">
+              <Reveal key={s.id} delay={(i % 3) * 0.08} className="min-w-0 bg-bg p-6">
                 <SkillCard s={s} />
               </Reveal>
             ))}

@@ -8,17 +8,17 @@ import { captureWaitlist } from "@/lib/waitlist";
 
 function PageHeader() {
   return (
-    /* Cinematic dark band — editorial image layer (opacity-45 saturate-[0.85])
-       + solid band overlay (no gradients), band text tokens, both themes */
+    /* Theme-aware editorial band — generated documentary image + solid
+       overlay, with separately tuned light and dark tokens. */
     <section className="relative isolate overflow-hidden border-b border-band-border bg-band-bg">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 -z-10 select-none"
       >
         <img
-          src="/editorial/cases-hero.jpg"
+          src="/editorial/thumbnails/hong-kong-adoption.jpg"
           alt=""
-          className="h-full w-full object-cover opacity-45 saturate-[0.85]"
+          className="h-full w-full object-cover opacity-30 saturate-[0.85]"
         />
         <span className="absolute inset-0 bg-band-bg/60" />
       </div>
@@ -86,7 +86,7 @@ function HonestState() {
       <Reveal y={20} duration={0.45}>
         <div className="mx-auto max-w-[640px] rounded-md border bg-surface p-12 text-center shadow-card dark:shadow-none max-md:p-8">
           <img
-            src="/editorial/cases-empty.png"
+            src="/editorial/thumbnails/prompt-workflow.jpg"
             alt="排版台上嘅空白案例版面 — 等待真實案例上架"
             width={640}
             height={400}
@@ -98,8 +98,8 @@ function HonestState() {
           </h2>
           <p className="mx-auto mt-4 max-w-[480px] text-body-sm text-text-secondary">
             我哋只發佈有真實數據支持、客戶授權嘅案例 —
-            每個案例要有量化成果、工具清單同可複製步驟,先至會上架。
-            與其放示範數字,不如留空等真案例。
+            每個案例要有量化成果、工具清單同可複製步驟，先至會上架。
+            與其放示範數字，不如留空等真案例。
           </p>
 
           <div className="mx-auto mt-8 max-w-[440px] border-t pt-8">
@@ -127,14 +127,14 @@ function HonestState() {
                 />
                 <button
                   type="submit"
-                  className="h-11 shrink-0 rounded-md bg-ink-solid px-5 text-label text-white press hover:bg-ink-hover"
+                  className="h-11 shrink-0 rounded-md bg-ink-solid px-5 text-label text-on-accent press hover:bg-ink-hover"
                 >
                   上架通知我
                 </button>
               </form>
             )}
             <p className="mt-3 text-caption text-text-muted">
-              有真實成果想投稿?用下面「提交案例」留低意向。
+              有真實成果想投稿？用下面「提交案例」留低意向。
             </p>
           </div>
         </div>

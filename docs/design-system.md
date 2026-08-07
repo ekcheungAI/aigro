@@ -3,7 +3,7 @@
 > **AIGRO** (AI + Growth) — 香港最值得信賴的 AI・增長・商業情報平台。
 > MasterClass 高端質感 × Indie Hackers 數據文化 × Intro.co 專家預約。
 > 本文件是全域設計系統：色彩、字體、間距、動效、共用元件、頁面清單、資產清單。
-> 本設計系統忠實轉譯已批准的 `/mnt/agents/output/hk-ai-platform/DESIGN.md` — 色彩 hex、字體、元件規格均為**約束性規格，不得更改**。
+> 實作 token 以 `src/index.css` 為唯一 source of truth；本文件必須與之同步。官方三點 logo 為不可變品牌資產，產品互動色則由獨立 UI token 管理。
 
 ---
 
@@ -15,8 +15,8 @@
 
 ### 1.2 品牌識別
 
-- **Wordmark**: Fraunces 550「AIGRO.」（全部大寫 Latin，letter-spacing +0.04em，**句號用 lime**——名片參考的「brand name.」處理），右側或下方配 Noto Sans TC `caption`「香港 AI・增長情報平台」。**Wordmark 即品牌標誌 — 無圖形 logo**。
-- **品牌色彩方向（2025 rebrand）**: **near-black + electric lime**。墨藍/暗金 editorial 系統已退役；唯一強調色是電光萊姆綠 `#43F50E`，互動填充一律「lime 底 + 近黑字」（black on green，名片參考）。淺色模式保留暖紙 `#FAF9F6` 作為 lime 的對比畫布。
+- **官方 logo**: 使用 `public/brand/aigro-wordmark-navy-transparent.png` 與 `public/brand/aigro-wordmark-white-transparent.png`。三點（個人／AI 知識／增長機會）的位置、比例與 navy／blue／green 顏色均不可重畫、改色或拆開重組。
+- **品牌色彩方向**: cool paper + deep navy + brand green。Logo 內的 blue 與 green 只屬於不可變 artwork；產品按鈕、連結、active 狀態只用一套獨立 brand-green interaction token。互動填充一律「green 底 + deep navy 字」。
 - **幾何圖案系統**: 45° 對角硬邊條紋（`.stripe-block`）與箭頭 chevron 帶（`.chevron-strip`）——blocky confidence 的品牌肌理。**全部是 hard-stop pattern，不是漸層**；每頁最多 ~3 個條紋時刻（hero 右緣條紋板、section chevron 分隔帶、footer 頂部細條紋帶），低透明度、克制使用。
 - **品牌色調詞**: Authoritative 權威 / Curated 精選 / Verified・稀缺 / Local 香港視角 / Bold・克制並存。
 - **UI 語言**: 繁體中文（香港用語）為主；導航與產品標籤採雙語並置（如 `Insights 情報`、`Ask 問答`）。
@@ -28,14 +28,14 @@
 - ❌ Generic SaaS 模板佈局（置中 hero + 3 張功能卡 + 紫色 CTA）。佈局邏輯是**編輯式出版網格**。
 - ❌ 高飽和背景、多強調色、霓虹態、玻璃擬態。**lime 只用於強調，永遠不做大面積背景**。
 - ❌ 「機械手觸碰人手」、發光電路大腦等 AI 圖庫 cliché。
-- ❌ **墨藍 (ink) 與暗金 (gold) 已退役** — 不得新增 ink/gold 用色；舊 token 名（`--ink*`、`--gold*`）僅作為指向 lime 系統的 alias 存在。
-- ✅ **Lime 是唯一強調色**: 連結、active 態、主按鈕、Verified 徽章、VIP 標記、精選 tick、metric 數字。淺色模式下文字/連結用深綠變體（AA），互動填充用純 lime + 近黑字。
+- ❌ **Logo blue 不得擴張成第二 UI accent**；舊 token 名（`--ink*`、`--gold*`）只可作為 brand-green 系統的 alias。
+- ✅ **Brand green 是唯一產品強調色**: 連結、active 態、主按鈕、Verified 徽章、VIP 標記、精選 tick、metric 數字。淺色文字場景用深綠 `#087568`（AA），互動填充用 `#42CAAC` + deep navy 字。
 - ✅ **條紋紀律**: 每頁最多 ~3 個條紋時刻，只用 `.stripe-block` / `.stripe-block-dark` / `.chevron-strip` 三個工具類，禁止手寫新圖案。
 
 ### 1.4 設計原則
 
 1. **Editorial first** — 內容層級永遠勝過介面裝飾。
-2. **One accent** — electric lime 負責所有互動與強調（含 Verified/premium）；淺色文字場景用深綠變體保 AA。
+2. **One product accent** — brand green 負責所有互動與強調；logo blue 永遠只留在官方 artwork。
 3. **Data earns trust** — 每個論點以數字與來源呈現，不用形容詞。
 4. **Whitespace is the luxury material** — section 間距 96–120px，卡片 padding 24–32px。
 5. **Dark mode 同等品質** — 不是反色事後補救，兩主題各自調校。
@@ -44,51 +44,51 @@
 
 ## 2. Color System（約束性 — 精確 hex）
 
-### 2.1 Light Mode — warm paper
+### 2.1 Light Mode — cool paper
 
 | Token | Hex | 用途 |
 | --- | --- | --- |
-| `bg` | `#FAF9F6` | 頁面背景（暖紙） |
+| `bg` | `#F5F7FA` | 頁面背景（cool paper） |
 | `surface` | `#FFFFFF` | 導航、卡片等浮起面 |
-| `card` | `#F3F1EC` | 卡片內嵌層 / wells / 代碼塊 |
+| `card` | `#EDF1F5` | 卡片內嵌層 / wells / 代碼塊 |
 | `overlay` | `#FFFFFF` @ 92% | Drawer、Ask 輸入列背板 |
-| `text-primary` | `#1C1B19` | 標題、強調正文（AAA） |
-| `text-secondary` | `#54514B` | 正文、metadata（AAA） |
-| `text-muted` | `#8A857C` | 時間戳、來源名、placeholder（AA） |
-| `border` | `#E4E0D8` | 髮絲線、卡片邊框 |
-| `border-strong` | `#C9C3B8` | 輸入框、強調分隔線 |
-| **`lime` 電光萊姆** | `#43F50E` | 唯一強調色：互動填充（配 `on-accent` 近黑字）、Verified 環、深色模式文字強調 |
-| `lime-hover` | `#3AD60D` | lime 填充 hover（稍暗） |
-| **`lime-text` 深綠** | `#1F7A06` | 淺色模式文字/連結/active 態（紙上 5.2:1，AA；霓虹綠在紙上不合格故用深綠） |
-| `lime-soft` | `#E3FAD9` | 染色 chip/tag 背景、Ask AI 氣泡（淺色） |
-| `on-accent` | `#0D0D0C` | lime 填充上的文字色（近黑，black on green） |
+| `text-primary` | `#101C30` | 標題、強調正文（AAA） |
+| `text-secondary` | `#4A5668` | 正文、metadata（AAA） |
+| `text-muted` | `#5D6775` | 時間戳、來源名、placeholder（四個淺色 surface 上均 AA） |
+| `border` | `#DDE3EA` | 髮絲線、卡片邊框 |
+| `border-strong` | `#BCC6D2` | 輸入框、強調分隔線 |
+| **`lime` brand green** | `#42CAAC` | 唯一產品強調色：互動填充、Verified 環、深色模式文字強調 |
+| `lime-hover` | `#35B598` | green 填充 hover（稍暗） |
+| **`lime-text` 深綠** | `#087568` | 淺色模式文字／連結／active 態；在 bg、surface、card、lime-soft 上均達 AA |
+| `lime-soft` | `#DDF3EE` | 染色 chip/tag 背景、Ask AI 氣泡（淺色） |
+| `on-accent` | `#02122C` | green 填充上的 deep navy 字 |
 | `success` | `#3E7A52` | 正向 delta、已發佈 |
 | `warning` | `#A36A0F` | 額度 80% 告警、待審核（語義色，非強調色） |
 | `error` | `#A63A30` | 錯誤、破壞性操作 |
 
 > Legacy alias：`--ink` → `lime-text`、`--ink-solid` → `lime`、`--ink-hover` → `lime-hover`、`--ink-soft` → `lime-soft`、`--gold`/`--gold-soft` → lime 系統。舊 class 名（`text-ink`、`bg-gold` 等）全部自動讀作 lime 家族。
 
-### 2.2 Dark Mode — near-black warm canvas（`#0D0D0C` 家族，暖中性、絕非藍黑）
+### 2.2 Dark Mode — deep navy canvas
 
 | Token | Hex | 用途 |
 | --- | --- | --- |
-| `bg` | `#0D0D0C` | 頁面背景（near-black，名片畫布） |
-| `surface` | `#151512` | 導航、卡片 |
-| `card` | `#1C1C19` | wells、內嵌層 |
-| `overlay` | `#151512` @ 92% | Drawer、輸入列 |
-| `text-primary` | `#F1EEE8` | 標題（AAA） |
-| `text-secondary` | `#C6C1B8` | 正文（AAA） |
-| `text-muted` | `#938D83` | captions（AA） |
-| `border` | `#35302A` | 髮絲線 |
-| `border-strong` | `#4C463D` | 輸入框 |
-| **`lime`** | `#43F50E` | 深色模式文字/連結/填充強調（near-black 上 13.3:1，AAA） |
-| `lime-hover` | `#3AD60D` | lime 填充 hover |
-| `lime-soft` | `#16270F` | 染色 chip 背景、Ask AI 氣泡（深色） |
+| `bg` | `#02122C` | 頁面背景（deep navy） |
+| `surface` | `#0A1E3C` | 導航、卡片 |
+| `card` | `#0E2547` | wells、內嵌層 |
+| `overlay` | `#0A1E3C` @ 92% | Drawer、輸入列 |
+| `text-primary` | `#EAF0F6` | 標題（AAA） |
+| `text-secondary` | `#B8C4D0` | 正文（AAA） |
+| `text-muted` | `#8593A5` | captions（AA） |
+| `border` | `#1C3355` | 髮絲線 |
+| `border-strong` | `#2C4A73` | 輸入框 |
+| **`lime`** | `#42CAAC` | 深色模式文字／連結／填充強調 |
+| `lime-hover` | `#35B598` | green 填充 hover |
+| `lime-soft` | `#0F3A33` | 染色 chip 背景、Ask AI 氣泡（深色） |
 | `success` | `#6FAE85` | — |
 | `warning` | `#D9A03C` | 80% 告警 |
 | `error` | `#D9756A` | — |
 
-> Cinematic dark band（hero + 反白 footer）同用 `#0D0D0C`/`#151512`/`#1C1C19` + lime，雙主題下完全一致。
+> Cinematic dark band（hero + footer）與 dark theme 共用 deep-navy family + brand green，避免另起第二套 accent。
 
 ### 2.3 Tier 規則
 
@@ -183,7 +183,7 @@
 | 卡片標題 | 墨色顯現 | color → `ink`，150ms |
 | 頭像 | 灰階 → 彩色，抬升 2px | filter transition 250ms |
 | 行內連結 | 下劃線滑入 | background-size trick，200ms，offset 2px |
-| 實心墨藍按鈕 | 變深 | bg → `ink-hover`，120ms；按下 `scale(0.98)` 80ms |
+| 實心 brand-green 按鈕 | 變深 | bg → `lime-hover`，120ms；按下 `scale(0.98)` 80ms |
 | Citation chips | 文字 → `ink` + 下劃線 | 120ms，**不位移**（chips 必須穩定可信） |
 | 導航連結 | active 態 | `ink` 文字 + 2px `ink` 下劃線，offset 6px |
 
@@ -209,7 +209,7 @@
 ### 6.1 Navbar（全站，sticky）
 
 - 64px 高，`surface` 背景 + 1px `border` 底線，滾動時不變化（無毛玻璃、無縮放）。
-- 左：wordmark Fraunces 20px「AIGRO.」（句號 lime 色）+ 右側 8px 處 `caption` `text-muted`「香港 AI・增長情報」。
+- 左：官方透明底三點 AIGRO wordmark（light 用 navy 版，dark 用 white 版）+ 可選 `caption` `text-muted`「香港 AI・增長情報」。不可用文字或 CSS 重畫 logo。
 - 中（desktop）：`label` 雙語連結 — `Insights 情報` · `Cases 案例` · `Library 資源庫` · `Experts 專家` · `Ask 問答` · `Pricing 方案`。Active：lime 系文字（light=`lime-text` / dark=`lime`）+ 2px 同色下劃線 offset 6px。
 - 右：深淺色切換（Lucide `sun`/`moon` 20px，200ms 旋轉淡入）+「訂閱」lime 實心按鈕（40px 高，`label`，radius-md，**近黑字**）。
 - Mobile：<768px 漢堡選單（Lucide `menu`），全屏 drawer（`overlay` 背景，大襯線連結，stagger 80ms 滑入）。
@@ -224,14 +224,14 @@
 
 | 變體 | 規格 |
 | --- | --- |
-| Primary | `lime` 實心（`#43F50E`），**`on-accent` 近黑字**（black on green），`label`，高 44px，padding-x 24px，radius-md。Hover → `lime-hover`（`#3AD60D`）；press scale(0.97) |
+| Primary | `lime` 實心（`#42CAAC`），**`on-accent` deep navy `#02122C`**，`label`，高 44px，padding-x 24px，radius-md。Hover → `lime-hover`（`#35B598`）；press scale(0.97) |
 | Outline | 1px `border-strong`，lime 系文字（light=`lime-text` / dark=`lime`），透明底。Hover → `lime-soft` 底 |
 | Ghost | 無邊框，lime 系文字 + Lucide arrow-right，hover 箭頭右移 4px |
 | VIP 標記 | 僅 Pricing/專家頁：lime 實心 + lime `caption` 鎖定標籤（gold 已退役，VIP  accent 一律 lime） |
 
 ### 6.4 Verified Badge「認證印」（Direction A — 主用，lime 版）
 
-24×24px 圓形印章：**1.5px 電光萊姆環（`lime` `#43F50E`）+ 近黑實心圓盤（`on-accent` `#0D0D0C`）**，負空間切出極簡勾形（暖紙色 `#FAF9F6` 6×6px）。尺寸：16px（列表行內）/ 24px（頭像角標）/ 40px（專家 hero）。Verified 頭像環同用 1.5px lime。首次出現必配文字「已認證 Verified」。`role="img" aria-label="已認證導師 Verified mentor"`。待用狀態：虛線 `border-strong` 環 + `caption`「敬請期待」，**不放徽章**。光澤動效見 §5.3。密集列表（>3 枚）改用 Direction B 單色版（squircle 外框 + 右上角 lime 小菱形，全 `text-muted` 亦可）。
+24×24px 圓形印章：**1.5px brand-green 環（`lime` `#42CAAC`）+ deep-navy 實心圓盤（`on-accent` `#02122C`）**，負空間切出極簡勾形（light surface `#F5F7FA` 6×6px）。尺寸：16px（列表行內）/ 24px（頭像角標）/ 40px（專家 hero）。Verified 頭像環同用 1.5px brand green。首次出現必配文字「已認證 Verified」。`role="img" aria-label="已認證導師 Verified mentor"`。待用狀態：虛線 `border-strong` 環 + `caption`「敬請期待」，**不放徽章**。光澤動效見 §5.3。密集列表（>3 枚）改用 Direction B 單色版（squircle 外框 + 右上角 brand-green 小菱形，全 `text-muted` 亦可）。
 
 ### 6.5 Insight Card 情報卡
 
@@ -256,7 +256,7 @@
 
 ### 6.9 Newsletter Block 訂閱（全站共用，首頁與頁尾前）
 
-`surface` 全寬帶 + `border` 上下線。左：襯線 `h3`「每週精選，直達信箱」+ `body-sm` 說明；右：email 輸入（`border-strong`，radius-md，48px 高）+ 墨藍實心「訂閱」按鈕；下方 `caption` `text-muted`「每週一封，隨時退訂」。成功態：`success` 色勾圖標 +「已訂閱成功」替換輸入框。無 modal、無彩帶。
+`surface` 全寬帶 + `border` 上下線。左：襯線 `h3`「每週精選，直達信箱」+ `body-sm` 說明；右：email 輸入（`border-strong`，radius-md，48px 高）+ brand-green 實心／deep-navy 字「訂閱」按鈕；下方 `caption` `text-muted`「每週一封，隨時退訂」。成功態：`success` 色勾圖標 +「已訂閱成功」替換輸入框。無 modal、無彩帶。
 
 ---
 
@@ -291,7 +291,7 @@
 | 8 | `experts.md` | `/experts` | 認證導師總覽：Verified 徽章牆 + 敬請期待位 |
 | 9 | `expert-profile.md` | `/experts/:slug` | 專家個人頁：專屬配色 hero、成就佐證、授權透明度、AI 分身入口 |
 | 10 | `ask.md` | `/ask` | AI 編輯部對話：引用 chips、免費額度條、打字機、升級 CTA |
-| 11 | `pricing.md` | `/pricing` | 免費/進階/VIP 三層方案（金色僅 VIP）+ 月費/年費切換 + FAQ |
+| 11 | `pricing.md` | `/pricing` | 免費／創始會員／VIP 三層方案（premium 同用單一 brand green）+ 月費／年費切換 + FAQ |
 
 ---
 
@@ -306,7 +306,7 @@
 | `expert-kelvin-wong.jpg` | Editorial environmental portrait of a Hong Kong Chinese man in his mid 30s, glasses, dark knit sweater, co-working space background softly blurred, muted warm-gray desaturated tones, shallow depth of field, magazine editorial quality, thoughtful expression | Experts 牆（待用態）、專家頁 | 800×800 1:1 | Image |
 | `expert-jocelyn-ng.jpg` | Editorial environmental portrait of a Hong Kong Chinese woman in her early 30s, tied-back hair, minimalist dark blouse, modern retail-tech office background blurred, muted warm-gray desaturated tones, shallow depth of field, magazine editorial quality, poised expression | Experts 牆（待用態）、專家頁 | 800×800 1:1 | Image |
 | `expert-eric-cheng.jpg` | Editorial environmental portrait of a Hong Kong Chinese man in his late 30s, light stubble, charcoal suit no tie, fintech office glass wall background blurred, muted warm-gray desaturated tones, shallow depth of field, magazine editorial quality, steady expression | Experts 牆（待用態）、專家頁 | 800×800 1:1 | Image |
-| `og-image.png` | Minimal editorial OG share card: warm paper background #FAF9F6, centered Fraunces serif wordmark "AIGRO" in ink blue #1B3A5C, below it a thin 1.5px muted-gold laurel wreath line framing the Chinese tagline 「香港 AI・增長情報平台」 in Noto Serif TC, generous negative space, gold covering less than 5% of area, no gradients | 社群分享 OG 圖 | 1200×630 | Image |
+| `og-image.png` | Approved AIGRO editorial share card: cool-paper `#F5F7FA` or deep-navy `#02122C` canvas, official supplied three-dot wordmark used unchanged, Chinese tagline 「香港 AI・增長情報平台」 in Noto Serif TC, one restrained brand-green `#42CAAC` rule or focal detail, generous negative space, no gradients and no extra logo-blue UI decoration | 社群分享 OG 圖 | 1200×630 | Image |
 
 ---
 

@@ -22,7 +22,7 @@ const EXPERT_INITIALS: Record<string, string> = {
  * Experts 列表頁同步用(冇濾鏡,唔改圖片色調)。
  */
 export const EXPERT_EDITORIAL_PANEL: Record<string, string> = {
-  "jimmy-lau": "/editorial/jimmy-panel.png",
+  "jimmy-lau": "/editorial/optimized/jimmy-panel.jpg",
 };
 
 interface ExpertIpHeroProps {
@@ -94,6 +94,8 @@ export default function ExpertIpHero({
                 <img
                   src={editorialPanel}
                   alt={`${fullName} — editorial 品牌肖像畫板`}
+                  width={953}
+                  height={1459}
                   className="h-full w-full object-cover"
                 />
               </div>

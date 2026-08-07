@@ -22,6 +22,7 @@ export default function HotTopicsTicker() {
   const [paused, setPaused] = useState(false);
   const liveTopics = useLiveHotTopics();
   const topics = liveTopics ?? aihotHotTopics;
+  const isLive = Boolean(liveTopics);
 
   useEffect(() => {
     if (reduced || paused || topics.length < 2) return;
@@ -43,18 +44,20 @@ export default function HotTopicsTicker() {
       onFocus={() => setPaused(true)}
       onBlur={() => setPaused(false)}
     >
-      {/* LIVE dot — amber,柔和脈衝(reduced-motion → 靜態) */}
+      {/* Runtime data may pulse; snapshot fallback stays static and explicit. */}
       <span className="flex shrink-0 items-center gap-2">
         <motion.span
           className="block h-1.5 w-1.5 rounded-full bg-band-warning"
           aria-hidden="true"
-          animate={reduced ? undefined : { opacity: [1, 0.35, 1] }}
+          animate={reduced || !isLive ? undefined : { opacity: [1, 0.35, 1] }}
           transition={
-            reduced ? undefined : { duration: 2.4, repeat: Infinity, ease: "easeInOut" }
+            reduced || !isLive
+              ? undefined
+              : { duration: 2.4, repeat: Infinity, ease: "easeInOut" }
           }
         />
         <span className="text-overline font-sans uppercase text-band-text-muted">
-          Live
+          {isLive ? "Live" : "快照"}
         </span>
       </span>
 

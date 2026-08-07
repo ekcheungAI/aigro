@@ -137,7 +137,7 @@ function Wordmark() {
 
 function PortalGate({ loading }: { loading: boolean }) {
   return (
-    <div className="flex min-h-[100dvh] items-center justify-center px-4 py-16">
+    <main className="flex min-h-[100dvh] items-center justify-center px-4 py-16">
       <div className="w-full max-w-md rounded-lg border border-border bg-surface p-8 text-center shadow-card">
         <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-lime-soft">
           <Lock className="h-5 w-5 text-lime-text" />
@@ -171,14 +171,14 @@ function PortalGate({ loading }: { loading: boolean }) {
           </Link>
         </p>
       </div>
-    </div>
+    </main>
   );
 }
 
 /** 已登入 expert 但 profiles.expert_slug 未連結 — 誠實提示,唔顯示假身份 */
 function UnlinkedNotice({ email }: { email: string }) {
   return (
-    <div className="flex min-h-[100dvh] items-center justify-center px-4 py-16">
+    <main className="flex min-h-[100dvh] items-center justify-center px-4 py-16">
       <div className="w-full max-w-md rounded-lg border border-border bg-surface p-8 text-center shadow-card">
         <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-lime-soft">
           <Link2 className="h-5 w-5 text-lime-text" />
@@ -199,7 +199,7 @@ function UnlinkedNotice({ email }: { email: string }) {
           </Link>
         </p>
       </div>
-    </div>
+    </main>
   );
 }
 

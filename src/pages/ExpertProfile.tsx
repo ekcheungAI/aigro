@@ -380,7 +380,7 @@ function PendingProfile({ expert }: { expert: Expert }) {
             transition={{ duration: 0.5, ease: REVEAL_EASE }}
           >
             <img
-              src="/editorial/pending-expert.png"
+              src="/editorial/optimized/pending-expert.jpg"
               alt={`${expertFullName(expert)} — 即將加盟領航專家剪影`}
               width={120}
               height={180}

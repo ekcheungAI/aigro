@@ -1,6 +1,4 @@
-import { useRef } from "react";
-import { motion, useInView, useReducedMotion } from "framer-motion";
-import Reveal, { REVEAL_EASE } from "@/components/Reveal";
+import Reveal from "@/components/Reveal";
 import type { Expert } from "@/data/experts";
 
 /**
@@ -27,43 +25,34 @@ function SectionHeader({
   );
 }
 
-/* ================= B. 領航風格雷達(600ms fill,once,reduced-motion → full) ================= */
+/* ================= B. 已審核方法摘要（移除無來源嘅百分比分數） ================= */
 
-function StyleRadar({ expert }: { expert: Expert }) {
+function MethodSummary({ expert }: { expert: Expert }) {
   const radar = expert.radar ?? [];
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, amount: 0.3 });
-  const reduceMotion = useReducedMotion();
 
   return (
     <section className="mx-auto max-w-[720px] px-6 pt-24 max-md:pt-16">
       <SectionHeader
-        title="領航風格雷達 Working Style Radar"
-        caption="編輯部根據公開分享整理嘅風格評估"
+        title="方法摘要 Method Summary"
+        caption="編輯部整理・不作量化評分"
       />
-      <div ref={ref} className="mt-10 space-y-8">
+      <div className="mt-10 border-y">
         {radar.map((d, i) => (
-          <div key={d.label}>
-            <div className="flex items-baseline justify-between gap-4">
-              <span className="text-label text-text-primary">{d.label}</span>
-              <span className="font-mono text-caption text-ink">{d.score}</span>
+          <Reveal
+            key={d.label}
+            delay={i * 0.06}
+            className={i > 0 ? "border-t" : ""}
+          >
+            <div className="grid gap-3 py-6 sm:grid-cols-[3rem_1fr]">
+              <span className="font-mono text-caption text-ink">
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <div>
+                <h3 className="text-label text-text-primary">{d.label}</h3>
+                <p className="mt-2 text-body-sm text-text-secondary">{d.note}</p>
+              </div>
             </div>
-            {/* 2px hairline track + ink fill;scaleX GPU-only,origin-left */}
-            <div className="mt-2 h-[2px] w-full bg-card">
-              <motion.div
-                className="h-full origin-left bg-ink"
-                style={{ width: `${d.score}%` }}
-                initial={reduceMotion ? false : { scaleX: 0 }}
-                animate={inView ? { scaleX: 1 } : undefined}
-                transition={{
-                  duration: 0.6,
-                  delay: reduceMotion ? 0 : i * 0.08,
-                  ease: REVEAL_EASE,
-                }}
-              />
-            </div>
-            <p className="mt-2 text-caption text-text-muted">{d.note}</p>
-          </div>
+          </Reveal>
         ))}
       </div>
     </section>
@@ -163,7 +152,7 @@ function DecisionHeuristics({ expert }: { expert: Expert }) {
 export default function ExpertStyleSections({ expert }: { expert: Expert }) {
   return (
     <>
-      {expert.radar && expert.radar.length > 0 && <StyleRadar expert={expert} />}
+      {expert.radar && expert.radar.length > 0 && <MethodSummary expert={expert} />}
       {expert.traits && expert.traits.length > 0 && <CoreTraits expert={expert} />}
       {expert.workingStyle && expert.workingStyle.length > 0 && (
         <WorkingStyle expert={expert} />

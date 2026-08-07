@@ -1,10 +1,16 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from "react";
 import { Link, Navigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Calendar, ExternalLink } from "lucide-react";
 import Reveal, { REVEAL_EASE } from "@/components/Reveal";
 import UpdatedChip from "@/components/UpdatedChip";
-import { todayInfo, recentIssues } from "@/lib/daily";
+import { dailyInfoForDate, todayInfo, recentIssues } from "@/lib/daily";
 import { aihotDaily, type AihotDailyEntry } from "@/data/aihot";
 import {
   hkDayKey,
@@ -13,6 +19,7 @@ import {
   useLiveInsights,
 } from "@/data/liveItems";
 import { cn } from "@/lib/utils";
+import useDataFreshness from "@/hooks/useDataFreshness";
 
 /** 日報 — 日期、星期、期號按今日動態生成 (src/lib/daily.ts)；內容來自真實情報 */
 const LIST_COUNT = 8;
@@ -37,6 +44,7 @@ const RECENT_ISSUES = recentIssues(7).map((d) => ({
 export function DailyContent({ embedded = false }: { embedded?: boolean }) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
+  const pickerButtonRef = useRef<HTMLButtonElement>(null);
   /** 揀緊嘅往期日期(YYYY-MM-DD);null = 今日/最新一期 */
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
@@ -44,6 +52,7 @@ export function DailyContent({ embedded = false }: { embedded?: boolean }) {
      (邏輯同 fetch-argro.mjs 一致),未成熟回落 build-time snapshot。 */
   const liveDaily = useLiveDaily();
   const liveInsights = useLiveInsights();
+  const { isLive, isArchive } = useDataFreshness();
   const currentDaily = liveDaily ?? aihotDaily;
 
   /* 有 live 數據嘅香港日期集 — picker 只開放呢啲日期 */
@@ -73,31 +82,33 @@ export function DailyContent({ embedded = false }: { embedded?: boolean }) {
       : null;
     const base = info
       ? { date: info.date, weekday: info.weekday, number: info.number }
-      : todayInfo();
+      : !isLive && daily.date
+        ? dailyInfoForDate(daily.date)
+        : todayInfo();
     const listCount = Math.min(daily.items.length, LIST_COUNT);
     return {
       ...base,
       sources: daily.itemCount,
       picks: (daily.lead ? 1 : 0) + listCount,
     };
-  }, [daily, viewingDate]);
+  }, [daily, viewingDate, isLive]);
   const lead = daily.lead;
 
   /* 編號列表按 section 分組(數據一早已計好) + 全刊連續編號(頭條 = 01)。
      條目分類同 section 對唔上(snapshot 邊緣case)時落入「其他」組,唔會消失。 */
   const sectionGroups = useMemo(() => {
     const list = daily.items.slice(0, LIST_COUNT);
-    const covered = new Set(daily.sections.map((s) => s.category));
+    const covered = new Set(daily.sections.map((s) => s.label));
     let counter = 1;
     const groups = daily.sections
       .map((s) => ({
         ...s,
         entries: list
-          .filter((i) => i.category === s.category)
+          .filter((i) => i.sectionLabel === s.label)
           .map((entry) => ({ entry, num: ++counter })),
       }))
       .filter((g) => g.entries.length > 0);
-    const orphans = list.filter((i) => !covered.has(i.category));
+    const orphans = list.filter((i) => !covered.has(i.sectionLabel));
     if (orphans.length > 0) {
       groups.push({
         label: "其他",
@@ -125,6 +136,11 @@ export function DailyContent({ embedded = false }: { embedded?: boolean }) {
     setPickerOpen(false);
   };
 
+  const choosePickerDate = (date: string | null) => {
+    goTo(date);
+    window.requestAnimationFrame(() => pickerButtonRef.current?.focus());
+  };
+
   // 點擊 popover 外部關閉
   useEffect(() => {
     if (!pickerOpen) return;
@@ -133,9 +149,46 @@ export function DailyContent({ embedded = false }: { embedded?: boolean }) {
         setPickerOpen(false);
       }
     };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      e.preventDefault();
+      setPickerOpen(false);
+      pickerButtonRef.current?.focus();
+    };
+    const frame = window.requestAnimationFrame(() => {
+      const menu = pickerRef.current?.querySelector<HTMLElement>("[role='menu']");
+      const active = menu?.querySelector<HTMLElement>("[aria-checked='true']:not([disabled])");
+      const first = menu?.querySelector<HTMLElement>("[role='menuitemradio']:not([disabled])");
+      (active ?? first)?.focus();
+    });
     document.addEventListener("pointerdown", onPointerDown);
-    return () => document.removeEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
   }, [pickerOpen]);
+
+  const onPickerMenuKeyDown = (e: ReactKeyboardEvent<HTMLElement>) => {
+    const menu = e.currentTarget;
+    const items = Array.from(
+      menu.querySelectorAll<HTMLButtonElement>("[role='menuitemradio']:not([disabled])")
+    );
+    if (items.length === 0) return;
+    const current = Math.max(0, items.indexOf(document.activeElement as HTMLButtonElement));
+    let next = current;
+    if (e.key === "ArrowDown") next = (current + 1) % items.length;
+    else if (e.key === "ArrowUp") next = (current - 1 + items.length) % items.length;
+    else if (e.key === "Home") next = 0;
+    else if (e.key === "End") next = items.length - 1;
+    else if (e.key === "Tab") {
+      setPickerOpen(false);
+      return;
+    } else return;
+    e.preventDefault();
+    items[next].focus();
+  };
 
   return (
     <>
@@ -193,10 +246,12 @@ export function DailyContent({ embedded = false }: { embedded?: boolean }) {
           {/* 中：日期選擇按鈕 + popover（近 7 日;冇數據嘅日期 disabled） */}
           <div className="relative" ref={pickerRef}>
             <button
+              ref={pickerButtonRef}
               type="button"
               onClick={() => setPickerOpen((open) => !open)}
               aria-expanded={pickerOpen}
-              aria-haspopup="listbox"
+              aria-haspopup="menu"
+              aria-controls="daily-date-menu"
               className="inline-flex h-9 items-center gap-2 rounded-md border border-border-strong px-3 text-ink press hover:bg-ink-soft"
             >
               <Calendar className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
@@ -204,9 +259,11 @@ export function DailyContent({ embedded = false }: { embedded?: boolean }) {
             </button>
             <AnimatePresence>
               {pickerOpen && (
-                <motion.ul
-                  role="listbox"
+                <motion.div
+                  id="daily-date-menu"
+                  role="menu"
                   aria-label="選擇日期"
+                  onKeyDown={onPickerMenuKeyDown}
                   className="absolute left-1/2 top-full z-50 mt-2 w-56 -translate-x-1/2 rounded-md border bg-surface p-1"
                   initial={{ opacity: 0, transform: "translateX(-50%) scale(0.96)" }}
                   animate={{ opacity: 1, transform: "translateX(-50%) scale(1)" }}
@@ -220,16 +277,15 @@ export function DailyContent({ embedded = false }: { embedded?: boolean }) {
                       ? viewingDate === null
                       : viewingDate === entry.date;
                     return (
-                      <li
-                        key={entry.date}
-                        role="option"
-                        aria-selected={active}
-                      >
                         <button
+                          key={entry.date}
                           type="button"
+                          role="menuitemradio"
+                          aria-checked={active}
+                          tabIndex={-1}
                           disabled={!enabled}
                           onClick={() =>
-                            goTo(entry.current ? null : entry.date)
+                            choosePickerDate(entry.current ? null : entry.date)
                           }
                           className={cn(
                             "flex w-full items-center justify-between rounded-sm px-3 py-2 text-left transition-colors duration-150",
@@ -247,10 +303,9 @@ export function DailyContent({ embedded = false }: { embedded?: boolean }) {
                             {enabled ? entry.issue : "暫無數據"}
                           </span>
                         </button>
-                      </li>
                     );
                   })}
-                </motion.ul>
+                </motion.div>
               )}
             </AnimatePresence>
           </div>
@@ -282,21 +337,21 @@ export function DailyContent({ embedded = false }: { embedded?: boolean }) {
           )}
         </motion.nav>
 
-        <motion.h1
+        <motion.h2
           className="mt-4 font-display text-display-lg text-text-primary"
           initial={{ opacity: 0, y: 28 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1, ease: REVEAL_EASE }}
         >
-          每日精選日報
-        </motion.h1>
+          {isArchive ? "精選日報存檔" : "每日精選日報"}
+        </motion.h2>
         <motion.p
           className="mx-auto mt-4 max-w-[560px] text-body-sm text-text-secondary"
           initial={{ opacity: 0, y: 28 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2, ease: REVEAL_EASE }}
         >
-          編輯部從 {issue.sources} 條{viewingDate ? "當日" : "即日"}情報選出{" "}
+          編輯部從 {issue.sources} 條{viewingDate || isArchive ? "當期" : "即日"}情報選出{" "}
           {issue.picks} 條必讀 — 3 分鐘，掌握全球 AI 脈搏。
         </motion.p>
         <motion.p
@@ -305,7 +360,11 @@ export function DailyContent({ embedded = false }: { embedded?: boolean }) {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.4, delay: 0.3, ease: REVEAL_EASE }}
         >
-          香港繁體整理 · 每 30 分鐘同步
+          {isLive
+            ? "香港繁體整理 · 每 30 分鐘同步"
+            : isArchive
+              ? "香港繁體整理 · 歷史資料快照"
+              : "香港繁體整理 · 資料快照"}
           {/* 誠實日期:數據日唔係今日就並列「內容截至」 */}
           {daily.date && daily.date !== todayInfo().date && (
             <> · 內容截至 {daily.date}</>
@@ -320,8 +379,8 @@ export function DailyContent({ embedded = false }: { embedded?: boolean }) {
           <UpdatedChip />
         </motion.div>
 
-        {/* Masthead 視覺帶 — 印刷機 editorial 圖全寬 cover band(刊頭下方);
-            底部漸層保 caption 對比,print-editorial 頭版相片位 */}
+        {/* Masthead 視覺帶 — approved editorial thumbnail full-width cover;
+            caption uses a solid overlay panel for dependable contrast. */}
         <motion.div
           className="mt-8 overflow-hidden rounded-md"
           initial={{ opacity: 0 }}
@@ -330,16 +389,12 @@ export function DailyContent({ embedded = false }: { embedded?: boolean }) {
         >
           <div className="relative h-[200px] md:h-[280px]">
             <img
-              src="/editorial/daily-masthead.png"
-              alt="AIGRO 日報刊頭 — 印刷機與飛紙嘅 editorial 視覺"
+              src="/editorial/thumbnails/agent-delivery.jpg"
+              alt="AIGRO 日報刊頭 — 任務卡、計時器與交付文件嘅 editorial 視覺"
               loading="lazy"
               className="absolute inset-0 h-full w-full object-cover"
             />
-            <span
-              aria-hidden="true"
-              className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent"
-            />
-            <p className="absolute bottom-3 left-4 font-mono text-caption text-white/85">
+            <p className="absolute bottom-3 left-4 bg-overlay/90 px-3 py-2 font-mono text-caption text-text-secondary">
               AIGRO DAILY · PRINT EDITION — 編輯部印刷房
             </p>
           </div>
@@ -368,7 +423,7 @@ export function DailyContent({ embedded = false }: { embedded?: boolean }) {
           >
             {sectionGroups.map((g, gi) => (
               <a
-                key={g.category}
+                key={`${g.category}-${gi}`}
                 href={`#daily-sec-${gi}`}
                 className="press rounded-sm border px-3 py-1.5 font-mono text-caption text-text-secondary transition-colors duration-150 hover:border-ink hover:text-ink"
               >
@@ -448,7 +503,7 @@ export function DailyContent({ embedded = false }: { embedded?: boolean }) {
       <section className="mx-auto max-w-container px-6 pt-12">
         {sectionGroups.map((g, gi) => (
           <div
-            key={g.category}
+            key={`${g.category}-${gi}`}
             id={`daily-sec-${gi}`}
             className="scroll-mt-24 pt-10 first:pt-0"
           >
@@ -464,7 +519,12 @@ export function DailyContent({ embedded = false }: { embedded?: boolean }) {
             </Reveal>
             <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
               {g.entries.map(({ entry, num }, i) => (
-                <DailyListCard key={entry.permalink} entry={entry} num={num} index={i} />
+                <DailyListCard
+                  key={`${entry.permalink}-${num}`}
+                  entry={entry}
+                  num={num}
+                  index={i}
+                />
               ))}
             </div>
           </div>
@@ -476,7 +536,7 @@ export function DailyContent({ embedded = false }: { embedded?: boolean }) {
         <Reveal y={16} duration={0.4}>
           <div className="flex flex-col items-center gap-3 rounded-md bg-card p-8 text-center">
             <p className="text-body-sm text-text-secondary">
-              對{viewingDate ? "呢期" : "今日"}日報有疑問？
+              對{viewingDate || isArchive ? "呢期" : "今日"}日報有疑問？
             </p>
             <Link
               to="/ask"

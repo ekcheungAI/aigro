@@ -36,9 +36,9 @@ interface JoinTier {
 }
 
 const JOIN_TIERS: JoinTier[] = [
-  { id: "free", name: "免費", price: "HK$0", tagline: "每日情報,永遠免費。" },
-  { id: "pro", name: "創始會員", price: "HK$168/月", tagline: "首批 100 席 · 永久鎖定創始價。" },
-  { id: "vip", name: "VIP", price: "HK$988/月", tagline: "真人導師,一對一。" },
+  { id: "free", name: "免費", price: "HK$0", tagline: "基本情報與 AI 編輯部。" },
+  { id: "pro", name: "創始會員", price: "HK$168/月", tagline: "授權專家分身與會員功能。" },
+  { id: "vip", name: "VIP", price: "HK$988/月", tagline: "真人導師，一對一。" },
 ];
 
 const NEXT_ACTIONS = [
@@ -50,8 +50,8 @@ const NEXT_ACTIONS = [
   },
   {
     icon: Newspaper,
-    title: "睇今日情報",
-    desc: "編輯部每日精選 5 條必讀",
+    title: "睇最新情報",
+    desc: "瀏覽目前可用嘅精選情報",
     to: "/insights/daily",
   },
   {
@@ -121,6 +121,18 @@ export default function Join() {
     if (!validEmail(email)) next.email = "請輸入有效嘅 Email 地址";
     if (password.length < 8) next.password = "密碼最少 8 個字元";
     setErrors(next);
+    const firstInvalid = next.name
+      ? "join-name"
+      : next.email
+        ? "join-email"
+        : next.password
+          ? "join-password"
+          : null;
+    if (firstInvalid) {
+      window.requestAnimationFrame(() => {
+        document.getElementById(firstInvalid)?.focus();
+      });
+    }
     return Object.keys(next).length === 0;
   };
 
@@ -131,6 +143,9 @@ export default function Join() {
     } else if (step === 2) {
       if (interests.length === 0) {
         setInterestError("最少揀一個你有興趣嘅領域");
+        window.requestAnimationFrame(() => {
+          document.getElementById("join-interests")?.focus();
+        });
         return;
       }
       setInterestError(null);
@@ -258,7 +273,7 @@ export default function Join() {
         {/* 頁首品牌 band — 會員沙龍 16:9 crop + 40% black overlay */}
         <div className="relative mb-8 h-40 overflow-hidden rounded-md">
           <img
-            src="/editorial/login-salon.png"
+            src="/editorial/thumbnails/hong-kong-adoption.jpg"
             alt="AIGRO 會員沙龍"
             width={720}
             height={405}
@@ -300,6 +315,7 @@ export default function Join() {
           })}
         </ol>
 
+        <form onSubmit={(event) => event.preventDefault()}>
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={step}
@@ -375,7 +391,11 @@ export default function Join() {
             {/* ---------------- Step 2:揀你嘅戰場 ---------------- */}
             {step === 2 && (
               <div className="flex flex-col gap-8">
-                <fieldset>
+                <fieldset
+                  id="join-interests"
+                  tabIndex={-1}
+                  aria-describedby={interestError ? "join-interests-error" : undefined}
+                >
                   <legend className="text-label text-text-primary">
                     你有興趣嘅領域(可揀多個)
                   </legend>
@@ -402,7 +422,7 @@ export default function Join() {
                     })}
                   </div>
                   {interestError && (
-                    <p role="alert" className="mt-2 text-caption text-error">
+                    <p id="join-interests-error" role="alert" className="mt-2 text-caption text-error">
                       {interestError}
                     </p>
                   )}
@@ -458,7 +478,7 @@ export default function Join() {
                           </span>
                         )}
                         <span className="text-overline uppercase tracking-[0.12em] text-text-muted">
-                          {t.id === "pro" ? "最受歡迎" : t.name}
+                          {t.name}
                         </span>
                         <span className="mt-2 font-display text-h4 text-text-primary">
                           {t.name}
@@ -471,8 +491,7 @@ export default function Join() {
                 </div>
                 {tier === "vip" && (
                   <p className="mt-4 rounded-md border border-border bg-card/60 px-4 py-3 text-caption text-text-secondary">
-                    VIP 採審核制 — 完成註冊即提交申請,我哋會喺 48
-                    小時內電郵回覆審核結果;審核期間可先用創始會員全部功能。
+                    VIP 採申請制 — 正式開放前會先確認導師時段、收費同服務條款。
                   </p>
                 )}
                 <p className="mt-4 text-caption text-text-muted">
@@ -515,6 +534,7 @@ export default function Join() {
             <ArrowRight className="h-4 w-4" strokeWidth={1.5} />
           </button>
         </div>
+        </form>
 
         <p className="mt-6 text-caption text-text-muted">
           {supabaseReady

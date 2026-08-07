@@ -12,7 +12,7 @@
     --overlay: 0 0% 100%;        /* #FFFFFF @ 92% (use with /92 alpha) */
     --text-primary: 218 50% 13%; /* #101C30 navy-ink */
     --text-secondary: 216 17% 35%; /* #4A5668 */
-    --text-muted: 216 12% 54%;   /* #7C8798 */
+    --text-muted: 215 12% 41%;   /* #5D6775 — AA on bg/surface/card/lime-soft */
     --border: 212 24% 89%;       /* #DDE3EA */
     --border-strong: 213 20% 78%; /* #BCC6D2 */
 
@@ -21,7 +21,7 @@
        Text/link on paper uses the deep green variant (bright green fails AA on light). */
     --lime: 167 56% 53%;         /* #42CAAC brand green (on dark) */
     --lime-hover: 166 55% 46%;   /* #35B598 dimmed green (fill hover) */
-    --lime-text: 171 84% 34%;    /* #0E9F8A deep brand green — text accent on light */
+    --lime-text: 173 87% 25%;    /* #087568 — AA on bg/surface/card/lime-soft */
     --lime-soft: 166 48% 91%;    /* #DDF3EE tint — chips / AI bubble on light */
     --on-accent: 217 91% 9%;     /* #02122C deep navy text on green fills */
 
@@ -46,7 +46,7 @@
     --gold-soft: var(--lime-soft);  /* premium wells → green tint */
 
     /* Stripe motif color (hard-stop pattern, theme-aware) */
-    --stripe-color: hsl(171 84% 34% / 0.10); /* deep brand green @ 10% on paper */
+    --stripe-color: hsl(173 87% 25% / 0.10); /* deep brand green @ 10% on paper */
 
     --success: 140 33% 36%;      /* #3E7A52 */
     --warning: 37 83% 35%;       /* #A36A0F */
@@ -93,22 +93,21 @@
     /* Verified badge sheen opacity (design.md §5.3: 22% light / 14% dark) */
     --sheen-opacity: 0.22;
 
-    /* ---- Cinematic dark band (hero + inverted footer) ----
-       Deep navy canvas (#02122C family) reused verbatim from dark theme so
-       the band reads identical in BOTH page themes. Brand green is the only
-       accent on the band. */
-    --band-bg: 217 91% 9%;            /* #02122C deep navy */
-    --band-surface: 216 71% 14%;      /* #0A1E3C */
-    --band-card: 216 67% 17%;         /* #0E2547 */
-    --band-text: 210 40% 94%;         /* #EAF0F6 (AAA on band) */
-    --band-text-secondary: 210 20% 77%;/* #B8C4D0 (AAA) */
-    --band-text-muted: 214 15% 58%;   /* #8593A5 (AA) */
-    --band-border: 216 50% 22%;       /* #1C3355 */
-    --band-border-strong: 215 45% 31%;/* #2C4A73 */
-    --band-ink: var(--lime);          /* brand green text/link on band (9.1:1) */
+    /* ---- Editorial bands ----
+       Light mode stays on the same cool-paper family as the application
+       shell. Dark mode receives its own tuned navy values below. */
+    --band-bg: var(--bg);
+    --band-surface: var(--surface);
+    --band-card: var(--card);
+    --band-text: var(--text-primary);
+    --band-text-secondary: var(--text-secondary);
+    --band-text-muted: var(--text-muted);
+    --band-border: var(--border);
+    --band-border-strong: var(--border-strong);
+    --band-ink: var(--lime-text);
     --band-ink-solid: var(--lime);    /* solid button on band = green + navy text */
     --band-ink-hover: var(--lime-hover); /* dimmed green hover on band */
-    --band-ink-soft: 170 59% 14%;     /* #0F3A33 green-tint chip bg on band */
+    --band-ink-soft: var(--lime-soft);
     --band-gold: var(--lime);         /* ex-gold hairline accents → brand green */
     --band-warning: 38 67% 54%;       /* #D9A03C — amber LIVE dot (semantic status, not accent) */
   }
@@ -139,6 +138,44 @@
     --error: 6 59% 63%;          /* #D9756A */
 
     --sheen-opacity: 0.14;
+
+    /* Dark-mode editorial bands retain the cinematic deep-navy treatment. */
+    --band-bg: 217 91% 9%;
+    --band-surface: 216 71% 14%;
+    --band-card: 216 67% 17%;
+    --band-text: 210 40% 94%;
+    --band-text-secondary: 210 20% 77%;
+    --band-text-muted: 214 15% 58%;
+    --band-border: 216 50% 22%;
+    --band-border-strong: 215 45% 31%;
+    --band-ink: var(--lime);
+    --band-ink-solid: var(--lime);
+    --band-ink-hover: var(--lime-hover);
+    --band-ink-soft: 170 59% 14%;
+    --band-gold: var(--lime);
+    --band-warning: 38 67% 54%;
+  }
+
+  /* UX concept route: force the application shell into a cool-paper light
+     palette even when the visitor's saved site preference is dark. The
+     preview reuses `band-*` component semantics so navigation, selection,
+     and content states can be compared without maintaining two component
+     trees. This scope never affects production routes. */
+  .aigro-preview-light {
+    --band-bg: 216 33% 97%;
+    --band-surface: 0 0% 100%;
+    --band-card: 210 29% 95%;
+    --band-text: 218 50% 13%;
+    --band-text-secondary: 216 17% 35%;
+    --band-text-muted: 215 12% 41%;
+    --band-border: 212 24% 89%;
+    --band-border-strong: 213 20% 78%;
+    --band-ink: 173 87% 25%;
+    --band-ink-solid: 167 56% 53%;
+    --band-ink-hover: 166 55% 46%;
+    --band-ink-soft: 166 48% 91%;
+    --band-gold: 173 87% 25%;
+    --band-warning: 37 83% 35%;
   }
 
   * {
@@ -184,10 +221,30 @@
     outline-offset: 2px;
   }
 
-  /* Focus rings on always-dark band surfaces (hero / MCP band / page headers /
-     footer / login panel): --ink reads deep brand green on light theme, which
-     is too low-contrast on navy. Band contexts override to brand green
-     (9.1:1 on #02122C) so keyboard focus stays visible in both themes. */
+  /* Mobile target-size floor (WCAG 2.2 / touch ergonomics). Text links inside
+     prose remain natural; controls and button-like links get a 44px hit area. */
+  @media (max-width: 767px) {
+    button,
+    input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]),
+    select,
+    textarea {
+      min-height: 44px;
+    }
+
+    button {
+      min-width: 44px;
+    }
+
+    a.press,
+    a.inline-flex,
+    a.flex {
+      min-height: 44px;
+      min-width: 44px;
+    }
+  }
+
+  /* Focus rings inside editorial band surfaces inherit the band accent so
+     they stay visible in both the paper-light and navy-dark treatments. */
   .bg-band-bg :focus-visible,
   .bg-band-bg:focus-visible {
     outline-color: hsl(var(--band-ink));
@@ -281,6 +338,7 @@
   .nudge-x,
   .nudge-x-neg,
   .nudge-y,
+  .arrow-nudge-icon,
   .hover-lift-sm {
     transition-timing-function: var(--ease-out-strong);
   }
@@ -295,6 +353,13 @@
   }
   .text-balance {
     text-wrap: balance;
+  }
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
   }
 }
 
@@ -314,6 +379,12 @@
   }
   .group:hover .nudge-y {
     transform: translateY(-0.125rem);
+  }
+  .arrow-nudge:hover .arrow-nudge-icon {
+    transform: translateX(0.25rem);
+  }
+  .group:hover .card-image-zoom {
+    transform: scale(1.025);
   }
   /* Small card lift (pricing tiers etc., replaces hover:-translate-y-0.5) */
   .hover-lift-sm:hover {
@@ -352,7 +423,11 @@
   }
   .group:hover .nudge-x,
   .group:hover .nudge-x-neg,
-  .group:hover .nudge-y {
+  .group:hover .nudge-y,
+  .arrow-nudge:hover .arrow-nudge-icon {
+    transform: none;
+  }
+  .group:hover .card-image-zoom {
     transform: none;
   }
 }

@@ -112,7 +112,7 @@ function Wordmark() {
 /** 未登入 / 非 admin — 誠實 gate,唔顯示任何後台數據 */
 function AdminGate({ loading }: { loading: boolean }) {
   return (
-    <div className="flex min-h-[100dvh] items-center justify-center bg-bg px-4 py-16">
+    <main className="flex min-h-[100dvh] items-center justify-center bg-bg px-4 py-16">
       <div className="w-full max-w-md rounded-lg border border-border bg-surface p-8 text-center shadow-card">
         <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-lime-soft">
           <Lock className="h-5 w-5 text-lime-text" />
@@ -145,7 +145,7 @@ function AdminGate({ loading }: { loading: boolean }) {
           </Link>
         </p>
       </div>
-    </div>
+    </main>
   );
 }
 

@@ -34,18 +34,18 @@ interface SourceGroup {
 const SOURCE_GROUPS: SourceGroup[] = [
   {
     title: "官方來源",
-    note: "模型廠商原廠直送 — 發佈第一時間,唔經二手轉述。",
+    note: "模型廠商官方渠道 — 優先讀原文，唔經二手轉述。",
     items: [
       {
         name: "OpenAI Blog",
         type: "RSS",
-        gives: "OpenAI 官方發佈第一時間",
+        gives: "OpenAI 官方產品與研究更新",
         url: "https://openai.com/blog",
       },
       {
         name: "Anthropic",
         type: "RSS",
-        gives: "Claude 更新同安全研究,原廠直送",
+        gives: "Claude 更新同安全研究，原廠直送",
         url: "https://www.anthropic.com/news",
       },
       {
@@ -87,14 +87,14 @@ const SOURCE_GROUPS: SourceGroup[] = [
       {
         name: "X 精選",
         type: "合作渠道",
-        gives: "AI 圈意見領袖實時動態,人手策展",
+        gives: "AI 圈意見領袖實時動態，人手策展",
         url: "https://x.com",
       },
     ],
   },
   {
     title: "中文精選",
-    note: "中文世界最值得追嘅 AI 聲音 — 快訊、深度、個人觀察。",
+    note: "中文 AI 快訊、技術拆解與個人觀察。",
     items: [
       {
         name: "36氪",
@@ -111,13 +111,13 @@ const SOURCE_GROUPS: SourceGroup[] = [
       {
         name: "IT之家",
         type: "RSS",
-        gives: "即時科技快訊,全年無休",
+        gives: "科技快訊與產業動態",
         url: "https://www.ithome.com",
       },
       {
         name: "數字生命卡茲克",
         type: "合作渠道",
-        gives: "中文 AI 圈最強個人觀察",
+        gives: "中文 AI 個人觀察",
         url: "https://www.zhihu.com/people/Khazix",
       },
     ],
@@ -128,22 +128,22 @@ const FLOW = [
   {
     step: "01",
     title: "來源",
-    body: "以上渠道,全部公開、有名有姓 — 只接公開同有授權嘅資訊,唔爬灰色地帶。",
+    body: "以上渠道，全部公開、有名有姓 — 只接公開同有授權嘅資訊，唔爬灰色地帶。",
   },
   {
     step: "02",
     title: "抓取去重",
-    body: "管道定時抓取,同一單新聞多個來源自動合併 — 你睇到嘅係一件事,唔係十次轉載。",
+    body: "管道定時抓取，同一單新聞多個來源自動合併 — 你睇到嘅係一件事，唔係十次轉載。",
   },
   {
     step: "03",
     title: "蒸餾評分",
-    body: "LLM 摘要 + 繁體中文 + 香港視角評分 — 邊啲資訊對香港 builder 真係有用,先出街。",
+    body: "LLM 摘要 + 繁體中文 + 香港視角評分 — 邊啲資訊對香港 builder 真係有用，先出街。",
   },
   {
     step: "04",
     title: "三種輸出",
-    body: "Insights 情報 · Daily 日報 · Ask 問答 — 同一條蒸餾線,三種用法,仲有 MCP 俾 agent 直接飲。",
+    body: "Insights 情報 · Daily 日報 · Ask 問答 — 同一條蒸餾線，三種用法；MCP 接入仍在封裝。",
   },
 ];
 
@@ -155,17 +155,17 @@ const FREE_USE: {
   {
     icon: BookOpen,
     title: "讀",
-    body: "全站情報免費讀,無需帳號 — Insights、Daily、Cases 全部打開,唔使登入唔使俾錢。",
+    body: "現有情報與日報免費讀，無需帳號；案例會喺完成核實後逐步上架。",
   },
   {
     icon: MessagesSquare,
     title: "問",
-    body: "AI 編輯部免費無限問答,每個答案都附來源 — 你可以隨時撳返原文核實。",
+    body: "AI 編輯部免費問答；命中已批准知識時會附來源，資料不足就清楚標明一般知識。",
   },
   {
     icon: Workflow,
-    title: "接",
-    body: "MCP / API 免費額度 6,551 tokens/日 — 你嘅 agent 都可以飲,唔使自己再砌 scraper。",
+    title: "登記",
+    body: "MCP / API 尚未公開；可以先登記接入通知，規格確認後會公布 endpoint 同配額。",
   },
 ];
 
@@ -260,19 +260,18 @@ function SourceInterestForm() {
 export default function Sources() {
   return (
     <>
-      {/* Hero — dark band:sources-band 媒體報頭疊影背景層
-          (opacity-45 + 實色 band overlay,同 insights-hero/skills-band 做法;
-          深淺色主題皆為 dark band) */}
+      {/* Hero — theme-aware editorial band using the approved thumbnail
+          system; light mode stays on paper, dark mode uses navy. */}
       <section className="relative isolate overflow-hidden border-b border-band-border bg-band-bg">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 -z-10 select-none"
         >
           <img
-            src="/editorial/sources-band.png"
+            src="/editorial/thumbnails/agent-delivery.jpg"
             alt=""
             loading="lazy"
-            className="h-full w-full object-cover opacity-45"
+            className="h-full w-full object-cover opacity-30"
           />
           <span className="absolute inset-0 bg-band-bg/60" />
         </div>
@@ -286,11 +285,11 @@ export default function Sources() {
               AIGRO Sources
             </p>
             <h1 className="mt-3 max-w-[760px] font-display text-display text-band-text">
-              情報渠道,公開透明
+              情報渠道，公開透明
             </h1>
             <p className="mt-6 max-w-[680px] text-body-lg text-band-text-secondary">
               每一條情報都有名有姓嘅來源。我哋將渠道公開 —
-              因為可信賴嘅情報,由可信賴嘅來源開始。
+              因為可信賴嘅情報，由可信賴嘅來源開始。
             </p>
           </Reveal>
         </div>
@@ -307,7 +306,7 @@ export default function Sources() {
             渠道牆
           </p>
           <h2 className="mt-3 font-display text-h2 text-text-primary">
-            我哋每日追蹤嘅來源,全部列晒出嚟
+            我哋追蹤嘅來源，全部列晒出嚟
           </h2>
         </Reveal>
 
@@ -370,7 +369,7 @@ export default function Sources() {
             數據點樣流
           </p>
           <h2 className="mt-3 font-display text-h2 text-text-primary">
-            由來源到你眼前,四步,冇黑盒
+            由來源到你眼前，四步，冇黑盒
           </h2>
         </Reveal>
         <div className="mt-10 grid gap-px border-y bg-border md:grid-cols-2 lg:grid-cols-4">
@@ -446,9 +445,9 @@ export default function Sources() {
               />
             </Link>
             <p className="max-w-[520px] text-caption text-text-muted">
-              內容經 AI 摘要 + 編輯整理,重要資料請以原文為準 —
+              內容經 AI 摘要 + 編輯整理，重要資料請以原文為準 —
               每條情報都附原文連結。原文版權歸各來源所有;來源方如需更正、
-              下架或調整展示方式,歡迎隨時聯絡。
+              下架或調整展示方式，歡迎隨時聯絡。
             </p>
           </div>
         </Reveal>
@@ -467,14 +466,14 @@ export default function Sources() {
               你嘅內容值得被聽見
             </h2>
             <p className="mt-4 max-w-[640px] text-body text-text-secondary">
-              你寫嘅嘢夠好,就應該出現喺全港 builder 嘅雷達上。授權我哋引用,
+              你寫嘅嘢夠好，就應該出現喺全港 builder 嘅雷達上。授權我哋引用，
               來源連結導流返你 — 你嘅內容會出現喺全港 agent
-              嘅答案入面,有名有姓。
+              嘅答案入面，有名有姓。
             </p>
             <SourceInterestForm />
             <p className="mt-4 flex items-center gap-2 font-mono text-caption text-text-muted">
               <Rss className="h-3.5 w-3.5" strokeWidth={1.5} aria-hidden="true" />
-              hello@aigro.hk · 或者直接留低聯絡,編輯部親自覆
+              hello@aigro.hk · 或者直接留低聯絡，編輯部親自覆
             </p>
           </div>
         </Reveal>

@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { ArrowRight, Check } from "lucide-react";
 import Reveal, { REVEAL_EASE } from "@/components/Reveal";
 import MonogramAvatar, { PhotoAvatar } from "@/components/MonogramAvatar";
@@ -9,12 +9,10 @@ import { EXPERT_EDITORIAL_PANEL } from "@/components/experts/ExpertIpHero";
 import {
   expertFullName,
   expertHasPhoto,
-  pendingExperts,
   verifiedExperts,
   type Expert,
 } from "@/data/experts";
 import { appendInterest, EXPERT_INTEREST_KEY } from "@/lib/interest";
-import { captureWaitlist } from "@/lib/waitlist";
 
 /** 領航專家 monogram 字母(data 無此欄位,由 slug 映射) */
 const EXPERT_INITIALS: Record<string, string> = {
@@ -26,17 +24,17 @@ const EXPERT_INITIALS: Record<string, string> = {
 
 function PageHeader() {
   return (
-    /* Cinematic dark band — editorial image layer (opacity-45 saturate-[0.85])
-       + solid band overlay (no gradients), band text tokens, both themes */
+    /* Theme-aware editorial band — local documentary image + solid overlay,
+       with separately tuned light and dark tokens. */
     <section className="relative isolate overflow-hidden border-b border-band-border bg-band-bg">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 -z-10 select-none"
       >
         <img
-          src="/editorial/club.jpg"
+          src="/editorial/thumbnails/hong-kong-adoption.jpg"
           alt=""
-          className="h-full w-full object-cover opacity-45 saturate-[0.85]"
+          className="h-full w-full object-cover opacity-25 saturate-[0.85]"
         />
         <span className="absolute inset-0 bg-band-bg/60" />
       </div>
@@ -66,7 +64,7 @@ function PageHeader() {
           transition={{ duration: 0.45, delay: 0.2, ease: REVEAL_EASE }}
         >
           AIGRO 係一個 growth hacking club — 兩位認證領航專家嘅 AI
-          分身基於授權內容蒸餾,隨時等你問,等會員跟住 playbook 做實驗。
+          分身基於授權內容蒸餾，隨時等你問，等會員跟住 playbook 做實驗。
         </motion.p>
         <motion.p
           className="mt-5 text-caption text-band-text-muted"
@@ -189,11 +187,11 @@ function VerifiedExpertCard({
             </p>
             <Link
               to={`/experts/${expert.slug}`}
-              className="group/btn ml-auto inline-flex h-11 items-center gap-1.5 rounded-md bg-ink-solid px-6 text-label text-white press hover:bg-ink-hover"
+              className="arrow-nudge ml-auto inline-flex h-11 items-center gap-1.5 rounded-md bg-ink-solid px-6 text-label text-on-accent press hover:bg-ink-hover"
             >
               查看領航檔案
               <ArrowRight
-                className="h-4 w-4 transition-transform duration-150 group-hover/btn:translate-x-1"
+                className="arrow-nudge-icon h-4 w-4 transition-transform duration-150"
                 strokeWidth={1.5}
                 aria-hidden="true"
               />
@@ -205,122 +203,7 @@ function VerifiedExpertCard({
   );
 }
 
-/* ================= Section 3 — 敬請期待(通用領航席,無虛構人名/相片) ================= */
-
-function PendingExpertCard({ expert, index }: { expert: Expert; index: number }) {
-  const [formOpen, setFormOpen] = useState(false);
-  const [email, setEmail] = useState("");
-  const [subscribed, setSubscribed] = useState(false);
-
-  return (
-    <motion.article
-      className="rounded-md border border-dashed border-border-strong bg-surface p-8"
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.2 }}
-      transition={{ duration: 0.45, delay: index * 0.1, ease: REVEAL_EASE }}
-    >
-      {/* 待用內容 60% 不透明度,唯 CTA 正常 */}
-      <div className="opacity-60">
-        <div className="flex h-[72px] w-[72px] items-center justify-center overflow-hidden rounded-full border border-dashed border-border-strong">
-          <img
-            src="/editorial/pending-expert.png"
-            alt="即將加盟領航專家剪影"
-            width={72}
-            height={72}
-            loading="lazy"
-            className="h-full w-full rounded-full object-cover"
-          />
-        </div>
-        <h3 className="mt-4 text-h4 font-sans text-text-primary">
-          {expert.nameZh}
-        </h3>
-        <p className="mt-1 text-caption text-text-muted">{expert.title}</p>
-        <div className="mt-4 flex flex-wrap gap-2">
-          {expert.specialties.map((s) => (
-            <span
-              key={s}
-              className="rounded-sm bg-card px-3 py-1.5 text-overline font-sans text-text-secondary"
-            >
-              {s}
-            </span>
-          ))}
-        </div>
-        <p className="mt-4 text-caption uppercase tracking-[0.12em] text-text-muted">
-          敬請期待 Coming Soon
-        </p>
-      </div>
-
-      {/* CTA — 上線通知捕獲 */}
-      <div className="mt-6">
-        {subscribed ? (
-          <p className="flex items-center gap-2 text-label text-success">
-            <Check className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-            已登記,上線即通知你
-          </p>
-        ) : (
-          <>
-            <button
-              type="button"
-              onClick={() => setFormOpen((v) => !v)}
-              aria-expanded={formOpen}
-              className="inline-flex h-11 items-center rounded-md border border-border-strong px-6 text-label text-ink press hover:bg-ink-soft"
-            >
-              上線通知我
-            </button>
-            <AnimatePresence initial={false}>
-              {formOpen && (
-                <motion.div
-                  className="overflow-hidden"
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.25, ease: REVEAL_EASE }}
-                >
-                  <form
-                    className="mt-4 flex gap-2"
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      // 真實收集:寫入 Supabase waitlist(無 env / 離線 → 靜默)
-                      void captureWaitlist({
-                        email: email.trim(),
-                        kind: "expert",
-                        note: `${expert.nameZh}上線通知`,
-                        source: "experts-pending-notify",
-                      });
-                      setSubscribed(true);
-                    }}
-                  >
-                    <label htmlFor={`notify-${expert.slug}`} className="sr-only">
-                      上線通知 email
-                    </label>
-                    <input
-                      id={`notify-${expert.slug}`}
-                      type="email"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="你的 email"
-                      className="h-11 min-w-0 flex-1 rounded-md border border-border-strong bg-surface px-3 text-caption text-text-primary placeholder:text-text-muted"
-                    />
-                    <button
-                      type="submit"
-                      className="h-11 shrink-0 rounded-md bg-ink-solid px-4 text-label text-white press hover:bg-ink-hover"
-                    >
-                      通知我
-                    </button>
-                  </form>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </>
-        )}
-      </div>
-    </motion.article>
-  );
-}
-
-/* ================= Section 4 — 領航專家邀請制(本頁唯一金色區塊) ================= */
+/* ================= Section 3 — 領航專家邀請制 ================= */
 
 /** Badge Direction C — 細線金色月桂環繞 Badge A(僅此處,40px) */
 function LaurelBadge() {
@@ -469,7 +352,7 @@ function InviteSection() {
               />
               <button
                 type="submit"
-                className="group inline-flex h-11 items-center justify-center gap-1.5 rounded-md bg-ink-solid px-6 text-label text-white press hover:bg-ink-hover sm:col-span-2"
+                className="group inline-flex h-11 items-center justify-center gap-1.5 rounded-md bg-ink-solid px-6 text-label text-on-accent press hover:bg-ink-hover sm:col-span-2"
               >
                 留低聯絡・開放時通知我
                 <ArrowRight
@@ -503,25 +386,6 @@ export default function Experts() {
               index={i}
               showVerifiedCaption={i === 0}
             />
-          ))}
-        </div>
-      </section>
-
-      {/* Section 3 — 敬請期待 */}
-      <section className="mx-auto max-w-container px-6 pt-24 max-md:pt-16">
-        <Reveal>
-          <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-            <h2 className="font-display text-h3 text-text-primary">
-              邀請中・敬請期待
-            </h2>
-            <p className="text-caption text-text-muted">
-              下一席領航專家,由 Jimmy 與 Elvin 親自邀請
-            </p>
-          </div>
-        </Reveal>
-        <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {pendingExperts.map((expert, i) => (
-            <PendingExpertCard key={expert.slug} expert={expert} index={i} />
           ))}
         </div>
       </section>

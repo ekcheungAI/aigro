@@ -34,8 +34,8 @@ const ROLE_CARDS: RoleCard[] = [
     icon: Sparkles,
     title: "創始會員 Founding",
     caption: "Club 付費會員",
-    tag: "首批 100 席",
-    perks: ["免費會員全部權限", "完整案例數據拆解", "MCP 優先接入名單", "創始價永久鎖定"],
+    tag: "方案預覽",
+    perks: ["免費會員全部權限", "案例上架後解鎖完整拆解", "MCP 開放時優先通知", "授權專家 AI 分身"],
   },
   {
     id: "expert",
@@ -64,7 +64,17 @@ export default function Access() {
   return (
     <div>
       {/* ---- 小 hero:深色 band,同 Login 品牌板/footer 同族 ---- */}
-      <section className="bg-band-bg text-band-text">
+      <section className="relative isolate overflow-hidden border-b border-band-border bg-band-bg text-band-text">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
+          <img
+            src="/editorial/thumbnails/model-network.jpg"
+            alt=""
+            width={1586}
+            height={992}
+            className="h-full w-full object-cover opacity-25"
+          />
+          <span className="absolute inset-0 bg-band-bg/70" />
+        </div>
         <div className="mx-auto max-w-container px-6 py-16 md:py-20">
           <motion.div
             initial={reduced ? { opacity: 0 } : { opacity: 0, y: 16 }}

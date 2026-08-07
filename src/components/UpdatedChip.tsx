@@ -1,15 +1,12 @@
-import { aihotFetchedAt, timeAgo } from "@/data/aihot";
-import { useLiveFetchedAt } from "@/data/liveItems";
+import useDataFreshness from "@/hooks/useDataFreshness";
 import { cn } from "@/lib/utils";
 
 /**
- * Live 時間戳 chip — IBM Plex Mono 細字:「更新於 X 分鐘前 · 每 30 分鐘同步」。
- * 數據時鐘:Supabase live fetchedAt(成熟時),未成熟回落 build-time
- * snapshot 嘅 aihotFetchedAt — 永遠反映頁面真實數據嘅更新時間。
+ * Source-aware freshness chip. Runtime data may state its sync cadence;
+ * the resilient build-time fallback is always labelled as a snapshot.
  */
 export default function UpdatedChip({ className }: { className?: string }) {
-  const liveFetchedAt = useLiveFetchedAt();
-  const ago = timeAgo(liveFetchedAt ?? aihotFetchedAt);
+  const { isLive, isArchive, ago } = useDataFreshness();
   if (!ago) return null;
   return (
     <span
@@ -18,8 +15,18 @@ export default function UpdatedChip({ className }: { className?: string }) {
         className
       )}
     >
-      <span className="h-1.5 w-1.5 rounded-full bg-ink" aria-hidden="true" />
-      更新於 {ago} · 每 30 分鐘同步
+      <span
+        className={cn(
+          "h-1.5 w-1.5 rounded-full",
+          isLive ? "bg-success" : "bg-warning"
+        )}
+        aria-hidden="true"
+      />
+      {isLive
+        ? `更新於 ${ago} · 每 30 分鐘同步`
+        : isArchive
+          ? `歷史快照 · 截至 ${ago}`
+          : `資料快照 · 更新於 ${ago}`}
     </span>
   );
 }

@@ -1,18 +1,19 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { LogOut, Menu, Moon, Sun, X } from "lucide-react";
+import { LogOut, Menu, Moon, Search, Sun, X } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { useMember } from "@/hooks/useMember";
 import { cn } from "@/lib/utils";
 import { REVEAL_EASE } from "@/components/Reveal";
 import { clearMember, memberInitial } from "@/components/auth/member";
+import useModalDialog from "@/hooks/useModalDialog";
 
-export const NAV_LINKS = [
+const NAV_LINKS = [
   { to: "/insights", en: "Insights", zh: "情報" },
-  { to: "/skills", en: "Skills", zh: "技能庫" },
-  { to: "/insights?tab=data", en: "Data", zh: "數據" },
+  { to: "/skills", en: "Skills", zh: "技能" },
   { to: "/experts", en: "Experts", zh: "專家" },
+  { to: "/pricing", en: "Pricing", zh: "方案" },
   { to: "/ask", en: "Ask", zh: "問答" },
 ] as const;
 
@@ -28,6 +29,8 @@ export default function Navbar() {
   const { pathname } = useLocation();
   // 會員態 — useMember 響應式(auth state change / 跨分頁 / demo 登入都即時更新)
   const { member } = useMember();
+  const closeDrawer = useCallback(() => setDrawerOpen(false), []);
+  const { dialogRef, triggerRef } = useModalDialog(drawerOpen, closeDrawer);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -57,33 +60,24 @@ export default function Navbar() {
         )}
       >
         <div className="mx-auto flex h-full max-w-container items-center gap-6 px-6">
-          {/* Wordmark — wordmark IS the logo (design.md §1.2); lime period
-              per business-card reference (「brand name.」) */}
-          <Link to="/" className="flex items-baseline gap-2" aria-label="AIGRO 首頁">
+          <Link to="/" className="flex min-h-11 shrink-0 items-center gap-2" aria-label="AIGRO 首頁">
             <img
-              src="/brand/a-mark.png"
-              alt=""
-              aria-hidden="true"
-              width={28}
-              height={28}
-              className="h-7 w-7 shrink-0 self-center"
+              src="/brand/aigro-wordmark-navy-transparent.png"
+              alt="AIGRO"
+              width={1267}
+              height={636}
+              className="h-8 w-auto dark:hidden"
+            />
+            <img
+              src="/brand/aigro-wordmark-white-transparent.png"
+              alt="AIGRO"
+              width={1267}
+              height={636}
+              className="hidden h-8 w-auto dark:block"
             />
             <span
               className={cn(
-                "font-display text-[22px] font-semibold lowercase tracking-[0.01em]",
-                overHero ? "text-band-text" : "text-text-primary"
-              )}
-            >
-              aigro
-              <span
-                className={cn("brand-period", overHero ? "text-band-ink" : "text-ink")}
-              >
-                .
-              </span>
-            </span>
-            <span
-              className={cn(
-                "hidden text-caption sm:inline",
+                "hidden whitespace-nowrap text-caption 2xl:inline",
                 overHero ? "text-band-text-secondary" : "text-text-muted"
               )}
             >
@@ -91,21 +85,35 @@ export default function Navbar() {
             </span>
           </Link>
 
+          <Link
+            to="/insights"
+            aria-label="搜尋 AIGRO 情報"
+            className={cn(
+              "press hidden h-11 min-w-0 max-w-[240px] flex-1 items-center gap-2 rounded-md border px-3 text-caption 2xl:flex",
+              overHero
+                ? "border-band-border bg-band-surface text-band-text-muted hover:border-band-border-strong"
+                : "border-border bg-card text-text-muted hover:border-border-strong"
+            )}
+          >
+            <Search className="h-4 w-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />
+            <span className="truncate">搜尋情報、專家與主題</span>
+          </Link>
+
           {/* Desktop nav — bilingual labels */}
-          <nav className="mx-auto hidden items-center gap-6 md:flex" aria-label="主導航">
+          <nav className="mx-auto hidden items-center gap-4 lg:flex xl:gap-5" aria-label="主導航">
             {NAV_LINKS.map((link) => (
               <NavLink
                 key={link.to}
                 to={link.to}
                 className={({ isActive }) =>
                   cn(
-                    "text-label transition-colors duration-150",
+                    "inline-flex min-h-11 items-center text-label transition-colors duration-150",
                     overHero
                       ? "text-band-text/85 hover:text-band-text"
                       : "text-text-secondary hover:text-ink",
                     isActive &&
                       (overHero
-                        ? "text-band-text underline decoration-band-text decoration-2 underline-offset-[6px]"
+                        ? "text-band-ink underline decoration-band-ink decoration-2 underline-offset-[6px]"
                         : "text-ink underline decoration-ink decoration-2 underline-offset-[6px]")
                   )
                 }
@@ -116,13 +124,13 @@ export default function Navbar() {
           </nav>
 
           {/* Right: theme toggle + subscribe */}
-          <div className="ml-auto flex items-center gap-3 md:ml-0">
+          <div className="ml-auto flex items-center gap-3 lg:ml-0">
             <button
               type="button"
               onClick={toggleTheme}
               aria-label={isDark ? "切換至淺色模式" : "切換至深色模式"}
               className={cn(
-                "press flex h-10 w-10 items-center justify-center rounded-md",
+                "press flex h-11 w-11 items-center justify-center rounded-md",
                 overHero
                   ? "text-band-text-secondary hover:bg-band-ink-soft hover:text-band-text"
                   : "text-text-secondary hover:bg-ink-soft hover:text-ink"
@@ -147,7 +155,7 @@ export default function Navbar() {
                       : `${member.name} 嘅會員專區`
                 }
                 className={cn(
-                  "press hidden h-10 items-center gap-2 rounded-md border pl-1.5 pr-3 sm:inline-flex",
+                  "press hidden h-11 items-center gap-2 rounded-md border pl-1.5 pr-3 sm:inline-flex",
                   overHero
                     ? "border-band-border-strong hover:bg-band-ink-soft"
                     : "border-border-strong hover:bg-ink-soft"
@@ -184,7 +192,7 @@ export default function Navbar() {
                 aria-label="登出"
                 title="登出"
                 className={cn(
-                  "press hidden h-10 w-10 items-center justify-center rounded-md border sm:inline-flex",
+                  "press hidden h-11 w-11 items-center justify-center rounded-md border sm:inline-flex",
                   overHero
                     ? "border-band-border-strong text-band-text-secondary hover:bg-band-ink-soft hover:text-band-text"
                     : "border-border-strong text-text-secondary hover:bg-ink-soft hover:text-ink"
@@ -199,7 +207,7 @@ export default function Navbar() {
                 <Link
                   to="/login"
                   className={cn(
-                    "press inline-flex h-10 items-center rounded-md px-4 text-label",
+                    "press inline-flex h-11 items-center rounded-md px-4 text-label",
                     overHero
                       ? "text-band-text-secondary hover:bg-band-ink-soft hover:text-band-text"
                       : "text-text-secondary hover:bg-ink-soft hover:text-ink"
@@ -209,7 +217,7 @@ export default function Navbar() {
                 </Link>
                 <Link
                   to="/join"
-                  className="press inline-flex h-10 items-center rounded-md bg-lime px-4 text-label text-on-accent hover:bg-lime-hover"
+                  className="press inline-flex h-11 items-center rounded-md bg-lime px-4 text-label text-on-accent hover:bg-lime-hover"
                 >
                   加入 Club
                 </Link>
@@ -217,11 +225,14 @@ export default function Navbar() {
             )}
             {/* Mobile hamburger */}
             <button
+              ref={triggerRef}
               type="button"
               onClick={() => setDrawerOpen(true)}
               aria-label="開啟選單"
+              aria-expanded={drawerOpen}
+              aria-controls="mobile-main-menu"
               className={cn(
-                "press flex h-10 w-10 items-center justify-center rounded-md md:hidden",
+                "press flex h-11 w-11 items-center justify-center rounded-md lg:hidden",
                 overHero ? "text-band-text" : "text-text-primary"
               )}
             >
@@ -235,28 +246,45 @@ export default function Navbar() {
       <AnimatePresence>
         {drawerOpen && (
           <motion.div
-            className="fixed inset-0 z-[60] flex flex-col bg-overlay/95 md:hidden"
+            ref={dialogRef}
+            id="mobile-main-menu"
+            role="dialog"
+            aria-modal="true"
+            aria-label="主選單"
+            tabIndex={-1}
+            className="fixed inset-0 z-[60] flex flex-col bg-overlay/95 lg:hidden"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
             <div className="flex h-16 items-center justify-between border-b px-6">
-              <span className="font-display text-[22px] font-semibold lowercase tracking-[0.01em]">
-                aigro<span className="brand-period text-ink">.</span>
-              </span>
+              <img
+                src="/brand/aigro-wordmark-navy-transparent.png"
+                alt="AIGRO"
+                width={1267}
+                height={636}
+                className="h-8 w-auto dark:hidden"
+              />
+              <img
+                src="/brand/aigro-wordmark-white-transparent.png"
+                alt="AIGRO"
+                width={1267}
+                height={636}
+                className="hidden h-8 w-auto dark:block"
+              />
               <button
                 type="button"
-                onClick={() => setDrawerOpen(false)}
+                onClick={closeDrawer}
                 aria-label="關閉選單"
-                className="press flex h-10 w-10 items-center justify-center rounded-md text-text-primary"
+                data-dialog-initial-focus
+                className="press flex h-11 w-11 items-center justify-center rounded-md text-text-primary"
               >
                 <X className="h-5 w-5" strokeWidth={1.5} />
               </button>
             </div>
             <nav className="flex flex-col gap-2 px-6 py-8" aria-label="手機導航">
-              {[{ to: "/", en: "Home", zh: "首頁" } as const, ...NAV_LINKS].map(
-                (link, i) => (
+              {NAV_LINKS.map((link, i) => (
                   <motion.div
                     key={link.to}
                     initial={{ opacity: 0, transform: "translateX(-16px)" }}
@@ -265,7 +293,7 @@ export default function Navbar() {
                   >
                     <NavLink
                       to={link.to}
-                      onClick={() => setDrawerOpen(false)}
+                      onClick={closeDrawer}
                       className={({ isActive }) =>
                         cn(
                           "block py-3 font-display text-h2 text-text-primary",
@@ -281,13 +309,13 @@ export default function Navbar() {
               <motion.div
                 initial={{ opacity: 0, transform: "translateX(-16px)" }}
                 animate={{ opacity: 1, transform: "translateX(0px)" }}
-                transition={{ duration: 0.3, delay: 7 * 0.08, ease: REVEAL_EASE }}
+                transition={{ duration: 0.3, delay: NAV_LINKS.length * 0.08, ease: REVEAL_EASE }}
                 className="flex items-center gap-3 pt-4"
               >
                 {member ? (
                   <Link
                     to={memberChipTo}
-                    onClick={() => setDrawerOpen(false)}
+                    onClick={closeDrawer}
                     className="inline-flex h-11 items-center gap-2 rounded-md border border-border-strong pl-1.5 pr-4 text-label text-text-primary"
                   >
                     <span
@@ -306,14 +334,14 @@ export default function Navbar() {
                   <>
                     <Link
                       to="/login"
-                      onClick={() => setDrawerOpen(false)}
+                      onClick={closeDrawer}
                       className="inline-flex h-11 items-center rounded-md border border-border-strong px-6 text-label text-text-primary"
                     >
                       登入
                     </Link>
                     <Link
                       to="/join"
-                      onClick={() => setDrawerOpen(false)}
+                      onClick={closeDrawer}
                       className="inline-flex h-11 items-center rounded-md bg-lime px-6 text-label text-on-accent"
                     >
                       加入 Club

@@ -101,12 +101,11 @@ export default function InsightDetail() {
       <div className="mx-auto max-w-[720px] px-6 py-32 text-center">
         <p className="font-display text-display-sm text-text-muted">找不到此情報</p>
         <p className="mt-4 text-body-sm text-text-secondary">
-          呢條連結冇對應嘅真實情報 — 資訊中心已改用即時動態,
-          情報由自家管道每 30 分鐘更新。
+          呢條連結冇對應嘅真實情報。你可以返回資訊中心查看目前可用嘅情報與資料快照。
         </p>
         <Link
           to={backTo}
-          className="mt-8 inline-flex items-center gap-2 rounded-sm bg-ink-solid px-5 py-2.5 text-label text-white press hover:bg-ink-hover"
+          className="mt-8 inline-flex min-h-11 items-center gap-2 rounded-sm bg-ink-solid px-5 py-2.5 text-label text-on-accent press hover:bg-ink-hover"
         >
           <ArrowLeft className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
           返回資訊中心
@@ -127,9 +126,9 @@ export default function InsightDetail() {
           className="pointer-events-none absolute inset-0 -z-10 select-none"
         >
           <img
-            src="/editorial/detail-band.png"
+            src="/editorial/thumbnails/agent-delivery.jpg"
             alt=""
-            className="h-full w-full object-cover opacity-45"
+            className="h-full w-full object-cover opacity-30"
           />
           <span className="absolute inset-0 bg-band-bg/60" />
         </div>
@@ -218,7 +217,7 @@ export default function InsightDetail() {
               href={item.originalUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-6 inline-flex h-11 items-center gap-2 rounded-sm bg-ink-solid px-6 text-label text-white press hover:bg-ink-hover"
+              className="mt-6 inline-flex h-11 items-center gap-2 rounded-sm bg-ink-solid px-6 text-label text-on-accent press hover:bg-ink-hover"
             >
               閱讀原文
               <ArrowUpRight

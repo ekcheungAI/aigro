@@ -4,6 +4,8 @@ import Lenis from "lenis";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Newsletter from "@/components/Newsletter";
+import MobileAppNav from "@/components/MobileAppNav";
+import { cn } from "@/lib/utils";
 
 /**
  * Shared layout — nested-route pattern (Layout renders <Outlet/>, App.tsx
@@ -16,6 +18,15 @@ import Newsletter from "@/components/Newsletter";
  */
 export default function Layout() {
   const { pathname } = useLocation();
+  const isFocusedFlow =
+    pathname.startsWith("/ask") ||
+    pathname === "/login" ||
+    pathname === "/join" ||
+    pathname.startsWith("/account");
+  const showMobileAppNav =
+    pathname === "/" ||
+    pathname.startsWith("/insights") ||
+    pathname.startsWith("/skills");
 
   // Lenis smooth scroll (design.md §5.3); disabled under prefers-reduced-motion (§5.4)
   useEffect(() => {
@@ -38,13 +49,25 @@ export default function Layout() {
   }, [pathname]);
 
   return (
-    <div className="flex min-h-[100dvh] flex-col bg-bg text-text-primary">
+    <div
+      className={cn(
+        "flex min-h-[100dvh] flex-col bg-bg text-text-primary",
+        showMobileAppNav && "pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0"
+      )}
+    >
+      <a
+        href="#main-content"
+        className="sr-only z-[100] rounded-sm bg-lime px-4 py-3 text-sm font-semibold text-on-accent outline-none focus:fixed focus:left-4 focus:top-4 focus:not-sr-only focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      >
+        跳到主要內容
+      </a>
       <Navbar />
-      <main className="flex-1">
+      <main id="main-content" tabIndex={-1} className="flex-1 outline-none">
         <Outlet />
       </main>
-      <Newsletter />
-      <Footer />
+      {!isFocusedFlow && <Newsletter />}
+      {!isFocusedFlow && <Footer />}
+      {showMobileAppNav && <MobileAppNav />}
     </div>
   );
 }

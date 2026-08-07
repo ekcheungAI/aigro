@@ -121,6 +121,7 @@ export function mapAihotCategory(raw: string): InsightCategory {
 
 /** AIHOT daily section label → 本站繁體分類（snapshot 已轉繁體，簡體 key 作向下兼容） */
 const DAILY_LABEL_MAP: Record<string, InsightCategory> = {
+  產品發布: "產品發布",
   "產品發佈/更新": "產品發布",
   "产品发布/更新": "產品發布",
   行業動態: "行業動態",
@@ -287,14 +288,19 @@ function buildDaily(): AihotDaily {
   const flat: AihotDailyEntry[] = [];
 
   for (const section of snapshot.daily.sections) {
+    const sectionLabel = clean(section.label);
+    const sectionCategory =
+      DAILY_LABEL_MAP[sectionLabel] ?? "行業動態";
     for (const item of section.items) {
       const matched = byId.get(permalinkId(item.permalink));
       flat.push({
         slug: matched ? matched.id : null,
-        category: matched
-          ? mapAihotCategory(matched.category)
-          : (DAILY_LABEL_MAP[clean(section.label)] ?? "行業動態"),
-        sectionLabel: clean(section.label),
+        // 日報 section 係編輯分類嘅 source of truth;情報列表分類只作
+        // section label 未知時嘅 fallback，避免同一批條目跌入兩個分組。
+        category:
+          DAILY_LABEL_MAP[sectionLabel] ??
+          (matched ? mapAihotCategory(matched.category) : sectionCategory),
+        sectionLabel,
         title: clean(item.title),
         summary: clean(item.summary),
         source: clean(item.sourceName),
@@ -305,20 +311,34 @@ function buildDaily(): AihotDaily {
     }
   }
 
+  // Upstream 偶爾會將同一條目放入多個 section。日報展示與所有計數
+  // 必須共用同一份去重列表，否則 masthead picks 同可見條目會對唔上。
+  const seen = new Set<string>();
+  const uniqueFlat = flat.filter((entry) => {
+    const key =
+      entry.slug ??
+      entry.canonical ??
+      entry.permalink ??
+      `${entry.title.trim().toLowerCase()}|${entry.source.trim().toLowerCase()}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
   return {
     date: snapshot.daily.date,
     canonical: snapshot.daily.attribution?.canonical ?? AIHOT_CANONICAL,
-    lead: flat[0] ?? null,
-    items: flat.slice(1),
+    lead: uniqueFlat[0] ?? null,
+    items: uniqueFlat.slice(1),
     sections: snapshot.daily.sections.map((s) => {
       const label = clean(s.label);
       return {
         label,
         category: DAILY_LABEL_MAP[label] ?? "行業動態",
-        count: s.items.length,
+        count: uniqueFlat.filter((entry) => entry.sectionLabel === label).length,
       };
     }),
-    itemCount: flat.length,
+    itemCount: uniqueFlat.length,
   };
 }
 

@@ -14,9 +14,9 @@ export default function Newsletter() {
 
   return (
     <section className="relative overflow-hidden border-y bg-surface">
-      {/* letterpress 肌理背景 — 15% 不透明度,唔影響內容對比 */}
+      {/* AIGRO editorial research still life — low opacity keeps copy readable. */}
       <img
-        src="/editorial/newsletter-texture.png"
+        src="/editorial/thumbnails/research-evidence.jpg"
         alt=""
         aria-hidden="true"
         loading="lazy"

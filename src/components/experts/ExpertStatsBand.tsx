@@ -59,6 +59,23 @@ export default function ExpertStatsBand({ custom, live }: ExpertStatsBandProps) 
     { icon: FileText, label: "已發佈情報", value: live?.insights ?? null },
     { icon: BookOpen, label: "知識條目", value: live?.knowledge ?? null },
   ];
+  const hasPublishedStats =
+    custom.length > 0 || dynamicStats.some((stat) => (stat.value ?? 0) > 0);
+
+  if (!hasPublishedStats) {
+    return (
+      <section className="border-y border-band-border bg-band-bg">
+        <div className="mx-auto flex max-w-container flex-col gap-2 px-6 py-6 md:flex-row md:items-center md:justify-between">
+          <p className="text-overline font-sans uppercase tracking-[0.2em] text-band-text-muted">
+            Knowledge status 知識庫狀態
+          </p>
+          <p className="text-body-sm text-band-text-secondary">
+            {live === null ? "正在讀取公開數據" : "新分身已上線・公開內容整理中"}
+          </p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="border-y border-band-border bg-band-bg">
@@ -117,7 +134,7 @@ export default function ExpertStatsBand({ custom, live }: ExpertStatsBandProps) 
           ))}
         </div>
         <p className="mt-6 text-caption text-band-text-muted">
-          動態數據為平台真實統計,實時更新
+          數據來自平台已記錄活動
         </p>
       </div>
     </section>

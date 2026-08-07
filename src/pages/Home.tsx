@@ -27,6 +27,7 @@ import {
 } from "@/data/aihot";
 import { hkDayKey, useLiveFetchedAt, useLiveInsights } from "@/data/liveItems";
 import { expertFullName, expertHasPhoto, experts } from "@/data/experts";
+import useDataFreshness from "@/hooks/useDataFreshness";
 
 /* ================= Section 1 — Cinematic Dark Hero ================= */
 
@@ -38,6 +39,7 @@ function Hero() {
   /* 今日精選速覽 — Supabase live 成熟時用全站評分最高 5 條,未成熟回落 snapshot */
   const liveInsights = useLiveInsights();
   const liveFetchedAt = useLiveFetchedAt();
+  const { isLive, isArchive } = useDataFreshness();
   /* 速覽 label 用數據時鐘日期(同 LiveStats 做法)— 唔會同展示嘅情報有落差 */
   const picksDate =
     hkDayKey(liveFetchedAt ?? aihotFetchedAt) ??
@@ -91,7 +93,9 @@ function Hero() {
             transition={{ duration: 0.4, ease: REVEAL_EASE }}
           >
             <span className="inline-block h-px w-10 bg-band-gold" aria-hidden="true" />
-            香港視角・每 30 分鐘同步 Hong Kong, Live
+            {isLive
+              ? "香港視角・每 30 分鐘同步 Hong Kong, Live"
+              : "香港視角・資料快照 Hong Kong Edition"}
           </motion.p>
 
           {/* H1 — MasterClass-scale Fraunces, slower line reveal
@@ -135,7 +139,7 @@ function Hero() {
                 to="/insights"
                 className="inline-flex h-12 items-center rounded-md bg-band-ink-solid px-8 text-label text-on-accent press hover:bg-band-ink-hover"
               >
-                閱讀今日情報
+                {isArchive ? "閱讀最新快照" : "閱讀今日情報"}
               </Link>
               <Link
                 to="/ask"
@@ -177,7 +181,9 @@ function Hero() {
               aria-expanded={picksOpen}
               className="flex w-full items-center gap-2 px-6 py-4 text-left"
             >
-              <span className="text-label text-band-text">今日 AI 精選速覽</span>
+              <span className="text-label text-band-text">
+                {isArchive ? "最新 AI 快照" : "今日 AI 精選速覽"}
+              </span>
               <ChevronDown
                 className={`h-4 w-4 text-band-text-muted transition-transform duration-200 ${picksOpen ? "rotate-180" : ""}`}
                 strokeWidth={1.5}
@@ -219,7 +225,11 @@ function Hero() {
                     ))}
                   </ol>
                   <p className="border-t border-band-border px-6 py-3 text-caption text-band-text-muted">
-                    香港繁體整理 · 每 30 分鐘同步
+                    {isLive
+                      ? "香港繁體整理 · 每 30 分鐘同步"
+                      : isArchive
+                        ? `香港繁體整理 · 歷史快照截至 ${picksDate}`
+                        : "香港繁體整理 · 資料快照"}
                   </p>
                 </motion.div>
               )}
@@ -246,19 +256,15 @@ function McpNetworkBand() {
             MCP Network
           </p>
           <h2 className="mt-4 font-display text-h2 text-band-text">
-            你嘅 AI,值得擁有行業雷達
+            MCP 接入正在封裝
           </h2>
           <p className="mt-4 max-w-[600px] text-body-sm text-band-text-secondary">
-            AIGRO 將各行業即時情報蒸餾成 MCP server — Claude Code / Cursor /
-            任何 agent 一連接,即刻有行業雷達。
+            AIGRO 正將現有情報、日報同熱門主題整理成 MCP 介面。
+            公開 endpoint 尚未上線；你可以先登記接入通知。
           </p>
-          {/* Vertical status chips */}
           <div className="mt-6 flex flex-wrap gap-2">
-            <span className="inline-flex items-center rounded-sm bg-band-ink-solid px-3 py-1.5 text-overline font-sans uppercase text-on-accent">
-              AI — 優先名單開放中
-            </span>
             <span className="inline-flex items-center rounded-sm border border-band-border-strong px-3 py-1.5 text-overline font-sans uppercase text-band-text-secondary">
-              Beauty・Technology — 規劃中
+              AI 情報 MCP — 封裝中
             </span>
           </div>
           <div className="mt-8 flex flex-wrap items-center gap-6">
@@ -272,7 +278,7 @@ function McpNetworkBand() {
               to="/developers#endpoints"
               className="group inline-flex items-center gap-1 text-label text-band-ink"
             >
-              睇 endpoints
+              查看接入計劃
               <ArrowRight
                 className="h-4 w-4 transition-transform duration-150 nudge-x"
                 strokeWidth={1.5}
@@ -417,7 +423,7 @@ function CasesFeatured() {
             </p>
           </div>
           <img
-            src="/editorial/cases-empty.png"
+            src="/editorial/thumbnails/prompt-workflow.jpg"
             alt="排版台上嘅空白案例版面"
             width={320}
             height={200}
@@ -426,7 +432,7 @@ function CasesFeatured() {
           />
           <Link
             to="/cases"
-            className="group inline-flex h-12 shrink-0 items-center gap-2 rounded-md bg-ink-solid px-8 text-label text-white press hover:bg-ink-hover"
+            className="group inline-flex h-12 shrink-0 items-center gap-2 rounded-md bg-ink-solid px-8 text-label text-on-accent press hover:bg-ink-hover"
           >
             登記上架通知
             <ArrowRight
@@ -520,7 +526,7 @@ function ExpertsWall() {
                   </span>
                 ) : (
                   <img
-                    src="/editorial/pending-expert.png"
+                    src="/editorial/optimized/pending-expert.jpg"
                     alt={`${expertFullName(expert)} — 即將加盟`}
                     width={64}
                     height={64}

@@ -120,6 +120,63 @@ const APPLICATIONS = [
   },
 ] as const;
 
+const THUMBNAILS = [
+  {
+    src: "/editorial/thumbnails/agent-delivery.jpg",
+    label: "AI 趨勢",
+    title: "Agent delivery",
+  },
+  {
+    src: "/editorial/thumbnails/growth-loop.jpg",
+    label: "增長策略",
+    title: "Repeatable growth",
+  },
+  {
+    src: "/editorial/thumbnails/hong-kong-adoption.jpg",
+    label: "香港視角",
+    title: "Local adoption",
+  },
+  {
+    src: "/editorial/thumbnails/prompt-workflow.jpg",
+    label: "工具評測",
+    title: "Prompt to workflow",
+  },
+  {
+    src: "/editorial/thumbnails/model-network.jpg",
+    label: "模型發布",
+    title: "Model network",
+  },
+  {
+    src: "/editorial/thumbnails/product-console.jpg",
+    label: "產品發布",
+    title: "Product console",
+  },
+  {
+    src: "/editorial/thumbnails/research-evidence.jpg",
+    label: "論文研究",
+    title: "Research evidence",
+  },
+  {
+    src: "/editorial/thumbnails/market-signals.jpg",
+    label: "市場情報",
+    title: "Market signals",
+  },
+] as const;
+
+const THUMBNAIL_RULES = [
+  "固定使用 16:10 主比例，構圖同時要能安全裁成 16:9 與 4:3。",
+  "以柔白紙色、近黑、炭灰與自然材質為主；每張最多一個細小綠色焦點。",
+  "光線來自單一方向，保留真實紙張、金屬或環境質感，避免過度磨皮與高飽和調色。",
+  "縮圖本身不放標題、logo 或 CTA；文字由介面層負責，確保可翻譯與可存取。",
+] as const;
+
+const THUMBNAIL_NEVER = [
+  "藍紫 AI glow、彩虹漸層、霓虹邊框或發光粒子。",
+  "機械手、人手觸碰、發光大腦、電路板與漂浮 hologram。",
+  "擺拍握手、誇張表情、假 dashboard 或無關的科技 stock photo。",
+  "每張圖使用不同濾鏡、不同色溫或多個搶眼 accent。",
+] as const;
+
 function CopyHex({ hex, name }: { hex: string; name: string }) {
   const [copied, setCopied] = useState(false);
 
@@ -198,17 +255,72 @@ export default function Branding() {
           <Reveal delay={0.08} className="md:pb-1">
             <figure className="border border-band-border bg-band-surface p-7 sm:p-9">
               <img
-                src="/brand/wordmark-white.png"
+                src="/brand/aigro-wordmark-navy-transparent.png"
+                alt="AIGRO 海軍藍三點 wordmark"
+                width={464}
+                height={223}
+                className="mx-auto h-auto w-full max-w-[390px] dark:hidden"
+              />
+              <img
+                src="/brand/aigro-wordmark-white-transparent.png"
                 alt="AIGRO 白色三點 wordmark"
                 width={464}
                 height={223}
-                className="mx-auto h-auto w-full max-w-[390px]"
+                className="mx-auto hidden h-auto w-full max-w-[390px] dark:block"
               />
               <figcaption className="mt-6 border-t border-band-border pt-4 text-center text-caption text-band-text-secondary">
                 AI Growth · Resources · Opportunities
               </figcaption>
             </figure>
           </Reveal>
+        </div>
+      </section>
+
+      <section className="border-y border-border bg-surface">
+        <div className="mx-auto max-w-container px-6 py-20 max-md:py-14">
+          <Reveal>
+            <p className="font-mono text-caption uppercase tracking-wider text-lime-text">
+              Image system
+            </p>
+            <h2 className="mt-3 font-display text-h2 text-text-primary">
+              Editorial thumbnails
+            </h2>
+            <p className="mt-4 max-w-prose text-body text-text-secondary">
+              縮圖不是裝飾，而是讀者判斷內容類型的第一個線索。所有內容圖使用同一套紙張、近黑物件、自然光與克制綠色焦點，建立一致的出版物辨識。
+            </p>
+          </Reveal>
+
+          <div className="mt-10 grid gap-5 md:grid-cols-2">
+            {THUMBNAILS.map((thumbnail, index) => (
+              <Reveal key={thumbnail.src} delay={(index % 2) * 0.06}>
+                <figure className="overflow-hidden border border-border bg-card">
+                  <img
+                    src={thumbnail.src}
+                    alt={`${thumbnail.label}縮圖示例：${thumbnail.title}`}
+                    width={1586}
+                    height={992}
+                    loading="lazy"
+                    className="aspect-[16/10] w-full object-cover"
+                  />
+                  <figcaption className="flex items-center justify-between gap-4 border-t border-border bg-surface px-5 py-4">
+                    <span className="font-mono text-[11px] uppercase tracking-wider text-lime-text">
+                      {thumbnail.label}
+                    </span>
+                    <span className="text-caption text-text-muted">{thumbnail.title}</span>
+                  </figcaption>
+                </figure>
+              </Reveal>
+            ))}
+          </div>
+
+          <div className="mt-10 grid gap-px border-y border-border bg-border md:grid-cols-2">
+            <Reveal>
+              <RuleList title="影像原則" rules={THUMBNAIL_RULES} positive />
+            </Reveal>
+            <Reveal delay={0.08}>
+              <RuleList title="禁止影像語言" rules={THUMBNAIL_NEVER} positive={false} />
+            </Reveal>
+          </div>
         </div>
       </section>
 
@@ -246,7 +358,7 @@ export default function Branding() {
           <div className="mt-10 grid gap-px border border-border bg-border md:grid-cols-2">
             <Reveal className="bg-logo-paper p-7 sm:p-10">
               <img
-                src="/brand/wordmark-navy.png"
+                src="/brand/aigro-wordmark-navy-transparent.png"
                 alt="AIGRO 海軍藍三點 wordmark"
                 width={464}
                 height={223}
@@ -257,7 +369,7 @@ export default function Branding() {
             </Reveal>
             <Reveal delay={0.08} className="bg-logo-navy p-7 sm:p-10">
               <img
-                src="/brand/wordmark-white.png"
+                src="/brand/aigro-wordmark-white-transparent.png"
                 alt="AIGRO 白色三點 wordmark"
                 width={464}
                 height={223}
@@ -274,7 +386,7 @@ export default function Branding() {
                 <div className="relative border border-logo-gray/40 p-10 sm:p-14">
                   <span className="absolute left-3 top-3 font-mono text-[11px] text-logo-gray">1x clear space</span>
                   <img
-                    src="/brand/wordmark-navy.png"
+                    src="/brand/aigro-wordmark-navy-transparent.png"
                     alt="AIGRO wordmark 的 1x 淨空間示例"
                     width={464}
                     height={223}

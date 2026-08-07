@@ -25,7 +25,7 @@ interface CredentialChip {
 
 /**
  * Speaker spotlight card — 對話開始前嘅「導師宣傳位」(empty state 主角)。
- * 大頭像 + presence dot +「你而家同緊 X 傾計」+ signature quote +
+ * 大頭像 + presence dot + persona 名稱 + signature quote +
  * 3 個 credential chips(experts.ts metrics)+ 核心觀點連結 + 授權 trust note。
  * 進場:fade + rise 300ms,children stagger 60ms(GPU-only;reduced-motion → 純 fade)。
  */
@@ -41,11 +41,14 @@ export default function SpotlightCard({
   const sourceCount = new Set(itemPool.map((i) => i.source).filter(Boolean))
     .size;
 
-  // 3 個 credential chips:專家取 experts.ts metrics 頭 3 個;平台取真實情報庫 counts
+  // 專家保留可查證 metrics；平台以一行資料範圍交代，避免 dashboard 式數字格。
   const chips: CredentialChip[] = expert?.metrics
     ? expert.metrics.slice(0, 3).map((m) => ({ value: m.value, label: m.label }))
     : [
-        { value: `${itemPool.length} 則`, label: "全站情報庫・每日更新" },
+        {
+          value: `${itemPool.length} 則`,
+          label: liveItems ? "全站情報庫・即時資料" : "全站情報庫・資料快照",
+        },
         { value: `${sourceCount} 個`, label: "情報來源・持續接入" },
         { value: `${verifiedExperts.length} 位`, label: "領航專家授權分身" },
       ];
@@ -92,7 +95,7 @@ export default function SpotlightCard({
             AI 分身 · 與你單對單
           </p>
           <h3 className="mt-1 flex items-center gap-1.5 font-display text-h3 text-text-primary">
-            <span className="truncate">你而家同緊 {persona.name} 傾計</span>
+            <span className="truncate">{persona.name}</span>
             {persona.kind === "expert" && <VerifiedBadge size={24} />}
           </h3>
           <p className="mt-1 text-caption text-text-muted">{persona.domainCaption}</p>
@@ -111,14 +114,20 @@ export default function SpotlightCard({
       </motion.blockquote>
 
       {/* 3 credential chips */}
-      <motion.ul {...rise(0.12)} className="mt-5 grid gap-2 sm:grid-cols-3">
-        {chips.map((c) => (
-          <li key={c.value + c.label} className="rounded-sm border bg-bg px-3 py-2.5">
-            <p className="font-mono text-label text-text-primary">{c.value}</p>
-            <p className="mt-0.5 text-caption text-text-muted">{c.label}</p>
-          </li>
-        ))}
-      </motion.ul>
+      {expert ? (
+        <motion.ul {...rise(0.12)} className="mt-5 grid gap-2 sm:grid-cols-3">
+          {chips.map((c) => (
+            <li key={c.value + c.label} className="border-l border-border-strong pl-3">
+              <p className="font-mono text-label text-text-primary">{c.value}</p>
+              <p className="mt-0.5 text-caption text-text-muted">{c.label}</p>
+            </li>
+          ))}
+        </motion.ul>
+      ) : (
+        <motion.p {...rise(0.12)} className="mt-5 border-l border-ink pl-3 text-caption text-text-muted">
+          {itemPool.length} 則情報・{sourceCount} 個來源・{verifiedExperts.length} 位已授權領航專家
+        </motion.p>
+      )}
 
       {/* 觀點連結 + trust note */}
       <motion.div

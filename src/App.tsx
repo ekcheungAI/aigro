@@ -68,12 +68,29 @@ function RouteMeta() {
     [/^\/join/, "加入 Club", "加入 AIGRO Club — 三步成為會員,免費開始,隨時升級。"],
     [/^\/account/, "會員專區", "你嘅 AIGRO 會員專區 — 層級、對話紀錄、MCP 名單與設定。"],
     [/^\/admin/, "AIGRO Admin", "內部管理後台。"],
+    [/^\/portal\/kb/, "專家知識庫", "管理已授權嘅專家知識、來源與 AI 分身內容。"],
+    [/^\/portal\/insights/, "專家數據洞察", "查看專家 AI 分身嘅內容與互動趨勢。"],
+    [/^\/portal\/profile/, "專家資料設定", "管理專家公開資料與 AI 分身設定。"],
+    [/^\/portal\/socials/, "社交渠道", "管理專家公開社交渠道。"],
+    [/^\/portal\/leads/, "專家潛在客戶", "管理由 AIGRO 帶來嘅專家合作查詢。"],
+    [/^\/portal\/bookings/, "專家預約", "管理專家諮詢與合作預約。"],
+    [/^\/portal/, "領航專家平台", "AIGRO 領航專家嘅內容、分身與合作管理平台。"],
   ];
-  const dailyTab = pathname === "/insights" && new URLSearchParams(search).get("tab") === "daily";
-  const hit = dailyTab
-    ? map.find(([re]) => re.test("/insights/daily"))
-    : map.find(([re]) => re.test(pathname));
-  usePageMeta(hit?.[1] || undefined, hit?.[2] || undefined);
+  const tab = pathname === "/insights" ? new URLSearchParams(search).get("tab") : null;
+  const tabMeta: Record<string, [string, string]> = {
+    daily: ["每日精選日報", "編輯部每日精選必讀 AI・增長情報 — 3 分鐘掌握全球脈搏的香港意義。"],
+    weekly: ["每週回顧", "一週 AI・增長脈搏一次過睇晒，按分類整理編輯部必讀情報。"],
+    topics: ["主題地圖", "按公司、模型與技術主題探索 AIGRO 情報庫。"],
+    data: ["數據合作", "了解 AIGRO 情報來源、數據合作方式與 MCP 發展方向。"],
+  };
+  const hit = map.find(([re]) => re.test(pathname));
+  const activeMeta: [string, string?] | undefined =
+    tab && tabMeta[tab] ? tabMeta[tab] : hit ? [hit[1], hit[2]] : undefined;
+  const isNotFound = !activeMeta;
+  usePageMeta(
+    isNotFound ? "找不到頁面" : activeMeta?.[0] || undefined,
+    isNotFound ? "此頁面不存在或已移除。返回 AIGRO 瀏覽最新 AI・增長情報。" : activeMeta?.[1] || undefined
+  );
   return null;
 }
 

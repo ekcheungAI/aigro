@@ -25,15 +25,16 @@ export interface WaitlistEntry {
 }
 
 /**
- * Insert 一條 waitlist 記錄。成功/失敗都 resolve(唔 reject),
- * 失敗(離線 / 無 env / RLS)靜默 — caller 嘅成功態唔受影響。
+ * Insert 一條 waitlist 記錄。永遠 resolve(唔 reject),並回傳有冇成功寫入。
+ * 現有 fire-and-forget caller 可以繼續忽略回傳值;需要誠實成功態嘅表單
+ * 可按 false 寫入本機 fallback。
  */
-export async function captureWaitlist(entry: WaitlistEntry): Promise<void> {
-  if (!supabase || !supabaseReady) return;
+export async function captureWaitlist(entry: WaitlistEntry): Promise<boolean> {
+  if (!supabase || !supabaseReady) return false;
   const email = entry.email.trim();
-  if (!email) return;
+  if (!email) return false;
   try {
-    await supabase.from("waitlist").insert({
+    const { error } = await supabase.from("waitlist").insert({
       email,
       kind: entry.kind,
       vertical: entry.vertical ?? null,
@@ -41,7 +42,8 @@ export async function captureWaitlist(entry: WaitlistEntry): Promise<void> {
       note: entry.note ?? null,
       source: entry.source ?? "web",
     });
+    return error === null;
   } catch {
-    /* 離線靜默 — localStorage fallback 已經記低 */
+    return false;
   }
 }

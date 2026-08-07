@@ -21,7 +21,7 @@ interface PersonaPopupProps {
 
 /**
  * Persona popup — 點 header 頭像 / 「關於佢」打開嘅 MasterClass 式導師宣傳卡。
- * 完整 bio + 成就 grid + 真實 socials + 領航風格雷達(top 3 bar)+ signature quote。
+ * 完整 bio + 成就佐證 + 真實 socials + 方法摘要 + signature quote。
  * Center modal:scale 0.96→1 + fade 200ms(EASE_OUT_STRONG),backdrop fade 150ms;
  * Esc / backdrop click 關閉;reduced-motion → 純 opacity。
  */
@@ -49,10 +49,7 @@ export default function PersonaPopup({ open, persona, onClose }: PersonaPopupPro
     };
   }, [open, onClose]);
 
-  // 領航風格雷達 top 3(編輯部評估分,降序)
-  const topRadar = expert?.radar
-    ? [...expert.radar].sort((a, b) => b.score - a.score).slice(0, 3)
-    : [];
+  const methodSummary = expert?.radar?.slice(0, 3) ?? [];
 
   const panelMotion = reduced
     ? {
@@ -81,7 +78,7 @@ export default function PersonaPopup({ open, persona, onClose }: PersonaPopupPro
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
             onClick={onClose}
-            className="absolute inset-0 cursor-default bg-[#02122C]/50"
+            className="absolute inset-0 cursor-default bg-overlay/50"
           />
           {/* Panel */}
           <motion.div
@@ -187,70 +184,42 @@ export default function PersonaPopup({ open, persona, onClose }: PersonaPopupPro
                       <p className="font-mono text-label text-text-primary">
                         {itemPool.length} 則
                       </p>
-                      <p className="mt-0.5 text-caption text-text-muted">全站情報庫・每日更新</p>
+                      <p className="mt-0.5 text-caption text-text-muted">
+                        全站情報庫・{liveItems ? "即時資料" : "資料快照"}
+                      </p>
                     </li>
                     <li className="rounded-sm border bg-bg px-3 py-2.5">
                       <p className="font-mono text-label text-text-primary">{sourceCount} 個</p>
-                      <p className="mt-0.5 text-caption text-text-muted">情報來源・持續接入</p>
+                      <p className="mt-0.5 text-caption text-text-muted">已收錄情報來源</p>
                     </li>
                   </ul>
                 </section>
               )}
 
-              {/* 領航風格雷達 top 3 — bar 用 scaleX(GPU-only) */}
-              {topRadar.length > 0 && (
+              {/* 方法摘要 — 保留可讀觀察，移除無來源百分比。 */}
+              {methodSummary.length > 0 && (
                 <section>
                   <div className="flex items-center justify-between">
-                    <p className="text-overline text-text-muted">領航風格 Top 3</p>
+                    <p className="text-overline text-text-muted">方法摘要</p>
                     <span
                       aria-hidden="true"
                       className="h-px w-10"
                       style={{ backgroundColor: persona.accent }}
                     />
                   </div>
-                  <ul className="mt-3 flex flex-col gap-2.5">
-                    {topRadar.map((r, i) => (
-                      <li key={r.label}>
-                        <div className="flex items-baseline justify-between gap-3">
-                          <p className="text-caption text-text-primary">{r.label}</p>
-                          <p className="font-mono text-caption text-text-muted">{r.score}</p>
-                        </div>
-                        <div className="mt-1 h-1 overflow-hidden rounded-full bg-ink-soft">
-                          <motion.div
-                            className="h-full w-full origin-left rounded-full"
-                            style={{
-                              backgroundColor: persona.accent,
-                              // reduced-motion:靜態 bar(純 opacity fade),transform 唔動畫
-                              transform: reduced
-                                ? `scaleX(${r.score / 100})`
-                                : undefined,
-                            }}
-                            initial={
-                              reduced
-                                ? { opacity: 0 }
-                                : { opacity: 1, transform: "scaleX(0)" }
-                            }
-                            animate={
-                              reduced
-                                ? { opacity: 1 }
-                                : {
-                                    opacity: 1,
-                                    transform: `scaleX(${r.score / 100})`,
-                                  }
-                            }
-                            transition={{
-                              duration: reduced ? 0.15 : 0.3,
-                              delay: reduced ? 0 : 0.1 + i * 0.06,
-                              ease: EASE_OUT_STRONG,
-                            }}
-                          />
+                  <ul className="mt-3 divide-y border-y">
+                    {methodSummary.map((item, index) => (
+                      <li key={item.label} className="grid grid-cols-[2rem_1fr] gap-3 py-3">
+                        <span className="font-mono text-caption text-ink">
+                          {String(index + 1).padStart(2, "0")}
+                        </span>
+                        <div>
+                          <p className="text-caption font-medium text-text-primary">{item.label}</p>
+                          <p className="mt-1 text-caption text-text-muted">{item.note}</p>
                         </div>
                       </li>
                     ))}
                   </ul>
-                  <p className="mt-2 text-caption text-text-muted">
-                    編輯部風格評估,非精確測量
-                  </p>
                 </section>
               )}
 

@@ -44,6 +44,7 @@ import { EASE_OUT_STRONG } from "@/components/Reveal";
 import { captureWaitlist } from "@/lib/waitlist";
 import { cn } from "@/lib/utils";
 import { getTurnstileToken } from "@/lib/turnstile";
+import useModalDialog from "@/hooks/useModalDialog";
 
 /** 訪客第 3 條訊息後嘅註冊捕捉卡 — dismiss 改 snooze(7 日後可再出一次) */
 const CAPTURE_DISMISS_KEY = "aigro-ask-capture-dismissed";
@@ -176,6 +177,11 @@ export default function Ask() {
   const [clubCaptureOpen, setClubCaptureOpen] = useState(false);
   // G10:<lg sessions drawer
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const closeSessionsDrawer = useCallback(() => setDrawerOpen(false), []);
+  const {
+    dialogRef: sessionsDialogRef,
+    triggerRef: sessionsTriggerRef,
+  } = useModalDialog(drawerOpen, closeSessionsDrawer);
 
   // 限時開放:對話額度無限 — 額度用盡升級態暫時 unreachable(保留程式碼)
   const exhausted = false;
@@ -576,9 +582,12 @@ export default function Ask() {
           })}
           {/* G10:<lg sessions drawer 觸發(內容 = PersonaPanel 嘅對話紀錄部分) */}
           <button
+            ref={sessionsTriggerRef}
             type="button"
             onClick={() => setDrawerOpen(true)}
             aria-label="打開對話紀錄"
+            aria-expanded={drawerOpen}
+            aria-controls="ask-sessions-drawer"
             title="對話紀錄"
             className="press ml-auto flex shrink-0 items-center gap-1.5 rounded-sm border px-2.5 py-1.5 text-caption text-text-secondary transition-colors duration-150 hover:bg-card"
           >
@@ -656,8 +665,10 @@ export default function Ask() {
                 >
                   <div className="overflow-hidden rounded-md border">
                     <img
-                      src="/editorial/ask-ambience.png"
+                      src="/editorial/optimized/ask-ambience.jpg"
                       alt="私人對話室 — 兩椅一燈嘅靜謐空間,寓意同 AI 分身嘅單對單對話"
+                      width={953}
+                      height={1459}
                       loading="lazy"
                       className="aspect-[2/3] w-full object-cover"
                     />
@@ -968,14 +979,19 @@ export default function Ask() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              onClick={() => setDrawerOpen(false)}
+              onClick={closeSessionsDrawer}
               className="fixed inset-0 z-40 bg-ink-solid/30 lg:hidden"
+              data-modal-companion
               aria-hidden="true"
             />
             <motion.div
+              ref={sessionsDialogRef}
               key="drawer-panel"
+              id="ask-sessions-drawer"
               role="dialog"
+              aria-modal="true"
               aria-label="對話紀錄"
+              tabIndex={-1}
               initial={reduced ? { opacity: 0 } : { opacity: 0, transform: "translateX(-16px)" }}
               animate={{ opacity: 1, transform: "translateX(0px)" }}
               exit={reduced ? { opacity: 0 } : { opacity: 0, transform: "translateX(-16px)" }}
@@ -986,9 +1002,10 @@ export default function Ask() {
                 <p className="text-label text-text-primary">{persona.name}</p>
                 <button
                   type="button"
-                  onClick={() => setDrawerOpen(false)}
+                  onClick={closeSessionsDrawer}
                   aria-label="關閉對話紀錄"
-                  className="press flex h-8 w-8 items-center justify-center rounded-sm border border-border-strong text-text-secondary hover:bg-card hover:text-ink"
+                  data-dialog-initial-focus
+                  className="press flex h-11 w-11 items-center justify-center rounded-sm border border-border-strong text-text-secondary hover:bg-card hover:text-ink"
                 >
                   <X className="h-4 w-4" strokeWidth={1.5} />
                 </button>
@@ -1000,11 +1017,11 @@ export default function Ask() {
                   activePersona={persona}
                   onSelectSession={(id) => {
                     selectSession(id);
-                    setDrawerOpen(false);
+                    closeSessionsDrawer();
                   }}
                   onNewSession={() => {
                     newSession();
-                    setDrawerOpen(false);
+                    closeSessionsDrawer();
                   }}
                 />
               </div>

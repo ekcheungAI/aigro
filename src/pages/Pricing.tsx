@@ -48,7 +48,7 @@ const TIERS: Tier[] = [
   },
   {
     id: "pro",
-    overline: "FOUNDING MEMBER — 最受歡迎 MOST POPULAR",
+    overline: "FOUNDING MEMBER",
     name: "創始會員",
     monthly: 168,
     yearly: 140,
@@ -56,8 +56,8 @@ const TIERS: Tier[] = [
     tagline: "俾認真嘅 marketer 同 founder。",
     features: [
       "無限分身對話",
-      "完整案例拆解",
-      "MCP 優先接入",
+      "案例上架後解鎖完整拆解",
+      "MCP 開放時優先通知",
       "專家活動優先席",
     ],
     ctaLabel: "成為創始會員",
@@ -115,9 +115,9 @@ const COMPARE_ROWS: { label: string; cells: [CellValue, CellValue, CellValue] }[
   {
     label: "案例完整拆解",
     cells: [
-      { kind: "text", value: "摘要" },
-      { kind: "check" },
-      { kind: "check" },
+      { kind: "text", value: "尚未上架" },
+      { kind: "text", value: "上架後開放" },
+      { kind: "text", value: "上架後開放" },
     ],
   },
 ];
@@ -127,7 +127,7 @@ const COMPARE_ROWS: { label: string; cells: [CellValue, CellValue, CellValue] }[
 const FAQS = [
   {
     q: "AI 分身嘅回答可靠嗎？",
-    a: "每個分身基於導師授權知識庫，回答附觀點出處；信心分數低於 0.6 時系統會建議預約真人導師。",
+    a: "每個分身基於導師授權知識庫；命中已批准知識時會附觀點出處，資料不足時會清楚標示，並建議向真人專家核實。",
   },
   {
     q: "VIP 嘅真人預約點安排？",
@@ -209,10 +209,10 @@ function TierCard({ tier, billing, counted, onCounted }: TierCardProps) {
       </p>
       <h3 className="mt-2 font-display text-h3 text-text-primary">{tier.name}</h3>
 
-      {/* 創始會員限定徽章 — 首批 100 席,lime pill */}
+      {/* 創始版本狀態 — 無虛假稀缺或未驗證人氣標籤 */}
       {isPro && (
         <p className="mt-3 inline-flex w-fit items-center rounded-full bg-lime-soft px-2.5 py-1 text-caption text-ink">
-          首批 100 席 · 永久鎖定創始價
+          創始版本 · 開放前可先登記
         </p>
       )}
 
@@ -253,7 +253,7 @@ function TierCard({ tier, billing, counted, onCounted }: TierCardProps) {
         className={cn(
           "group mt-8 inline-flex h-11 w-full items-center justify-center gap-2 rounded-md text-label press",
           isVip || isPro
-            ? "bg-ink-solid text-white hover:bg-ink-hover"
+            ? "bg-ink-solid text-on-accent hover:bg-ink-hover"
             : "border border-border-strong text-ink hover:bg-ink-soft"
         )}
       >
@@ -329,43 +329,53 @@ export default function Pricing() {
   return (
     <>
       {/* ---------- Section 1 — Page Header ---------- */}
-      <section className="mx-auto max-w-container px-6 pt-24 text-center">
+      <section className="relative isolate overflow-hidden border-b border-band-border bg-band-bg text-center">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
+          <img
+            src="/editorial/thumbnails/market-signals.jpg"
+            alt=""
+            width={1586}
+            height={992}
+            className="h-full w-full object-cover opacity-30"
+          />
+          <span className="absolute inset-0 bg-band-bg/65" />
+        </div>
+        <div className="mx-auto max-w-container px-6 py-16 md:py-20">
         <Reveal>
-          <p className="flex items-center justify-center gap-3 text-overline uppercase text-text-muted">
-            <span className="inline-block h-px w-6 bg-border-strong" aria-hidden="true" />
+          <p className="flex items-center justify-center gap-3 text-overline uppercase text-band-text-muted">
+            <span className="inline-block h-px w-6 bg-band-border-strong" aria-hidden="true" />
             Pricing 方案
-            <span className="inline-block h-px w-6 bg-border-strong" aria-hidden="true" />
+            <span className="inline-block h-px w-6 bg-band-border-strong" aria-hidden="true" />
           </p>
         </Reveal>
         <Reveal delay={0.1}>
-          <h1 className="mt-4 font-display text-display text-text-primary">
-            值得信賴嘅情報，值得嘅價錢
+          <h1 className="mt-4 font-display text-display text-band-text">
+            情報免費讀；會員解鎖專家分身
           </h1>
         </Reveal>
         <Reveal delay={0.2}>
-          <p className="mx-auto mt-4 max-w-xl text-body-lg text-text-secondary">
-            每日情報同 AI 對話免費任你用；創始會員解鎖專家分身、完整案例拆解 —
-            用過先決定，隨時取消。
+          <p className="mx-auto mt-4 max-w-xl text-body-lg text-band-text-secondary">
+            基本情報與 AI 編輯部免費使用；創始會員用授權專家分身深入追問，
+            新功能按實際開放狀態逐步加入。
           </p>
         </Reveal>
         <Reveal delay={0.3}>
           <div
-            className="mt-8 inline-flex rounded-md border bg-surface p-1"
-            role="tablist"
+            className="mt-8 inline-flex rounded-md border border-band-border-strong bg-band-bg p-1"
+            role="group"
             aria-label="收費模式"
           >
             {(["monthly", "yearly"] as const).map((mode) => (
               <button
                 key={mode}
                 type="button"
-                role="tab"
-                aria-selected={billing === mode}
+                aria-pressed={billing === mode}
                 onClick={() => setBilling(mode)}
                 className={cn(
-                  "rounded-sm px-4 py-2 text-label transition-colors duration-150",
+                  "min-h-11 rounded-sm px-4 py-2 text-label transition-colors duration-150",
                   billing === mode
-                    ? "bg-ink-soft text-ink"
-                    : "text-text-secondary hover:text-ink"
+                      ? "bg-band-ink-soft text-band-ink"
+                      : "text-band-text-secondary hover:text-band-ink"
                 )}
               >
                 {mode === "monthly" ? "月費" : "年費（慳 2 個月）"}
@@ -373,10 +383,20 @@ export default function Pricing() {
             ))}
           </div>
         </Reveal>
+        <Reveal delay={0.35}>
+          <a
+            href="#founding-plan"
+            className="press mt-4 inline-flex min-h-11 items-center gap-2 rounded-md px-3 text-label text-band-ink md:hidden"
+          >
+            查看創始會員 HK$168/月
+            <ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+          </a>
+        </Reveal>
+        </div>
       </section>
 
       {/* ---------- Section 2 — 方案卡格（金色僅 VIP 欄） ---------- */}
-      <section className="mx-auto max-w-container px-6 py-24">
+      <section className="mx-auto max-w-container px-6 py-16 md:py-24">
         <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-3">
           {TIERS.map((tier, i) => (
             <Reveal key={tier.id} delay={i * 0.1}>

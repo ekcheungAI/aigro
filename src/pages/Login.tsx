@@ -17,7 +17,7 @@ import { supabase, supabaseReady } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 
 const BENEFITS = [
-  { icon: MessagesSquare, title: "無限分身對話", desc: "領航專家 AI 分身,隨時問隨時答" },
+  { icon: MessagesSquare, title: "無限分身對話", desc: "領航專家 AI 分身，隨時問隨時答" },
   { icon: NotebookText, title: "完整案例拆解", desc: "數據、方法、可複製步驟全部公開" },
   { icon: Plug, title: "MCP 優先接入", desc: "AIGRO MCP Network 名單優先開放" },
 ] as const;
@@ -67,7 +67,7 @@ export default function Login() {
       });
       if (error) {
         setState("idle");
-        setErrors((prev) => ({ ...prev, password: "Email 或密碼唔啱,請再試" }));
+        setErrors((prev) => ({ ...prev, password: "Email 或密碼唔啱，請再試" }));
         return;
       }
       setState("success");
@@ -75,7 +75,7 @@ export default function Login() {
       window.setTimeout(() => navigate("/account"), 700);
     } catch {
       setState("idle");
-      showToast("登入失敗,請稍後再試");
+      showToast("登入失敗，請稍後再試");
     }
   };
 
@@ -98,7 +98,7 @@ export default function Login() {
           : `重設密碼連結已發送至 ${email.trim()}`
       );
     } catch {
-      showToast("發送失敗,請稍後再試");
+      showToast("發送失敗，請稍後再試");
     }
     setResetSending(false);
   };
@@ -119,7 +119,7 @@ export default function Login() {
     setLinkSending(false);
     if (res.ok) {
       setLinkSent(true);
-      showToast("連結已發送,去你嘅信箱click 連結登入");
+      showToast("連結已發送，去你嘅信箱 click 連結登入");
     } else {
       showToast(`發送失敗:${res.error ?? "請稍後再試"}`);
     }
@@ -137,19 +137,19 @@ export default function Login() {
         <div className="relative flex flex-col justify-between gap-10 overflow-hidden bg-band-bg p-8 text-band-text md:p-10">
           {/* 會員沙龍品牌圖 — cover + 40% black overlay 保文字對比 */}
           <img
-            src="/editorial/login-salon.png"
+            src="/editorial/thumbnails/hong-kong-adoption.jpg"
             alt=""
             aria-hidden="true"
             className="pointer-events-none absolute inset-0 h-full w-full object-cover"
           />
-          <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-black/40" />
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-band-bg/75" />
           <div className="relative">
             <p className="text-overline uppercase tracking-[0.12em] text-band-ink">
               AIGRO Club
             </p>
             <h2 className="mt-3 font-display text-h2 text-band-text">會員專區</h2>
             <p className="mt-3 text-body-sm text-band-text-secondary">
-              加入香港 AI × Growth 圈,情報、分身、案例一次解鎖。
+              加入香港 AI × Growth 圈，情報、分身、案例一次解鎖。
             </p>
           </div>
           <ul className="relative flex flex-col gap-5">
@@ -263,7 +263,7 @@ export default function Login() {
               {linkSending
                 ? "發送中…"
                 : linkSent
-                  ? "連結已發送,去你嘅信箱"
+                  ? "連結已發送，去你嘅信箱"
                   : "用 Email 連結登入"}
             </button>
           </form>

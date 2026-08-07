@@ -42,6 +42,14 @@ function toDailyInfo(d: Date): DailyInfo {
   };
 }
 
+/** 指定 YYYY-MM-DD 嘅刊期資訊；無效日期回落今日。 */
+export function dailyInfoForDate(date: string): DailyInfo {
+  const [year, month, day] = date.split("-").map(Number);
+  if (!year || !month || !day) return todayInfo();
+  const parsed = new Date(year, month - 1, day);
+  return Number.isNaN(parsed.getTime()) ? todayInfo() : toDailyInfo(parsed);
+}
+
 /** 今日嘅日報資訊 */
 export function todayInfo(): DailyInfo {
   return toDailyInfo(new Date());

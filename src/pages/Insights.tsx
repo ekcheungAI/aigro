@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -51,6 +51,7 @@ import {
   type TopicGroup,
 } from "@/data/topics";
 import { cn } from "@/lib/utils";
+import useDataFreshness from "@/hooks/useDataFreshness";
 
 /* ============ Tabs ============ */
 
@@ -329,7 +330,7 @@ function FeedTab() {
   return (
     <>
       {/* 工具列：精選/全部動態 + 搜尋 + 分類 chips + 計數 */}
-      <section className="mx-auto max-w-container px-6 pt-12">
+      <section className="mx-auto max-w-container px-6 pt-4 md:pt-12">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
           <div
             className="flex items-center rounded-md border bg-surface p-1"
@@ -360,7 +361,10 @@ function FeedTab() {
           <form
             className="flex min-w-[200px] flex-1 items-center gap-2 sm:max-w-[360px]"
             role="search"
-            onSubmit={(e) => e.preventDefault()}
+            onSubmit={(e) => {
+              e.preventDefault();
+              updateParams({ q: query.trim() || null });
+            }}
           >
             <div className="relative flex-1">
               <Search
@@ -385,7 +389,7 @@ function FeedTab() {
             </button>
           </form>
 
-          <span className="ml-auto flex flex-wrap items-center gap-x-3 gap-y-2">
+          <span className="ml-auto hidden flex-wrap items-center gap-x-3 gap-y-2 md:flex">
             <UpdatedChip />
             <span className="font-mono text-caption text-text-muted">
               已載入 {filtered.length} 則{mode === "selected" ? "精選" : "動態"}
@@ -394,7 +398,7 @@ function FeedTab() {
         </div>
 
         <div
-          className="mt-4 flex flex-wrap items-center gap-2"
+          className="scrollbar-none mt-4 flex flex-nowrap items-center gap-2 overflow-x-auto pb-1 md:flex-wrap md:overflow-visible md:pb-0"
           role="group"
           aria-label="分類篩選"
         >
@@ -430,7 +434,10 @@ function FeedTab() {
                 </p>
                 <button
                   type="button"
-                  onClick={() => setQuery("")}
+                  onClick={() => {
+                    setQuery("");
+                    updateParams({ q: null });
+                  }}
                   className="press mt-4 inline-flex h-11 items-center rounded-md border border-border-strong px-6 text-label text-ink hover:bg-ink-soft"
                 >
                   清除搜尋
@@ -451,7 +458,7 @@ function FeedTab() {
               </>
             ) : (
               <p className="text-body-sm text-text-muted">
-                暫無情報 — 數據同步中,稍後再試。
+                暫無情報 — 數據同步中，稍後再試。
               </p>
             )}
           </div>
@@ -575,6 +582,8 @@ function TopicLogoTile({ topic }: { topic: TopicDef }) {
         <img
           src={`https://cdn.simpleicons.org/${topic.logo}/000000`}
           alt=""
+          width={24}
+          height={24}
           loading="lazy"
           onError={() => setLogoFailed(true)}
           className="h-6 w-6 dark:invert"
@@ -692,7 +701,7 @@ function HotSignalsSection() {
             </span>
           </div>
           <p className="mt-1 text-caption text-text-secondary">
-            編輯部追蹤中嘅熱門話題,按訊號強度排列 — 數字為覆蓋該話題嘅來源數。
+            編輯部追蹤中嘅熱門話題，按訊號強度排列 — 數字為覆蓋該話題嘅來源數。
           </p>
         </div>
       </Reveal>
@@ -789,7 +798,7 @@ function TopicMapView() {
           AI 主題地圖
         </h2>
         <p className="mt-3 max-w-[640px] text-body-sm text-text-secondary">
-          先看最新焦點,再按公司、技術同內容類型追蹤 {TOPIC_TOTAL} 個主題 —
+          先看最新焦點，再按公司、技術同內容類型追蹤 {TOPIC_TOTAL} 個主題 —
           每張卡直達主題閱讀 view（日期分組嘅過濾 feed）。
         </p>
       </Reveal>
@@ -1049,12 +1058,14 @@ function WeeklyTab() {
             className="pointer-events-none absolute inset-0 -z-10 select-none"
           >
             <img
-              src="/editorial/daily-masthead.png"
+              src="/editorial/optimized/daily-masthead.jpg"
               alt=""
+              width={1905}
+              height={1094}
               loading="lazy"
               className="h-full w-full object-cover"
             />
-            <span className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/30" />
+            <span className="absolute inset-0 bg-black/70" />
           </div>
           <div className="px-8 py-10 max-md:px-6 max-md:py-8">
             <p className="flex items-center gap-3 text-overline font-sans uppercase text-white/70">
@@ -1066,8 +1077,8 @@ function WeeklyTab() {
             </p>
             <h2 className="mt-4 font-display text-h2 text-white">每週回顧</h2>
             <p className="mt-3 max-w-[640px] text-body-sm text-white/80">
-              一週 AI 脈搏,一次過睇晒 — 編輯部從本週 {weekly.itemCount}{" "}
-              則情報揀出 {(lead ? 1 : 0) + weekly.items.length} 條必讀,按分類分組。
+              一週 AI 脈搏，一次過睇晒 — 編輯部從本週 {weekly.itemCount}{" "}
+              則情報揀出 {(lead ? 1 : 0) + weekly.items.length} 條必讀，按分類分組。
             </p>
             <p className="mt-3 font-mono text-caption text-white/60">
               {weekly.weekStart} – {weekly.weekEnd} · 週一至週日
@@ -1087,7 +1098,7 @@ function WeeklyTab() {
         >
           {groups.map((g, gi) => (
             <a
-              key={g.category}
+              key={`${g.category}-${gi}`}
               href={`#weekly-sec-${gi}`}
               className="press rounded-sm border px-3 py-1.5 font-mono text-caption text-text-secondary transition-colors duration-150 hover:border-ink hover:text-ink"
             >
@@ -1153,7 +1164,7 @@ function WeeklyTab() {
       {/* 分類小標編號列表 */}
       {groups.map((g, gi) => (
         <section
-          key={g.category}
+          key={`${g.category}-${gi}`}
           id={`weekly-sec-${gi}`}
           className="mt-12 scroll-mt-24"
         >
@@ -1302,8 +1313,10 @@ function SectorEmptyState({ sector }: { sector: SectorDef }) {
     <section className="mx-auto flex max-w-container flex-col items-center px-6 py-24 text-center max-md:py-16">
       <Reveal y={20} duration={0.45}>
         <img
-          src="/editorial/sector-printing.png"
+          src="/editorial/optimized/sector-printing.jpg"
           alt={`${sector.name}情報整緊插畫`}
+          width={1429}
+          height={972}
           loading="lazy"
           className="w-full max-w-sm rounded-md"
         />
@@ -1318,7 +1331,7 @@ function SectorEmptyState({ sector }: { sector: SectorDef }) {
       </Reveal>
       <Reveal y={20} duration={0.45} delay={0.16}>
         <p className="mt-4 max-w-[520px] text-body-sm text-text-secondary">
-          我哋正籌備呢個行業嘅情報網 — 登記優先名單,開放時第一批通知你。
+          我哋正籌備呢個行業嘅情報網 — 登記優先名單，開放時第一批通知你。
         </p>
       </Reveal>
       <Reveal y={20} duration={0.45} delay={0.24}>
@@ -1360,6 +1373,7 @@ function SectorEmptyState({ sector }: { sector: SectorDef }) {
  */
 export default function Insights() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { isLive, isArchive } = useDataFreshness();
   const tabParam = searchParams.get("tab");
   const tab: TabKey =
     tabParam && TAB_KEYS.includes(tabParam) ? (tabParam as TabKey) : "feed";
@@ -1372,6 +1386,7 @@ export default function Insights() {
       : "ai";
   /** greyed 行業點擊後嘅靜態 waitlist 提示（唔導航） */
   const [sectorNotice, setSectorNotice] = useState<SectorKey | null>(null);
+  const [mobileSectorsOpen, setMobileSectorsOpen] = useState(false);
 
   const selectTab = (key: TabKey) => {
     // tab 切換都清走 transient 行業提示(唔俾 Beauty 提示殘留)
@@ -1379,9 +1394,36 @@ export default function Insights() {
     setSearchParams(key === "feed" ? {} : { tab: key });
   };
 
+  const onTabKeyDown = (
+    event: ReactKeyboardEvent<HTMLButtonElement>,
+    current: TabKey
+  ) => {
+    const currentIndex = TABS.findIndex((item) => item.key === current);
+    let nextIndex = currentIndex;
+    if (event.key === "ArrowRight") nextIndex = (currentIndex + 1) % TABS.length;
+    else if (event.key === "ArrowLeft") nextIndex = (currentIndex - 1 + TABS.length) % TABS.length;
+    else if (event.key === "Home") nextIndex = 0;
+    else if (event.key === "End") nextIndex = TABS.length - 1;
+    else return;
+
+    event.preventDefault();
+    const next = TABS[nextIndex];
+    selectTab(next.key);
+    window.requestAnimationFrame(() => {
+      document.getElementById(`insights-tab-${next.key}`)?.focus();
+    });
+  };
+
   const selectSector = (key: SectorKey) => {
     const def = SECTORS.find((s) => s.key === key);
     if (!def) return;
+    if (key === "more") {
+      setMobileSectorsOpen((open) => {
+        setSectorNotice(null);
+        return !open;
+      });
+      return;
+    }
     if (key === sector) {
       // 已喺呢個行業(例如撳返 AI)— 清除任何 transient 提示
       setSectorNotice(null);
@@ -1401,26 +1443,25 @@ export default function Insights() {
 
   return (
     <>
-      {/* Page Header — cinematic dark band: insights-hero editorial image layer
-          (opacity-45,無濾鏡改色) + solid band overlay, band text tokens. Theme-
-          independent (band tokens fixed near-black in both themes). */}
+      {/* Page Header — theme-aware editorial band using the approved growth
+          thumbnail family and solid contrast overlay. */}
       <section className="relative isolate overflow-hidden border-b border-band-border bg-band-bg">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 -z-10 select-none"
         >
           <img
-            src="/editorial/insights-hero.png"
+            src="/editorial/thumbnails/growth-loop.jpg"
             alt=""
-            className="h-full w-full object-cover opacity-45"
+            className="h-full w-full object-cover opacity-30"
           />
           <span className="absolute inset-0 bg-band-bg/60" />
         </div>
         {/* 緊湊刊頭（~150px）：桌面左標題右副題一行排列，py 收緊、H1 由 display 降至 h2 */}
-        <div className="mx-auto flex max-w-container flex-col gap-4 px-6 py-10 max-md:py-8 md:flex-row md:items-end md:justify-between">
+        <div className="mx-auto flex max-w-container flex-col gap-4 px-6 py-5 md:flex-row md:items-end md:justify-between md:py-10">
           <div>
             <Reveal y={24}>
-              <p className="flex items-center gap-3 text-overline font-sans uppercase text-band-text-muted">
+              <p className="hidden items-center gap-3 text-overline font-sans uppercase text-band-text-muted md:flex">
                 <span
                   className="inline-block h-px w-6 bg-band-border-strong"
                   aria-hidden="true"
@@ -1429,18 +1470,22 @@ export default function Insights() {
               </p>
             </Reveal>
             <Reveal y={24} delay={0.1}>
-              <h1 className="mt-3 font-display text-h2 text-band-text">
+              <h1 className="mt-0 font-display text-h3 text-band-text md:mt-3 md:text-h2">
                 資訊中心 <span className="text-band-ink">Intelligence Hub</span>
               </h1>
             </Reveal>
           </div>
           <Reveal y={24} delay={0.2}>
-            <div className="md:max-w-[360px] md:text-right">
+            <div className="hidden md:block md:max-w-[360px] md:text-right">
               <p className="text-body-sm text-band-text-secondary">
-                由 AI 開始,逐個行業建起情報網 — 你嘅 AI 工具值得每個行業嘅雷達。
+                由 AI 開始，逐個行業建起情報網 — 你嘅 AI 工具值得每個行業嘅雷達。
               </p>
               <p className="mt-2 text-caption text-band-text-muted">
-                香港繁體整理 · 每 30 分鐘同步
+                {isLive
+                  ? "香港繁體整理 · 每 30 分鐘同步"
+                  : isArchive
+                    ? "香港繁體整理 · 歷史資料快照"
+                    : "香港繁體整理 · 資料快照"}
               </p>
             </div>
           </Reveal>
@@ -1448,9 +1493,9 @@ export default function Insights() {
       </section>
 
       {/* Sector switcher — 多行業情報網入口（AI 先發 live;其餘 greyed 即將推出） */}
-      <section className="mx-auto max-w-container px-6 pt-12">
+      <section className="mx-auto max-w-container px-6 pt-4 md:pt-12">
         <Reveal y={16} duration={0.4}>
-          <p className="flex items-center gap-3 text-overline font-sans uppercase text-text-muted">
+          <p className="hidden items-center gap-3 text-overline font-sans uppercase text-text-muted md:flex">
             <span
               className="inline-block h-px w-6 bg-border-strong"
               aria-hidden="true"
@@ -1459,7 +1504,8 @@ export default function Insights() {
           </p>
         </Reveal>
         <div
-          className="mt-5 flex flex-wrap items-stretch gap-3"
+          id="sector-options"
+          className="scrollbar-none mt-0 flex snap-x snap-mandatory items-stretch gap-3 overflow-x-auto pb-2 md:mt-5 md:flex-wrap md:overflow-visible md:pb-0"
           role="group"
           aria-label="選擇行業"
         >
@@ -1474,7 +1520,7 @@ export default function Insights() {
                   onClick={() => selectSector(s.key)}
                   aria-pressed={isActive}
                   className={cn(
-                    "press inline-flex items-center gap-2.5 rounded-md border px-4 py-3 text-label transition-colors duration-150",
+                    "press inline-flex shrink-0 snap-start items-center gap-2.5 rounded-md border px-4 py-3 text-label transition-colors duration-150",
                     isActive
                       ? "border-transparent bg-ink-solid text-on-accent"
                       : "border-border-strong bg-surface text-ink hover:border-ink"
@@ -1503,7 +1549,7 @@ export default function Insights() {
                         : "bg-ink-soft text-ink"
                     )}
                   >
-                    Live
+                    {isLive ? "Live" : isArchive ? "歷史快照" : "已開放"}
                   </span>
                 </button>
               );
@@ -1514,10 +1560,12 @@ export default function Insights() {
                 key={s.key}
                 type="button"
                 onClick={() => selectSector(s.key)}
-                aria-disabled="true"
                 aria-pressed={isActive}
+                aria-expanded={s.key === "more" ? mobileSectorsOpen : undefined}
+                aria-controls={s.key === "more" ? "sector-options" : undefined}
                 className={cn(
-                  "press inline-flex items-center gap-2.5 rounded-md border border-dashed px-4 py-3 text-label transition-[color,opacity] duration-150",
+                  "press inline-flex shrink-0 snap-start items-center gap-2.5 rounded-md border border-dashed px-4 py-3 text-label transition-[color,opacity] duration-150",
+                  s.key !== "more" && !mobileSectorsOpen && "hidden",
                   isActive
                     ? "border-border-strong bg-surface text-text-secondary"
                     : "border-border-strong text-text-muted opacity-60 hover:text-text-secondary hover:opacity-100"
@@ -1537,9 +1585,13 @@ export default function Insights() {
                     aria-hidden="true"
                   />
                 )}
-                {s.name}
+                {s.key === "more"
+                  ? mobileSectorsOpen
+                    ? "收起行業路線圖"
+                    : "行業路線圖"
+                  : s.name}
                 <span className="rounded-sm border border-current px-1.5 py-0.5 text-overline font-sans">
-                  情報即將推出
+                  {s.key === "more" ? "規劃" : "情報即將推出"}
                 </span>
               </button>
             );
@@ -1549,9 +1601,9 @@ export default function Insights() {
         {sectorNotice && sectorNotice !== sector && (
           <p className="mt-4 text-caption text-text-muted">
             {SECTORS.find((s) => s.key === sectorNotice)?.name}情報整緊 —
-            想第一批收到?
+            想第一批收到？
             <Link
-              to="/developers"
+              to={`/developers?sector=${sectorNotice}`}
               className="ml-1 text-ink underline decoration-border-strong underline-offset-4 transition-colors duration-150 hover:decoration-ink"
             >
               登記優先名單
@@ -1566,19 +1618,23 @@ export default function Insights() {
       ) : (
         <>
           {/* Tab bar — sticky 於導航之下，髮絲線底邊 */}
-          <div className="sticky top-16 z-40 mt-10 border-b bg-bg">
+          <div className="sticky top-16 z-40 mt-4 border-b bg-bg md:mt-10">
             <div
-              className="mx-auto flex max-w-container items-center gap-6 overflow-x-auto px-6"
+              className="scrollbar-none mx-auto flex max-w-container items-center gap-6 overflow-x-auto px-6"
               role="tablist"
               aria-label="資訊中心分頁"
             >
               {TABS.map((t) => (
                 <button
                   key={t.key}
+                  id={`insights-tab-${t.key}`}
                   type="button"
                   role="tab"
                   aria-selected={tab === t.key}
+                  aria-controls={`insights-panel-${t.key}`}
+                  tabIndex={tab === t.key ? 0 : -1}
                   onClick={() => selectTab(t.key)}
+                  onKeyDown={(event) => onTabKeyDown(event, t.key)}
                   className={cn(
                     "press relative shrink-0 py-3 text-label transition-colors duration-150",
                     tab === t.key
@@ -1586,7 +1642,13 @@ export default function Insights() {
                       : "text-text-secondary hover:text-ink"
                   )}
                 >
-                  {t.label}
+                  {isArchive && t.key === "feed"
+                    ? "情報存檔"
+                    : isArchive && t.key === "daily"
+                      ? "日報存檔"
+                      : isArchive && t.key === "weekly"
+                        ? "週報存檔"
+                        : t.label}
                   {tab === t.key && (
                     <motion.span
                       layoutId="insights-tab-underline"
@@ -1600,18 +1662,18 @@ export default function Insights() {
           </div>
 
           {/* Tab 內容（key remount：切換時重播進場 reveal） */}
-          <div key={tab}>
+          <div
+            key={tab}
+            id={`insights-panel-${tab}`}
+            role="tabpanel"
+            aria-labelledby={`insights-tab-${tab}`}
+            tabIndex={0}
+          >
             {tab === "feed" && <FeedTab />}
             {tab === "daily" && <DailyContent embedded />}
             {tab === "weekly" && <WeeklyTab />}
             {tab === "topics" && <TopicsTab />}
-            {tab === "data" && (
-              /* /data 併入 — DataPartnership 內容原封不動,僅外包一層
-                 tab 容器收緊頂部間距(原頁面 pt-24 為獨立頁設計) */
-              <div className="[&>section:first-child]:pt-16 [&>section:first-child]:max-md:pt-12">
-                <DataPartnership />
-              </div>
-            )}
+            {tab === "data" && <DataPartnership embedded />}
           </div>
         </>
       )}

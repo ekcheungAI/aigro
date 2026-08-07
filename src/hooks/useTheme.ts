@@ -12,14 +12,13 @@ function getInitialTheme(): Theme {
   } catch {
     /* localStorage unavailable */
   }
-  return window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? "dark"
-    : "light";
+  return "light";
 }
 
 /**
  * Class-based dark mode (`.dark` on <html>), persisted to localStorage,
- * defaults to system preference (design.md §7).
+ * defaults to the brand's preferred light experience while preserving any
+ * explicit visitor choice in localStorage.
  */
 export function useTheme() {
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
