@@ -35,7 +35,7 @@ entry only for that role.
 | Backend readiness monitor | Live | Admin-only RPC reports Cron, Vault presence, private Storage, corpus/persona/booking counts and feature flags without returning secret values |
 | Content management | Live | Real `items` review/publish controls |
 | Sources | Beta | Source CRUD works; MCP output is not built |
-| Experts | Beta | Reads are real; create/edit still has local-only controls |
+| Experts | Beta | Create/edit/Verified status and audit are persisted; public directory still uses verified static profiles and AI provider rollout remains blocked |
 | Members | Live | Profiles/access data and protected role/tier mutation |
 | CRM | Beta | Real leads, atomic chat scoring, audited stage RPC; new flow depends on blocked AI chat |
 | Engagement | Beta | Real conversation/message reads; new visitor chat flow is blocked |
@@ -89,6 +89,18 @@ until the external chat configuration below is complete.
 3. The upstream key and Supabase server key are GitHub secrets; neither remains
    in repository code or the browser bundle.
 4. The workflow runs a production read-path/function-guard audit after sync.
+
+### Expert profile lifecycle
+
+1. Master Admin creates a draft through `upsert_admin_expert`; nothing is kept
+   only in browser storage.
+2. The same transaction persists editable `experts` fields, synchronizes the
+   public `expert_profiles` headline/bio and writes an audit event.
+3. Verified profile status is separate from CMS/RAG/booking flags, so publishing
+   an editorial profile cannot accidentally enable an untested AI pipeline.
+4. The public directory still uses the curated static profile set as its
+   verified presentation layer; replacing that layer with fully dynamic profile
+   rendering remains a Beta item.
 
 ## External configuration still required
 

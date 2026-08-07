@@ -1,0 +1,52 @@
+import { describe, expect, it } from "vitest";
+import { adminExpertToView, type AdminExpertRecord } from "@/lib/adminExperts";
+
+const row: AdminExpertRecord = {
+  id: "10000000-0000-0000-0000-000000000001",
+  slug: "new-teacher",
+  display_name: "New Teacher",
+  name_en: "New Teacher",
+  name_zh: "新導師",
+  title: "增長導師",
+  bio: "真實簡介",
+  brand_color: "#466A5E",
+  specialties: ["增長"],
+  quote: "先做再學",
+  credential: "創辦人",
+  verified: false,
+  radar: [{ label: "實戰", score: 88, note: "重視落地" }],
+  traits: ["務實"],
+  status: "draft",
+};
+
+describe("admin expert records", () => {
+  it("turns a database draft into the existing expert editor shape", () => {
+    const expert = adminExpertToView(row, []);
+    expect(expert.slug).toBe("new-teacher");
+    expect(expert.nameZh).toBe("新導師");
+    expect(expert.specialties).toEqual(["增長"]);
+    expect(expert.radar?.[0].score).toBe(88);
+    expect(expert.verified).toBe(false);
+    expect(expert.pendingNote).toContain("Supabase");
+  });
+
+  it("keeps verified static portrait/deep content while database fields override editable copy", () => {
+    const expert = adminExpertToView(
+      { ...row, slug: "existing", verified: true, status: "active", title: "DB title" },
+      [{
+        slug: "existing",
+        nameEn: "Static",
+        nameZh: "靜態",
+        title: "Static title",
+        image: "/portrait.jpg",
+        verified: true,
+        specialties: ["靜態"],
+        heuristics: [{ name: "原則", whenToUse: "測試", example: "例子" }],
+      }]
+    );
+    expect(expert.title).toBe("DB title");
+    expect(expert.image).toBe("/portrait.jpg");
+    expect(expert.heuristics?.[0].name).toBe("原則");
+    expect(expert.pendingNote).toBeUndefined();
+  });
+});

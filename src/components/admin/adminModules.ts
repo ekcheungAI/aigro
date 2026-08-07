@@ -81,7 +81,7 @@ export const ADMIN_MODULES: readonly AdminModule[] = [
     en: "Experts",
     icon: Users,
     status: "beta",
-    betaReason: "建立及編輯導師仍只儲存在瀏覽器，未寫入 experts 後端。",
+    betaReason: "建立、編輯、Verified 狀態同 audit 已接 Supabase；公開目錄仍以核實靜態檔案為主，蒸餾／persona providers 未配置。",
     reviewedAt: REVIEWED_AT,
   },
   {

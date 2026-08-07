@@ -506,37 +506,70 @@ export type Database = {
       }
       experts: {
         Row: {
+          bio: string | null
+          brand_color: string | null
           created_at: string
+          credential: string | null
           display_name: string
           feature_flags: Json
           id: string
+          name_en: string | null
+          name_zh: string | null
           owner_user_id: string | null
           published_persona_version_id: string | null
+          quote: string | null
+          radar: Json
           slug: string
+          specialties: string[]
           status: string
+          title: string | null
+          traits: string[]
           updated_at: string
+          verified: boolean
         }
         Insert: {
+          bio?: string | null
+          brand_color?: string | null
           created_at?: string
+          credential?: string | null
           display_name: string
           feature_flags?: Json
           id?: string
+          name_en?: string | null
+          name_zh?: string | null
           owner_user_id?: string | null
           published_persona_version_id?: string | null
+          quote?: string | null
+          radar?: Json
           slug: string
+          specialties?: string[]
           status?: string
+          title?: string | null
+          traits?: string[]
           updated_at?: string
+          verified?: boolean
         }
         Update: {
+          bio?: string | null
+          brand_color?: string | null
           created_at?: string
+          credential?: string | null
           display_name?: string
           feature_flags?: Json
           id?: string
+          name_en?: string | null
+          name_zh?: string | null
           owner_user_id?: string | null
           published_persona_version_id?: string | null
+          quote?: string | null
+          radar?: Json
           slug?: string
+          specialties?: string[]
           status?: string
+          title?: string | null
+          traits?: string[]
           updated_at?: string
+          verified?: boolean
         }
         Relationships: [
           {
@@ -1551,6 +1584,25 @@ export type Database = {
       update_lead_stage: {
         Args: { p_lead_id: string; p_stage: string }
         Returns: undefined
+      }
+      upsert_admin_expert: {
+        Args: {
+          p_bio: string
+          p_brand_color: string
+          p_credential: string
+          p_display_name: string
+          p_expert_id: string
+          p_name_en: string
+          p_name_zh: string
+          p_quote: string
+          p_radar: Json
+          p_slug: string
+          p_specialties: string[]
+          p_title: string
+          p_traits: string[]
+          p_verified: boolean
+        }
+        Returns: string
       }
     }
     Enums: {

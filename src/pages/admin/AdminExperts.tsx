@@ -23,12 +23,14 @@ import type {
   AdminLeadRow,
 } from "@/components/admin/adminData";
 import {
-  loadDraftExperts,
-  persistDraftExperts,
   slugifyExpertName,
   uniqueExpertSlug,
 } from "@/components/admin/draftExperts";
-import type { DraftExpertInput } from "@/components/admin/draftExperts";
+import {
+  adminExpertToView,
+  fetchAdminExperts,
+  saveAdminExpert,
+} from "@/lib/adminExperts";
 
 type EditorTab = "基本資料" | "風格與原則" | "知識庫" | "數據 Data" | "線索 CRM" | "活動 Activity" | "發佈";
 const TABS: EditorTab[] = ["基本資料", "風格與原則", "知識庫", "數據 Data", "線索 CRM", "活動 Activity", "發佈"];
@@ -42,6 +44,9 @@ interface ExpertDraft {
   verified: boolean;
   radar: RadarDimension[];
   traits: string[];
+  specialties: string[];
+  quote: string;
+  credential: string;
 }
 
 function toDraft(e: Expert): ExpertDraft {
@@ -54,26 +59,9 @@ function toDraft(e: Expert): ExpertDraft {
     verified: e.verified,
     radar: (e.radar ?? []).map((r) => ({ ...r })),
     traits: [...(e.traits ?? [])],
-  };
-}
-
-/** 草稿 → Expert 形狀,直接混入表格/編輯器渲染(標明「草稿 — 未發佈」) */
-function draftToExpert(d: DraftExpertInput): Expert {
-  return {
-    slug: d.slug,
-    nameEn: d.name,
-    nameZh: "",
-    title: d.credential || "領航導師(草稿)",
-    image: "",
-    verified: false,
-    specialties: d.specialties,
-    quote: d.quote || undefined,
-    brandColor: d.brandColor,
-    credential: d.credential || undefined,
-    kbUpdated: "—",
-    promptVersion: "v0.1(草稿)",
-    pendingNote:
-      "草稿 — 未發佈,只存喺呢個瀏覽器(localStorage)。下一步:接 Supabase experts 後端 + 蒸餾 pipeline,審批通過先可以 Verified 上線。",
+    specialties: [...e.specialties],
+    quote: e.quote ?? "",
+    credential: e.credential ?? "",
   };
 }
 
@@ -355,24 +343,30 @@ function Expert360Tabs({
 
 export default function AdminExperts() {
   const toast = useAdminToast();
+  const {
+    data: expertRows,
+    loading: expertsLoading,
+    error: expertsError,
+    refetch: refetchExperts,
+  } = useAdminQuery(fetchAdminExperts);
   const [openSlug, setOpenSlug] = useState<string | null>(null);
   const [tab, setTab] = useState<EditorTab>("基本資料");
   const [draft, setDraft] = useState<ExpertDraft | null>(null);
   const [newTrait, setNewTrait] = useState("");
+  const [saving, setSaving] = useState(false);
 
-  /* 新增導師草稿 — localStorage 持久化,標明「草稿 — 未發佈」 */
-  const [drafts, setDrafts] = useState<DraftExpertInput[]>(() =>
-    loadDraftExperts()
-  );
   const [createOpen, setCreateOpen] = useState(false);
   const [form, setForm] = useState<CreateForm>(EMPTY_CREATE);
   const [newSpecialty, setNewSpecialty] = useState("");
+  const [createSaving, setCreateSaving] = useState(false);
 
-  const draftExperts = drafts.map(draftToExpert);
-  const allExperts = [...experts, ...draftExperts];
-  const draftSlugs = new Set(drafts.map((d) => d.slug));
+  const allExperts = (expertRows ?? []).map((row) => adminExpertToView(row, experts));
+  const draftSlugs = new Set(
+    (expertRows ?? []).filter((row) => row.status !== "active").map((row) => row.slug)
+  );
 
   const expert = allExperts.find((e) => e.slug === openSlug) ?? null;
+  const expertRecord = (expertRows ?? []).find((row) => row.slug === openSlug) ?? null;
   const expertIsDraft = expert !== null && draftSlugs.has(expert.slug);
 
   const openEditor = (e: Expert, initialTab: EditorTab = "基本資料") => {
@@ -399,29 +393,70 @@ export default function AdminExperts() {
     setCreateOpen(true);
   };
 
-  const saveCreate = () => {
+  const saveCreate = async () => {
     const name = form.name.trim();
     if (!name) {
       toast("請填寫導師姓名");
       return;
     }
-    const taken = [...experts.map((e) => e.slug), ...drafts.map((d) => d.slug)];
+    const taken = (expertRows ?? []).map((row) => row.slug);
     const base = slugifyExpertName(form.slug.trim() || name);
-    const next: DraftExpertInput = {
-      slug: uniqueExpertSlug(base, taken),
-      name,
-      credential: form.credential.trim(),
-      specialties: form.specialties,
-      brandColor: form.brandColor,
-      quote: form.quote.trim(),
-      createdAt: new Date().toISOString().slice(0, 10),
-    };
-    const nextDrafts = [...drafts, next];
-    setDrafts(nextDrafts);
-    persistDraftExperts(nextDrafts);
-    setCreateOpen(false);
-    toast("已建立草稿(未發佈,只存本機)— 下一步:接後端做蒸餾");
-    openEditor(draftToExpert(next), "知識庫");
+    setCreateSaving(true);
+    try {
+      await saveAdminExpert({
+        id: null,
+        slug: uniqueExpertSlug(base, taken),
+        displayName: name,
+        nameEn: name,
+        nameZh: "",
+        title: form.credential.trim(),
+        bio: "",
+        brandColor: form.brandColor,
+        specialties: form.specialties,
+        quote: form.quote.trim(),
+        credential: form.credential.trim(),
+        verified: false,
+        radar: [],
+        traits: [],
+      });
+      setCreateOpen(false);
+      refetchExperts();
+      toast("導師草稿已寫入 Supabase，並記錄 audit event");
+    } catch (error) {
+      toast(`建立失敗:${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setCreateSaving(false);
+    }
+  };
+
+  const saveChanges = async () => {
+    if (!expert || !expertRecord || !draft) return;
+    setSaving(true);
+    try {
+      await saveAdminExpert({
+        id: expertRecord.id,
+        slug: expert.slug,
+        displayName: [draft.nameZh, draft.nameEn].filter(Boolean).join(" "),
+        nameEn: draft.nameEn,
+        nameZh: draft.nameZh,
+        title: draft.title,
+        bio: draft.bio,
+        brandColor: draft.brandColor,
+        specialties: draft.specialties,
+        quote: draft.quote,
+        credential: draft.credential,
+        verified: draft.verified,
+        radar: draft.radar,
+        traits: draft.traits,
+      });
+      refetchExperts();
+      closeEditor();
+      toast("導師資料已同步到 Supabase 同公開 profile，並記錄 audit event");
+    } catch (error) {
+      toast(`儲存失敗:${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -449,7 +484,13 @@ export default function AdminExperts() {
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto rounded-lg border border-border bg-surface">
+      <QueryState
+        loading={expertsLoading}
+        error={expertsError ? `載入失敗:${expertsError}` : null}
+        retry={refetchExperts}
+        skeletonRows={4}
+      >
+      {expertRows && <div className="overflow-x-auto rounded-lg border border-border bg-surface">
         <table className="w-full min-w-[720px] text-left text-sm">
           <thead>
             <tr className="border-b border-border text-xs text-text-muted">
@@ -536,7 +577,8 @@ export default function AdminExperts() {
             ))}
           </tbody>
         </table>
-      </div>
+      </div>}
+      </QueryState>
 
       {/* Editor slide-over */}
       <AdminSlideOver
@@ -554,7 +596,7 @@ export default function AdminExperts() {
         subtitle={
           expert?.credential ??
           (expertIsDraft
-            ? "草稿 · 未發佈 — 只存本機,接後端先會上線"
+            ? "草稿 · 已存 Supabase · 未發佈"
             : "等待邀請確認 · 未完成領航認證")
         }
         width={560}
@@ -745,16 +787,16 @@ export default function AdminExperts() {
                 </>
               )}
 
-              {/* ---- 知識庫(誠實 state — 蒸餾 pipeline 未接) ---- */}
+              {/* ---- 知識庫(誠實 state — pipeline 已部署但未配置 provider) ---- */}
               {tab === "知識庫" && (
                 <div className="rounded-md border border-dashed border-border-strong bg-card px-4 py-8 text-center">
                   <p className="text-sm font-medium text-text-primary">
-                    知識庫蒸餾 — 即將推出
+                    知識庫蒸餾 — Blocked
                   </p>
                   <p className="mx-auto mt-1.5 max-w-[360px] text-xs leading-relaxed text-text-muted">
-                    素材上載、切塊同重新蒸餾需要 Supabase Storage +
-                    distillation pipeline 先可以運作,而家未有真後端,
-                    所以唔會顯示任何虛構嘅素材數量。Prompt 版本:
+                    Private Storage、資料表、工作佇列同 Edge worker 已部署；
+                    Vault/provider secrets 同首個已批准 corpus 未配置前唔會啟用。
+                    呢度唔會顯示任何虛構素材數量。Prompt 版本:
                     <span className="font-mono text-text-secondary">
                       {expert.promptVersion ?? "—"}
                     </span>
@@ -784,7 +826,7 @@ export default function AdminExperts() {
                         Verified 上線狀態
                       </p>
                       <p className="mt-0.5 text-xs text-text-muted">
-                        開關只係本機預覽 — 上線流程需要 experts 後端(即將推出)
+                        呢個開關會寫入受保護 experts 記錄；AI 對話仍由獨立 RAG／persona feature flags 控制。
                       </p>
                     </div>
                     <AdminToggle
@@ -829,14 +871,12 @@ export default function AdminExperts() {
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  toast("變更只保留喺呢個畫面 — experts 後端未接,唔會寫入資料庫");
-                  closeEditor();
-                }}
+                disabled={saving}
+                onClick={() => void saveChanges()}
                 className="inline-flex items-center gap-1.5 rounded-md bg-lime px-4 py-2 text-sm font-medium text-on-accent transition-colors hover:bg-lime-hover"
               >
                 <Save className="h-4 w-4" />
-                儲存變更
+                {saving ? "儲存中…" : "儲存變更"}
               </button>
             </div>
           </div>
@@ -848,7 +888,7 @@ export default function AdminExperts() {
         open={createOpen}
         onClose={() => setCreateOpen(false)}
         title="新增導師"
-        subtitle="建立草稿(未發佈,只存本機)— 接 Supabase experts 後端 + 蒸餾 pipeline 之後先會上線"
+        subtitle="建立受保護 Supabase 草稿；完成蒸餾、評估同審批後先會上線"
         width={480}
       >
         <div className="flex h-full flex-col">
@@ -996,11 +1036,12 @@ export default function AdminExperts() {
             </button>
             <button
               type="button"
-              onClick={saveCreate}
+              disabled={createSaving}
+              onClick={() => void saveCreate()}
               className="inline-flex items-center gap-1.5 rounded-md bg-lime px-4 py-2 text-sm font-medium text-on-accent transition-colors hover:bg-lime-hover"
             >
               <Plus className="h-4 w-4" />
-              建立草稿
+              {createSaving ? "建立中…" : "建立草稿"}
             </button>
           </div>
         </div>

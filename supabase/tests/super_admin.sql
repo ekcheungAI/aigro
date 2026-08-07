@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(15);
+select plan(18);
 
 set local role postgres;
 
@@ -66,6 +66,29 @@ select is(
   (select tier from public.account_access where user_id = '63000000-0000-0000-0000-000000000003'),
   'vip',
   'admin can manage a member tier'
+);
+
+select lives_ok(
+  $$select public.upsert_admin_expert(
+    null, 'rollback-expert', 'Rollback Expert', 'Rollback Expert', '',
+    '測試導師', '只會存在 transaction 內', '#466A5E', array['測試'],
+    '測試定位', '測試頭銜', false, '[]'::jsonb, array['審慎']
+  )$$,
+  'admin can create a persisted expert draft'
+);
+select is(
+  (select status from public.experts where slug = 'rollback-expert'),
+  'draft',
+  'new expert remains draft until verified'
+);
+select ok(
+  exists (
+    select 1 from public.audit_events
+    where actor_id = '62000000-0000-0000-0000-000000000002'
+      and action = 'expert.created'
+      and metadata ->> 'slug' = 'rollback-expert'
+  ),
+  'expert creation writes an audit event'
 );
 
 select throws_like(
