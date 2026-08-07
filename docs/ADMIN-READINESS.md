@@ -32,6 +32,7 @@ entry only for that role.
 | Public intelligence | Live | argro sync has repeated successful scheduled runs; published `items` readable through RLS |
 | argro admin health | Live | Private upstream key moved to GitHub/Vercel secrets; admin-only same-origin proxy returned live production health |
 | Master Admin dashboard | Live | Production counts and activity queries |
+| Backend readiness monitor | Live | Admin-only RPC reports Cron, Vault presence, private Storage, corpus/persona/booking counts and feature flags without returning secret values |
 | Content management | Live | Real `items` review/publish controls |
 | Sources | Beta | Source CRUD works; MCP output is not built |
 | Experts | Beta | Reads are real; create/edit still has local-only controls |
@@ -49,7 +50,10 @@ entry only for that role.
 
 Every incomplete Admin module displays `Beta` in navigation and explains why.
 Admin Settings also separates `Live`, `Beta`, `Blocked` and `Planned`
-integrations.
+integrations. Its live readiness panel currently confirms all five database
+maintenance/dispatch schedules and the private `expert-kb` bucket are present.
+It also confirms all four required Vault entries are still absent, so worker
+dispatch remains blocked even though the Cron runs themselves succeed.
 
 ## Connected server workflows
 
@@ -128,6 +132,9 @@ and the admin health proxy without printing secrets.
 
 - Raw expert knowledge and Storage are private; browser clients do not receive a
   service key.
+- `get_backend_readiness()` is restricted to admin JWTs and exposes only
+  booleans/counts; ordinary members receive `admin_required` and Vault values
+  never leave Postgres.
 - Conversation, message and lead ownership is based on `auth.uid()`.
 - `profiles.role/tier/expert_slug` are compatibility mirrors, not authorities.
 - Anonymous callers cannot execute business RPCs; server-only chat persistence

@@ -7,30 +7,10 @@ export type Json =
   | Json[]
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -868,6 +848,131 @@ export type Database = {
           },
         ]
       }
+      leads: {
+        Row: {
+          analysis: string | null
+          anon_id: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          last_activity_at: string | null
+          owner_id: string | null
+          persona: string
+          questions: Json | null
+          score: number | null
+          signals: string[] | null
+          stage: string | null
+          timeline: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          analysis?: string | null
+          anon_id?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          last_activity_at?: string | null
+          owner_id?: string | null
+          persona?: string
+          questions?: Json | null
+          score?: number | null
+          signals?: string[] | null
+          stage?: string | null
+          timeline?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          analysis?: string | null
+          anon_id?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          last_activity_at?: string | null
+          owner_id?: string | null
+          persona?: string
+          questions?: Json | null
+          score?: number | null
+          signals?: string[] | null
+          stage?: string | null
+          timeline?: Json | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          answer_basis: string | null
+          citations: Json | null
+          confidence: number | null
+          content: string
+          conversation_id: string | null
+          coverage: string | null
+          created_at: string | null
+          id: string
+          persona_version_id: string | null
+          provider_usage: Json
+          request_id: string | null
+          retrieval: Json
+          role: string
+          source: string | null
+        }
+        Insert: {
+          answer_basis?: string | null
+          citations?: Json | null
+          confidence?: number | null
+          content: string
+          conversation_id?: string | null
+          coverage?: string | null
+          created_at?: string | null
+          id?: string
+          persona_version_id?: string | null
+          provider_usage?: Json
+          request_id?: string | null
+          retrieval?: Json
+          role: string
+          source?: string | null
+        }
+        Update: {
+          answer_basis?: string | null
+          citations?: Json | null
+          confidence?: number | null
+          content?: string
+          conversation_id?: string | null
+          coverage?: string | null
+          created_at?: string | null
+          id?: string
+          persona_version_id?: string | null
+          provider_usage?: Json
+          request_id?: string | null
+          retrieval?: Json
+          role?: string
+          source?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_persona_version_id_fkey"
+            columns: ["persona_version_id"]
+            isOneToOne: false
+            referencedRelation: "expert_persona_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       persona_evaluation_questions: {
         Row: {
           active: boolean
@@ -1045,131 +1150,6 @@ export type Database = {
           },
           {
             foreignKeyName: "persona_synthesis_jobs_persona_version_id_fkey"
-            columns: ["persona_version_id"]
-            isOneToOne: false
-            referencedRelation: "expert_persona_versions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      leads: {
-        Row: {
-          analysis: string | null
-          anon_id: string | null
-          created_at: string | null
-          email: string | null
-          id: string
-          last_activity_at: string | null
-          owner_id: string | null
-          persona: string
-          questions: Json | null
-          score: number | null
-          signals: string[] | null
-          stage: string | null
-          timeline: Json | null
-          user_id: string | null
-        }
-        Insert: {
-          analysis?: string | null
-          anon_id?: string | null
-          created_at?: string | null
-          email?: string | null
-          id?: string
-          last_activity_at?: string | null
-          owner_id?: string | null
-          persona?: string
-          questions?: Json | null
-          score?: number | null
-          signals?: string[] | null
-          stage?: string | null
-          timeline?: Json | null
-          user_id?: string | null
-        }
-        Update: {
-          analysis?: string | null
-          anon_id?: string | null
-          created_at?: string | null
-          email?: string | null
-          id?: string
-          last_activity_at?: string | null
-          owner_id?: string | null
-          persona?: string
-          questions?: Json | null
-          score?: number | null
-          signals?: string[] | null
-          stage?: string | null
-          timeline?: Json | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "leads_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      messages: {
-        Row: {
-          answer_basis: string | null
-          citations: Json | null
-          confidence: number | null
-          content: string
-          conversation_id: string | null
-          coverage: string | null
-          created_at: string | null
-          id: string
-          persona_version_id: string | null
-          provider_usage: Json
-          request_id: string | null
-          retrieval: Json
-          role: string
-          source: string | null
-        }
-        Insert: {
-          answer_basis?: string | null
-          citations?: Json | null
-          confidence?: number | null
-          content: string
-          conversation_id?: string | null
-          coverage?: string | null
-          created_at?: string | null
-          id?: string
-          persona_version_id?: string | null
-          provider_usage?: Json
-          request_id?: string | null
-          retrieval?: Json
-          role: string
-          source?: string | null
-        }
-        Update: {
-          answer_basis?: string | null
-          citations?: Json | null
-          confidence?: number | null
-          content?: string
-          conversation_id?: string | null
-          coverage?: string | null
-          created_at?: string | null
-          id?: string
-          persona_version_id?: string | null
-          provider_usage?: Json
-          request_id?: string | null
-          retrieval?: Json
-          role?: string
-          source?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "messages_conversation_id_fkey"
-            columns: ["conversation_id"]
-            isOneToOne: false
-            referencedRelation: "conversations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "messages_persona_version_id_fkey"
             columns: ["persona_version_id"]
             isOneToOne: false
             referencedRelation: "expert_persona_versions"
@@ -1403,7 +1383,31 @@ export type Database = {
       }
       claim_persona_synthesis_jobs: {
         Args: { p_limit?: number; p_worker_id: string }
-        Returns: Database["public"]["Tables"]["persona_synthesis_jobs"]["Row"][]
+        Returns: {
+          attempts: number
+          created_at: string
+          created_by: string | null
+          error_message: string | null
+          evidence_manifest: Json
+          expert_id: string
+          fidelity_report: Json
+          fidelity_score: number | null
+          fidelity_status: string
+          id: string
+          locked_at: string | null
+          locked_by: string | null
+          model: string | null
+          next_retry_at: string
+          output_blueprint: Json
+          persona_version_id: string | null
+          research_cutoff_at: string
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source_revision_ids: string[]
+          status: string
+          updated_at: string
+        }[]
         SetofOptions: {
           from: "*"
           to: "persona_synthesis_jobs"
@@ -1433,9 +1437,11 @@ export type Database = {
         }
         Returns: Json
       }
+      get_backend_readiness: { Args: never; Returns: Json }
       invoke_knowledge_worker: { Args: never; Returns: number }
       invoke_persona_compiler: { Args: never; Returns: number }
       is_admin: { Args: never; Returns: boolean }
+      is_super_admin: { Args: never; Returns: boolean }
       list_available_slots: {
         Args: {
           p_expert_slug: string
@@ -1487,6 +1493,14 @@ export type Database = {
         }
         Returns: string
       }
+      publish_compiled_persona: {
+        Args: {
+          p_greeting: string
+          p_job_id: string
+          p_sample_dialogues?: Json
+        }
+        Returns: string
+      }
       publish_persona_version: {
         Args: {
           p_boundaries: Json
@@ -1497,12 +1511,11 @@ export type Database = {
         }
         Returns: string
       }
-      publish_compiled_persona: {
-        Args: { p_greeting: string; p_job_id: string; p_sample_dialogues?: Json }
+      purge_expired_anonymous_chats: { Args: never; Returns: number }
+      queue_persona_synthesis: {
+        Args: { p_expert_id: string }
         Returns: string
       }
-      queue_persona_synthesis: { Args: { p_expert_id: string }; Returns: string }
-      purge_expired_anonymous_chats: { Args: never; Returns: number }
       requeue_stuck_distillation_jobs: { Args: never; Returns: undefined }
       requeue_stuck_persona_synthesis_jobs: { Args: never; Returns: undefined }
       reschedule_booking: {
@@ -1533,6 +1546,10 @@ export type Database = {
           p_meeting_url?: string
           p_status: string
         }
+        Returns: undefined
+      }
+      update_lead_stage: {
+        Args: { p_lead_id: string; p_stage: string }
         Returns: undefined
       }
     }
@@ -1663,9 +1680,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {},
   },

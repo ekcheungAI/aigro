@@ -5,6 +5,10 @@ import QueryState from "@/components/QueryState";
 import { cn } from "@/lib/utils";
 import { supabase, supabaseReady } from "@/lib/supabase";
 import { useArgroHealth } from "@/lib/argroHealth";
+import {
+  fetchBackendReadiness,
+  summarizeBackendReadiness,
+} from "@/lib/backendReadiness";
 import { countRows, useAdminQuery } from "@/components/admin/adminData";
 import { PRODUCTION_INTEGRATIONS } from "@/components/admin/adminModules";
 
@@ -49,6 +53,12 @@ export default function AdminSettings() {
     error: countsError,
     refetch: refetchCounts,
   } = useAdminQuery(fetchTableCounts);
+  const {
+    data: backendReadiness,
+    loading: readinessLoading,
+    error: readinessError,
+    refetch: refetchReadiness,
+  } = useAdminQuery(fetchBackendReadiness);
 
   const [ping, setPing] = useState<{ ok: boolean; detail: string } | null>(null);
   const [pingLoading, setPingLoading] = useState(true);
@@ -92,6 +102,7 @@ export default function AdminSettings() {
             runPing();
             argro.refresh();
             refetchCounts();
+            refetchReadiness();
             toast("已重新檢查所有連線");
           }}
           className="inline-flex items-center gap-1.5 rounded-md border border-border px-4 py-2 text-sm text-text-secondary transition-colors hover:border-border-strong"
@@ -215,6 +226,67 @@ export default function AdminSettings() {
                   <p className="mt-0.5 text-xs text-text-muted">{c.label}</p>
                 </div>
               ))}
+            </div>
+          )}
+        </QueryState>
+      </section>
+
+      {/* 由受保護 RPC 提供的非敏感後端就緒度 */}
+      <section className="mt-5 rounded-lg border border-border bg-surface p-5">
+        <div className="flex items-center gap-2">
+          <Settings2 className="h-4 w-4 text-lime-text" />
+          <h2 className="font-display text-[17px] font-medium text-text-primary">
+            後端就緒度
+          </h2>
+        </div>
+        <p className="mt-1 text-xs leading-relaxed text-text-muted">
+          即時檢查排程、Vault 是否已配置、private Storage、發佈資料同 feature flags；只回傳狀態，絕不回傳 secret 值。
+        </p>
+        <QueryState
+          loading={readinessLoading}
+          error={readinessError ? `載入失敗:${readinessError}` : null}
+          retry={refetchReadiness}
+          skeletonRows={3}
+        >
+          {backendReadiness && (
+            <div className="mt-4 space-y-2.5">
+              {summarizeBackendReadiness(backendReadiness).map((row) => {
+                const label = row.status === "live"
+                  ? "Live"
+                  : row.status === "beta"
+                    ? "Beta"
+                    : "Blocked";
+                return (
+                  <div
+                    key={row.key}
+                    className="rounded-md border border-border bg-card px-4 py-3"
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span
+                        className={cn(
+                          "h-2 w-2 rounded-full",
+                          row.status === "live" ? "bg-lime" : "bg-border-strong"
+                        )}
+                      />
+                      <p className="text-sm font-medium text-text-primary">{row.label}</p>
+                      <span
+                        className={cn(
+                          "ml-auto rounded-full border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.08em]",
+                          row.status === "live"
+                            ? "border-lime bg-lime-soft text-lime-text"
+                            : "border-border-strong text-text-muted"
+                        )}
+                      >
+                        {label}
+                      </span>
+                    </div>
+                    <p className="mt-1.5 text-xs leading-relaxed text-text-muted">{row.detail}</p>
+                  </div>
+                );
+              })}
+              <p className="text-right font-mono text-[10px] text-text-muted">
+                檢查時間 {new Date(backendReadiness.generated_at).toLocaleString("zh-HK")}
+              </p>
             </div>
           )}
         </QueryState>

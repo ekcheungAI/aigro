@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(13);
+select plan(15);
 
 set local role postgres;
 
@@ -89,6 +89,15 @@ select set_config('request.jwt.claims',
 
 select ok(public.is_super_admin(), 'super-admin helper recognizes platform owner');
 select ok(public.is_admin(), 'super-admin inherits admin access');
+
+select lives_ok(
+  $$select public.get_backend_readiness()$$,
+  'super-admin can read the non-secret backend readiness report'
+);
+select ok(
+  (public.get_backend_readiness() -> 'vault') ? 'project_url',
+  'readiness reports Vault configuration presence without exposing values'
+);
 
 set local role postgres;
 update public.experts
