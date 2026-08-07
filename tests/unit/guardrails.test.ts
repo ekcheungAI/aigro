@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { isOffGuard } from "@/lib/llmFallback";
+import { instructorUnavailableReply, isOffGuard } from "@/lib/llmFallback";
+import { getPersona } from "@/data/personas";
 
 describe("Ask guardrails", () => {
   it("allows normal Cantonese instructor questions", () => {
@@ -16,5 +17,16 @@ describe("Ask guardrails", () => {
 
   it("rejects symbol-only spam", () => {
     expect(isOffGuard("!!!!!!!!!!!!")).toBe("spam");
+  });
+
+  it("does not present static expert content or citations when live chat is unavailable", () => {
+    const reply = instructorUnavailableReply(getPersona("elvin-cheung"));
+
+    expect(reply.text).toContain("暫時未能連接");
+    expect(reply.citations).toEqual([]);
+    expect(reply.source).toBe("unavailable");
+    expect(reply.answerBasis).toBe("general");
+    expect(reply.coverage).toBe("none");
+    expect(reply.confidence).toBe(0);
   });
 });

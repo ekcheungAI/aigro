@@ -10,7 +10,7 @@ test("public routes load without console errors", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await page.goto("/ask?expert=elvin-cheung");
   await expect(page.getByRole("heading", { name: "Ask 問答" })).toBeAttached();
-  await expect(page.getByText("AI 分身 · 與你單對單").first()).toBeVisible();
+  await expect(page.getByText("AI 分身 · Beta").first()).toBeVisible();
   expect(errors).toEqual([]);
 });
 

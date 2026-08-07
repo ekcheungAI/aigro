@@ -21,8 +21,8 @@ const PresenceDot = memo(function PresenceDot({
   return (
     <span
       role="status"
-      aria-label="AI 分身 · 隨時可問"
-      title="AI 分身 · 隨時可問"
+      aria-label="AI 分身 · Beta"
+      title="AI 分身 · Beta"
       className={cn("relative inline-flex shrink-0", className)}
       style={{ width: size, height: size }}
     >

@@ -74,6 +74,24 @@ export function guardrailReply(persona: Persona, kind: GuardKind): AiReply {
   };
 }
 
+/**
+ * Live instructor service failed before a grounded answer was completed.
+ * Never reuse the code-based persona reply here: doing so could display stale
+ * content and citations that were not returned by the published CMS revision.
+ */
+export function instructorUnavailableReply(persona: Persona): AiReply {
+  const serviceName = persona.kind === "expert" ? "AI 導師服務" : "AI 問答服務";
+  return {
+    text: `${serviceName}暫時未能連接。為避免提供未經知識庫核實嘅答案，今次唔會用示範內容代答。請稍後再試。`,
+    citations: [],
+    confidence: 0,
+    source: "unavailable",
+    answerBasis: "general",
+    coverage: "none",
+    followUps: [],
+  };
+}
+
 /* ---------------- C. Grounded streaming instructor chat ---------------- */
 
 export interface StreamCitation {

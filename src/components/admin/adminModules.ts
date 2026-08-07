@@ -26,7 +26,35 @@ export interface AdminModule {
   reviewedAt: string;
 }
 
+export type ProductionIntegrationStatus = "live" | "beta" | "blocked" | "planned";
+
+export interface ProductionIntegration {
+  key: string;
+  label: string;
+  status: ProductionIntegrationStatus;
+}
+
 const REVIEWED_AT = "2026-08-08";
+
+/**
+ * Verified production integration registry shown in Admin Settings.
+ * Keep a capability blocked until its provider credentials, runtime path and
+ * end-to-end smoke test have all passed; schema or deployed code alone is beta.
+ */
+export const PRODUCTION_INTEGRATIONS: readonly ProductionIntegration[] = [
+  { key: "intelligence", label: "情報管道(argro → items / sources)", status: "live" },
+  { key: "member_login", label: "會員密碼／Email 連結登入(profiles)", status: "live" },
+  { key: "admin", label: "Master Admin + Expert Portal 真查詢", status: "live" },
+  { key: "edge_functions", label: "四個 Supabase Edge Functions", status: "beta" },
+  { key: "anonymous_chat", label: "訪客匿名 JWT 對話", status: "blocked" },
+  { key: "instructor_model", label: "AI 導師串流回答 + 對話原子保存", status: "blocked" },
+  { key: "distillation", label: "知識庫蒸餾(Storage + worker + providers)", status: "blocked" },
+  { key: "persona_compiler", label: "角色蒸餾 Persona Compiler", status: "blocked" },
+  { key: "booking", label: "真人預約 + Resend 通知", status: "blocked" },
+  { key: "lead_scoring", label: "Leads 自動評分(leads 表寫入管道)", status: "beta" },
+  { key: "submissions", label: "專家投稿後端(submissions)", status: "planned" },
+  { key: "mcp", label: "MCP server 輸出端點", status: "planned" },
+] as const;
 
 /**
  * Production capability registry for the master admin control plane.
@@ -61,7 +89,7 @@ export const ADMIN_MODULES: readonly AdminModule[] = [
     en: "Studio",
     icon: FlaskConical,
     status: "beta",
-    betaReason: "CMS RPC 已存在，但 production worker functions 與排程 secrets 尚未接通。",
+    betaReason: "Edge Functions 已部署；provider secrets、匿名 Auth、Vault 排程同首個發佈版本仍未接通。",
     reviewedAt: REVIEWED_AT,
   },
   {

@@ -38,10 +38,10 @@ export default function ContextPanel({
     ? liveItems
       ? `全站情報庫 ${itemCount} 則 · 自家管道每 30 分鐘更新`
       : `全站情報庫 ${itemCount} 則 · 目前顯示資料快照`
-    : `公開分享 + 授權內容 · ${persona.expert?.viewpoints?.length ?? 10} 個核心觀點 · Prompt v1.0`;
+    : "Beta · 正式 CMS/RAG 知識庫尚未發佈";
   const updatedDate = isPlatform
     ? (liveFetchedAt ?? aihotFetchedAt).slice(0, 10)
-    : "2026-07";
+    : "尚未發佈";
   const usageLimits = [
     "免費無限對話 · 限時開放",
     isPlatform

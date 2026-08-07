@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { supabase, supabaseReady } from "@/lib/supabase";
 import { useArgroHealth } from "@/lib/argroHealth";
 import { countRows, useAdminQuery } from "@/components/admin/adminData";
+import { PRODUCTION_INTEGRATIONS } from "@/components/admin/adminModules";
 
 /** Supabase 連線測試 — head-count 一次 items,驗證 anon key + RLS 生效 */
 async function pingSupabase(): Promise<{ ok: boolean; detail: string }> {
@@ -228,21 +229,20 @@ export default function AdminSettings() {
           </h2>
         </div>
         <ul className="mt-4 space-y-2.5 text-sm">
-          {[
-            { label: "情報管道(argro → items / sources)", done: true },
-            { label: "Ask 分身對話持久化(conversations / messages)", done: true },
-            { label: "會員 magic-link 登入(profiles)", done: true },
-            { label: "Admin 後台 + Expert Portal 真查詢", done: true },
-            { label: "Leads 自動評分(leads 表寫入管道)", done: false },
-            { label: "專家投稿後端(submissions)", done: false },
-            { label: "知識庫蒸餾 pipeline(Storage + distillation)", done: false },
-            { label: "MCP server 輸出端點", done: false },
-          ].map((row) => (
+          {PRODUCTION_INTEGRATIONS.map((row) => {
+            const live = row.status === "live";
+            const statusLabel = {
+              live: "Live",
+              beta: "Beta",
+              blocked: "Blocked",
+              planned: "Planned",
+            }[row.status];
+            return (
             <li key={row.label} className="flex items-center gap-2.5">
               <span
                 className={cn(
                   "flex h-4 w-4 items-center justify-center rounded-full border",
-                  row.done
+                  live
                     ? "border-lime bg-lime-soft text-lime-text"
                     : "border-border-strong text-transparent"
                 )}
@@ -251,16 +251,17 @@ export default function AdminSettings() {
               </span>
               <span
                 className={cn(
-                  row.done ? "text-text-primary" : "text-text-muted"
+                  live ? "text-text-primary" : "text-text-muted"
                 )}
               >
                 {row.label}
               </span>
               <span className="ml-auto font-mono text-[11px] text-text-muted">
-                {row.done ? "Live" : "即將推出"}
+                {statusLabel}
               </span>
             </li>
-          ))}
+            );
+          })}
         </ul>
       </section>
     </div>

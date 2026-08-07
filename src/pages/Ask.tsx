@@ -29,6 +29,7 @@ import { getPersona, personas, personaInitials, pickReply } from "@/data/persona
 import { useLiveItems } from "@/data/liveItems";
 import {
   guardrailReply,
+  instructorUnavailableReply,
   isOffGuard,
   streamInstructorReply,
 } from "@/lib/llmFallback";
@@ -378,13 +379,7 @@ export default function Ask() {
             turnstileToken
           );
         })
-        .catch(() => ({
-          ...reply,
-          source: "general" as const,
-          coverage: "none" as const,
-          answerBasis: "general" as const,
-          confidence: 0,
-        }))
+        .catch(() => instructorUnavailableReply(persona))
         .then((finalReply) => {
           setPendingLlm((current) =>
             current && current.personaKey === personaKey && current.question === question
@@ -493,7 +488,7 @@ export default function Ask() {
                     <VerifiedBadge size={16} />
                   </p>
                   <p className="hidden text-caption text-text-muted sm:block">
-                    AI 分身 · 與你單對單
+                    AI 分身 · Beta
                   </p>
                 </div>
               </>

@@ -55,7 +55,7 @@ export default function SpotlightCard({
 
   const quote = expert?.quote ?? persona.signature;
   const trustNote = expert
-    ? `分身由 ${persona.shortName} 嘅授權內容蒸餾・知識庫經本人審核・回答僅代表方法論`
+    ? `Beta・${persona.shortName} 正式 CMS/RAG 知識庫尚未發佈・未連接時唔會用示範內容代答`
     : "回答經編輯審核流程整理・每個論點附可檢索來源";
 
   const rise = (delay: number) =>
@@ -92,7 +92,7 @@ export default function SpotlightCard({
         </span>
         <div className="min-w-0">
           <p className="text-overline uppercase tracking-[0.12em] text-text-muted">
-            AI 分身 · 與你單對單
+            AI 分身 · Beta
           </p>
           <h3 className="mt-1 flex items-center gap-1.5 font-display text-h3 text-text-primary">
             <span className="truncate">{persona.name}</span>

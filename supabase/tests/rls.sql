@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(13);
+select plan(25);
 
 set local role postgres;
 
@@ -99,6 +99,79 @@ select isnt(
 select ok(
   has_table_privilege('anon', 'public.items', 'select'),
   'published intelligence remains reachable through its public RLS policy'
+);
+select lives_ok(
+  $$select count(*) from public.items where status = 'published'$$,
+  'anonymous intelligence query does not evaluate protected expert policies'
+);
+select is(
+  (select roles::text from pg_policies
+   where schemaname = 'public' and tablename = 'items' and policyname = 'items_public_read'),
+  '{anon,authenticated}',
+  'public intelligence policy is explicitly scoped to browser reader roles'
+);
+select is(
+  (select roles::text from pg_policies
+   where schemaname = 'public' and tablename = 'items' and policyname = 'items_expert_read_own'),
+  '{authenticated}',
+  'expert intelligence policy cannot run for the anon database role'
+);
+select isnt(
+  has_function_privilege(
+    'anon',
+    'public.create_knowledge_source(text,text,text,text,text,text,text[])',
+    'execute'
+  ),
+  true,
+  'anonymous callers cannot execute the CMS creation RPC'
+);
+select isnt(
+  has_function_privilege('anon', 'public.cancel_booking(uuid)', 'execute'),
+  true,
+  'anonymous callers cannot execute member booking mutations'
+);
+select isnt(
+  has_function_privilege('anon', 'public.queue_persona_synthesis(uuid)', 'execute'),
+  true,
+  'anonymous callers cannot execute persona synthesis mutations'
+);
+select isnt(
+  has_function_privilege('anon', 'public.notify_booking_change()', 'execute'),
+  true,
+  'trigger-only booking notifier is not exposed as an RPC'
+);
+select isnt(
+  has_function_privilege(
+    'anon',
+    'public.list_available_slots(text,date,date)',
+    'execute'
+  ),
+  true,
+  'booking availability requires an authenticated anonymous or member session'
+);
+select isnt(
+  has_function_privilege('anon', 'public.is_admin()', 'execute'),
+  true,
+  'anonymous callers cannot execute the admin capability helper'
+);
+select isnt(
+  has_function_privilege('anon', 'public.is_super_admin()', 'execute'),
+  true,
+  'anonymous callers cannot execute the super-admin capability helper'
+);
+select isnt(
+  has_function_privilege('anon', 'public.owns_expert(uuid)', 'execute'),
+  true,
+  'anonymous callers cannot execute the expert ownership helper'
+);
+select ok(
+  coalesce(
+    (select proconfig @> array['search_path=pg_catalog, public']
+     from pg_proc
+     where oid = 'public.touch_updated_at()'::regprocedure),
+    false
+  ),
+  'updated-at trigger has an immutable search path'
 );
 
 select * from finish();

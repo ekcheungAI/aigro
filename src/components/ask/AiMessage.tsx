@@ -34,8 +34,9 @@ export interface AiReply {
    * - llm = LLM 一般知識回覆 → 顯示「AI 生成 · 一般知識」chip 取代引用 chips
    * - general = 內建一般知識模板 → 顯示「一般知識回覆」chip
    * - guardrail = 安全 deflect → 唔顯示信心行(deflect 唔係低信心答案)
+   * - unavailable = live CMS/RAG 未能完成 → 明確顯示服務未連接，絕不顯示假引用
    */
-  source?: "kb" | "llm" | "general" | "guardrail";
+  source?: "kb" | "llm" | "general" | "guardrail" | "unavailable";
   /**
    * KB 命中類型(G11/G12 信任 copy)— pickReply 回傳後由 Ask 附上:
    * direct/composed → 「授權內容庫回答 · 附來源」;near/continued →「相關話題回答」。
@@ -209,7 +210,9 @@ export default function AiMessage({
       {/* 一般知識 chip(v1.21)— LLM / 內建模板回覆冊引用,用呢個 chip 標明性質。
           同引用 chips 一樣文字完成後先 fade-in;還原歷史即刻顯示。 */}
       {visiblePhase === "done" &&
-        (reply.source === "llm" || reply.source === "general") && (
+        (reply.source === "llm" ||
+          reply.source === "general" ||
+          reply.source === "unavailable") && (
           <motion.div
             className="mt-3 flex flex-wrap gap-2"
             initial={animate ? { opacity: 0 } : false}
@@ -218,7 +221,11 @@ export default function AiMessage({
           >
             <span className="inline-flex h-6 items-center gap-1.5 rounded-sm border bg-surface px-2 text-caption text-text-muted">
               <Sparkles className="h-3 w-3 shrink-0" strokeWidth={1.5} aria-hidden="true" />
-              {reply.source === "llm" ? "AI 生成 · 分身語氣" : "一般知識回覆"}
+              {reply.source === "llm"
+                ? "AI 生成 · 分身語氣"
+                : reply.source === "unavailable"
+                  ? "Beta · 服務暫時未連接"
+                  : "一般知識回覆"}
             </span>
             {reply.source === "llm" && reply.ragUsed && (
               <span className="inline-flex h-6 items-center gap-1.5 rounded-sm border bg-surface px-2 text-caption text-text-muted">
@@ -292,6 +299,8 @@ export default function AiMessage({
         >
           {reply.source === "llm"
             ? "AI 生成 · 分身語氣・回答僅供參考"
+            : reply.source === "unavailable"
+              ? "Beta・AI 導師服務暫時未連接"
             : reply.source === "general"
               ? "一般知識回覆・回答僅供參考"
               : reply.matched === "near" || reply.matched === "continued"

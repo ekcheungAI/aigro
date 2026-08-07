@@ -238,7 +238,7 @@ function ExpertAboutCard({ persona }: { persona: Persona }) {
         </p>
         <p className="mt-1.5 flex items-center gap-1.5 text-caption text-text-secondary">
           <PresenceDot size={8} />
-          AI 分身 · 隨時可問
+          AI 分身 · Beta
         </p>
 
         {/* Signature quote — serif,expert accent left border */}
@@ -334,7 +334,7 @@ function ExpertAboutCard({ persona }: { persona: Persona }) {
 
         {/* 授權 transparency line(keep) */}
         <p className="mt-4 border-t border-border pt-3 text-caption text-text-muted">
-          {persona.aboutTransparency}
+          Beta：正式 CMS/RAG 知識庫尚未發佈；未連接時唔會用示範內容或假引用代答。
         </p>
       </div>
       <Toast message={toast} />

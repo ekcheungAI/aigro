@@ -186,7 +186,7 @@ function convMapSet(sessionId: string, conversationId: string): void {
 
 /** AiReply.source → messages.source(schema 註釋:kb / llm / guardrail / scripted) */
 function mapMessageSource(source: AiReply["source"]): string {
-  if (source === "general") return "scripted";
+  if (source === "general" || source === "unavailable") return "scripted";
   return source ?? "kb";
 }
 
