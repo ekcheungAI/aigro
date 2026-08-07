@@ -127,6 +127,20 @@ export const TIER_LABEL: Record<MemberTier, string> = {
   vip: "VIP 會員",
 };
 
+/**
+ * `super_admin` is the platform owner role. It inherits every product
+ * entitlement without mutating the separate billing tier.
+ */
+export function hasFullPlatformAccess(member: Pick<AigroMember, "role">): boolean {
+  return member.role === "super_admin";
+}
+
+export function hasHumanBookingAccess(
+  member: Pick<AigroMember, "role" | "tier">
+): boolean {
+  return hasFullPlatformAccess(member) || member.tier === "vip";
+}
+
 const MEMBER_ROLES: MemberRole[] = ["free", "founding", "expert", "admin", "super_admin"];
 
 function isMemberRole(v: unknown): v is MemberRole {

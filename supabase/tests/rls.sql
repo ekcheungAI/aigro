@@ -86,7 +86,11 @@ insert into public.expert_knowledge (expert_slug, title, content, status)
 values ('elvin-cheung', 'legacy secret', 'must stay private', 'active');
 set local role anon;
 select set_config('request.jwt.claims', '{"role":"anon"}', true);
-select is((select count(*) from public.expert_knowledge), 0::bigint, 'legacy active knowledge is no longer public');
+select isnt(
+  has_table_privilege('anon', 'public.expert_knowledge', 'select'),
+  true,
+  'legacy active knowledge is not exposed to anonymous Data API clients'
+);
 
 select * from finish();
 rollback;

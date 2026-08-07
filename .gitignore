@@ -11,4 +11,6 @@ playwright-report
 test-results
 supabase/.temp
 .worktrees/
+supabase/.branches/
+supabase/.temp/
 output/backups/

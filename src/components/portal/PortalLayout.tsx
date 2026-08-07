@@ -205,18 +205,30 @@ function UnlinkedNotice({ email }: { email: string }) {
 
 /* ---------------- Layout ---------------- */
 
-/** 讀自己 profile 嘅 expert_slug(RLS:本人可讀) */
-async function fetchMyExpertSlug(): Promise<string | null> {
-  if (!supabase) return null;
+/**
+ * Expert users receive only their linked identity. A super-admin can operate
+ * every expert workspace and chooses the active identity in the portal header.
+ */
+async function fetchPortalExpertSlugs(isSuperAdmin: boolean): Promise<string[]> {
+  if (!supabase) return [];
+  if (isSuperAdmin) {
+    const { data, error } = await supabase
+      .from("experts")
+      .select("slug")
+      .order("display_name");
+    if (error) throw new Error(error.message);
+    return (data ?? []).map((row) => row.slug as string);
+  }
   const uid = await getAuthUserId();
-  if (!uid) return null;
+  if (!uid) return [];
   const { data, error } = await supabase
     .from("profiles")
     .select("expert_slug")
     .eq("id", uid)
     .maybeSingle();
   if (error) throw new Error(error.message);
-  return (data?.expert_slug as string | null) ?? null;
+  const slug = (data?.expert_slug as string | null) ?? null;
+  return slug ? [slug] : [];
 }
 
 /**
@@ -228,6 +240,7 @@ async function fetchMyExpertSlug(): Promise<string | null> {
  */
 export default function PortalLayout() {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [selectedSlug, setSelectedSlug] = useState("");
   const { member, loading: memberLoading } = useMember();
   const authorized =
     member !== null && (
@@ -237,10 +250,16 @@ export default function PortalLayout() {
     );
 
   const {
-    data: slug,
+    data: portalSlugs,
     loading: slugLoading,
     error: slugError,
-  } = useAdminQuery(fetchMyExpertSlug, [authorized]);
+  } = useAdminQuery(
+    () => fetchPortalExpertSlugs(member?.role === "super_admin"),
+    [authorized, member?.role]
+  );
+  const slug = selectedSlug && portalSlugs?.includes(selectedSlug)
+    ? selectedSlug
+    : portalSlugs?.[0] ?? null;
 
   if (memberLoading || !authorized) {
     return (
@@ -365,6 +384,25 @@ export default function PortalLayout() {
               AIGRO Expert Portal — 領航專家後台
             </span>
             <div className="ml-auto flex items-center gap-3">
+              {member.role === "super_admin" && portalSlugs && portalSlugs.length > 1 && (
+                <label className="hidden items-center gap-2 sm:flex">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-text-muted">
+                    管理分身
+                  </span>
+                  <select
+                    aria-label="選擇要管理的專家分身"
+                    value={slug}
+                    onChange={(event) => setSelectedSlug(event.target.value)}
+                    className="rounded-md border border-border bg-card px-2.5 py-1.5 text-xs text-text-primary focus:border-lime focus:outline-none"
+                  >
+                    {portalSlugs.map((optionSlug) => (
+                      <option key={optionSlug} value={optionSlug}>
+                        {experts.find((item) => item.slug === optionSlug)?.nameEn ?? optionSlug}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
               <Link
                 to="/"
                 className="hidden items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs text-text-secondary transition-colors hover:border-border-strong hover:text-text-primary sm:inline-flex"

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { CalendarDays, Check, LoaderCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { Persona } from "@/data/personas";
+import { hasHumanBookingAccess } from "@/components/auth/member";
 import { lastUserQuestion } from "@/components/ask/sessions";
 import { useMember } from "@/hooks/useMember";
 import { ensureAuthenticatedUser, supabase } from "@/lib/supabase";
@@ -38,6 +39,7 @@ export default function ClubBookingCapture({
   onSubmitted?: () => void;
 }) {
   const { member } = useMember();
+  const canBook = member ? hasHumanBookingAccess(member) : false;
   const [slots, setSlots] = useState<Slot[]>([]);
   const [selected, setSelected] = useState("");
   const [loading, setLoading] = useState(true);
@@ -143,7 +145,7 @@ export default function ClubBookingCapture({
         <p className="mt-4 text-xs text-text-muted">未有可預約時段，請稍後再睇。</p>
       )}
 
-      {member?.tier !== "vip" && (
+      {!canBook && (
         <p className="mt-3 text-caption text-text-muted">
           預約包含喺 VIP 方案。<Link to="/pricing" className="text-lime-text underline-offset-2 hover:underline">查看方案</Link>
         </p>

@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(8);
+select plan(10);
 
 set local role postgres;
 
@@ -60,6 +60,34 @@ select set_config('request.jwt.claims',
 
 select ok(public.is_super_admin(), 'super-admin helper recognizes platform owner');
 select ok(public.is_admin(), 'super-admin inherits admin access');
+
+set local role postgres;
+update public.experts
+set feature_flags = feature_flags || '{"booking_enabled":true}'::jsonb
+where slug = 'elvin-cheung';
+insert into public.availability_rules (
+  expert_id, weekday, start_time, end_time, timezone, slot_minutes
+)
+select id,
+  extract(dow from (date_trunc('day', now() + interval '7 days') + interval '10 hours') at time zone 'UTC')::smallint,
+  '09:00', '17:00', 'UTC', 45
+from public.experts where slug = 'elvin-cheung';
+
+set local role authenticated;
+select set_config('request.jwt.claims',
+  '{"sub":"61000000-0000-0000-0000-000000000001","role":"authenticated"}', true);
+select lives_ok(
+  $$select public.create_booking(
+    'elvin-cheung', date_trunc('day', now() + interval '7 days') + interval '10 hours'
+  )$$,
+  'free-tier super-admin inherits VIP booking entitlement'
+);
+select is(
+  (select tier from public.account_access
+   where user_id = '61000000-0000-0000-0000-000000000001'),
+  'free',
+  'full platform access does not rewrite billing tier'
+);
 
 update public.account_access set app_role = 'admin'
 where user_id = '63000000-0000-0000-0000-000000000003';

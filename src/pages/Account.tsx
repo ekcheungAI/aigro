@@ -18,6 +18,7 @@ import useMember from "@/hooks/useMember";
 import {
   clearMember,
   greeting,
+  hasFullPlatformAccess,
   isFoundingTier,
   memberInitial,
   milestonesFor,
@@ -315,6 +316,7 @@ export default function Account() {
 
   const completion = profileCompletion(member);
   const founding = isFoundingTier(member);
+  const fullPlatformAccess = hasFullPlatformAccess(member);
   const milestones = milestonesFor(member);
 
   const stats = [
@@ -364,17 +366,24 @@ export default function Account() {
               目前方案
             </p>
             <p className="mt-2 font-display text-h3 text-text-primary">
-              {TIER_LABEL[member.tier]}
+              {fullPlatformAccess ? "全平台存取" : TIER_LABEL[member.tier]}
             </p>
             <p className="mt-1 text-body-sm text-text-secondary">
-              {member.tier === "free" &&
+              {fullPlatformAccess &&
+                "最高管理員擁有所有會員方案、Admin、專家 Portal、CMS、AI 對話及真人預約權限。"}
+              {!fullPlatformAccess && member.tier === "free" &&
                 "每日情報任讀;升級創始會員解鎖無限分身對話與完整案例拆解。"}
-              {member.tier === "pro" &&
+              {!fullPlatformAccess && member.tier === "pro" &&
                 "無限分身對話、完整案例拆解、MCP 優先接入、專家活動優先席。"}
-              {member.tier === "vip" && "真人導師一對一,新功能優先體驗。"}
+              {!fullPlatformAccess && member.tier === "vip" && "真人導師一對一,新功能優先體驗。"}
             </p>
+            {fullPlatformAccess && (
+              <p className="mt-2 font-mono text-[11px] uppercase tracking-[0.12em] text-lime-text">
+                Billing tier: {member.tier} · Effective access: unrestricted
+              </p>
+            )}
           </div>
-          {member.tier !== "vip" && (
+          {!fullPlatformAccess && member.tier !== "vip" && (
             <Link
               to="/pricing"
               className="press inline-flex h-12 shrink-0 items-center gap-2 self-start rounded-md bg-lime px-6 text-label text-on-accent hover:bg-lime-hover sm:self-center"
