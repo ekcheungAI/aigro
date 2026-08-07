@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   hasFullPlatformAccess,
   hasHumanBookingAccess,
+  memberRoleLabel,
   type AigroMember,
 } from "@/components/auth/member";
 
@@ -32,5 +33,9 @@ describe("member entitlements", () => {
 
   it("keeps VIP booking access for ordinary members", () => {
     expect(hasHumanBookingAccess(member({ role: "founding", tier: "vip" }))).toBe(true);
+  });
+
+  it("labels the platform owner as the highest administrator", () => {
+    expect(memberRoleLabel(member({ role: "super_admin" }))).toBe("最高管理員");
   });
 });

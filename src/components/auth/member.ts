@@ -118,6 +118,10 @@ export const ROLE_LABELS: Record<MemberRole, string> = {
   super_admin: "最高管理員",
 };
 
+export function memberRoleLabel(member: Pick<AigroMember, "role">): string {
+  return ROLE_LABELS[member.role];
+}
+
 /** 級別排序(權限由低至高) */
 export const TIER_ORDER: MemberRole[] = ["free", "founding", "expert", "admin", "super_admin"];
 

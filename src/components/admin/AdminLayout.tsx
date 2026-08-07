@@ -22,7 +22,7 @@ import {
 import { cn } from "@/lib/utils";
 import { AdminToastProvider } from "@/components/admin/AdminToast";
 import { useMember } from "@/hooks/useMember";
-import { memberInitial } from "@/components/auth/member";
+import { memberInitial, memberRoleLabel } from "@/components/auth/member";
 import { supabaseReady } from "@/lib/supabase";
 
 const NAV = [
@@ -269,7 +269,7 @@ export default function AdminLayout() {
                 </span>
                 <span className="text-xs text-text-primary">
                   {member.name}{" "}
-                  <span className="text-text-muted">· 管理員</span>
+                  <span className="text-text-muted">· {memberRoleLabel(member)}</span>
                 </span>
               </div>
             </div>
