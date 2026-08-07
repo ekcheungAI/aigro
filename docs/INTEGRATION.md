@@ -1,5 +1,8 @@
 # INTEGRATION.md — Mock vs Supabase-Ready 審計
 
+> **歷史文件：** 呢份記錄早期接入階段，部分 mock 狀態已過時。現時 production
+> capability、權限同操作清單以 [ADMIN-READINESS.md](./ADMIN-READINESS.md) 為準。
+
 > v1.19 全站接入審計。誠實記錄而家邊啲係 MOCK(localStorage / 靜態 TS 數據)、
 > 邊啲已經 SUPABASE-READY(換一個 module 就上得線),同埋每區嘅接入點同工作量。
 > Schema 參考:`supabase/schema.sql`(已建立:profiles / waitlist / conversations /

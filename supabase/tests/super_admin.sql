@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(10);
+select plan(13);
 
 set local role postgres;
 
@@ -27,9 +27,38 @@ where user_id = '61000000-0000-0000-0000-000000000001';
 update public.account_access set app_role = 'admin'
 where user_id = '62000000-0000-0000-0000-000000000002';
 
+insert into public.leads (id, user_id, owner_id, persona, score)
+values (
+  '64000000-0000-0000-0000-000000000004',
+  '63000000-0000-0000-0000-000000000003',
+  '63000000-0000-0000-0000-000000000003',
+  'platform', 25
+);
+
 set local role authenticated;
 select set_config('request.jwt.claims',
   '{"sub":"62000000-0000-0000-0000-000000000002","role":"authenticated"}', true);
+
+select lives_ok(
+  $$select public.update_lead_stage(
+    '64000000-0000-0000-0000-000000000004', '跟進中'
+  )$$,
+  'admin can move a CRM lead through the audited workflow'
+);
+select is(
+  (select stage from public.leads where id = '64000000-0000-0000-0000-000000000004'),
+  '跟進中',
+  'CRM workflow persists the new lead stage'
+);
+select ok(
+  exists (
+    select 1 from public.audit_events
+    where actor_id = '62000000-0000-0000-0000-000000000002'
+      and entity_id = '64000000-0000-0000-0000-000000000004'
+      and action = 'lead.stage_updated'
+  ),
+  'CRM stage change writes an audit event'
+);
 
 update public.account_access set tier = 'vip'
 where user_id = '63000000-0000-0000-0000-000000000003';

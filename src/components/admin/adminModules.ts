@@ -98,8 +98,8 @@ export const ADMIN_MODULES: readonly AdminModule[] = [
     zh: "CRM",
     en: "CRM",
     icon: Target,
-    status: "live",
-    betaReason: "",
+    status: "beta",
+    betaReason: "線索查詢及有 audit trail 嘅階段更新已接通；新 lead 仍受 AI 導師 provider 未配置所阻塞。",
     reviewedAt: REVIEWED_AT,
   },
   {
@@ -134,8 +134,8 @@ export const ADMIN_MODULES: readonly AdminModule[] = [
     zh: "對話參與",
     en: "Engagement",
     icon: MessagesSquare,
-    status: "live",
-    betaReason: "",
+    status: "beta",
+    betaReason: "現有 conversations/messages 真查詢已接通；匿名 Auth 同模型未啟用前唔會有完整新對話流入。",
     reviewedAt: REVIEWED_AT,
   },
   {

@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(25);
+select plan(30);
 
 set local role postgres;
 insert into auth.users (
@@ -36,7 +36,7 @@ select ok(
     '53000000-0000-0000-0000-000000000003',
     (select id from public.experts where slug = 'elvin-cheung'),
     'elvin-cheung', '54000000-0000-0000-0000-000000000004',
-    'CMS 未有答案時點算？', '我未有足夠已發佈資料，建議預約真人導師。',
+    '我想預約，請問價錢？', '我未有足夠已發佈資料，建議預約真人導師。',
     'general', 'none', '[]'::jsonb, null, '[]'::jsonb,
     '{"prompt_tokens":10,"completion_tokens":12,"total_tokens":22}'::jsonb,
     'MiniMax-M3', 800, 'provider-request-1'
@@ -54,7 +54,7 @@ select public.persist_chat_round(
   '53000000-0000-0000-0000-000000000003',
   (select id from public.experts where slug = 'elvin-cheung'),
   'elvin-cheung', '54000000-0000-0000-0000-000000000004',
-  'CMS 未有答案時點算？', 'duplicate should be ignored',
+  '我想預約，請問價錢？', 'duplicate should be ignored',
   'general', 'none'
 );
 select is(
@@ -64,12 +64,61 @@ select is(
 );
 select is((select count(*) from public.leads where owner_id = '51000000-0000-0000-0000-000000000001'), 1::bigint,
   'chat transaction updates the owner lead');
+select is(
+  (select score from public.leads where owner_id = '51000000-0000-0000-0000-000000000001'),
+  45::numeric,
+  'chat CRM scoring adds booking and pricing intent once despite an idempotent replay'
+);
+select ok(
+  (select signals @> array['問預約', '問價錢'] from public.leads
+   where owner_id = '51000000-0000-0000-0000-000000000001'),
+  'chat CRM record stores normalized high-intent signals'
+);
 select is((select count(*) from public.knowledge_gaps where conversation_id = '53000000-0000-0000-0000-000000000003'), 1::bigint,
   'no-coverage expert answer creates one knowledge gap');
 select isnt(
   has_function_privilege('authenticated', 'public.persist_chat_round(uuid,uuid,uuid,text,text,text,text,text,text,jsonb,uuid,jsonb,jsonb,text,integer,text)', 'EXECUTE'),
   true,
   'browser role cannot call server-only chat persistence RPC'
+);
+
+-- Anonymous Auth owns data through owner_id without requiring a profile row.
+set local role postgres;
+insert into auth.users (
+  id, instance_id, aud, role, encrypted_password,
+  raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+) values (
+  '56000000-0000-0000-0000-000000000006',
+  '00000000-0000-0000-0000-000000000000',
+  'authenticated', 'authenticated', '', '{}', '{}', now(), now()
+);
+insert into public.conversations (id, owner_id, user_id, expert_id, persona, title)
+select '57000000-0000-0000-0000-000000000007',
+  '56000000-0000-0000-0000-000000000006',
+  '56000000-0000-0000-0000-000000000006', id, slug, 'Anonymous chat'
+from public.experts where slug = 'elvin-cheung';
+select ok(
+  public.persist_chat_round(
+    '56000000-0000-0000-0000-000000000006',
+    '57000000-0000-0000-0000-000000000007',
+    (select id from public.experts where slug = 'elvin-cheung'),
+    'elvin-cheung', '58000000-0000-0000-0000-000000000008',
+    '請問價錢？', '目前未能回答。', 'general', 'none'
+  ) is not null,
+  'anonymous Auth user can persist a completed chat round'
+);
+select is(
+  (select user_id from public.conversations where id = '57000000-0000-0000-0000-000000000007'),
+  null::uuid,
+  'anonymous conversation keeps legacy profile user_id null'
+);
+select ok(
+  exists (
+    select 1 from public.leads
+    where owner_id = '56000000-0000-0000-0000-000000000006'
+      and user_id is null
+  ),
+  'anonymous CRM lead is owned by Auth uid without a profile foreign key'
 );
 
 set local role postgres;

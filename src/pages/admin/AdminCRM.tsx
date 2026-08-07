@@ -13,7 +13,6 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import {
   daysAgoUtcStartIso,
-  formatDate,
   personaLabel,
   timeAgo,
   useAdminQuery,
@@ -122,15 +121,10 @@ export default function AdminCRM() {
   const moveStage = async (lead: AdminLeadRow, stage: LeadStage) => {
     if (!supabase || moving) return;
     setMoving(true);
-    const entry = {
-      date: formatDate(new Date().toISOString()),
-      label: `階段更新 — 移至${stage}`,
-    };
-    const timeline = [...(lead.timeline ?? []), entry];
-    const { error: updateError } = await supabase
-      .from("leads")
-      .update({ stage, timeline })
-      .eq("id", lead.id);
+    const { error: updateError } = await supabase.rpc("update_lead_stage", {
+      p_lead_id: lead.id,
+      p_stage: stage,
+    });
     setMoving(false);
     if (updateError) {
       toast(`更新失敗:${updateError.message}`);
@@ -157,7 +151,7 @@ export default function AdminCRM() {
           線索管理
         </h1>
         <p className="mt-1 text-sm text-text-muted">
-          leads 表即時查詢 — 高意圖對話會自動生成線索,冇任何示範 lead。
+          leads 表即時查詢及有 audit trail 嘅階段更新已接通；新線索自動流入仍取決於 AI 導師服務。
         </p>
       </div>
 
@@ -190,9 +184,8 @@ export default function AdminCRM() {
                 暫未有線索
               </p>
               <p className="mx-auto mt-1.5 max-w-[440px] text-xs leading-relaxed text-text-muted">
-                leads 表而家係 0。線索會自動產生:當訪客同 AI 分身對話出現高意圖訊號
-                (問公司導入、問預約、問價錢),系統會按問題內容評分並寫入 leads 表,
-                即刻喺呢度出現 — 唔使人手輸入。
+                leads 表而家係 0。AI 導師 provider 同匿名 Auth 啟用後，對話會喺同一個
+                server transaction 內按公司導入、預約同價錢意圖評分並寫入呢度。
               </p>
             </div>
           ) : null

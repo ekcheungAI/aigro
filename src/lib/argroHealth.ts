@@ -8,10 +8,10 @@
  * 資料來源:GET https://argro-api.zeabur.app/meta/health(CORS 已開)。
  */
 
-const ENDPOINT = "https://argro-api.zeabur.app/meta/health";
-// NOTE(security): 而家 key 直接放 client bundle 只係權宜之計 —
-// production 應改經 edge proxy 注入 X-API-Key,唔好將 key 放 client。
-const API_KEY = "argro-shared-8f3k2m9x1q";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { supabase } from "@/lib/supabase";
+
+const ENDPOINT = "/api/argro-health";
 
 /** 自動更新間隔(30 秒) */
 export const ARGRO_HEALTH_REFRESH_MS = 30_000;
@@ -58,8 +58,12 @@ export interface ArgroHealth {
 
 /** 單次抓取;throw Error(HTTP 非 2xx / 網絡失敗 / JSON 唔啱)。 */
 export async function fetchArgroHealth(signal?: AbortSignal): Promise<ArgroHealth> {
+  if (!supabase) throw new Error("Supabase 未連接");
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  if (!token) throw new Error("需要管理員登入");
   const res = await fetch(ENDPOINT, {
-    headers: { "X-API-Key": API_KEY },
+    headers: { Authorization: `Bearer ${token}` },
     signal,
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -71,8 +75,6 @@ export async function fetchArgroHealth(signal?: AbortSignal): Promise<ArgroHealt
 }
 
 /* ---------------- hook(30s auto-refresh + cleanup) ---------------- */
-
-import { useCallback, useEffect, useRef, useState } from "react";
 
 export interface UseArgroHealthResult {
   /** 最新一份健康數據;從未成功過就係 null。 */

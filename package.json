@@ -14,6 +14,7 @@
     "test:e2e": "playwright test",
     "test:db": "supabase test db",
     "test:functions": "deno test supabase/functions/_shared/distillation_test.ts supabase/functions/_shared/persona-compiler_test.ts",
+    "check:production": "node scripts/check-production-integrations.mjs",
     "verify": "npm run lint && npm run test && npm run build",
     "preview": "vite preview",
     "fetch:argro": "node scripts/fetch-argro.mjs",

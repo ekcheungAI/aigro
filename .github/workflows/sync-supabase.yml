@@ -12,6 +12,10 @@ on:
 permissions:
   contents: none
 
+concurrency:
+  group: argro-supabase-sync
+  cancel-in-progress: false
+
 jobs:
   sync:
     runs-on: ubuntu-latest
@@ -21,7 +25,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
 
       - name: Install deps (opencc-js lives in devDependencies)
@@ -32,5 +36,8 @@ jobs:
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
           SUPABASE_URL: https://mxjgavuzzpcvazxdnuzg.supabase.co
           ARGRO_API_BASE: https://argro-api.zeabur.app
-          ARGRO_API_KEY: argro-shared-8f3k2m9x1q
+          ARGRO_API_KEY: ${{ secrets.ARGRO_API_KEY }}
         run: node scripts/sync-argro-to-supabase.mjs
+
+      - name: Verify production read paths and function guards
+        run: npm run check:production

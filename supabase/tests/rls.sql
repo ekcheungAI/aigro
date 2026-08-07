@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(25);
+select plan(30);
 
 set local role postgres;
 
@@ -13,6 +13,38 @@ insert into auth.users (
   ('20000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000000',
    'authenticated', 'authenticated', 'member@test.local', '', now(), '{}', '{}', now(), now())
 on conflict (id) do nothing;
+
+select is(
+  (select count(*) from public.profiles
+   where id in (
+     '10000000-0000-0000-0000-000000000001',
+     '20000000-0000-0000-0000-000000000002'
+   )),
+  2::bigint,
+  'auth user creation provisions a profile server-side'
+);
+select is(
+  (select count(*) from public.account_access
+   where user_id in (
+     '10000000-0000-0000-0000-000000000001',
+     '20000000-0000-0000-0000-000000000002'
+   ) and app_role = 'member' and tier = 'free'),
+  2::bigint,
+  'new auth users receive only the safe member/free access default'
+);
+select isnt(
+  has_function_privilege('authenticated', 'public.handle_new_auth_user()', 'EXECUTE'),
+  true,
+  'auth provisioning trigger is not exposed as a browser RPC'
+);
+select has_column(
+  'public', 'usage_logs', 'model',
+  'usage telemetry schema includes the model used by chat persistence'
+);
+select has_column(
+  'public', 'usage_logs', 'request_id',
+  'usage telemetry schema includes the provider request id'
+);
 
 insert into public.profiles (id, email, name) values
   ('10000000-0000-0000-0000-000000000001', 'expert@test.local', 'Expert'),

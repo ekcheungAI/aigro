@@ -16,11 +16,11 @@ import {
   roleFromTier,
   saveMember,
   savePendingProfile,
-  sendMagicLink,
   validEmail,
 } from "@/components/auth/member";
 import type { MemberTier } from "@/components/auth/member";
-import { supabaseReady } from "@/lib/supabase";
+import { registerAccount } from "@/lib/registerAccount";
+import { supabase, supabaseReady } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 
 const STEP_LABELS = ["建立帳號", "揀你嘅戰場", "揀方案"] as const;
@@ -94,8 +94,8 @@ export default function Join() {
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [done, setDone] = useState(false);
-  // magic-link 成功發送(有 env 時)— 成功畫面提示去信箱click 連結
-  const [magicSent, setMagicSent] = useState(false);
+  const [confirmationSent, setConfirmationSent] = useState(false);
+  const [finishing, setFinishing] = useState(false);
 
   // Step 1
   const [name, setName] = useState("");
@@ -154,33 +154,50 @@ export default function Join() {
   };
 
   const finish = async () => {
+    if (finishing) return;
+    setFinishing(true);
     const member = {
       name: name.trim(),
       email: email.trim(),
       interests,
       persona,
-      // 4 級制度:揀創始會員方案 → founding;免費 → free
-      role: roleFromTier(tier),
-      tier,
+      // 方案選擇只係申請意向；付款／人工批核前，權限由後端 member/free 開始。
+      role: roleFromTier("free"),
+      tier: "free" as const,
       joinedAt: Date.now(),
       notifications: { ...DEFAULT_NOTIFICATIONS },
       // 離線 / 無 env → 本地示範帳號;有 env → 行真 magic-link
       ...(supabaseReady ? {} : { demo: true as const }),
     };
-    saveMember(member);
-    if (supabaseReady) {
-      // magic-link 空窗期:暫存 onboarding 欄位,session 建立後 upsert 入 profiles
+    if (supabaseReady && supabase) {
+      const result = await registerAccount(supabase, {
+        email: member.email,
+        password,
+        name: member.name,
+        interests,
+        persona,
+        requestedTier: tier,
+        redirectTo: `${window.location.origin}/account`,
+      });
+      if (!result.ok) {
+        setFinishing(false);
+        showToast(`建立帳號失敗:${result.error ?? "請稍後再試"}`);
+        return;
+      }
+      // Email confirmation 空窗期保留 onboarding；DB trigger 已先保證 profile/access 存在。
       savePendingProfile({
         name: member.name,
         email: member.email,
         interests,
         persona,
-        tier,
+        tier: "free",
       });
-      const res = await sendMagicLink(member.email);
-      setMagicSent(res.ok);
-      if (!res.ok) showToast("登入連結發送失敗 — 帳號已喺本機建立,可稍後再登入");
+      setConfirmationSent(Boolean(result.emailConfirmationRequired));
+      if (!result.emailConfirmationRequired) saveMember(member);
+    } else {
+      saveMember(member);
     }
+    setFinishing(false);
     setDone(true);
   };
 
@@ -215,13 +232,14 @@ export default function Join() {
             歡迎加入 AIGRO Club
           </h1>
           <p className="mt-3 max-w-md text-body-sm text-text-secondary">
-            {name.trim()},你嘅帳號已經開通。而家免費開始,隨時升級 —
-            以下係你可以即刻做嘅三件事:
+            {confirmationSent
+              ? `${name.trim()},你嘅帳號已建立，確認電郵後即可登入。以下係你而家可以瀏覽嘅內容：`
+              : `${name.trim()},你嘅帳號已經開通。而家免費開始，隨時升級 — 以下係你可以即刻做嘅三件事：`}
           </p>
-          {magicSent && (
+          {confirmationSent && (
             <p className="mt-4 inline-flex items-center gap-2 rounded-md border border-lime bg-lime-soft px-4 py-2.5 text-caption text-ink">
               <Check className="h-4 w-4 shrink-0" strokeWidth={2} />
-              登入連結已發送至 {email.trim()} — 去你嘅信箱click 連結,完成登入同步資料
+              確認連結已發送至 {email.trim()} — 去信箱確認後即可用密碼登入
             </p>
           )}
         </motion.div>
@@ -527,10 +545,11 @@ export default function Join() {
           )}
           <button
             type="button"
-            onClick={step === 3 ? finish : goNext}
-            className="press ml-auto inline-flex h-12 items-center gap-2 rounded-md bg-lime px-6 text-label text-on-accent hover:bg-lime-hover"
+            onClick={step === 3 ? () => void finish() : goNext}
+            disabled={finishing}
+            className="press ml-auto inline-flex h-12 items-center gap-2 rounded-md bg-lime px-6 text-label text-on-accent hover:bg-lime-hover disabled:opacity-60"
           >
-            {step === 3 ? "完成註冊" : "下一步"}
+            {step === 3 ? (finishing ? "建立帳號中…" : "完成註冊") : "下一步"}
             <ArrowRight className="h-4 w-4" strokeWidth={1.5} />
           </button>
         </div>
@@ -538,7 +557,7 @@ export default function Join() {
 
         <p className="mt-6 text-caption text-text-muted">
           {supabaseReady
-            ? "完成註冊後會收到登入連結 email — click 連結即同步你嘅資料"
+            ? "完成註冊後會建立密碼帳號；如需要電郵確認，確認後即可登入。付費方案需另行完成付款或批核。"
             : "示範模式 — 未設定 Supabase env,資料只存喺瀏覽器"}
         </p>
       </motion.div>

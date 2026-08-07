@@ -113,7 +113,7 @@ export default function PortalLeads() {
               </p>
               <p className="mx-auto mt-1.5 max-w-[400px] text-xs leading-relaxed text-text-muted">
                 你嘅分身暫時未有高意圖對話。當訪客同你嘅分身問到公司導入、
-                預約或價錢呢類高意圖問題,系統會自動評分並記入 leads 表,
+                AI 導師服務啟用後，預約或價錢呢類高意圖問題會由 server 自動評分並記入 leads 表,
                 即刻喺呢度出現。
               </p>
             </div>

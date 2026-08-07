@@ -1,5 +1,8 @@
 # FULL-REVIEW.md — 全站建設缺口分析 + 後端建設藍圖
 
+> **歷史基線：** 呢份係後端建設前嘅 review。現況請睇
+> [ADMIN-READINESS.md](./ADMIN-READINESS.md)。
+
 > 審計基準:v1.21 codebase(master @ 239190a,branch fix-22-gap 起)。
 > 方法:全 source review(`src/pages` 19 + admin 10 + portal 6 頁、`src/data` 12 module、
 > `src/lib`、`scripts/`、sitemap/robots/env)+ 對照 INTEGRATION.md / ADMIN-READINESS.md / ROADMAP.md。

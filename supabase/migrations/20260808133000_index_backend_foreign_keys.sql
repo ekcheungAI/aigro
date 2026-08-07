@@ -1,0 +1,33 @@
+-- Cover foreign keys used by RLS, ownership joins, cleanup and admin views.
+
+create index if not exists account_access_expert_id_idx on public.account_access(expert_id);
+create index if not exists audit_events_actor_id_idx on public.audit_events(actor_id);
+create index if not exists audit_events_expert_id_idx on public.audit_events(expert_id);
+create index if not exists availability_exceptions_expert_id_idx on public.availability_exceptions(expert_id);
+create index if not exists availability_rules_expert_id_idx on public.availability_rules(expert_id);
+create index if not exists bookings_member_id_idx on public.bookings(member_id);
+create index if not exists bookings_source_conversation_id_idx on public.bookings(source_conversation_id);
+create index if not exists conversations_expert_id_idx on public.conversations(expert_id);
+create index if not exists conversations_owner_id_idx on public.conversations(owner_id);
+create index if not exists conversations_user_id_idx on public.conversations(user_id);
+create index if not exists expert_persona_versions_approved_by_idx on public.expert_persona_versions(approved_by);
+create index if not exists expert_persona_versions_created_by_idx on public.expert_persona_versions(created_by);
+create index if not exists experts_published_persona_version_id_idx on public.experts(published_persona_version_id);
+create index if not exists items_source_id_idx on public.items(source_id);
+create index if not exists knowledge_gaps_conversation_id_idx on public.knowledge_gaps(conversation_id);
+create index if not exists knowledge_gaps_expert_id_idx on public.knowledge_gaps(expert_id);
+create index if not exists knowledge_gaps_message_id_idx on public.knowledge_gaps(message_id);
+create index if not exists knowledge_gaps_resolved_source_idx on public.knowledge_gaps(resolved_by_source_id);
+create index if not exists knowledge_revisions_approved_by_idx on public.knowledge_revisions(approved_by);
+create index if not exists knowledge_revisions_created_by_idx on public.knowledge_revisions(created_by);
+create index if not exists knowledge_sources_created_by_idx on public.knowledge_sources(created_by);
+create index if not exists knowledge_sources_expert_id_idx on public.knowledge_sources(expert_id);
+create index if not exists knowledge_sources_published_revision_idx on public.knowledge_sources(published_revision_id);
+create index if not exists leads_user_id_idx on public.leads(user_id);
+create index if not exists messages_persona_version_id_idx on public.messages(persona_version_id);
+create index if not exists persona_evaluation_questions_created_by_idx on public.persona_evaluation_questions(created_by);
+create index if not exists persona_evaluation_questions_expert_id_idx on public.persona_evaluation_questions(expert_id);
+create index if not exists persona_evaluation_runs_job_idx on public.persona_evaluation_runs(synthesis_job_id);
+create index if not exists persona_synthesis_jobs_created_by_idx on public.persona_synthesis_jobs(created_by);
+create index if not exists persona_synthesis_jobs_persona_version_idx on public.persona_synthesis_jobs(persona_version_id);
+create index if not exists persona_synthesis_jobs_reviewed_by_idx on public.persona_synthesis_jobs(reviewed_by);

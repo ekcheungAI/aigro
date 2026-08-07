@@ -21,8 +21,10 @@ describe("master admin module status", () => {
     expect(betaModules).toEqual([
       "Experts",
       "Studio",
+      "CRM",
       "Sources",
       "Skills",
+      "Engagement",
       "Emails",
       "Settings",
     ]);

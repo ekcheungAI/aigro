@@ -24,11 +24,16 @@ const tc = (s) =>
     : s;
 
 const BASE = process.env.ARGRO_API_BASE ?? "https://argro-api.zeabur.app";
-const KEY = process.env.ARGRO_API_KEY ?? "argro-shared-8f3k2m9x1q";
+const KEY = process.env.ARGRO_API_KEY;
 const OUT = resolve(
   dirname(fileURLToPath(import.meta.url)),
   "../src/data/aihot-snapshot.json"
 );
+
+if (!KEY) {
+  console.error("ARGRO_API_KEY is required (server-side only).");
+  process.exit(1);
+}
 
 /** argro topic key → AIGRO 分類（feed chips 同主題地圖用） */
 const CATEGORY_MAP = {

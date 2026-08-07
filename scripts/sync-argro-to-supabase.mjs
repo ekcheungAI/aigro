@@ -12,7 +12,7 @@
  *   SUPABASE_URL         (預設 https://mxjgavuzzpcvazxdnuzg.supabase.co)
  *   SUPABASE_SECRET_KEY  (service/secret key — server-side only,絕唔可以入 client)
  *   ARGRO_API_BASE       (預設 https://argro-api.zeabur.app)
- *   ARGRO_API_KEY        (預設 argro-shared-8f3k2m9x1q)
+ *   ARGRO_API_KEY        (required; server-side only)
  *
  * 行為:
  *   1. 拉 argro /news/hot + /news/stream + /insights/daily
@@ -35,13 +35,13 @@ const tc = (s) =>
     : s;
 
 const ARGRO_BASE = process.env.ARGRO_API_BASE ?? "https://argro-api.zeabur.app";
-const ARGRO_KEY = process.env.ARGRO_API_KEY ?? "argro-shared-8f3k2m9x1q";
+const ARGRO_KEY = process.env.ARGRO_API_KEY;
 const SUPA_URL =
   process.env.SUPABASE_URL ?? "https://mxjgavuzzpcvazxdnuzg.supabase.co";
 const SUPA_KEY = process.env.SUPABASE_SECRET_KEY;
 
-if (!SUPA_KEY) {
-  console.error("SUPABASE_SECRET_KEY is required (service key, server-side only).");
+if (!SUPA_KEY || !ARGRO_KEY) {
+  console.error("SUPABASE_SECRET_KEY and ARGRO_API_KEY are required server-side.");
   process.exit(1);
 }
 

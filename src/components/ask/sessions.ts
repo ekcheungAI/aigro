@@ -206,6 +206,8 @@ export function ensureConversationId(
     try {
       const uid = await ensureAuthenticatedUser();
       if (!uid) return null;
+      const { data: authData } = await supabase.auth.getSession();
+      const profileUserId = authData.session?.user.is_anonymous ? null : uid;
       const { data: expert, error: expertError } = await supabase
         .from("experts")
         .select("id")
@@ -217,7 +219,7 @@ export function ensureConversationId(
         .from("conversations")
         .insert({
           owner_id: uid,
-          user_id: uid,
+          user_id: profileUserId,
           anon_id: null,
           persona: personaKey,
           expert_id: expert.id,
