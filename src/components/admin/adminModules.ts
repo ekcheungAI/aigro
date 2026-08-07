@@ -43,7 +43,8 @@ const REVIEWED_AT = "2026-08-08";
  */
 export const PRODUCTION_INTEGRATIONS: readonly ProductionIntegration[] = [
   { key: "intelligence", label: "情報管道(argro → items / sources)", status: "live" },
-  { key: "member_login", label: "會員密碼／Email 連結登入(profiles)", status: "live" },
+  { key: "member_login", label: "會員密碼登入 + profiles", status: "live" },
+  { key: "email_auth", label: "Email signup／magic-link 投遞驗收", status: "beta" },
   { key: "admin", label: "Master Admin + Expert Portal 真查詢", status: "live" },
   { key: "edge_functions", label: "四個 Supabase Edge Functions", status: "beta" },
   { key: "anonymous_chat", label: "訪客匿名 JWT 對話", status: "blocked" },

@@ -50,6 +50,7 @@ describe("master admin module status", () => {
     );
 
     expect(statuses.edge_functions).toBe("beta");
+    expect(statuses.email_auth).toBe("beta");
     expect(statuses.anonymous_chat).toBe("blocked");
     expect(statuses.instructor_model).toBe("blocked");
     expect(statuses.distillation).toBe("blocked");
