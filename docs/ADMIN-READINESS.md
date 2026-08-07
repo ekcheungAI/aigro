@@ -30,7 +30,7 @@ entry only for that role.
 | Signup + profile provisioning | Live code + migration | Real `signUp`/anonymous upgrade; Auth trigger guarantees profile and member/free access; email delivery still needs acceptance testing |
 | Member access management | Live | Admin changes member/expert tier; only super admin can manage admin roles; changes audited |
 | Public intelligence | Live | argro sync has repeated successful scheduled runs; published `items` readable through RLS |
-| argro admin health | Live after next Vercel deploy | Private upstream key moved to GitHub/Vercel secrets; admin-only same-origin proxy added |
+| argro admin health | Live | Private upstream key moved to GitHub/Vercel secrets; admin-only same-origin proxy returned live production health |
 | Master Admin dashboard | Live | Production counts and activity queries |
 | Content management | Live | Real `items` review/publish controls |
 | Sources | Beta | Source CRUD works; MCP output is not built |
