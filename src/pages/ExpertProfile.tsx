@@ -1,7 +1,21 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Link, useParams } from "react-router-dom";
 import { AnimatePresence, motion, useInView } from "framer-motion";
-import { ArrowRight, AudioLines, CalendarClock, Check, ExternalLink, ShieldCheck } from "lucide-react";
+import {
+  ArrowRight,
+  AudioLines,
+  BookOpenCheck,
+  CalendarClock,
+  Check,
+  Code2,
+  ExternalLink,
+  Image as ImageIcon,
+  Megaphone,
+  PenTool,
+  ShieldCheck,
+  Workflow,
+  type LucideIcon,
+} from "lucide-react";
 import Reveal, { REVEAL_EASE } from "@/components/Reveal";
 import ExpertStyleSections from "@/components/expert/ExpertStyleSections";
 import ExpertIpHero from "@/components/experts/ExpertIpHero";
@@ -131,6 +145,116 @@ function MetricChip({
   );
 }
 
+const PROFILE_NAV = [
+  { href: "#profile-overview", label: "概覽" },
+  { href: "#method-summary", label: "方法" },
+  { href: "#viewpoints", label: "核心觀點" },
+  { href: "#transparency", label: "授權透明度" },
+  { href: "#ask-expert", label: "問 AI 分身" },
+] as const;
+
+function ExpertProfileNav() {
+  return (
+    <nav
+      aria-label="專家檔案章節"
+      className="sticky top-16 z-30 border-y bg-surface/95"
+    >
+      <div className="mx-auto flex max-w-container items-center gap-1 overflow-x-auto px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {PROFILE_NAV.map((item, index) => (
+          <a
+            key={item.href}
+            href={item.href}
+            className="press inline-flex min-h-12 shrink-0 items-center gap-2 px-4 font-sans text-label text-text-secondary hover:text-ink first:pl-0"
+          >
+            <span className="font-mono text-caption text-text-muted">
+              {String(index + 1).padStart(2, "0")}
+            </span>
+            {item.label}
+          </a>
+        ))}
+      </div>
+    </nav>
+  );
+}
+
+function specialtyIcon(label: string): LucideIcon {
+  if (label.includes("行銷")) return Megaphone;
+  if (label.includes("圖像") || label.includes("影像")) return ImageIcon;
+  if (label.includes("內容") || label.includes("拆解")) return PenTool;
+  if (label.includes("自動化") || label.includes("Workflow")) return Workflow;
+  if (label.includes("Coding")) return Code2;
+  return BookOpenCheck;
+}
+
+function ExpertOverview({
+  expert,
+  bio,
+  askHref,
+}: {
+  expert: Expert;
+  bio: string | null;
+  askHref: string;
+}) {
+  if (!bio) return null;
+  const firstName = expertFirstName(expert);
+  const sentences = (bio.match(/[^。]+。?/g) ?? [bio])
+    .map((sentence) => sentence.trim())
+    .filter(Boolean);
+  const pivot = Math.max(1, Math.ceil(sentences.length / 2));
+  const paragraphs = [
+    sentences.slice(0, pivot).join(""),
+    sentences.slice(pivot).join(""),
+  ].filter(Boolean);
+
+  return (
+    <section
+      id="profile-overview"
+      className="mx-auto max-w-container scroll-mt-32 px-6 pt-24 max-md:pt-16"
+    >
+      <div className="grid overflow-hidden rounded-md border bg-surface lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
+        <Reveal className="p-8 md:p-10 lg:p-12">
+          <p className="text-overline font-sans uppercase text-ink">About 專家概覽</p>
+          <h2 className="mt-3 font-display text-h2 text-text-primary">關於 {firstName}</h2>
+          <div className="mt-6 max-w-prose space-y-4">
+            {paragraphs.map((paragraph) => (
+              <p key={paragraph.slice(0, 48)} className="text-body text-text-secondary">
+                {paragraph}
+              </p>
+            ))}
+          </div>
+        </Reveal>
+
+        <Reveal delay={0.08} className="border-t bg-card p-8 md:p-10 lg:border-l lg:border-t-0 lg:p-12">
+          <p className="text-overline font-sans uppercase text-text-muted">Ask Topics 可以問咩</p>
+          <h3 className="mt-3 font-display text-h3 text-text-primary">
+            由 {firstName} 嘅實戰領域開始
+          </h3>
+          <div className="mt-6 divide-y border-y">
+            {expert.specialties.map((specialty) => {
+              const Icon = specialtyIcon(specialty);
+              return (
+                <div key={specialty} className="flex items-center gap-3 py-4">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-ink-soft text-ink">
+                    <Icon className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+                  </span>
+                  <span className="font-sans text-label text-text-primary">{specialty}</span>
+                </div>
+              );
+            })}
+          </div>
+          <Link
+            to={askHref}
+            className="press mt-7 inline-flex h-11 items-center gap-2 rounded-md bg-ink-solid px-6 text-label text-on-accent hover:bg-ink-hover"
+          >
+            問 {firstName} 嘅 AI 分身
+            <ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+          </Link>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
 /* ================= Verified 專家 — Expert IP 主頁 ================= */
 
 function VerifiedProfile({ expert }: { expert: Expert }) {
@@ -190,6 +314,10 @@ function VerifiedProfile({ expert }: { expert: Expert }) {
       {/* Section 2 — Key stats band(dark strip):自訂 stats + 真實動態統計 */}
       <ExpertStatsBand custom={profile?.stats ?? []} live={liveStats} />
 
+      <ExpertProfileNav />
+
+      <ExpertOverview expert={expert} bio={bio} askHref={askHref} />
+
       {/* Section 3 — 成就佐證 Strip(experts.ts 真實身份 chips) */}
       {expert.metrics && expert.metrics.length > 0 && (
         <section className="mx-auto max-w-container px-6 pt-16 max-md:pt-12">
@@ -222,7 +350,7 @@ function VerifiedProfile({ expert }: { expert: Expert }) {
       <ExpertStyleSections expert={expert} />
 
       {/* Section 6 — 核心觀點 Grid(保留現有 10 觀點內容) */}
-      <section className="mx-auto max-w-container px-6 pt-24 max-md:pt-16">
+      <section id="viewpoints" className="mx-auto max-w-container scroll-mt-32 px-6 pt-24 max-md:pt-16">
         <Reveal>
           <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
             <h2 className="font-display text-h3 text-text-primary">
@@ -231,11 +359,11 @@ function VerifiedProfile({ expert }: { expert: Expert }) {
             <p className="text-caption text-text-muted">蒸餾自公開分享與授權內容</p>
           </div>
         </Reveal>
-        <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div className="mt-8 flex snap-x gap-5 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-2 md:gap-6 md:overflow-visible md:pb-0">
           {shown.map((v, i) => (
             <motion.article
               key={v.title}
-              className="card-hover rounded-md border bg-surface p-6"
+              className="card-hover w-[82vw] max-w-[300px] shrink-0 snap-start rounded-md border bg-surface p-6 md:w-auto md:max-w-none"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
@@ -255,6 +383,7 @@ function VerifiedProfile({ expert }: { expert: Expert }) {
           {/* 收尾卡：虛線邊框，其餘觀點在分身對話中探索 */}
           {remaining > 0 && (
             <motion.div
+              className="w-[82vw] max-w-[300px] shrink-0 snap-start md:w-auto md:max-w-none"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
@@ -279,7 +408,7 @@ function VerifiedProfile({ expert }: { expert: Expert }) {
       </section>
 
       {/* Section 7 — 授權透明度（強制置於對話入口之上） */}
-      <section className="mx-auto max-w-[720px] px-6 pt-24 max-md:pt-16">
+      <section id="transparency" className="mx-auto max-w-[720px] scroll-mt-32 px-6 pt-24 max-md:pt-16">
         <Reveal y={16} duration={0.4}>
           <div className="rounded-md bg-card p-8">
             <p className="flex items-center gap-2 text-overline font-sans uppercase text-text-muted">
@@ -294,7 +423,7 @@ function VerifiedProfile({ expert }: { expert: Expert }) {
       </section>
 
       {/* Section 8 — AI 分身入口 Band */}
-      <section className="mt-24 border-y bg-surface max-md:mt-16">
+      <section id="ask-expert" className="mt-24 scroll-mt-32 border-y bg-surface max-md:mt-16">
         <div className="mx-auto max-w-container px-6 py-16 text-center">
           <Reveal>
             <h2 className="font-display text-h3 text-text-primary">

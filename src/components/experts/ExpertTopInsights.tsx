@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowRight, ArrowUpRight, Sparkles } from "lucide-react";
+import { ArrowRight, ArrowUpRight, BookOpenCheck } from "lucide-react";
 import Reveal, { REVEAL_EASE } from "@/components/Reveal";
 import { hkDayKey } from "@/data/liveItems";
 import type { ExpertInsight } from "@/lib/expertProfiles";
@@ -54,7 +54,7 @@ export default function ExpertTopInsights({
         <Reveal y={16} duration={0.4}>
           <div className="mt-8 flex flex-col items-center rounded-md border border-dashed border-border-strong px-8 py-16 text-center">
             <span className="flex h-12 w-12 items-center justify-center rounded-md bg-ink-soft text-ink">
-              <Sparkles className="h-6 w-6" strokeWidth={1.5} aria-hidden="true" />
+              <BookOpenCheck className="h-6 w-6" strokeWidth={1.5} aria-hidden="true" />
             </span>
             <h3 className="mt-5 font-display text-h4 text-text-primary">
               首批獨家內容籌備中

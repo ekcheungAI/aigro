@@ -34,6 +34,14 @@ interface ExpertIpHeroProps {
   askHref: string;
 }
 
+function conciseBio(bio: string): string {
+  if (bio.length <= 240) return bio;
+  const draft = bio.slice(0, 220);
+  const stops = [draft.lastIndexOf("。"), draft.lastIndexOf("，"), draft.lastIndexOf(",")];
+  const cut = Math.max(...stops);
+  return `${draft.slice(0, cut >= 120 ? cut + 1 : 220).trim()}…`;
+}
+
 /**
  * Expert IP cinematic hero — MasterClass 級編排:
  * 全寬 deep navy band(#02122C)+ brand green accent、超大 Fraunces 姓名、
@@ -192,14 +200,20 @@ export default function ExpertIpHero({
 
             {/* Bio — expert_profiles.bio 優先,回落 experts.ts 已核實 bio */}
             {bio && (
-              <motion.p
-                className="mt-4 max-w-[560px] text-body-sm text-band-text-secondary"
+              <motion.div
+                className="mt-4 max-w-[600px]"
                 initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.46, ease: REVEAL_EASE }}
               >
-                {bio}
-              </motion.p>
+                <p className="text-body-sm text-band-text-secondary">{conciseBio(bio)}</p>
+                <a
+                  href="#profile-overview"
+                  className="mt-3 inline-flex min-h-11 items-center text-label text-band-ink link-underline"
+                >
+                  閱讀完整介紹
+                </a>
+              </motion.div>
             )}
 
             {/* 分身檔案 meta(perskill 格式)— mono caption,不喧賓奪主 */}

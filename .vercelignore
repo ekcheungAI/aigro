@@ -1,0 +1,8 @@
+.playwright-cli
+.worktrees
+drafts
+output
+supabase/.branches
+Codex Image*.png
+docs/minimax-m3.md
+supabase/v4-minimax.sql

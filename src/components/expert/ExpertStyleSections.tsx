@@ -1,4 +1,5 @@
 import Reveal from "@/components/Reveal";
+import { ChevronDown } from "lucide-react";
 import type { Expert } from "@/data/experts";
 
 /**
@@ -29,28 +30,44 @@ function SectionHeader({
 
 function MethodSummary({ expert }: { expert: Expert }) {
   const radar = expert.radar ?? [];
+  const traits = expert.traits ?? [];
 
   return (
-    <section className="mx-auto max-w-[720px] px-6 pt-24 max-md:pt-16">
+    <section
+      id="method-summary"
+      className="mx-auto max-w-container scroll-mt-32 px-6 pt-24 max-md:pt-16"
+    >
       <SectionHeader
         title="方法摘要 Method Summary"
         caption="編輯部整理・不作量化評分"
       />
-      <div className="mt-10 border-y">
+      {traits.length > 0 && (
+        <Reveal delay={0.04}>
+          <div className="mt-6 flex flex-wrap gap-2">
+            {traits.map((trait) => (
+              <span
+                key={trait}
+                className="rounded-sm bg-ink-soft px-3 py-1.5 font-sans text-overline text-ink"
+              >
+                {trait}
+              </span>
+            ))}
+          </div>
+        </Reveal>
+      )}
+      <div className="mt-8 flex snap-x gap-4 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-2 md:overflow-visible md:pb-0 lg:grid-cols-3">
         {radar.map((d, i) => (
           <Reveal
             key={d.label}
             delay={i * 0.06}
-            className={i > 0 ? "border-t" : ""}
+            className="h-full w-[78vw] max-w-[280px] shrink-0 snap-start md:w-auto md:max-w-none"
           >
-            <div className="grid gap-3 py-6 sm:grid-cols-[3rem_1fr]">
-              <span className="font-mono text-caption text-ink">
+            <div className="h-full rounded-md border bg-surface p-6">
+              <span className="flex h-9 w-9 items-center justify-center rounded-md bg-ink-soft font-mono text-caption text-ink">
                 {String(i + 1).padStart(2, "0")}
               </span>
-              <div>
-                <h3 className="text-label text-text-primary">{d.label}</h3>
-                <p className="mt-2 text-body-sm text-text-secondary">{d.note}</p>
-              </div>
+              <h3 className="mt-5 font-sans text-h4 text-text-primary">{d.label}</h3>
+              <p className="mt-3 text-body-sm text-text-secondary">{d.note}</p>
             </div>
           </Reveal>
         ))}
@@ -59,92 +76,82 @@ function MethodSummary({ expert }: { expert: Expert }) {
   );
 }
 
-/* ================= C. 核心特質 chips ================= */
+/* ================= C–D. 工作風格 + 決策原則 ================= */
 
-function CoreTraits({ expert }: { expert: Expert }) {
-  const traits = expert.traits ?? [];
-  return (
-    <section className="mx-auto max-w-[720px] px-6 pt-16 max-md:pt-12">
-      <SectionHeader title="核心特質 Core Traits" />
-      <Reveal delay={0.08}>
-        <div className="mt-6 flex flex-wrap gap-2">
-          {traits.map((t) => (
-            <span
-              key={t}
-              className="rounded-sm bg-card px-3 py-1.5 text-overline font-sans text-text-secondary"
-            >
-              {t}
-            </span>
-          ))}
-        </div>
-      </Reveal>
-    </section>
-  );
-}
-
-/* ================= D. 工作風格(hairline 分段) ================= */
-
-function WorkingStyle({ expert }: { expert: Expert }) {
+function ExpertPlaybook({ expert }: { expert: Expert }) {
   const blocks = expert.workingStyle ?? [];
-  return (
-    <section className="mx-auto max-w-[720px] px-6 pt-24 max-md:pt-16">
-      <SectionHeader title="工作風格 Working Style" />
-      <div className="mt-10">
-        {blocks.map((b, i) => (
-          <Reveal
-            key={b.title}
-            delay={i * 0.08}
-            className={i > 0 ? "mt-8 border-t pt-8" : ""}
-          >
-            <h3 className="text-h4 font-sans text-text-primary">{b.title}</h3>
-            <p className="mt-3 text-body text-text-secondary">{b.body}</p>
-          </Reveal>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-/* ================= E. 決策原則(numbered rows + hairline dividers) ================= */
-
-function DecisionHeuristics({ expert }: { expert: Expert }) {
   const rules = expert.heuristics ?? [];
+
+  if (blocks.length === 0 && rules.length === 0) return null;
+
   return (
-    <section className="mx-auto max-w-[720px] px-6 pt-24 max-md:pt-16">
-      <SectionHeader
-        title="決策原則 Decision Heuristics"
-        caption="蒸餾自公開分享與授權內容"
-      />
-      <div className="mt-10">
-        {rules.map((r, i) => (
+    <section className="mx-auto max-w-container px-6 pt-24 max-md:pt-16">
+      {blocks.length > 0 && (
+        <>
+          <SectionHeader title="工作風格 Working Style" />
+          <div className="mt-8 flex snap-x gap-5 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-3 md:overflow-visible md:pb-0">
+            {blocks.map((block, index) => (
+              <Reveal
+                key={block.title}
+                delay={index * 0.06}
+                className="h-full w-[82vw] max-w-[300px] shrink-0 snap-start md:w-auto md:max-w-none"
+              >
+                <article className="h-full border-t-2 border-ink bg-surface p-6">
+                  <p className="font-mono text-caption text-ink">
+                    {String(index + 1).padStart(2, "0")}
+                  </p>
+                  <h3 className="mt-4 font-sans text-h4 text-text-primary">{block.title}</h3>
+                  <p className="mt-3 text-body-sm text-text-secondary">{block.body}</p>
+                </article>
+              </Reveal>
+            ))}
+          </div>
+        </>
+      )}
+
+      {rules.length > 0 && (
+        <div className="mt-20 grid gap-8 lg:grid-cols-[280px_minmax(0,1fr)] max-md:mt-16">
           <Reveal
-            key={r.name}
-            delay={i * 0.06}
-            className={i > 0 ? "mt-10 border-t pt-10" : ""}
+            y={16}
+            duration={0.4}
           >
-            <div className="flex gap-6 max-md:gap-4">
-              <span className="pt-1 font-mono text-caption text-ink">
-                {String(i + 1).padStart(2, "0")}
-              </span>
-              <div className="min-w-0">
-                <h3 className="text-h4 font-sans text-text-primary">{r.name}</h3>
-                <p className="mt-4 text-overline font-sans uppercase text-text-muted">
-                  使用時機 When to use
-                </p>
-                <p className="mt-2 text-body-sm text-text-secondary">
-                  {r.whenToUse}
-                </p>
-                <p className="mt-5 text-overline font-sans uppercase text-text-muted">
-                  實例 Real case
-                </p>
-                <p className="mt-2 text-body-sm text-text-secondary">
-                  {r.example}
-                </p>
-              </div>
-            </div>
+            <p className="text-overline font-sans uppercase text-ink">Decision Playbook</p>
+            <h2 className="mt-3 font-display text-h3 text-text-primary">決策原則</h2>
+            <p className="mt-3 text-body-sm text-text-secondary">
+              蒸餾自公開分享與授權內容。展開每條原則，查看適用時機同實際用法。
+            </p>
           </Reveal>
-        ))}
-      </div>
+          <div className="border-y">
+            {rules.map((rule, index) => (
+              <Reveal key={rule.name} delay={index * 0.05}>
+                <details className="group border-b last:border-b-0" open={index === 0}>
+                  <summary className="press flex min-h-16 cursor-pointer list-none items-center gap-4 py-4 [&::-webkit-details-marker]:hidden">
+                    <span className="font-mono text-caption text-ink">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <span className="font-sans text-h4 text-text-primary">{rule.name}</span>
+                    <ChevronDown
+                      className="ml-auto h-5 w-5 text-text-muted transition-transform duration-200 group-open:rotate-180"
+                      strokeWidth={1.5}
+                      aria-hidden="true"
+                    />
+                  </summary>
+                  <div className="grid gap-6 pb-6 pl-10 md:grid-cols-2">
+                    <div>
+                      <p className="text-overline font-sans uppercase text-text-muted">使用時機</p>
+                      <p className="mt-2 text-body-sm text-text-secondary">{rule.whenToUse}</p>
+                    </div>
+                    <div>
+                      <p className="text-overline font-sans uppercase text-text-muted">實際用法</p>
+                      <p className="mt-2 text-body-sm text-text-secondary">{rule.example}</p>
+                    </div>
+                  </div>
+                </details>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      )}
     </section>
   );
 }
@@ -153,13 +160,7 @@ export default function ExpertStyleSections({ expert }: { expert: Expert }) {
   return (
     <>
       {expert.radar && expert.radar.length > 0 && <MethodSummary expert={expert} />}
-      {expert.traits && expert.traits.length > 0 && <CoreTraits expert={expert} />}
-      {expert.workingStyle && expert.workingStyle.length > 0 && (
-        <WorkingStyle expert={expert} />
-      )}
-      {expert.heuristics && expert.heuristics.length > 0 && (
-        <DecisionHeuristics expert={expert} />
-      )}
+      <ExpertPlaybook expert={expert} />
     </>
   );
 }

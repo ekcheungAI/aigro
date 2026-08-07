@@ -210,8 +210,8 @@
 
 - 64px 高，`surface` 背景 + 1px `border` 底線，滾動時不變化（無毛玻璃、無縮放）。
 - 左：官方透明底三點 AIGRO wordmark（light 用 navy 版，dark 用 white 版）+ 可選 `caption` `text-muted`「香港 AI・增長情報」。不可用文字或 CSS 重畫 logo。
-- 中（desktop）：`label` 雙語連結 — `Insights 情報` · `Cases 案例` · `Library 資源庫` · `Experts 專家` · `Ask 問答` · `Pricing 方案`。Active：lime 系文字（light=`lime-text` / dark=`lime`）+ 2px 同色下劃線 offset 6px。
-- 右：深淺色切換（Lucide `sun`/`moon` 20px，200ms 旋轉淡入）+「訂閱」lime 實心按鈕（40px 高，`label`，radius-md，**近黑字**）。
+- 中（desktop）：`label` 雙語連結 — `Insights 情報` · `Skills 技能` · `Experts 專家` · `Ask 問答` · `Pricing 方案`。英文係主標籤、中文係同一行嘅輔助 caption。Active：主文字加深 + 底部 2px lime bar；避免瀏覽器 underline 令中英基線顯得不齊。
+- 右：深淺色切換 + 身份動作。未登入顯示「登入」與「加入 Club」；已登入收斂成 avatar + 角色入口嘅單一帳戶選單，選單內先顯示完整名稱、角色、平台入口、帳戶設定與登出，避免長名稱擠壓主導航。
 - Mobile：<768px 漢堡選單（Lucide `menu`），全屏 drawer（`overlay` 背景，大襯線連結，stagger 80ms 滑入）。
 
 ### 6.2 Footer（全站）

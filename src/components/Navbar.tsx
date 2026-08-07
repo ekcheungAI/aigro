@@ -1,20 +1,34 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { LogOut, Menu, Moon, Search, Sun, X } from "lucide-react";
+import {
+  ChevronDown,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  Moon,
+  Search,
+  Sun,
+  UserRound,
+  X,
+} from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { useMember } from "@/hooks/useMember";
 import { cn } from "@/lib/utils";
 import { REVEAL_EASE } from "@/components/Reveal";
-import { clearMember, memberInitial } from "@/components/auth/member";
+import {
+  clearMember,
+  memberInitial,
+  ROLE_LABELS,
+} from "@/components/auth/member";
 import useModalDialog from "@/hooks/useModalDialog";
 
 const NAV_LINKS = [
   { to: "/insights", en: "Insights", zh: "情報" },
   { to: "/skills", en: "Skills", zh: "技能" },
   { to: "/experts", en: "Experts", zh: "專家" },
-  { to: "/pricing", en: "Pricing", zh: "方案" },
   { to: "/ask", en: "Ask", zh: "問答" },
+  { to: "/pricing", en: "Pricing", zh: "方案" },
 ] as const;
 
 /**
@@ -25,7 +39,9 @@ const NAV_LINKS = [
 export default function Navbar() {
   const { isDark, toggleTheme } = useTheme();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const accountMenuRef = useRef<HTMLDivElement>(null);
   const { pathname } = useLocation();
   // 會員態 — useMember 響應式(auth state change / 跨分頁 / demo 登入都即時更新)
   const { member } = useMember();
@@ -39,6 +55,23 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  useEffect(() => {
+    const onPointerDown = (event: PointerEvent) => {
+      if (!accountMenuRef.current?.contains(event.target as Node)) {
+        setAccountOpen(false);
+      }
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setAccountOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, []);
+
   // Transparent-over-hero only on Home, only at the very top
   const overHero = pathname === "/" && !scrolled;
 
@@ -50,6 +83,13 @@ export default function Navbar() {
         ? "/admin"
         : "/account"
     : "/account";
+  const memberAreaLabel = member
+    ? member.role === "expert"
+      ? "專家平台"
+      : member.role === "admin" || member.role === "super_admin"
+        ? "管理後台"
+        : "會員專區"
+    : "會員專區";
 
   return (
     <>
@@ -100,25 +140,41 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop nav — bilingual labels */}
-          <nav className="mx-auto hidden items-center gap-4 lg:flex xl:gap-5" aria-label="主導航">
+          <nav className="mx-auto hidden h-full items-center gap-1 lg:flex" aria-label="主導航">
             {NAV_LINKS.map((link) => (
               <NavLink
                 key={link.to}
                 to={link.to}
-                className={({ isActive }) =>
-                  cn(
-                    "inline-flex min-h-11 items-center text-label transition-colors duration-150",
-                    overHero
-                      ? "text-band-text/85 hover:text-band-text"
-                      : "text-text-secondary hover:text-ink",
-                    isActive &&
-                      (overHero
-                        ? "text-band-ink underline decoration-band-ink decoration-2 underline-offset-[6px]"
-                        : "text-ink underline decoration-ink decoration-2 underline-offset-[6px]")
-                  )
-                }
+                className={({ isActive }) => cn(
+                  "relative inline-flex h-full min-h-11 items-center gap-1.5 px-3 font-sans text-label transition-colors duration-150 xl:px-4",
+                  overHero
+                    ? "text-band-text-secondary hover:text-band-text"
+                    : "text-text-secondary hover:text-text-primary",
+                  isActive && (overHero ? "text-band-text" : "text-text-primary")
+                )}
               >
-                {link.en} {link.zh}
+                {({ isActive }) => (
+                  <>
+                    <span>{link.en}</span>
+                    <span className={cn(
+                      "text-caption",
+                      isActive
+                        ? overHero ? "text-band-ink" : "text-ink"
+                        : overHero ? "text-band-text-muted" : "text-text-muted"
+                    )}>
+                      {link.zh}
+                    </span>
+                    {isActive && (
+                      <span
+                        aria-hidden="true"
+                        className={cn(
+                          "absolute inset-x-3 bottom-0 h-0.5 xl:inset-x-4",
+                          overHero ? "bg-band-ink" : "bg-ink"
+                        )}
+                      />
+                    )}
+                  </>
+                )}
               </NavLink>
             ))}
           </nav>
@@ -143,63 +199,86 @@ export default function Navbar() {
               )}
             </button>
             {member && (
-              /* 已登入:頭像 chip — expert → /portal,admin → /admin,其他 → /account;
-                 創始會員喺名下面加「創始會員」caption */
-              <Link
-                to={memberChipTo}
-                aria-label={
-                  member.role === "expert"
-                    ? `${member.name} 嘅專家平台`
-                    : member.role === "admin" || member.role === "super_admin"
-                      ? `${member.name} 嘅管理後台`
-                      : `${member.name} 嘅會員專區`
-                }
-                className={cn(
-                  "press hidden h-11 items-center gap-2 rounded-md border pl-1.5 pr-3 sm:inline-flex",
-                  overHero
-                    ? "border-band-border-strong hover:bg-band-ink-soft"
-                    : "border-border-strong hover:bg-ink-soft"
-                )}
-              >
-                <span
-                  aria-hidden="true"
-                  className="flex h-7 w-7 items-center justify-center rounded-full bg-lime font-display text-[13px] font-medium text-on-accent"
-                >
-                  {memberInitial(member.name)}
-                </span>
-                <span className="flex max-w-[96px] flex-col items-start">
-                  <span
-                    className={cn(
-                      "w-full truncate text-label leading-tight",
-                      overHero ? "text-band-text" : "text-text-primary"
-                    )}
-                  >
-                    {member.name}
-                  </span>
-                  {member.role === "founding" && (
-                    <span className="w-full truncate text-[10px] leading-tight text-ink">
-                      創始會員
-                    </span>
+              <div ref={accountMenuRef} className="relative hidden sm:block">
+                <button
+                  type="button"
+                  onClick={() => setAccountOpen((open) => !open)}
+                  aria-label={`${member.name} 帳戶選單`}
+                  aria-haspopup="true"
+                  aria-expanded={accountOpen}
+                  aria-controls="account-navigation"
+                  className={cn(
+                    "press inline-flex h-11 items-center gap-2 rounded-md border pl-1.5 pr-2.5 font-sans",
+                    overHero
+                      ? "border-band-border-strong hover:bg-band-ink-soft"
+                      : "border-border-strong bg-surface hover:bg-ink-soft"
                   )}
-                </span>
-              </Link>
-            )}
-            {member && (
-              /* 登出 — 任何頁面一撳即用;clearMember 清快取 + local-scope signOut */
-              <button
-                type="button"
-                onClick={() => clearMember()}
-                aria-label="登出"
-                title="登出"
-                className={cn(
-                  "press hidden h-11 w-11 items-center justify-center rounded-md border sm:inline-flex",
-                  overHero
-                    ? "border-band-border-strong text-band-text-secondary hover:bg-band-ink-soft hover:text-band-text"
-                    : "border-border-strong text-text-secondary hover:bg-ink-soft hover:text-ink"
+                >
+                  <span
+                    aria-hidden="true"
+                    className="flex h-8 w-8 items-center justify-center rounded-full bg-lime font-display text-[13px] font-medium text-on-accent"
+                  >
+                    {memberInitial(member.name)}
+                  </span>
+                  <span className={cn(
+                    "hidden text-label xl:inline",
+                    overHero ? "text-band-text" : "text-text-primary"
+                  )}>
+                    {memberAreaLabel}
+                  </span>
+                  <ChevronDown
+                    className={cn(
+                      "h-4 w-4 transition-transform duration-150",
+                      accountOpen && "rotate-180",
+                      overHero ? "text-band-text-muted" : "text-text-muted"
+                    )}
+                    strokeWidth={1.5}
+                    aria-hidden="true"
+                  />
+                </button>
+
+                {accountOpen && (
+                  <nav
+                    id="account-navigation"
+                    aria-label="帳戶導覽"
+                    className="absolute right-0 top-full z-20 mt-2 w-64 rounded-md border bg-surface p-2 shadow-card dark:shadow-none"
+                  >
+                    <div className="border-b px-3 pb-3 pt-2">
+                      <p className="truncate text-label text-text-primary">{member.name}</p>
+                      <p className="mt-1 text-caption text-text-muted">{ROLE_LABELS[member.role]}</p>
+                    </div>
+                    <Link
+                      to={memberChipTo}
+                      onClick={() => setAccountOpen(false)}
+                      className="press mt-1 flex min-h-11 items-center gap-3 rounded-md px-3 text-label text-text-secondary hover:bg-ink-soft hover:text-text-primary"
+                    >
+                      <LayoutDashboard className="h-4 w-4 text-text-muted" strokeWidth={1.5} aria-hidden="true" />
+                      {memberAreaLabel}
+                    </Link>
+                    {memberChipTo !== "/account" && (
+                      <Link
+                        to="/account"
+                        onClick={() => setAccountOpen(false)}
+                        className="press flex min-h-11 items-center gap-3 rounded-md px-3 text-label text-text-secondary hover:bg-ink-soft hover:text-text-primary"
+                      >
+                        <UserRound className="h-4 w-4 text-text-muted" strokeWidth={1.5} aria-hidden="true" />
+                        帳戶設定
+                      </Link>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAccountOpen(false);
+                        clearMember();
+                      }}
+                      className="press flex min-h-11 w-full items-center gap-3 rounded-md px-3 text-left text-label text-text-secondary hover:bg-card hover:text-text-primary"
+                    >
+                      <LogOut className="h-4 w-4 text-text-muted" strokeWidth={1.5} aria-hidden="true" />
+                      登出
+                    </button>
+                  </nav>
                 )}
-              >
-                <LogOut className="h-4 w-4" strokeWidth={1.5} />
-              </button>
+              </div>
             )}
             {!member && (
               /* 未登入:登入 ghost + 加入 Club lime primary */

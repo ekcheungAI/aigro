@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   ArrowRight,
+  ArrowUpRight,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -181,7 +182,7 @@ function Hero() {
               aria-expanded={picksOpen}
               className="flex w-full items-center gap-2 px-6 py-4 text-left"
             >
-              <span className="text-label text-band-text">
+              <span className="font-sans text-label text-band-text">
                 {isArchive ? "最新 AI 快照" : "今日 AI 精選速覽"}
               </span>
               <ChevronDown
@@ -189,7 +190,7 @@ function Hero() {
                 strokeWidth={1.5}
                 aria-hidden="true"
               />
-              <span className="ml-auto text-caption text-band-text-muted">
+              <span className="ml-auto font-mono text-caption text-band-text-muted">
                 {picksDate}・{dailyPicks.length} 條
               </span>
             </button>
@@ -209,22 +210,29 @@ function Hero() {
                           href={pick.originalUrl ?? pick.permalink}
                           target="_blank"
                           rel="noreferrer"
-                          className="group flex items-baseline gap-4 px-6 py-3 transition-colors duration-150 hover:bg-band-card"
+                          className="group grid min-h-14 grid-cols-[2rem_minmax(0,1fr)] items-center gap-x-3 px-6 py-3 transition-colors duration-150 hover:bg-band-card sm:grid-cols-[2rem_minmax(0,1fr)_10rem]"
                         >
                           <span className="font-mono text-caption text-band-ink">
                             {String(i + 1).padStart(2, "0")}
                           </span>
-                          <span className="line-clamp-1 text-h4 font-sans font-medium text-band-text transition-colors duration-150 group-hover:text-band-ink">
-                            {pick.title}
+                          <span className="min-w-0">
+                            <span className="line-clamp-1 font-sans text-body font-medium leading-[1.45] text-band-text transition-colors duration-150 group-hover:text-band-ink">
+                              {pick.title}
+                            </span>
+                            <span className="mt-1 flex items-center gap-1 font-sans text-caption text-band-text-muted sm:hidden">
+                              {pick.source || "來源連結"}
+                              <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} aria-hidden="true" />
+                            </span>
                           </span>
-                          <span className="ml-auto shrink-0 text-caption text-band-text-muted">
-                            {pick.source}
+                          <span className="hidden items-center justify-end gap-1 font-sans text-caption text-band-text-muted sm:flex">
+                            <span className="truncate">{pick.source || "來源連結"}</span>
+                            <ArrowUpRight className="h-3.5 w-3.5 shrink-0" strokeWidth={1.5} aria-hidden="true" />
                           </span>
                         </a>
                       </li>
                     ))}
                   </ol>
-                  <p className="border-t border-band-border px-6 py-3 text-caption text-band-text-muted">
+                  <p className="border-t border-band-border px-6 py-3 font-sans text-caption text-band-text-muted">
                     {isLive
                       ? "香港繁體整理 · 每 30 分鐘同步"
                       : isArchive
