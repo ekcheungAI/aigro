@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(11);
+select plan(13);
 
 set local role postgres;
 
@@ -90,6 +90,15 @@ select isnt(
   has_table_privilege('anon', 'public.expert_knowledge', 'select'),
   true,
   'legacy active knowledge is not exposed to anonymous Data API clients'
+);
+select isnt(
+  has_table_privilege('anon', 'public.profiles', 'select'),
+  true,
+  'member profiles are not exposed to anonymous Data API clients'
+);
+select ok(
+  has_table_privilege('anon', 'public.items', 'select'),
+  'published intelligence remains reachable through its public RLS policy'
 );
 
 select * from finish();
