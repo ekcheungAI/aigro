@@ -152,10 +152,26 @@ export interface AdminMessageRow {
 
 export type LeadStage = "新線索" | "已接觸" | "跟進中" | "已轉化";
 
-export interface LeadQuestion {
+export interface StructuredLeadQuestion {
   text?: string;
   persona?: string;
   date?: string;
+}
+
+/** Legacy/client lead snapshots stored strings; server rows can be structured. */
+export type LeadQuestion = string | StructuredLeadQuestion;
+
+export function leadQuestionText(question: LeadQuestion): string {
+  return typeof question === "string" ? question : (question.text ?? "");
+}
+
+export function leadQuestionMeta(question: LeadQuestion): {
+  date: string;
+  persona: string;
+} {
+  return typeof question === "string"
+    ? { date: "", persona: "" }
+    : { date: question.date ?? "", persona: question.persona ?? "" };
 }
 
 export interface LeadTimelineEntry {

@@ -184,6 +184,16 @@ function convMapSet(sessionId: string, conversationId: string): void {
   }
 }
 
+function convMapDelete(sessionId: string): void {
+  const m = loadConvMap();
+  m.delete(sessionId);
+  try {
+    window.localStorage.setItem(CONV_MAP_KEY, JSON.stringify(Object.fromEntries(m)));
+  } catch {
+    /* private mode — in-memory mapping is still cleared */
+  }
+}
+
 /** AiReply.source → messages.source(schema 註釋:kb / llm / guardrail / scripted) */
 function mapMessageSource(source: AiReply["source"]): string {
   if (source === "general" || source === "unavailable") return "scripted";
@@ -197,8 +207,6 @@ export function ensureConversationId(
   title: string
 ): Promise<string | null> {
   if (!supabase || !supabaseReady) return Promise.resolve(null);
-  const cached = convMapGet(sessionId);
-  if (cached) return Promise.resolve(cached);
   const pending = pendingConv.get(sessionId);
   if (pending) return pending;
 
@@ -206,6 +214,17 @@ export function ensureConversationId(
     try {
       const uid = await ensureAuthenticatedUser();
       if (!uid) return null;
+      const cached = convMapGet(sessionId);
+      if (cached) {
+        const { data: ownedConversation } = await supabase
+          .from("conversations")
+          .select("id")
+          .eq("id", cached)
+          .eq("owner_id", uid)
+          .maybeSingle();
+        if (ownedConversation) return cached;
+        convMapDelete(sessionId);
+      }
       const { data: authData } = await supabase.auth.getSession();
       const profileUserId = authData.session?.user.is_anonymous ? null : uid;
       const { data: expert, error: expertError } = await supabase

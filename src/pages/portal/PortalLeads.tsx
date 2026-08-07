@@ -5,7 +5,13 @@ import { usePortalExpert } from "@/components/portal/PortalLayout";
 import QueryState from "@/components/QueryState";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
-import { personaLabel, timeAgo, useAdminQuery } from "@/components/admin/adminData";
+import {
+  leadQuestionMeta,
+  leadQuestionText,
+  personaLabel,
+  timeAgo,
+  useAdminQuery,
+} from "@/components/admin/adminData";
 import type { AdminLeadRow } from "@/components/admin/adminData";
 
 /** 高意向訊號(導入/預約/價錢 = 高) */
@@ -223,10 +229,12 @@ export default function PortalLeads() {
                       className="rounded-md border border-border bg-card/50 px-3.5 py-2.5"
                     >
                       <p className="text-sm leading-relaxed text-text-primary">
-                        「{q.text ?? ""}」
+                        「{leadQuestionText(q)}」
                       </p>
                       <p className="mt-1 font-mono text-[10px] text-text-muted">
-                        {q.date ?? ""} {q.persona ? `· ${personaLabel(q.persona)}` : ""}
+                        {leadQuestionMeta(q).date} {leadQuestionMeta(q).persona
+                          ? `· ${personaLabel(leadQuestionMeta(q).persona)}`
+                          : ""}
                       </p>
                     </li>
                   ))}

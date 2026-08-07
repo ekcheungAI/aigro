@@ -13,6 +13,8 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import {
   daysAgoUtcStartIso,
+  leadQuestionMeta,
+  leadQuestionText,
   personaLabel,
   timeAgo,
   useAdminQuery,
@@ -428,10 +430,12 @@ export default function AdminCRM() {
                         className="rounded-md border border-border bg-card px-3 py-2.5"
                       >
                         <p className="text-sm leading-relaxed text-text-primary">
-                          「{q.text ?? ""}」
+                          「{leadQuestionText(q)}」
                         </p>
                         <p className="mt-1.5 font-mono text-[10px] text-text-muted">
-                          {q.persona ? personaLabel(q.persona) : ""} {q.date ?? ""}
+                          {leadQuestionMeta(q).persona
+                            ? personaLabel(leadQuestionMeta(q).persona)
+                            : ""} {leadQuestionMeta(q).date}
                         </p>
                       </li>
                     ))}
