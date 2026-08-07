@@ -4,8 +4,8 @@
  * 設計(同 liveItems.ts 一致嘅 graceful degradation):
  * - 表公開可讀(anon)。表未建 / 查詢失敗 / 無行 → 全部回 null,
  *   consumer 回落 src/data/experts.ts 嘅已核實靜態資料,頁面永遠唔會空。
- * - 動態統計(對話數 / 情報數 / 知識條目)全部真查 Supabase;
- *   任何一條 query 失敗(如 expert_knowledge 表未建)→ 該項靜默 0,唔虛構。
+ * - 動態統計(對話數 / 情報數 / 知識條目)只喺有效 session 下查 Supabase;
+ *   公開訪客直接回落 0 / [],避免觸碰受保護 table grants。
  *
  * expert_profiles 表結構(v3 SQL):
  *   slug text pk, headline text, bio text,
@@ -98,6 +98,16 @@ function parseFeaturedIds(raw: unknown): string[] {
 
 /* ---------------- 查詢 ---------------- */
 
+async function hasAuthenticatedSession(): Promise<boolean> {
+  if (!supabase) return false;
+  try {
+    const { data } = await supabase.auth.getSession();
+    return Boolean(data.session);
+  } catch {
+    return false;
+  }
+}
+
 /**
  * 讀 expert_profiles 單行。失敗 / 無行 → null(consumer 回落 experts.ts)。
  */
@@ -128,14 +138,15 @@ export async function fetchExpertProfile(
 
 /**
  * 三條真實動態統計 count 查詢並行;任何一條失敗 → 該項靜默 0。
- * (conversations RLS:anon 可讀匿名對話;items:published 公開;expert_knowledge
- *  表未建時 PostgREST 報錯 → 0)
+ * 無 session 時唔發 request:conversations / expert_knowledge 係受保護資料,
+ * 而 items 嘅公開 policy 亦可能依賴受保護會員資料。
  */
 export async function fetchExpertLiveStats(
   slug: string
 ): Promise<ExpertLiveStats> {
   const zero: ExpertLiveStats = { conversations: 0, insights: 0, knowledge: 0 };
   if (!supabase) return zero;
+  if (!(await hasAuthenticatedSession())) return zero;
   const client = supabase;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -172,6 +183,7 @@ export async function fetchExpertTopInsights(
   featuredIds: string[]
 ): Promise<ExpertInsight[]> {
   if (!supabase) return [];
+  if (!(await hasAuthenticatedSession())) return [];
   try {
     const { data, error } = await supabase
       .from("items")
