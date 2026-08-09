@@ -11,13 +11,18 @@ const record = (key, ok, detail, blocking = false) => {
   results.push({ key, status: ok ? "pass" : blocking ? "blocked" : "fail", detail });
 };
 
-async function responseCheck(key, url, expectedStatus, init, detail) {
+async function responseCheck(key, url, expectedStatus, init, detail, blocking = false) {
   try {
     const response = await fetch(url, init);
-    record(key, response.status === expectedStatus, `${detail}; HTTP ${response.status}`);
+    record(key, response.status === expectedStatus, `${detail}; HTTP ${response.status}`, blocking);
     return response;
   } catch (error) {
-    record(key, false, `${detail}; ${error instanceof Error ? error.message : String(error)}`);
+    record(
+      key,
+      false,
+      `${detail}; ${error instanceof Error ? error.message : String(error)}`,
+      blocking
+    );
     return null;
   }
 }
@@ -75,15 +80,46 @@ await responseCheck(
   "chat function CORS preflight"
 );
 
-for (const slug of ["knowledge-worker", "persona-compiler", "booking-notify"]) {
+for (const slug of [
+  "knowledge-worker",
+  "persona-compiler",
+  "booking-notify",
+  "social-sync-worker",
+]) {
   await responseCheck(
     `function.${slug}`,
     `${SUPABASE_URL}/functions/v1/${slug}`,
     401,
     { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" },
-    "internal function rejects missing secret"
+    "internal function rejects missing secret",
+    slug === "social-sync-worker"
   );
 }
+
+await responseCheck(
+  "function.invite_expert_owner",
+  `${SUPABASE_URL}/functions/v1/invite-expert-owner`,
+  401,
+  { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" },
+  "expert invitation function rejects missing JWT",
+  true
+);
+
+await responseCheck(
+  "rpc.public_instructors",
+  `${SUPABASE_URL}/rest/v1/rpc/list_public_instructors`,
+  200,
+  {
+    method: "POST",
+    headers: {
+      apikey: PUBLISHABLE_KEY,
+      "Content-Type": "application/json",
+    },
+    body: "{}",
+  },
+  "sanitized dynamic instructor directory",
+  true
+);
 
 for (const row of results) {
   const label = row.status.toUpperCase().padEnd(7);

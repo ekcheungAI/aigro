@@ -1,6 +1,10 @@
 # Persona Compiler／導師角色蒸餾器
 
-更新：2026-08-05
+更新：2026-08-10
+
+> 狀態：compiler、fidelity gate、人工審批及 rollback 已在程式／migration
+> 內完成；production 尚未部署最新 function、provider secret 及第一個 25 題
+> evaluation dataset，因此 Admin 仍顯示 `Blocked`，唔會當作已 live。
 
 Persona Compiler 將 AIGRO 已批准知識轉成可版本化、可驗證、可回退的導師思考藍圖。方法參考 MIT licensed [Nuwa Skill](https://github.com/alchaincyf/nuwa-skill) 的跨來源研究、矛盾保留、誠實邊界與 fidelity evaluation，但不採用直接冒充真人、自動上網或未經授權蒐集素材的做法。
 

@@ -4,6 +4,7 @@ import {
   normalizeSourceText,
   sha256Hex,
 } from "../_shared/distillation.ts";
+import { buildKnowledgeDuplicateScope } from "../_shared/knowledge-dedupe.ts";
 
 const MAX_JOBS = 3;
 const CHUNK_TARGET_CHARS = 2_800;
@@ -22,6 +23,7 @@ interface SourceRow {
   source_type: SourceType;
   title: string;
   source_url: string | null;
+  archived_at: string | null;
 }
 
 interface RevisionRow {
@@ -166,7 +168,7 @@ async function extractYoutube(url: string): Promise<ExtractedDocument> {
   return { text, segments, provider: "youtube-transcript-dev" };
 }
 
-async function extract(
+function extract(
   client: SupabaseClient,
   source: SourceRow,
   revision: RevisionRow,
@@ -174,7 +176,7 @@ async function extract(
   if (source.source_type === "manual") {
     const text = normalizeSourceText(revision.raw_text ?? "");
     if (!text) throw new Error("Manual source is empty");
-    return { text, provider: "manual" };
+    return Promise.resolve({ text, provider: "manual" });
   }
   if (source.source_type === "url") return extractUrl(source.source_url ?? "");
   if (source.source_type === "pdf") return extractPdf(client, revision.storage_path ?? "");
@@ -289,7 +291,11 @@ async function embed(texts: string[]): Promise<number[][]> {
   return vectors;
 }
 
-async function processJob(client: SupabaseClient, job: ClaimedJob): Promise<void> {
+async function processJob(
+  client: SupabaseClient,
+  job: ClaimedJob,
+  workerId: string,
+): Promise<void> {
   const { data: revisionData, error: revisionError } = await client
     .from("knowledge_revisions")
     .select("id,source_id,raw_text,storage_path")
@@ -299,24 +305,43 @@ async function processJob(client: SupabaseClient, job: ClaimedJob): Promise<void
   const revision = revisionData as RevisionRow;
   const { data: sourceData, error: sourceError } = await client
     .from("knowledge_sources")
-    .select("id,expert_id,source_type,title,source_url")
+    .select("id,expert_id,source_type,title,source_url,archived_at")
     .eq("id", revision.source_id)
     .single();
   if (sourceError || !sourceData) throw new Error(`Source unavailable: ${sourceError?.message}`);
   const source = sourceData as SourceRow;
+  if (source.archived_at) throw new Error("Source consent is no longer active");
 
-  await client.from("knowledge_revisions").update({ status: "processing", error_message: null }).eq("id", revision.id);
+  const { data: processingRevision, error: processingError } = await client
+    .from("knowledge_revisions")
+    .update({ status: "processing", error_message: null })
+    .eq("id", revision.id)
+    .neq("status", "archived")
+    .select("id")
+    .maybeSingle();
+  if (processingError || !processingRevision) {
+    throw new Error("Revision is no longer eligible for distillation");
+  }
   await client.from("distillation_jobs").update({ stage: "extract" }).eq("id", job.id);
   const document = await extract(client, source, revision);
   const contentHash = await sha256Hex(document.text);
-  const { data: duplicate } = await client
+  const duplicateScope = buildKnowledgeDuplicateScope({
+    contentHash,
+    currentRevisionId: revision.id,
+    expertId: source.expert_id,
+  });
+  const { data: duplicate, error: duplicateError } = await client
     .from("knowledge_revisions")
-    .select("id")
-    .eq("content_hash", contentHash)
-    .neq("id", revision.id)
+    .select(duplicateScope.select)
+    .eq("content_hash", duplicateScope.contentHash)
+    .eq(duplicateScope.expertFilterColumn, duplicateScope.expertId)
+    .neq("id", duplicateScope.currentRevisionId)
     .limit(1)
     .maybeSingle();
-  if (duplicate) throw new Error(`Duplicate content already exists in revision ${duplicate.id}`);
+  if (duplicateError) {
+    throw new Error(`Cannot verify duplicate content: ${duplicateError.message}`);
+  }
+  if (duplicate) throw new Error("Duplicate content already exists for this instructor");
 
   await client.from("distillation_jobs").update({ stage: "distill" }).eq("id", job.id);
   const distilled = await distill(source.title, document.text);
@@ -325,40 +350,35 @@ async function processJob(client: SupabaseClient, job: ClaimedJob): Promise<void
 
   await client.from("distillation_jobs").update({ stage: "embed" }).eq("id", job.id);
   const vectors = await embed(chunks.map((chunk) => chunk.content));
-  await client.from("knowledge_chunks").delete().eq("revision_id", revision.id);
-  const { error: chunkError } = await client.from("knowledge_chunks").insert(
-    chunks.map((chunk, index) => ({
-      revision_id: revision.id,
-      expert_id: source.expert_id,
+  const { error: completionError } = await client.rpc("complete_distillation_job", {
+    p_job_id: job.id,
+    p_worker_id: workerId,
+    p_extracted_text: document.text,
+    p_distilled_json: distilled,
+    p_content_hash: contentHash,
+    p_provider_meta: {
+      extraction: document.provider,
+      embedding: Deno.env.get("OPENAI_EMBEDDING_MODEL") ?? "text-embedding-3-small",
+    },
+    p_chunks: chunks.map((chunk, index) => ({
       chunk_index: index,
       content: chunk.content,
       embedding: `[${vectors[index].join(",")}]`,
       citation_meta: chunk.citationMeta,
       token_count: Math.ceil(chunk.content.length / 3),
     })),
-  );
-  if (chunkError) throw new Error(`Cannot save chunks: ${chunkError.message}`);
-
-  const { error: updateError } = await client.from("knowledge_revisions").update({
-    extracted_text: document.text,
-    distilled_json: distilled,
-    content_hash: contentHash,
-    status: "review",
-    provider_meta: {
-      extraction: document.provider,
-      embedding: Deno.env.get("OPENAI_EMBEDDING_MODEL") ?? "text-embedding-3-small",
-    },
-    error_message: null,
-  }).eq("id", revision.id);
-  if (updateError) throw new Error(`Cannot complete revision: ${updateError.message}`);
-  await client.from("distillation_jobs").update({
-    stage: "complete",
-    status: "complete",
-    error_message: null,
-  }).eq("id", job.id);
+  });
+  if (completionError) {
+    throw new Error(`Cannot complete distillation atomically: ${completionError.message}`);
+  }
 }
 
-async function failJob(client: SupabaseClient, job: ClaimedJob, error: unknown): Promise<void> {
+async function failJob(
+  client: SupabaseClient,
+  job: ClaimedJob,
+  workerId: string,
+  error: unknown,
+): Promise<void> {
   const message = error instanceof Error ? error.message : String(error);
   const retry = job.attempts < 3;
   const delayMinutes = Math.max(1, 2 ** Math.max(0, job.attempts - 1));
@@ -369,11 +389,14 @@ async function failJob(client: SupabaseClient, job: ClaimedJob, error: unknown):
       error_message: message.slice(0, 1_000),
       locked_at: null,
       locked_by: null,
-    }).eq("id", job.id),
+    }).eq("id", job.id)
+      .eq("status", "processing")
+      .eq("locked_by", workerId),
     client.from("knowledge_revisions").update({
       status: retry ? "queued" : "failed",
       error_message: message.slice(0, 1_000),
-    }).eq("id", job.revision_id),
+    }).eq("id", job.revision_id)
+      .neq("status", "archived"),
   ]);
 }
 
@@ -391,10 +414,10 @@ Deno.serve(async (request) => {
   const results: Array<{ id: string; status: string; error?: string }> = [];
   for (const job of jobs) {
     try {
-      await processJob(client, job);
+      await processJob(client, job, workerId);
       results.push({ id: job.id, status: "complete" });
     } catch (jobError) {
-      await failJob(client, job, jobError);
+      await failJob(client, job, workerId, jobError);
       results.push({
         id: job.id,
         status: job.attempts < 3 ? "retry" : "failed",

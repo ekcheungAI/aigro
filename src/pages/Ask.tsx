@@ -24,13 +24,27 @@ import {
   saveSessionStore,
   setActiveSession,
 } from "@/components/ask/sessions";
+import {
+  clearPendingRequest,
+  pendingRequestId,
+} from "@/components/ask/pendingTurn";
 import type { SessionStore } from "@/components/ask/sessions";
-import { getPersona, personas, personaInitials, pickReply } from "@/data/personas";
+import {
+  getRuntimePersona,
+  personaInitials,
+  personas as staticPersonas,
+  personasFromPublicInstructors,
+  pickReply,
+} from "@/data/personas";
 import { useLiveItems } from "@/data/liveItems";
 import {
+  chatQuotaReply,
   guardrailReply,
+  InstructorChatError,
   instructorUnavailableReply,
   isOffGuard,
+  quotaResetAt,
+  safeClientCitationHref,
   streamInstructorReply,
 } from "@/lib/llmFallback";
 import { expertHasPhoto } from "@/data/experts";
@@ -46,6 +60,8 @@ import { captureWaitlist } from "@/lib/waitlist";
 import { cn } from "@/lib/utils";
 import { getTurnstileToken } from "@/lib/turnstile";
 import useModalDialog from "@/hooks/useModalDialog";
+import { useAdminQuery } from "@/components/admin/adminData";
+import { fetchPublicInstructors } from "@/lib/publicInstructors";
 
 /** 訪客第 3 條訊息後嘅註冊捕捉卡 — dismiss 改 snooze(7 日後可再出一次) */
 const CAPTURE_DISMISS_KEY = "aigro-ask-capture-dismissed";
@@ -53,7 +69,7 @@ const CAPTURE_DISMISS_KEY = "aigro-ask-capture-dismissed";
 const USER_MSG_COUNT_KEY = "aigro-ask-user-msg-count";
 const CAPTURE_SNOOZE_MS = 7 * 24 * 60 * 60 * 1000;
 
-const CAPTURE_BENEFITS = ["無限對話", "歷史同步", "個人化分身推薦"] as const;
+const CAPTURE_BENEFITS = ["每日更多對話", "保留帳戶身份", "日後解鎖會員功能"] as const;
 
 function loadCaptureDismissed(): boolean {
   try {
@@ -120,7 +136,37 @@ function SessionTimer() {
  */
 export default function Ask() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const persona = getPersona(searchParams.get("expert"));
+  const {
+    data: publicInstructors,
+    loading: instructorDirectoryLoading,
+    error: instructorDirectoryError,
+  } = useAdminQuery(fetchPublicInstructors);
+  const safeStaticPersonas = useMemo(
+    () => staticPersonas.map((item) =>
+      item.kind === "expert" ? { ...item, chatReady: false } : item
+    ),
+    []
+  );
+  const runtimePersonas = useMemo(
+    () => publicInstructors
+      ? personasFromPublicInstructors(publicInstructors)
+      : safeStaticPersonas,
+    [publicInstructors, safeStaticPersonas]
+  );
+  const persona = getRuntimePersona(
+    searchParams.get("expert"),
+    runtimePersonas,
+    {
+      status: instructorDirectoryError
+        ? "error"
+        : instructorDirectoryLoading
+          ? "loading"
+          : publicInstructors
+            ? "ready"
+            : "error",
+    }
+  );
+  const chatBlocked = persona.kind === "expert" && persona.chatReady === false;
 
   // Live 開場建議:Supabase items 成熟時,取今日 top 3 情報標題生成
   // 「『標題』點關我事?」chips,排喺 personas.ts 靜態建議前面;未成熟 → 淨靜態
@@ -184,14 +230,41 @@ export default function Ask() {
     triggerRef: sessionsTriggerRef,
   } = useModalDialog(drawerOpen, closeSessionsDrawer);
 
-  // 限時開放:對話額度無限 — 額度用盡升級態暫時 unreachable(保留程式碼)
-  const exhausted = false;
+  // The server is the quota authority. The UI does not guess a remaining count;
+  // a future quota-status endpoint can turn this state on before the next send.
+  const [exhaustedScope, setExhaustedScope] = useState<"daily" | "monthly" | null>(null);
+  const exhausted = exhaustedScope !== null;
+
+  useEffect(() => {
+    if (!exhaustedScope) return;
+    const resetsAt = quotaResetAt(exhaustedScope);
+    let timer = 0;
+    const scheduleReset = () => {
+      const remaining = resetsAt - Date.now();
+      if (remaining <= 0) {
+        setExhaustedScope(null);
+        return;
+      }
+      timer = window.setTimeout(
+        scheduleReset,
+        Math.min(remaining, 2_147_000_000)
+      );
+    };
+    scheduleReset();
+    return () => window.clearTimeout(timer);
+  }, [exhaustedScope]);
 
   const sessions = store.sessions[persona.key] ?? [];
   const activeSessionId = store.active[persona.key] ?? null;
   const activeSession = sessions.find((s) => s.id === activeSessionId) ?? null;
   const messages = useMemo(() => activeSession?.messages ?? [], [activeSession]);
-  const citations = useMemo(() => collectCitations(messages), [messages]);
+  const citations = useMemo(
+    () => collectCitations(messages).map((citation) => ({
+      ...citation,
+      href: safeClientCitationHref(citation.href),
+    })),
+    [messages]
+  );
   // 訪客第 3 條訊息後(跨 session 全局累計),喺訊息流插入一張註冊捕捉卡(snooze 7 日)
   const showCapture = !member && !captureDismissed && globalUserCount >= 3;
 
@@ -304,7 +377,7 @@ export default function Ask() {
   const send = useCallback(
     (raw: string) => {
       const question = raw.trim();
-      if (!question || exhausted || pendingLlm) return;
+      if (!question || exhausted || pendingLlm || chatBlocked) return;
       setInput("");
       if (textareaRef.current) textareaRef.current.style.height = "auto";
       // G13:全局累計訊息數(捕捉卡時機)
@@ -347,7 +420,7 @@ export default function Ask() {
 
       // 平台 FAQ 可用已審核靜態答案；專家分身一律走 CMS/RAG，避免 code
       // 內答案同導師已發佈知識版本不一致。
-      if (persona.kind === "platform" && matched !== "fallback") {
+      if (persona.kind === "platform") {
         commit({ ...reply, matched }, topicId);
         return;
       }
@@ -361,9 +434,9 @@ export default function Ask() {
       void ensureConversationId(prepared.session.id, personaKey, prepared.session.title)
         .then(async (conversationId) => {
           if (!conversationId) throw new Error("conversation_unavailable");
-          const requestId = crypto.randomUUID();
+          const requestId = pendingRequestId(sessionStorage, conversationId, question);
           const turnstileToken = await getTurnstileToken("instructor_chat");
-          return streamInstructorReply(
+          const finalReply = await streamInstructorReply(
             persona,
             conversationId,
             question,
@@ -378,8 +451,20 @@ export default function Ask() {
             },
             turnstileToken
           );
+          clearPendingRequest(sessionStorage, conversationId, requestId);
+          return finalReply;
         })
-        .catch(() => instructorUnavailableReply(persona))
+        .catch((error: unknown) => {
+          if (error instanceof InstructorChatError && error.code.startsWith("quota_exceeded_")) {
+            const scope = error.code === "quota_exceeded_monthly" ? "monthly" : "daily";
+            setExhaustedScope(scope);
+            return chatQuotaReply(
+              persona,
+              scope
+            );
+          }
+          return instructorUnavailableReply(persona);
+        })
         .then((finalReply) => {
           setPendingLlm((current) =>
             current && current.personaKey === personaKey && current.question === question
@@ -389,7 +474,7 @@ export default function Ask() {
           commit(finalReply, null, true);
         });
     },
-    [exhausted, persona, activeSession, pendingLlm, scrollToBottom]
+    [exhausted, persona, activeSession, pendingLlm, chatBlocked, scrollToBottom]
   );
 
   const autoGrow = (el: HTMLTextAreaElement) => {
@@ -425,7 +510,7 @@ export default function Ask() {
         className="hidden h-full lg:block"
       >
         <PersonaPanel
-          personas={personas}
+          personas={runtimePersonas}
           activePersona={persona}
           onSelectPersona={selectPersona}
           sessions={sessions}
@@ -477,15 +562,17 @@ export default function Ask() {
                       size={32}
                     />
                   )}
-                  <PresenceDot
-                    size={10}
-                    className="absolute -bottom-0.5 -right-0.5"
-                  />
+                  {!chatBlocked && (
+                    <PresenceDot
+                      size={10}
+                      className="absolute -bottom-0.5 -right-0.5"
+                    />
+                  )}
                 </button>
                 <div className="min-w-0">
                   <p className="flex items-center gap-1 truncate text-label text-text-primary">
                     <span className="truncate">{persona.name}</span>
-                    <VerifiedBadge size={16} />
+                    {persona.expert.verified && <VerifiedBadge size={16} />}
                   </p>
                   <p className="hidden text-caption text-text-muted sm:block">
                     AI 分身 · Beta
@@ -516,7 +603,7 @@ export default function Ask() {
             )}
           </motion.div>
 
-          {/* 對話中計時 + 關於佢 + 對話額度(限時無限開放) */}
+          {/* 對話中計時 + 關於佢 + 伺服器對話額度 */}
           <div className="ml-auto flex items-center gap-3 sm:gap-4">
             <span className="hidden sm:flex">
               <SessionTimer key={persona.key} />
@@ -546,7 +633,7 @@ export default function Ask() {
 
         {/* 手機版分身切換條(<lg) */}
         <div className="flex shrink-0 gap-2 overflow-x-auto border-b bg-surface px-3 py-2 lg:hidden">
-          {personas.map((p) => {
+          {runtimePersonas.map((p) => {
             const active = p.key === persona.key;
             return (
               <button
@@ -618,6 +705,7 @@ export default function Ask() {
                 {/* G9:greetingBody(personas.ts 已定義)— 分身開場白,唔好浪費 */}
                 <motion.p
                   key={`${persona.key}-greeting-body`}
+                  role={chatBlocked ? "status" : undefined}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.25, delay: reduced ? 0.12 : 0.3 }}
@@ -642,7 +730,7 @@ export default function Ask() {
                         ease: EASE_OUT_STRONG,
                       }}
                       onClick={() => send(s)}
-                      disabled={exhausted || pendingLlm !== null}
+                      disabled={chatBlocked || exhausted || pendingLlm !== null}
                       className="press rounded-sm border bg-surface px-4 py-2.5 text-body-sm text-text-secondary transition-colors duration-150 hover:border-[var(--ask-accent)] hover:text-[var(--ask-accent)] disabled:pointer-events-none disabled:opacity-40"
                     >
                       {s}
@@ -865,10 +953,12 @@ export default function Ask() {
                   className="rounded-md border bg-surface p-8 text-center"
                 >
                   <h4 className="font-display text-h4 text-text-primary">
-                    免費無限對話 · 限時開放
+                    {exhaustedScope === "monthly" ? "本月對話額度已用完" : "今日對話額度已用完"}
                   </h4>
                   <p className="mx-auto mt-2 max-w-md text-body-sm text-text-secondary">
-                    限時開放期間,訪客同會員都係免費無限對話 — 繼續問,唔使等聽日。
+                    {exhaustedScope === "monthly"
+                      ? "額度會按香港時間每月重設；你亦可以查看會員方案或真人導師資料。"
+                      : "額度會按香港時間每日重設；你亦可以查看會員方案或真人導師資料。"}
                   </p>
                   <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
                     <Link
@@ -911,6 +1001,8 @@ export default function Ask() {
                       ref={textareaRef}
                       rows={1}
                       value={input}
+                      disabled={chatBlocked}
+                      aria-describedby="ask-privacy-disclosure"
                       onChange={(e) => {
                         setInput(e.target.value);
                         autoGrow(e.target);
@@ -921,21 +1013,27 @@ export default function Ask() {
                           send(input);
                         }
                       }}
-                      placeholder={`問下${persona.shortName}…`}
+                      placeholder={chatBlocked ? "此 AI 導師暫未可用" : `問下${persona.shortName}…`}
                       className="max-h-[132px] min-h-[48px] flex-1 resize-none overflow-y-auto rounded-md border border-border-strong bg-surface px-4 py-3 text-body text-text-primary transition-[border-color,box-shadow] duration-150 placeholder:text-text-muted focus:border-ink focus:outline-none focus:ring-2 focus:ring-ink-soft"
                     />
                     <button
                       type="button"
                       onClick={() => send(input)}
-                      disabled={!input.trim() || pendingLlm !== null}
+                      disabled={chatBlocked || !input.trim() || pendingLlm !== null}
                       aria-label="送出問題"
                       className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-ink-solid text-on-accent press hover:bg-ink-hover disabled:pointer-events-none disabled:opacity-40"
                     >
                       <ArrowUp className="h-5 w-5" strokeWidth={1.5} />
                     </button>
                   </div>
-                  <p className="mt-2 text-caption text-text-muted">
-                    Shift+Enter 換行・AI 回答僅供參考・免費無限對話 · 限時開放
+                  <p id="ask-privacy-disclosure" className="mt-2 text-caption text-text-muted">
+                    Shift+Enter 換行・AI 回答僅供參考・每日額度按帳戶級別計算
+                    {persona.kind === "expert" && (
+                      <>
+                        <br />
+                        對話內容只供你、所選導師及獲授權 AIGRO 管理員查看，並可用作導師 CRM 跟進；匿名對話保留 30 日。
+                      </>
+                    )}
                   </p>
                 </motion.div>
               )}
@@ -960,7 +1058,7 @@ export default function Ask() {
           persona={persona}
           citations={citations}
           onSuggestion={send}
-          suggestionsDisabled={exhausted || pendingLlm !== null}
+          suggestionsDisabled={chatBlocked || exhausted || pendingLlm !== null}
         />
       </motion.div>
 

@@ -146,7 +146,7 @@ function newFingerprint(): string {
 }
 
 function rlsHint(message: string): string {
-  return `${message} — 可能係權限未開:請先喺 Supabase SQL Editor 執行 supabase/v2-policies.sql(items_expert_insert / items_expert_update_own policy)。`;
+  return `${message} — 請由 Master Admin 檢查最新 migration 同 RLS readiness；唔好再執行已退役嘅 v2/v3 policy SQL。`;
 }
 
 function fieldsToTags(tags: string): string[] {
@@ -592,7 +592,7 @@ export default function PortalInsights() {
         loading={loading}
         error={
           error
-            ? `載入失敗:${error} — 可能係權限未開:請先喺 Supabase SQL Editor 執行 supabase/v2-policies.sql。`
+            ? `載入失敗:${error} — 請由 Master Admin 檢查最新 migration 同 RLS readiness。`
             : null
         }
         retry={refetch}

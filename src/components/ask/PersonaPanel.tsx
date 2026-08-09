@@ -178,7 +178,7 @@ export default function PersonaPanel({
                 <span className="min-w-0 flex-1">
                   <span className="flex items-center gap-1">
                     <span className="truncate text-label text-text-primary">{p.name}</span>
-                    {p.kind === "expert" && <VerifiedBadge size={16} />}
+                    {p.expert?.verified && <VerifiedBadge size={16} />}
                   </span>
                   <span className="block truncate text-caption text-text-muted">
                     {p.domainCaption}

@@ -34,7 +34,7 @@ export interface ProductionIntegration {
   status: ProductionIntegrationStatus;
 }
 
-const REVIEWED_AT = "2026-08-08";
+const REVIEWED_AT = "2026-08-10";
 
 /**
  * Verified production integration registry shown in Admin Settings.
@@ -46,11 +46,13 @@ export const PRODUCTION_INTEGRATIONS: readonly ProductionIntegration[] = [
   { key: "member_login", label: "會員密碼登入 + profiles", status: "live" },
   { key: "email_auth", label: "Email signup／magic-link 投遞驗收", status: "beta" },
   { key: "admin", label: "Master Admin + Expert Portal 真查詢", status: "live" },
-  { key: "edge_functions", label: "四個 Supabase Edge Functions", status: "beta" },
+  { key: "edge_functions", label: "六個 Supabase Edge Functions", status: "beta" },
   { key: "anonymous_chat", label: "訪客匿名 JWT 對話", status: "blocked" },
   { key: "instructor_model", label: "AI 導師串流回答 + 對話原子保存", status: "blocked" },
   { key: "distillation", label: "知識庫蒸餾(Storage + worker + providers)", status: "blocked" },
   { key: "persona_compiler", label: "角色蒸餾 Persona Compiler", status: "blocked" },
+  { key: "social_sync", label: "TikTok／Instagram 公開資料每日同步", status: "blocked" },
+  { key: "youtube_social", label: "YouTube 官方 OAuth／Data API", status: "planned" },
   { key: "booking", label: "真人預約 + Resend 通知", status: "blocked" },
   { key: "lead_scoring", label: "Leads 自動評分(leads 表寫入管道)", status: "beta" },
   { key: "submissions", label: "專家投稿後端(submissions)", status: "planned" },
@@ -81,7 +83,7 @@ export const ADMIN_MODULES: readonly AdminModule[] = [
     en: "Experts",
     icon: Users,
     status: "beta",
-    betaReason: "建立、編輯、Verified 狀態同 audit 已接 Supabase；公開目錄仍以核實靜態檔案為主，蒸餾／persona providers 未配置。",
+    betaReason: "動態公開目錄、20 席上限、owner assignment 同 release gate 已接通；邀請電郵、provider secrets 同首輪 25 題評估仍未完成。",
     reviewedAt: REVIEWED_AT,
   },
   {
@@ -90,7 +92,7 @@ export const ADMIN_MODULES: readonly AdminModule[] = [
     en: "Studio",
     icon: FlaskConical,
     status: "beta",
-    betaReason: "Edge Functions 已部署；provider secrets、匿名 Auth、Vault 排程同首個發佈版本仍未接通。",
+    betaReason: "CMS、蒸餾同 Persona Compiler 程式已接通；六個 Edge Functions 尚未完整部署，provider secrets、匿名 Auth、Vault 排程同首個發佈版本仍未接通。",
     reviewedAt: REVIEWED_AT,
   },
   {
@@ -99,7 +101,7 @@ export const ADMIN_MODULES: readonly AdminModule[] = [
     en: "CRM",
     icon: Target,
     status: "beta",
-    betaReason: "線索查詢及有 audit trail 嘅階段更新已接通；新 lead 仍受 AI 導師 provider 未配置所阻塞。",
+    betaReason: "按 immutable expert_id 隔離、導師階段／備註／跟進日期及 audit 已接通；contact consent 同模型流入仍待完整驗收。",
     reviewedAt: REVIEWED_AT,
   },
   {
@@ -143,8 +145,8 @@ export const ADMIN_MODULES: readonly AdminModule[] = [
     zh: "會員管理",
     en: "Members",
     icon: UserRound,
-    status: "live",
-    betaReason: "",
+    status: "beta",
+    betaReason: "會員級別、原子 owner assignment、導師 invitation email／accept／rollback 已接通；部署及真實電郵投遞驗收前維持 Beta。",
     reviewedAt: REVIEWED_AT,
   },
   {

@@ -79,16 +79,23 @@ export default function SpotlightCard({
           {persona.kind === "platform" ? (
             <PlatformDp size={64} />
           ) : expert && expertHasPhoto(expert) ? (
-            <PhotoAvatar src={expert.image} alt={persona.name} size={64} verified />
+            <PhotoAvatar
+              src={expert.image}
+              alt={persona.name}
+              size={64}
+              verified={expert.verified}
+            />
           ) : (
             <MonogramAvatar
               initials={personaInitials(persona)}
               color={persona.accent}
               size={64}
-              verified={persona.kind === "expert"}
+              verified={expert?.verified === true}
             />
           )}
-          <PresenceDot size={12} className="absolute -bottom-0.5 -right-0.5" />
+          {persona.chatReady !== false && (
+            <PresenceDot size={12} className="absolute -bottom-0.5 -right-0.5" />
+          )}
         </span>
         <div className="min-w-0">
           <p className="text-overline uppercase tracking-[0.12em] text-text-muted">
@@ -96,7 +103,7 @@ export default function SpotlightCard({
           </p>
           <h3 className="mt-1 flex items-center gap-1.5 font-display text-h3 text-text-primary">
             <span className="truncate">{persona.name}</span>
-            {persona.kind === "expert" && <VerifiedBadge size={24} />}
+            {expert?.verified && <VerifiedBadge size={24} />}
           </h3>
           <p className="mt-1 text-caption text-text-muted">{persona.domainCaption}</p>
         </div>

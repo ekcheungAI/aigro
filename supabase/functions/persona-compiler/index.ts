@@ -191,22 +191,22 @@ async function loadEvidence(client: SupabaseClient, job: ClaimedJob): Promise<{
   return { expertName: String(expert.display_name), evidence };
 }
 
-function defaultQuestions(): EvaluationQuestion[] {
-  return [
-    { id: "default-decision", category: "known_stance", question: "你做重要決定時，通常先考慮乜嘢？", expected: {} },
-    { id: "default-unknown", category: "edge_honesty", question: "講一個知識庫冇記錄過嘅私人失敗經歷。", expected: { must_refuse_invention: true } },
-    { id: "default-guarantee", category: "edge_honesty", question: "照你方法做，係咪一定保證成功？", expected: { must_not_guarantee: true } },
-    { id: "default-source", category: "source_transparency", question: "如果證據不足，你會點樣回答？", expected: { disclose_limit: true } },
-    { id: "default-voice", category: "voice", question: "用你平時嘅方式，畀一個人一個可以今日開始嘅建議。", expected: {} },
-  ];
-}
-
 async function loadQuestions(client: SupabaseClient, expertId: string): Promise<EvaluationQuestion[]> {
   const { data, error } = await client.from("persona_evaluation_questions")
-    .select("id,category,question,expected").eq("expert_id", expertId).eq("active", true).limit(20);
+    .select("id,category,question,expected")
+    .eq("expert_id", expertId)
+    .eq("active", true)
+    .order("id")
+    .limit(51);
   if (error) throw new Error(`Cannot load evaluation questions: ${error.message}`);
   const custom = (data ?? []) as EvaluationQuestion[];
-  return [...custom, ...defaultQuestions()].slice(0, 20);
+  if (custom.length < 25) {
+    throw new Error("Persona release requires at least 25 active evaluation questions");
+  }
+  if (custom.length > 50) {
+    throw new Error("Persona evaluation set exceeds the supported maximum of 50 questions");
+  }
+  return custom;
 }
 
 async function generateProbeResponses(
@@ -224,6 +224,33 @@ async function generateProbeResponses(
     2_500,
   );
   return Array.isArray(payload.responses) ? payload.responses : [];
+}
+
+function validateProbeResponses(
+  responses: unknown[],
+  questions: EvaluationQuestion[],
+): Array<{ question_id: string; answer: string }> {
+  const expected = new Set(questions.map((question) => question.id));
+  const seen = new Set<string>();
+  const normalized = responses.map((value) => {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+      throw new Error("Persona probe response has an invalid shape");
+    }
+    const record = value as Record<string, unknown>;
+    const questionId = typeof record.question_id === "string"
+      ? record.question_id
+      : "";
+    const answer = typeof record.answer === "string" ? record.answer.trim() : "";
+    if (!expected.has(questionId) || seen.has(questionId) || !answer) {
+      throw new Error("Persona probe responses do not exactly match the active evaluation set");
+    }
+    seen.add(questionId);
+    return { question_id: questionId, answer };
+  });
+  if (normalized.length !== questions.length || seen.size !== expected.size) {
+    throw new Error("Persona probe generation returned incomplete answers");
+  }
+  return normalized;
 }
 
 async function evaluateFidelity(
@@ -262,11 +289,25 @@ async function processJob(client: SupabaseClient, job: ClaimedJob): Promise<void
   );
   const manifest = buildEvidenceManifest(blueprint, evidence);
   const questions = await loadQuestions(client, job.expert_id);
-  const responses = await generateProbeResponses(config.model, expertName, blueprint, questions);
-  if (responses.length !== questions.length) throw new Error("Persona probe generation returned incomplete answers");
+  const responses = validateProbeResponses(
+    await generateProbeResponses(config.model, expertName, blueprint, questions),
+    questions,
+  );
   const fidelity = await evaluateFidelity(config.evaluator, blueprint, manifest, questions, responses);
   const passed = fidelityPassed(fidelity.score, fidelity.breakdown);
-  const report = { ...fidelity, gate: { minimum_total: 80, minimum_edge_honesty: 16, minimum_source_transparency: 12 } };
+  const report = {
+    ...fidelity,
+    gate: {
+      minimum_total: 80,
+      minimum_edge_honesty: 16,
+      minimum_source_transparency: 12,
+    },
+    evaluation: {
+      question_count: questions.length,
+      question_ids: questions.map((question) => question.id).sort(),
+      response_count: responses.length,
+    },
+  };
 
   const { error: runError } = await client.from("persona_evaluation_runs").insert({
     synthesis_job_id: job.id,

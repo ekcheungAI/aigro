@@ -12,7 +12,6 @@ import QueryState from "@/components/QueryState";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import {
-  daysAgoUtcStartIso,
   leadQuestionMeta,
   leadQuestionText,
   personaLabel,
@@ -22,6 +21,21 @@ import {
 import type { AdminLeadRow, LeadStage } from "@/components/admin/adminData";
 
 type StageFilter = "全部" | LeadStage;
+
+interface AdminCrmSummary {
+  lead_count: number;
+  high_intent_count: number;
+  week_new_count: number;
+  new_count: number;
+  contacted_count: number;
+  following_up_count: number;
+  converted_count: number;
+}
+
+interface AdminCrmData {
+  preview: AdminLeadRow[];
+  summary: AdminCrmSummary;
+}
 
 const STAGES: { key: LeadStage; en: string }[] = [
   { key: "新線索", en: "New" },
@@ -42,17 +56,42 @@ function signalChipClass(s: string) {
   return "bg-card text-text-secondary border-border";
 }
 
-async function fetchLeads(): Promise<AdminLeadRow[]> {
+function count(value: unknown): number {
+  const normalized = Number(value);
+  return Number.isFinite(normalized) && normalized >= 0 ? normalized : 0;
+}
+
+function normalizeSummary(value: unknown): AdminCrmSummary {
+  const row = value && typeof value === "object" ? value as Record<string, unknown> : {};
+  return {
+    lead_count: count(row.lead_count),
+    high_intent_count: count(row.high_intent_count),
+    week_new_count: count(row.week_new_count),
+    new_count: count(row.new_count),
+    contacted_count: count(row.contacted_count),
+    following_up_count: count(row.following_up_count),
+    converted_count: count(row.converted_count),
+  };
+}
+
+async function fetchLeads(): Promise<AdminCrmData> {
   if (!supabase) throw new Error("Supabase 未連接 — 請檢查環境變數。");
-  const { data, error } = await supabase
-    .from("leads")
-    .select(
-      "id,user_id,anon_id,persona,score,signals,stage,questions,analysis,timeline,last_activity_at,created_at"
-    )
-    .order("last_activity_at", { ascending: false })
-    .limit(500);
-  if (error) throw new Error(error.message);
-  return (data ?? []) as AdminLeadRow[];
+  const [previewResult, summaryResult] = await Promise.all([
+    supabase
+      .from("leads")
+      .select(
+        "id,user_id,anon_id,owner_is_anonymous,persona,score,signals,stage,questions,analysis,timeline,last_activity_at,created_at"
+      )
+      .order("last_activity_at", { ascending: false })
+      .limit(500),
+    supabase.rpc("get_admin_crm_summary").single(),
+  ]);
+  if (previewResult.error) throw new Error(previewResult.error.message);
+  if (summaryResult.error) throw new Error(summaryResult.error.message);
+  return {
+    preview: (previewResult.data ?? []) as AdminLeadRow[],
+    summary: normalizeSummary(summaryResult.data),
+  };
 }
 
 /** 意向評分錶盤 — 大 mono 數字 + hairline 圓環 */
@@ -94,7 +133,7 @@ export default function AdminCRM() {
   const [openId, setOpenId] = useState<string | null>(null);
   const [moving, setMoving] = useState(false);
 
-  const list = useMemo(() => data ?? [], [data]);
+  const list = useMemo(() => data?.preview ?? [], [data]);
   const active = list.find((l) => l.id === openId) ?? null;
 
   const filtered = useMemo(
@@ -102,10 +141,12 @@ export default function AdminCRM() {
     [list, stageFilter]
   );
 
-  const stageCount = (s: LeadStage) => list.filter((l) => l.stage === s).length;
-  const weekNew = list.filter(
-    (l) => l.created_at && l.created_at >= daysAgoUtcStartIso(6)
-  ).length;
+  const stageCount = (s: LeadStage) => ({
+    新線索: data?.summary.new_count ?? 0,
+    已接觸: data?.summary.contacted_count ?? 0,
+    跟進中: data?.summary.following_up_count ?? 0,
+    已轉化: data?.summary.converted_count ?? 0,
+  })[s];
 
   /** 建議跟進 queue — 未接觸線索按評分排序,取 top 5 */
   const followUpQueue = useMemo(
@@ -118,7 +159,9 @@ export default function AdminCRM() {
   );
 
   const leadLabel = (l: AdminLeadRow) =>
-    l.anon_id ? `訪客 ${l.anon_id.slice(0, 8)}` : `會員 ${l.user_id?.slice(0, 8) ?? "—"}`;
+    l.owner_is_anonymous || l.anon_id
+      ? `訪客 ${l.anon_id?.slice(0, 8) ?? l.id.slice(0, 8)}`
+      : `會員 ${l.user_id?.slice(0, 8) ?? "—"}`;
 
   const moveStage = async (lead: AdminLeadRow, stage: LeadStage) => {
     if (!supabase || moving) return;
@@ -137,9 +180,9 @@ export default function AdminCRM() {
   };
 
   const kpis = [
-    { label: "總線索", value: list.length, lime: false },
-    { label: "高意向", value: list.filter((l) => isHigh(l.score ?? 0)).length, lime: true },
-    { label: "本週新增", value: weekNew, lime: false },
+    { label: "總線索", value: data?.summary.lead_count ?? 0, lime: false },
+    { label: "高意向", value: data?.summary.high_intent_count ?? 0, lime: true },
+    { label: "本週新增", value: data?.summary.week_new_count ?? 0, lime: false },
     { label: "跟進中", value: stageCount("跟進中"), lime: false },
   ];
 
@@ -179,7 +222,7 @@ export default function AdminCRM() {
         error={error ? `載入失敗:${error}` : null}
         retry={refetch}
         empty={
-          data && data.length === 0 ? (
+          data && data.summary.lead_count === 0 ? (
             <div className="mt-5 rounded-lg border border-dashed border-border-strong bg-surface px-6 py-16 text-center">
               <Target className="mx-auto h-6 w-6 text-text-muted" />
               <p className="mt-3 text-sm font-medium text-text-primary">
@@ -193,7 +236,7 @@ export default function AdminCRM() {
           ) : null
         }
       >
-        {data && data.length > 0 && (
+        {data && data.summary.lead_count > 0 && (
           <>
             {/* Pipeline stage tabs */}
             <div className="mt-5 flex flex-wrap gap-1.5">
@@ -208,7 +251,7 @@ export default function AdminCRM() {
                 )}
               >
                 全部
-                <span className="ml-1 font-mono">{list.length}</span>
+                <span className="ml-1 font-mono">{data.summary.lead_count}</span>
               </button>
               {STAGES.map((s) => (
                 <button
@@ -327,7 +370,8 @@ export default function AdminCRM() {
                   </tbody>
                 </table>
                 <p className="border-t border-border px-4 py-2.5 font-mono text-[11px] text-text-muted">
-                  leads 表即時總數 {list.length} 個
+                  顯示最近 {list.length} / 精確總數 {data.summary.lead_count} 個；
+                  超過 500 條時請按導師 workspace 查閱，完整分頁仍屬 Beta。
                 </p>
               </div>
 

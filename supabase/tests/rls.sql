@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(30);
+select plan(38);
 
 set local role postgres;
 
@@ -75,16 +75,41 @@ select is(
   'profile update cannot self-promote membership tier'
 );
 
+select throws_like(
+  $$insert into public.conversations (id, owner_id, user_id, persona, expert_id, title)
+    select '30000000-0000-0000-0000-000000000003', auth.uid(), auth.uid(), e.slug, e.id, 'private'
+    from public.experts e where e.slug = 'elvin-cheung'$$,
+  '%row-level security policy%',
+  'browser clients cannot create instructor conversations outside the routed RPC'
+);
+set local role postgres;
 insert into public.conversations (id, owner_id, user_id, persona, expert_id, title)
-select '30000000-0000-0000-0000-000000000003', auth.uid(), auth.uid(), e.slug, e.id, 'private'
+select '30000000-0000-0000-0000-000000000003',
+  '10000000-0000-0000-0000-000000000001',
+  '10000000-0000-0000-0000-000000000001', e.slug, e.id, 'private'
 from public.experts e where e.slug = 'elvin-cheung';
-insert into public.messages (conversation_id, role, content)
-values ('30000000-0000-0000-0000-000000000003', 'user', 'private message');
+insert into public.messages (conversation_id, role, content, server_generated)
+values ('30000000-0000-0000-0000-000000000003', 'user', 'private message', true);
+set local role authenticated;
+select set_config('request.jwt.claims',
+  '{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}', true);
 select is((select count(*) from public.conversations), 1::bigint, 'owner can read own conversation');
 
+select throws_like(
+  $$insert into public.knowledge_sources (id, expert_id, source_type, title, created_by)
+    select '40000000-0000-0000-0000-000000000004', e.id, 'manual', 'private source', auth.uid()
+    from public.experts e where e.slug = 'elvin-cheung'$$,
+  '%permission denied%',
+  'browser clients cannot mutate raw knowledge outside audited CMS RPCs'
+);
+set local role postgres;
 insert into public.knowledge_sources (id, expert_id, source_type, title, created_by)
-select '40000000-0000-0000-0000-000000000004', e.id, 'manual', 'private source', auth.uid()
+select '40000000-0000-0000-0000-000000000004', e.id, 'manual', 'private source',
+  '10000000-0000-0000-0000-000000000001'
 from public.experts e where e.slug = 'elvin-cheung';
+set local role authenticated;
+select set_config('request.jwt.claims',
+  '{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}', true);
 select is((select count(*) from public.knowledge_sources), 1::bigint, 'expert can read own raw source');
 
 set local role postgres;
@@ -122,6 +147,41 @@ select isnt(
   has_table_privilege('anon', 'public.expert_knowledge', 'select'),
   true,
   'legacy active knowledge is not exposed to anonymous Data API clients'
+);
+select isnt(
+  has_table_privilege('authenticated', 'public.expert_knowledge', 'select'),
+  true,
+  'legacy raw knowledge is retired from every authenticated browser client'
+);
+select ok(
+  not has_table_privilege('authenticated', 'public.expert_persona_versions', 'insert')
+  and not has_table_privilege('authenticated', 'public.expert_persona_versions', 'update')
+  and not has_table_privilege('authenticated', 'public.expert_persona_versions', 'delete'),
+  'browser clients cannot mutate persona versions directly'
+);
+select ok(
+  not has_table_privilege('authenticated', 'public.knowledge_sources', 'insert')
+  and not has_table_privilege('authenticated', 'public.knowledge_sources', 'update')
+  and not has_table_privilege('authenticated', 'public.knowledge_sources', 'delete'),
+  'browser clients cannot mutate knowledge sources directly'
+);
+select ok(
+  not has_table_privilege('authenticated', 'public.knowledge_revisions', 'insert')
+  and not has_table_privilege('authenticated', 'public.knowledge_revisions', 'update')
+  and not has_table_privilege('authenticated', 'public.knowledge_revisions', 'delete'),
+  'browser clients cannot mutate knowledge revisions directly'
+);
+select ok(
+  not has_table_privilege('authenticated', 'public.knowledge_chunks', 'insert')
+  and not has_table_privilege('authenticated', 'public.knowledge_chunks', 'update')
+  and not has_table_privilege('authenticated', 'public.knowledge_chunks', 'delete'),
+  'browser clients cannot mutate knowledge chunks directly'
+);
+select ok(
+  not has_table_privilege('authenticated', 'public.knowledge_gaps', 'insert')
+  and not has_table_privilege('authenticated', 'public.knowledge_gaps', 'update')
+  and not has_table_privilege('authenticated', 'public.knowledge_gaps', 'delete'),
+  'browser clients cannot mutate knowledge gaps directly'
 );
 select isnt(
   has_table_privilege('anon', 'public.profiles', 'select'),

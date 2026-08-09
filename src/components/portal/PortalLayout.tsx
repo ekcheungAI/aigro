@@ -19,7 +19,6 @@ import {
 import { cn } from "@/lib/utils";
 import { AdminToastProvider } from "@/components/admin/AdminToast";
 import MonogramAvatar from "@/components/MonogramAvatar";
-import { getAuthUserId } from "@/components/auth/member";
 import type { AigroMember } from "@/components/auth/member";
 import { useMember } from "@/hooks/useMember";
 import { supabase } from "@/lib/supabase";
@@ -31,9 +30,10 @@ import { useAdminQuery } from "@/components/admin/adminData";
 
 export interface PortalExpertCtx {
   member: AigroMember;
-  /** 專家 slug(profiles.expert_slug),如 "jimmy-lau" */
+  /** 受保護 account_access 所屬 workspace。 */
+  expertId: string;
   slug: string;
-  /** 公開檔案(experts.ts 靜態站內資料);新專家未入檔時為 null */
+  /** DB-backed portal identity；靜態資料只補充已核實導師嘅 editorial sections。 */
   expert: Expert | null;
 }
 
@@ -147,7 +147,7 @@ function PortalGate({ loading }: { loading: boolean }) {
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-text-secondary">
           專家平台而家直接讀 Supabase 真實數據 — 只有領航專家帳號
-          (profiles.role = expert / admin)先可以入嚟管理自己嘅 AI 分身。
+          （受保護 account_access = expert / admin）先可以管理授權 AI 分身。
         </p>
         {loading && (
           <p className="mt-4 font-mono text-xs text-text-muted">
@@ -175,7 +175,7 @@ function PortalGate({ loading }: { loading: boolean }) {
   );
 }
 
-/** 已登入 expert 但 profiles.expert_slug 未連結 — 誠實提示,唔顯示假身份 */
+/** 已登入 expert 但 account_access 未連結 workspace — 誠實提示。 */
 function UnlinkedNotice({ email }: { email: string }) {
   return (
     <main className="flex min-h-[100dvh] items-center justify-center px-4 py-16">
@@ -187,7 +187,7 @@ function UnlinkedNotice({ email }: { email: string }) {
           帳號未連結專家身份
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-text-secondary">
-          {email} 嘅 profiles.expert_slug 仲未設定 — 平台團隊連結咗你嘅專家身份之後,
+          {email} 嘅 account_access 仲未連結導師 workspace — 平台團隊完成 owner assignment 之後，
           分身數據就會喺呢度出現。請聯絡平台處理。
         </p>
         <p className="mt-4 text-xs text-text-muted">
@@ -209,26 +209,51 @@ function UnlinkedNotice({ email }: { email: string }) {
  * Expert users receive only their linked identity. A super-admin can operate
  * every expert workspace and chooses the active identity in the portal header.
  */
-async function fetchPortalExpertSlugs(isSuperAdmin: boolean): Promise<string[]> {
+interface PortalWorkspaceRow {
+  id: string;
+  slug: string;
+  display_name: string;
+  name_en: string | null;
+  name_zh: string | null;
+  title: string | null;
+  bio: string | null;
+  brand_color: string | null;
+  specialties: string[] | null;
+  quote: string | null;
+  credential: string | null;
+  verified: boolean;
+  status: string;
+}
+
+async function fetchPortalWorkspaces(): Promise<PortalWorkspaceRow[]> {
   if (!supabase) return [];
-  if (isSuperAdmin) {
-    const { data, error } = await supabase
-      .from("experts")
-      .select("slug")
-      .order("display_name");
-    if (error) throw new Error(error.message);
-    return (data ?? []).map((row) => row.slug as string);
-  }
-  const uid = await getAuthUserId();
-  if (!uid) return [];
   const { data, error } = await supabase
-    .from("profiles")
-    .select("expert_slug")
-    .eq("id", uid)
-    .maybeSingle();
+    .from("experts")
+    .select("id,slug,display_name,name_en,name_zh,title,bio,brand_color,specialties,quote,credential,verified,status")
+    .neq("slug", "platform")
+    .order("display_name");
   if (error) throw new Error(error.message);
-  const slug = (data?.expert_slug as string | null) ?? null;
-  return slug ? [slug] : [];
+  return (data ?? []) as PortalWorkspaceRow[];
+}
+
+function portalExpert(row: PortalWorkspaceRow): Expert {
+  const editorial = experts.find((entry) => entry.slug === row.slug);
+  return {
+    ...(editorial ?? {}),
+    slug: row.slug,
+    nameEn: row.name_en || editorial?.nameEn || row.display_name,
+    nameZh: row.name_zh ?? editorial?.nameZh ?? "",
+    title: row.title || editorial?.title || "AIGRO 領航導師",
+    image: editorial?.image ?? "",
+    verified: row.verified && row.status === "active",
+    specialties: row.specialties?.length
+      ? row.specialties
+      : editorial?.specialties ?? [],
+    bio: row.bio ?? editorial?.bio,
+    brandColor: row.brand_color ?? editorial?.brandColor,
+    quote: row.quote ?? editorial?.quote,
+    credential: row.credential ?? editorial?.credential,
+  };
 }
 
 /**
@@ -250,16 +275,17 @@ export default function PortalLayout() {
     );
 
   const {
-    data: portalSlugs,
+    data: portalWorkspaces,
     loading: slugLoading,
     error: slugError,
   } = useAdminQuery(
-    () => fetchPortalExpertSlugs(member?.role === "super_admin"),
+    fetchPortalWorkspaces,
     [authorized, member?.role]
   );
-  const slug = selectedSlug && portalSlugs?.includes(selectedSlug)
+  const portalSlugs = portalWorkspaces?.map((workspace) => workspace.slug) ?? [];
+  const slug = selectedSlug && portalSlugs.includes(selectedSlug)
     ? selectedSlug
-    : portalSlugs?.[0] ?? null;
+    : portalSlugs[0] ?? null;
 
   if (memberLoading || !authorized) {
     return (
@@ -293,8 +319,18 @@ export default function PortalLayout() {
     );
   }
 
-  const expert = experts.find((e) => e.slug === slug) ?? null;
-  const ctx: PortalExpertCtx = { member, slug, expert };
+  const workspace = portalWorkspaces?.find((entry) => entry.slug === slug) ?? null;
+  const expert = workspace ? portalExpert(workspace) : null;
+  if (!workspace) {
+    return (
+      <AdminToastProvider>
+        <div className="min-h-[100dvh] bg-bg text-text-primary">
+          <UnlinkedNotice email={member.email} />
+        </div>
+      </AdminToastProvider>
+    );
+  }
+  const ctx: PortalExpertCtx = { member, expertId: workspace.id, slug, expert };
   const chipInitials = initialsFor(slug);
   const chipName = expert?.nameEn.split(" ")[0] ?? slug;
   const chipColor = expert?.brandColor ?? "#466A5E";
@@ -384,8 +420,9 @@ export default function PortalLayout() {
               AIGRO Expert Portal — 領航專家後台
             </span>
             <div className="ml-auto flex items-center gap-3">
-              {member.role === "super_admin" && portalSlugs && portalSlugs.length > 1 && (
-                <label className="hidden items-center gap-2 sm:flex">
+              {(member.role === "admin" || member.role === "super_admin") &&
+                portalSlugs.length > 1 && (
+                <label className="flex items-center gap-2">
                   <span className="font-mono text-[10px] uppercase tracking-wider text-text-muted">
                     管理分身
                   </span>
@@ -395,9 +432,9 @@ export default function PortalLayout() {
                     onChange={(event) => setSelectedSlug(event.target.value)}
                     className="rounded-md border border-border bg-card px-2.5 py-1.5 text-xs text-text-primary focus:border-lime focus:outline-none"
                   >
-                    {portalSlugs.map((optionSlug) => (
-                      <option key={optionSlug} value={optionSlug}>
-                        {experts.find((item) => item.slug === optionSlug)?.nameEn ?? optionSlug}
+                    {(portalWorkspaces ?? []).map((option) => (
+                      <option key={option.slug} value={option.slug}>
+                        {option.display_name || option.slug}
                       </option>
                     ))}
                   </select>

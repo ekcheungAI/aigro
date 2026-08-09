@@ -38,16 +38,20 @@ export default function ContextPanel({
     ? liveItems
       ? `全站情報庫 ${itemCount} 則 · 自家管道每 30 分鐘更新`
       : `全站情報庫 ${itemCount} 則 · 目前顯示資料快照`
-    : "Beta · 正式 CMS/RAG 知識庫尚未發佈";
+    : persona.chatReady
+      ? "已批准 CMS 知識庫・以伺服器檢索回答"
+      : "Beta · 正式 CMS/RAG 知識庫尚未發佈";
   const updatedDate = isPlatform
     ? (liveFetchedAt ?? aihotFetchedAt).slice(0, 10)
-    : "尚未發佈";
+    : persona.chatReady
+      ? "以目前已發佈版本為準"
+      : "尚未發佈";
   const usageLimits = [
-    "免費無限對話 · 限時開放",
+    "每日對話額度按帳戶級別計算",
     isPlatform
       ? "回答僅代表編輯整理,唔係即時意見"
       : "回答僅代表方法論,唔係即時意見",
-    "低信心時會建議你睇來源或等 Club 預約",
+    "知識覆蓋不足時會建議睇參考來源或預約真人導師",
     "唔提供投資/法律/醫療建議",
   ];
 
@@ -112,10 +116,10 @@ export default function ContextPanel({
         </div>
       </section>
 
-      {/* 引用來源 */}
+      {/* 檢索參考來源 */}
       <section>
         <div className="flex items-center justify-between">
-          <p className="text-overline text-text-muted">引用來源</p>
+          <p className="text-overline text-text-muted">檢索參考來源</p>
           <span
             aria-hidden="true"
             className="h-px w-10"
@@ -124,12 +128,12 @@ export default function ContextPanel({
         </div>
         {citations.length === 0 ? (
           <p className="mt-3 text-caption text-text-muted">
-            對話出現引用之後,所有來源會喺呢度集合。
+            對話檢索到參考資料之後，來源會喺呢度集合。
           </p>
         ) : (
           <>
             <p className="mt-3 text-caption text-text-secondary">
-              呢段對話引用咗 {citations.length} 個來源
+              呢段對話檢索咗 {citations.length} 個參考來源
             </p>
             <ul className="mt-2 flex flex-col gap-1.5">
               {citations.map((c) => (

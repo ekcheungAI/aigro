@@ -4,8 +4,8 @@
  * 設計(同 liveItems.ts 一致嘅 graceful degradation):
  * - 表公開可讀(anon)。表未建 / 查詢失敗 / 無行 → 全部回 null,
  *   consumer 回落 src/data/experts.ts 嘅已核實靜態資料,頁面永遠唔會空。
- * - 動態統計(對話數 / 情報數 / 知識條目)只喺有效 session 下查 Supabase;
- *   公開訪客直接回落 0 / [],避免觸碰受保護 table grants。
+ * - 動態統計經 sanitized security-definer RPC 回傳 aggregate counts；
+ *   公開客戶端永遠唔會取得 conversations 或 raw knowledge rows。
  *
  * expert_profiles 表結構(v3 SQL):
  *   slug text pk, headline text, bio text,
@@ -39,7 +39,7 @@ export interface ExpertProfileRow {
 
 /** 真實動態統計(全部 Supabase count 真查;失敗項 = 0) */
 export interface ExpertLiveStats {
-  /** 分身對話數 — conversations where persona = slug */
+  /** 分身對話數 — sanitized RPC where conversations.expert_id = instructor */
   conversations: number;
   /** 已發佈情報數 — items where expert_slug = slug + status = published */
   insights: number;
@@ -137,40 +137,27 @@ export async function fetchExpertProfile(
 }
 
 /**
- * 三條真實動態統計 count 查詢並行;任何一條失敗 → 該項靜默 0。
- * 無 session 時唔發 request:conversations / expert_knowledge 係受保護資料,
- * 而 items 嘅公開 policy 亦可能依賴受保護會員資料。
+ * 真實 aggregate count 只經 sanitized RPC；任何失敗 → 全部靜默 0。
  */
 export async function fetchExpertLiveStats(
   slug: string
 ): Promise<ExpertLiveStats> {
   const zero: ExpertLiveStats = { conversations: 0, insights: 0, knowledge: 0 };
   if (!supabase) return zero;
-  if (!(await hasAuthenticatedSession())) return zero;
-  const client = supabase;
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const countSafe = async (table: string, apply: (q: any) => any): Promise<number> => {
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let q: any = client.from(table).select("id", { count: "exact", head: true });
-      q = apply(q);
-      const { count, error } = await q;
-      if (error) return 0;
-      return count ?? 0;
-    } catch {
-      return 0;
-    }
-  };
-
-  const [conversations, insights, knowledge] = await Promise.all([
-    countSafe("conversations", (q) => q.eq("persona", slug)),
-    countSafe("items", (q) => q.eq("expert_slug", slug).eq("status", "published")),
-    countSafe("expert_knowledge", (q) =>
-      q.eq("expert_slug", slug).eq("status", "active")
-    ),
-  ]);
-  return { conversations, insights, knowledge };
+  try {
+    const { data, error } = await supabase.rpc("get_public_instructor_stats", {
+      p_slug: slug,
+    });
+    if (error || !Array.isArray(data) || !data[0]) return zero;
+    const row = data[0] as Record<string, unknown>;
+    return {
+      conversations: Math.max(0, Number(row.conversations) || 0),
+      insights: Math.max(0, Number(row.insights) || 0),
+      knowledge: Math.max(0, Number(row.knowledge) || 0),
+    };
+  } catch {
+    return zero;
+  }
 }
 
 /**

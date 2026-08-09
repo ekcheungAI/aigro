@@ -181,8 +181,10 @@ export interface LeadTimelineEntry {
 
 export interface AdminLeadRow {
   id: string;
+  expert_id?: string | null;
   user_id: string | null;
   anon_id: string | null;
+  owner_is_anonymous?: boolean;
   persona: string;
   score: number | null;
   signals: string[] | null;
@@ -190,6 +192,8 @@ export interface AdminLeadRow {
   questions: LeadQuestion[] | null;
   analysis: string | null;
   timeline: LeadTimelineEntry[] | null;
+  next_follow_up_at?: string | null;
+  contact_consented_at?: string | null;
   last_activity_at: string | null;
   created_at: string | null;
 }

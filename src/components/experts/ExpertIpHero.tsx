@@ -32,6 +32,8 @@ interface ExpertIpHeroProps {
   /** expert_profiles.bio(無 → consumer 傳 expert.bio) */
   bio: string | null;
   askHref: string;
+  /** Live CMS/RAG readiness; false keeps the profile public but blocks chat. */
+  chatReady: boolean;
 }
 
 function conciseBio(bio: string): string {
@@ -54,6 +56,7 @@ export default function ExpertIpHero({
   headline,
   bio,
   askHref,
+  chatReady,
 }: ExpertIpHeroProps) {
   const accent = expert.brandColor ?? "#42CAAC";
   const firstName = expertFirstName(expert);
@@ -236,13 +239,24 @@ export default function ExpertIpHero({
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.58, ease: REVEAL_EASE }}
             >
-              <Link
-                to={askHref}
-                className="inline-flex h-12 items-center gap-2 rounded-md bg-band-ink-solid px-7 text-label text-on-accent press hover:bg-band-ink-hover"
-              >
-                同 {firstName} 嘅 AI 分身傾計
-                <ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-              </Link>
+              {chatReady ? (
+                <Link
+                  to={askHref}
+                  className="inline-flex h-12 items-center gap-2 rounded-md bg-band-ink-solid px-7 text-label text-on-accent press hover:bg-band-ink-hover"
+                >
+                  同 {firstName} 嘅 AI 分身傾計
+                  <ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  disabled
+                  className="inline-flex h-12 cursor-not-allowed items-center gap-2 rounded-md border border-band-border-strong px-7 text-label text-band-text-muted opacity-70"
+                >
+                  AI 分身聊天暫未開放
+                  <span className="font-mono text-caption text-band-ink">Beta</span>
+                </button>
+              )}
               <a
                 href="#top-insights"
                 className="inline-flex h-12 items-center rounded-md border border-band-border-strong px-6 text-label text-band-text-secondary transition-colors duration-150 hover:border-band-text-muted hover:text-band-text"

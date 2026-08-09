@@ -7,10 +7,30 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.5"
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
   public: {
     Tables: {
@@ -242,6 +262,24 @@ export type Database = {
           },
         ]
       }
+      chat_ip_rate_limits: {
+        Row: {
+          ip_hash: string
+          request_count: number
+          window_start: string
+        }
+        Insert: {
+          ip_hash: string
+          request_count?: number
+          window_start: string
+        }
+        Update: {
+          ip_hash?: string
+          request_count?: number
+          window_start?: string
+        }
+        Relationships: []
+      }
       chat_rate_limits: {
         Row: {
           request_count: number
@@ -259,6 +297,73 @@ export type Database = {
           window_start?: string
         }
         Relationships: []
+      }
+      chat_request_reservations: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          error_code: string | null
+          expert_id: string
+          id: string
+          locked_until: string
+          message_hash: string
+          persona_version_id: string | null
+          request_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          error_code?: string | null
+          expert_id: string
+          id?: string
+          locked_until?: string
+          message_hash: string
+          persona_version_id?: string | null
+          request_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          error_code?: string | null
+          expert_id?: string
+          id?: string
+          locked_until?: string
+          message_hash?: string
+          persona_version_id?: string | null
+          request_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_request_reservations_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_request_reservations_expert_id_fkey"
+            columns: ["expert_id"]
+            isOneToOne: false
+            referencedRelation: "experts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_request_reservations_persona_version_id_fkey"
+            columns: ["persona_version_id"]
+            isOneToOne: false
+            referencedRelation: "expert_persona_versions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       conversations: {
         Row: {
@@ -357,6 +462,59 @@ export type Database = {
             columns: ["revision_id"]
             isOneToOne: true
             referencedRelation: "knowledge_revisions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expert_invitations: {
+        Row: {
+          accepted_at: string | null
+          accepted_user_id: string | null
+          created_at: string
+          email: string
+          expert_id: string
+          expires_at: string
+          failure_reason: string | null
+          id: string
+          invited_by: string | null
+          revoked_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_user_id?: string | null
+          created_at?: string
+          email: string
+          expert_id: string
+          expires_at?: string
+          failure_reason?: string | null
+          id?: string
+          invited_by?: string | null
+          revoked_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_user_id?: string | null
+          created_at?: string
+          email?: string
+          expert_id?: string
+          expires_at?: string
+          failure_reason?: string | null
+          id?: string
+          invited_by?: string | null
+          revoked_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expert_invitations_expert_id_fkey"
+            columns: ["expert_id"]
+            isOneToOne: false
+            referencedRelation: "experts"
             referencedColumns: ["id"]
           },
         ]
@@ -506,6 +664,7 @@ export type Database = {
       }
       experts: {
         Row: {
+          archived_at: string | null
           bio: string | null
           brand_color: string | null
           created_at: string
@@ -516,6 +675,7 @@ export type Database = {
           name_en: string | null
           name_zh: string | null
           owner_user_id: string | null
+          public_profile_enabled: boolean
           published_persona_version_id: string | null
           quote: string | null
           radar: Json
@@ -528,6 +688,7 @@ export type Database = {
           verified: boolean
         }
         Insert: {
+          archived_at?: string | null
           bio?: string | null
           brand_color?: string | null
           created_at?: string
@@ -538,6 +699,7 @@ export type Database = {
           name_en?: string | null
           name_zh?: string | null
           owner_user_id?: string | null
+          public_profile_enabled?: boolean
           published_persona_version_id?: string | null
           quote?: string | null
           radar?: Json
@@ -550,6 +712,7 @@ export type Database = {
           verified?: boolean
         }
         Update: {
+          archived_at?: string | null
           bio?: string | null
           brand_color?: string | null
           created_at?: string
@@ -560,6 +723,7 @@ export type Database = {
           name_en?: string | null
           name_zh?: string | null
           owner_user_id?: string | null
+          public_profile_enabled?: boolean
           published_persona_version_id?: string | null
           quote?: string | null
           radar?: Json
@@ -573,11 +737,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "experts_published_persona_version_id_fkey"
-            columns: ["published_persona_version_id"]
+            foreignKeyName: "experts_published_persona_same_expert_fkey"
+            columns: ["published_persona_version_id", "id"]
             isOneToOne: false
             referencedRelation: "expert_persona_versions"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "expert_id"]
           },
         ]
       }
@@ -656,6 +820,7 @@ export type Database = {
           expert_id: string
           id: string
           revision_id: string
+          source_id: string
           token_count: number | null
         }
         Insert: {
@@ -667,6 +832,7 @@ export type Database = {
           expert_id: string
           id?: string
           revision_id: string
+          source_id: string
           token_count?: number | null
         }
         Update: {
@@ -678,6 +844,7 @@ export type Database = {
           expert_id?: string
           id?: string
           revision_id?: string
+          source_id?: string
           token_count?: number | null
         }
         Relationships: [
@@ -694,6 +861,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "knowledge_revisions"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "knowledge_chunks_revision_source_fkey"
+            columns: ["revision_id", "source_id"]
+            isOneToOne: false
+            referencedRelation: "knowledge_revisions"
+            referencedColumns: ["id", "source_id"]
+          },
+          {
+            foreignKeyName: "knowledge_chunks_source_expert_fkey"
+            columns: ["source_id", "expert_id"]
+            isOneToOne: false
+            referencedRelation: "knowledge_sources"
+            referencedColumns: ["id", "expert_id"]
           },
         ]
       }
@@ -873,10 +1054,127 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "knowledge_sources_published_revision_id_fkey"
-            columns: ["published_revision_id"]
+            foreignKeyName: "knowledge_sources_published_revision_same_source_fkey"
+            columns: ["published_revision_id", "id"]
             isOneToOne: false
             referencedRelation: "knowledge_revisions"
+            referencedColumns: ["id", "source_id"]
+          },
+        ]
+      }
+      lead_interactions: {
+        Row: {
+          conversation_id: string
+          expert_id: string
+          id: string
+          lead_id: string
+          message_id: string
+          occurred_at: string
+          owner_id: string
+          question: string
+          score_delta: number
+          signals: string[]
+        }
+        Insert: {
+          conversation_id: string
+          expert_id: string
+          id?: string
+          lead_id: string
+          message_id: string
+          occurred_at?: string
+          owner_id: string
+          question: string
+          score_delta?: number
+          signals?: string[]
+        }
+        Update: {
+          conversation_id?: string
+          expert_id?: string
+          id?: string
+          lead_id?: string
+          message_id?: string
+          occurred_at?: string
+          owner_id?: string
+          question?: string
+          score_delta?: number
+          signals?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_interactions_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_interactions_expert_id_fkey"
+            columns: ["expert_id"]
+            isOneToOne: false
+            referencedRelation: "experts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_interactions_lead_expert_fkey"
+            columns: ["lead_id", "expert_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id", "expert_id"]
+          },
+          {
+            foreignKeyName: "lead_interactions_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: true
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_notes: {
+        Row: {
+          author_id: string | null
+          body: string
+          created_at: string
+          expert_id: string
+          id: string
+          lead_id: string
+        }
+        Insert: {
+          author_id?: string | null
+          body: string
+          created_at?: string
+          expert_id: string
+          id?: string
+          lead_id: string
+        }
+        Update: {
+          author_id?: string | null
+          body?: string
+          created_at?: string
+          expert_id?: string
+          id?: string
+          lead_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_notes_expert_id_fkey"
+            columns: ["expert_id"]
+            isOneToOne: false
+            referencedRelation: "experts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_notes_lead_expert_fkey"
+            columns: ["lead_id", "expert_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id", "expert_id"]
+          },
+          {
+            foreignKeyName: "lead_notes_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
             referencedColumns: ["id"]
           },
         ]
@@ -885,15 +1183,23 @@ export type Database = {
         Row: {
           analysis: string | null
           anon_id: string | null
+          contact_consented_at: string | null
           created_at: string | null
           email: string | null
+          expert_id: string | null
           id: string
           last_activity_at: string | null
+          last_message_id: string | null
+          legacy_questions_captured_at: string | null
+          legacy_questions_snapshot: Json
+          next_follow_up_at: string | null
           owner_id: string | null
+          owner_is_anonymous: boolean
           persona: string
           questions: Json | null
           score: number | null
           signals: string[] | null
+          source_conversation_id: string | null
           stage: string | null
           timeline: Json | null
           user_id: string | null
@@ -901,15 +1207,23 @@ export type Database = {
         Insert: {
           analysis?: string | null
           anon_id?: string | null
+          contact_consented_at?: string | null
           created_at?: string | null
           email?: string | null
+          expert_id?: string | null
           id?: string
           last_activity_at?: string | null
+          last_message_id?: string | null
+          legacy_questions_captured_at?: string | null
+          legacy_questions_snapshot?: Json
+          next_follow_up_at?: string | null
           owner_id?: string | null
+          owner_is_anonymous?: boolean
           persona?: string
           questions?: Json | null
           score?: number | null
           signals?: string[] | null
+          source_conversation_id?: string | null
           stage?: string | null
           timeline?: Json | null
           user_id?: string | null
@@ -917,20 +1231,49 @@ export type Database = {
         Update: {
           analysis?: string | null
           anon_id?: string | null
+          contact_consented_at?: string | null
           created_at?: string | null
           email?: string | null
+          expert_id?: string | null
           id?: string
           last_activity_at?: string | null
+          last_message_id?: string | null
+          legacy_questions_captured_at?: string | null
+          legacy_questions_snapshot?: Json
+          next_follow_up_at?: string | null
           owner_id?: string | null
+          owner_is_anonymous?: boolean
           persona?: string
           questions?: Json | null
           score?: number | null
           signals?: string[] | null
+          source_conversation_id?: string | null
           stage?: string | null
           timeline?: Json | null
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "leads_expert_id_fkey"
+            columns: ["expert_id"]
+            isOneToOne: false
+            referencedRelation: "experts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_last_message_id_fkey"
+            columns: ["last_message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_source_conversation_id_fkey"
+            columns: ["source_conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "leads_user_id_fkey"
             columns: ["user_id"]
@@ -955,7 +1298,9 @@ export type Database = {
           request_id: string | null
           retrieval: Json
           role: string
+          server_generated: boolean
           source: string | null
+          turn_sequence: number
         }
         Insert: {
           answer_basis?: string | null
@@ -971,7 +1316,9 @@ export type Database = {
           request_id?: string | null
           retrieval?: Json
           role: string
+          server_generated?: boolean
           source?: string | null
+          turn_sequence: number
         }
         Update: {
           answer_basis?: string | null
@@ -987,7 +1334,9 @@ export type Database = {
           request_id?: string | null
           retrieval?: Json
           role?: string
+          server_generated?: boolean
           source?: string | null
+          turn_sequence?: number
         }
         Relationships: [
           {
@@ -1253,6 +1602,263 @@ export type Database = {
         }
         Relationships: []
       }
+      social_connections: {
+        Row: {
+          account_identifier: string
+          canonical_url: string | null
+          consent_status: string
+          consent_version: string
+          consented_at: string
+          created_at: string
+          created_by: string | null
+          cursor: string | null
+          expert_id: string
+          id: string
+          last_error: string | null
+          last_synced_at: string | null
+          next_sync_at: string
+          platform: string
+          provider_account_id: string | null
+          revoked_at: string | null
+          source: string
+          sync_enabled: boolean
+          updated_at: string
+          use_for_distillation: boolean
+        }
+        Insert: {
+          account_identifier: string
+          canonical_url?: string | null
+          consent_status?: string
+          consent_version?: string
+          consented_at?: string
+          created_at?: string
+          created_by?: string | null
+          cursor?: string | null
+          expert_id: string
+          id?: string
+          last_error?: string | null
+          last_synced_at?: string | null
+          next_sync_at?: string
+          platform: string
+          provider_account_id?: string | null
+          revoked_at?: string | null
+          source: string
+          sync_enabled?: boolean
+          updated_at?: string
+          use_for_distillation?: boolean
+        }
+        Update: {
+          account_identifier?: string
+          canonical_url?: string | null
+          consent_status?: string
+          consent_version?: string
+          consented_at?: string
+          created_at?: string
+          created_by?: string | null
+          cursor?: string | null
+          expert_id?: string
+          id?: string
+          last_error?: string | null
+          last_synced_at?: string | null
+          next_sync_at?: string
+          platform?: string
+          provider_account_id?: string | null
+          revoked_at?: string | null
+          source?: string
+          sync_enabled?: boolean
+          updated_at?: string
+          use_for_distillation?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_connections_expert_id_fkey"
+            columns: ["expert_id"]
+            isOneToOne: false
+            referencedRelation: "experts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_content_items: {
+        Row: {
+          canonical_url: string
+          connection_id: string
+          content_type: string | null
+          expert_id: string
+          first_seen_at: string
+          id: string
+          knowledge_source_id: string | null
+          last_seen_at: string
+          platform: string
+          provider_content_id: string
+          provider_meta: Json
+          public_metrics: Json
+          published_at: string | null
+          text_content: string | null
+          thumbnail_url: string | null
+          title: string | null
+        }
+        Insert: {
+          canonical_url: string
+          connection_id: string
+          content_type?: string | null
+          expert_id: string
+          first_seen_at?: string
+          id?: string
+          knowledge_source_id?: string | null
+          last_seen_at?: string
+          platform: string
+          provider_content_id: string
+          provider_meta?: Json
+          public_metrics?: Json
+          published_at?: string | null
+          text_content?: string | null
+          thumbnail_url?: string | null
+          title?: string | null
+        }
+        Update: {
+          canonical_url?: string
+          connection_id?: string
+          content_type?: string | null
+          expert_id?: string
+          first_seen_at?: string
+          id?: string
+          knowledge_source_id?: string | null
+          last_seen_at?: string
+          platform?: string
+          provider_content_id?: string
+          provider_meta?: Json
+          public_metrics?: Json
+          published_at?: string | null
+          text_content?: string | null
+          thumbnail_url?: string | null
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_content_connection_scope_fkey"
+            columns: ["connection_id", "expert_id", "platform"]
+            isOneToOne: false
+            referencedRelation: "social_connections"
+            referencedColumns: ["id", "expert_id", "platform"]
+          },
+          {
+            foreignKeyName: "social_content_items_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "social_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_content_items_expert_id_fkey"
+            columns: ["expert_id"]
+            isOneToOne: false
+            referencedRelation: "experts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_content_items_knowledge_source_id_fkey"
+            columns: ["knowledge_source_id"]
+            isOneToOne: false
+            referencedRelation: "knowledge_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_sync_invocation_leases: {
+        Row: {
+          lease_name: string
+          locked_by: string | null
+          locked_until: string | null
+          updated_at: string
+        }
+        Insert: {
+          lease_name: string
+          locked_by?: string | null
+          locked_until?: string | null
+          updated_at?: string
+        }
+        Update: {
+          lease_name?: string
+          locked_by?: string | null
+          locked_until?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      social_sync_jobs: {
+        Row: {
+          attempts: number
+          connection_id: string
+          created_at: string
+          error_message: string | null
+          expert_id: string
+          fetched_count: number | null
+          id: string
+          locked_at: string | null
+          locked_by: string | null
+          next_retry_at: string
+          provider_request_id: string | null
+          status: string
+          sync_date: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          connection_id: string
+          created_at?: string
+          error_message?: string | null
+          expert_id: string
+          fetched_count?: number | null
+          id?: string
+          locked_at?: string | null
+          locked_by?: string | null
+          next_retry_at?: string
+          provider_request_id?: string | null
+          status?: string
+          sync_date: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          connection_id?: string
+          created_at?: string
+          error_message?: string | null
+          expert_id?: string
+          fetched_count?: number | null
+          id?: string
+          locked_at?: string | null
+          locked_by?: string | null
+          next_retry_at?: string
+          provider_request_id?: string | null
+          status?: string
+          sync_date?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_sync_jobs_connection_expert_fkey"
+            columns: ["connection_id", "expert_id"]
+            isOneToOne: false
+            referencedRelation: "social_connections"
+            referencedColumns: ["id", "expert_id"]
+          },
+          {
+            foreignKeyName: "social_sync_jobs_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "social_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_sync_jobs_expert_id_fkey"
+            columns: ["expert_id"]
+            isOneToOne: false
+            referencedRelation: "experts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sources: {
         Row: {
           created_at: string | null
@@ -1387,9 +1993,47 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_expert_invitation: {
+        Args: { p_invitation_id: string }
+        Returns: string
+      }
+      acquire_social_sync_invocation_lease: {
+        Args: { p_lease_seconds?: number; p_worker_id: string }
+        Returns: boolean
+      }
+      activate_expert: { Args: { p_expert_id: string }; Returns: undefined }
+      archive_expert_workspace: {
+        Args: { p_expert_id: string }
+        Returns: undefined
+      }
+      archive_unused_expert_draft: {
+        Args: { p_expert_id: string }
+        Returns: undefined
+      }
+      assign_expert_owner: {
+        Args: { p_expert_id: string; p_user_id: string }
+        Returns: undefined
+      }
+      assign_expert_owner_with_tier: {
+        Args: { p_expert_id: string; p_tier: string; p_user_id: string }
+        Returns: undefined
+      }
       cancel_booking: { Args: { p_booking_id: string }; Returns: undefined }
+      cancel_expert_invitation: {
+        Args: { p_invitation_id: string; p_reason?: string }
+        Returns: undefined
+      }
       check_chat_rate_limit: {
         Args: { p_limit?: number; p_user_id: string }
+        Returns: boolean
+      }
+      check_chat_rate_limits: {
+        Args: {
+          p_ip_hash: string
+          p_ip_limit?: number
+          p_user_id: string
+          p_user_limit?: number
+        }
         Returns: boolean
       }
       claim_distillation_jobs: {
@@ -1448,6 +2092,43 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      claim_social_sync_jobs: {
+        Args: { p_limit?: number; p_worker_id: string }
+        Returns: {
+          attempts: number
+          connection_id: string
+          created_at: string
+          error_message: string | null
+          expert_id: string
+          fetched_count: number | null
+          id: string
+          locked_at: string | null
+          locked_by: string | null
+          next_retry_at: string
+          provider_request_id: string | null
+          status: string
+          sync_date: string
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "social_sync_jobs"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      complete_distillation_job: {
+        Args: {
+          p_chunks: Json
+          p_content_hash: string
+          p_distilled_json: Json
+          p_extracted_text: string
+          p_job_id: string
+          p_provider_meta: Json
+          p_worker_id: string
+        }
+        Returns: undefined
+      }
       create_booking: {
         Args: {
           p_expert_slug: string
@@ -1456,6 +2137,14 @@ export type Database = {
           p_source_question?: string
           p_starts_at: string
         }
+        Returns: string
+      }
+      create_chat_conversation: {
+        Args: { p_persona_slug: string; p_title?: string }
+        Returns: string
+      }
+      create_expert_invitation: {
+        Args: { p_email: string; p_expert_id: string }
         Returns: string
       }
       create_knowledge_source: {
@@ -1470,10 +2159,74 @@ export type Database = {
         }
         Returns: Json
       }
+      dispatch_social_sync: { Args: never; Returns: number }
+      fail_chat_request: {
+        Args: { p_error_code?: string; p_request_id: string; p_user_id: string }
+        Returns: undefined
+      }
+      finish_social_sync_job: {
+        Args: {
+          p_cursor?: string
+          p_error_message?: string
+          p_fetched_count?: number
+          p_job_id: string
+          p_provider_request_id?: string
+          p_retryable?: boolean
+          p_success: boolean
+          p_worker_id: string
+        }
+        Returns: undefined
+      }
+      get_admin_crm_summary: {
+        Args: never
+        Returns: {
+          contacted_count: number
+          converted_count: number
+          following_up_count: number
+          high_intent_count: number
+          lead_count: number
+          new_count: number
+          week_new_count: number
+        }[]
+      }
       get_backend_readiness: { Args: never; Returns: Json }
+      get_expert_crm_summary: {
+        Args: { p_expert_id: string }
+        Returns: {
+          conversation_count: number
+          converted_count: number
+          following_up_count: number
+          high_intent_count: number
+          lead_count: number
+        }[]
+      }
+      get_expert_release_readiness: {
+        Args: { p_expert_id: string }
+        Returns: Json
+      }
+      get_public_instructor_stats: {
+        Args: { p_slug: string }
+        Returns: {
+          conversations: number
+          insights: number
+          knowledge: number
+        }[]
+      }
+      has_current_passed_persona_evaluation: {
+        Args: { p_expert_id: string; p_persona_version_id: string }
+        Returns: boolean
+      }
       invoke_knowledge_worker: { Args: never; Returns: number }
       invoke_persona_compiler: { Args: never; Returns: number }
+      invoke_social_sync_worker: { Args: never; Returns: number }
       is_admin: { Args: never; Returns: boolean }
+      is_expert_chat_ready: { Args: { p_expert_id: string }; Returns: boolean }
+      is_public_expert: { Args: { p_expert_id: string }; Returns: boolean }
+      is_public_expert_slug: { Args: { p_slug: string }; Returns: boolean }
+      is_safe_knowledge_source_url: {
+        Args: { p_url: string; p_youtube?: boolean }
+        Returns: boolean
+      }
       is_super_admin: { Args: never; Returns: boolean }
       list_available_slots: {
         Args: {
@@ -1484,6 +2237,38 @@ export type Database = {
         Returns: {
           ends_at: string
           starts_at: string
+        }[]
+      }
+      list_my_expert_invitations: {
+        Args: never
+        Returns: {
+          expert_id: string
+          expert_name: string
+          expert_slug: string
+          expires_at: string
+          id: string
+        }[]
+      }
+      list_public_instructors: {
+        Args: never
+        Returns: {
+          bio: string
+          brand_color: string
+          chat_ready: boolean
+          credential: string
+          display_name: string
+          greeting: string
+          id: string
+          name_en: string
+          name_zh: string
+          public_profile_enabled: boolean
+          quote: string
+          radar: Json
+          slug: string
+          specialties: string[]
+          title: string
+          traits: string[]
+          verified: boolean
         }[]
       }
       match_expert_knowledge: {
@@ -1526,6 +2311,20 @@ export type Database = {
         }
         Returns: string
       }
+      persist_social_sync_result: {
+        Args: {
+          p_canonical_url: string
+          p_connection_id: string
+          p_cursor?: string
+          p_expert_id: string
+          p_items: Json
+          p_job_id: string
+          p_provider_account_id: string
+          p_provider_request_id?: string
+          p_worker_id: string
+        }
+        Returns: number
+      }
       publish_compiled_persona: {
         Args: {
           p_greeting: string
@@ -1545,14 +2344,46 @@ export type Database = {
         Returns: string
       }
       purge_expired_anonymous_chats: { Args: never; Returns: number }
+      queue_due_social_syncs: {
+        Args: { p_sync_date?: string }
+        Returns: number
+      }
       queue_persona_synthesis: {
         Args: { p_expert_id: string }
         Returns: string
       }
+      refresh_lead_questions: {
+        Args: { p_lead_id: string }
+        Returns: undefined
+      }
+      release_social_sync_invocation_lease: {
+        Args: { p_worker_id: string }
+        Returns: undefined
+      }
       requeue_stuck_distillation_jobs: { Args: never; Returns: undefined }
       requeue_stuck_persona_synthesis_jobs: { Args: never; Returns: undefined }
+      requeue_stuck_social_sync_jobs: { Args: never; Returns: undefined }
       reschedule_booking: {
         Args: { p_booking_id: string; p_starts_at: string }
+        Returns: undefined
+      }
+      reserve_chat_request: {
+        Args: {
+          p_conversation_id: string
+          p_expert_id: string
+          p_message_hash: string
+          p_request_id: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
+      resolve_active_expert: { Args: { p_slug: string }; Returns: string }
+      resolve_knowledge_gap: {
+        Args: { p_gap_id: string; p_status: string }
+        Returns: undefined
+      }
+      restore_expert_workspace: {
+        Args: { p_expert_id: string }
         Returns: undefined
       }
       review_knowledge_revision: {
@@ -1568,9 +2399,25 @@ export type Database = {
         }
         Returns: undefined
       }
+      revoke_social_connection: {
+        Args: { p_connection_id: string }
+        Returns: undefined
+      }
       rollback_knowledge_source: {
         Args: { p_revision_id: string; p_source_id: string }
         Returns: undefined
+      }
+      set_expert_feature_flag: {
+        Args: { p_enabled: boolean; p_expert_id: string; p_key: string }
+        Returns: undefined
+      }
+      set_knowledge_source_archived: {
+        Args: { p_archived: boolean; p_source_id: string }
+        Returns: undefined
+      }
+      stage_social_content_for_distillation: {
+        Args: { p_item_id: string }
+        Returns: string
       }
       update_booking_status: {
         Args: {
@@ -1578,6 +2425,30 @@ export type Database = {
           p_expert_note?: string
           p_meeting_url?: string
           p_status: string
+        }
+        Returns: undefined
+      }
+      update_expert_lead: {
+        Args: {
+          p_lead_id: string
+          p_next_follow_up_at?: string
+          p_note?: string
+          p_stage: string
+        }
+        Returns: undefined
+      }
+      update_expert_public_profile: {
+        Args: {
+          p_bio: string
+          p_brand_color: string
+          p_display_name: string
+          p_expert_id: string
+          p_featured_ids?: string[]
+          p_quote: string
+          p_socials?: Json
+          p_specialties: string[]
+          p_stats?: Json
+          p_title: string
         }
         Returns: undefined
       }
@@ -1601,6 +2472,15 @@ export type Database = {
           p_title: string
           p_traits: string[]
           p_verified: boolean
+        }
+        Returns: string
+      }
+      upsert_social_connection: {
+        Args: {
+          p_account_identifier: string
+          p_expert_id: string
+          p_platform: string
+          p_use_for_distillation?: boolean
         }
         Returns: string
       }
@@ -1732,6 +2612,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {},
   },

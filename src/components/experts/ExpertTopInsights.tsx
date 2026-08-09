@@ -10,6 +10,7 @@ interface ExpertTopInsightsProps {
   insights: ExpertInsight[] | null;
   firstName: string;
   askHref: string;
+  chatReady: boolean;
 }
 
 /**
@@ -21,6 +22,7 @@ export default function ExpertTopInsights({
   insights,
   firstName,
   askHref,
+  chatReady,
 }: ExpertTopInsightsProps) {
   return (
     <section id="top-insights" className="mx-auto max-w-container scroll-mt-20 px-6 pt-24 max-md:pt-16">
@@ -60,16 +62,28 @@ export default function ExpertTopInsights({
               首批獨家內容籌備中
             </h3>
             <p className="mx-auto mt-3 max-w-[440px] text-body-sm text-text-secondary">
-              {firstName} 嘅獨家情報正在製作 — 想搶先了解佢嘅觀點,
-              而家就可以同佢嘅 AI 分身傾計。
+              {chatReady
+                ? `${firstName} 嘅獨家情報正在製作 — 想搶先了解佢嘅觀點，而家就可以同佢嘅 AI 分身傾計。`
+                : `${firstName} 嘅獨家情報正在製作；AI 分身完成知識同角色評估後先會開放。`}
             </p>
-            <Link
-              to={askHref}
-              className="mt-6 inline-flex h-11 items-center gap-1.5 rounded-md bg-ink-solid px-6 text-label text-on-accent press hover:bg-ink-hover"
-            >
-              同 {firstName} 嘅 AI 分身傾計
-              <ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-            </Link>
+            {chatReady ? (
+              <Link
+                to={askHref}
+                className="mt-6 inline-flex h-11 items-center gap-1.5 rounded-md bg-ink-solid px-6 text-label text-on-accent press hover:bg-ink-hover"
+              >
+                同 {firstName} 嘅 AI 分身傾計
+                <ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+              </Link>
+            ) : (
+              <button
+                type="button"
+                disabled
+                className="mt-6 inline-flex h-11 cursor-not-allowed items-center gap-2 rounded-md border border-border-strong px-6 text-label text-text-muted opacity-70"
+              >
+                AI 分身聊天暫未開放
+                <span className="font-mono text-caption text-ink">Beta</span>
+              </button>
+            )}
           </div>
         </Reveal>
       ) : (

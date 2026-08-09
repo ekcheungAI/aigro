@@ -17,6 +17,11 @@ export interface AdminExpertRecord {
   radar: unknown;
   traits: string[];
   status: string;
+  owner_user_id: string | null;
+  public_profile_enabled: boolean;
+  invitation_status: string | null;
+  invitation_email: string | null;
+  invitation_expires_at: string | null;
 }
 
 export interface SaveAdminExpertInput {
@@ -80,11 +85,36 @@ export async function fetchAdminExperts(): Promise<AdminExpertRecord[]> {
   if (!supabase) throw new Error("Supabase 未連接");
   const { data, error } = await supabase
     .from("experts")
-    .select("id,slug,display_name,name_en,name_zh,title,bio,brand_color,specialties,quote,credential,verified,radar,traits,status")
+    .select("id,slug,display_name,name_en,name_zh,title,bio,brand_color,specialties,quote,credential,verified,radar,traits,status,owner_user_id,public_profile_enabled")
     .neq("slug", "platform")
+    .is("archived_at", null)
     .order("created_at");
   if (error) throw new Error(error.message);
-  return (data ?? []) as AdminExpertRecord[];
+  const rows = (data ?? []) as Array<Omit<AdminExpertRecord,
+    "invitation_status" | "invitation_email" | "invitation_expires_at">>;
+  if (rows.length === 0) return [];
+  const { data: invitations, error: invitationError } = await supabase
+    .from("expert_invitations")
+    .select("expert_id,email,status,expires_at,created_at")
+    .in("expert_id", rows.map((row) => row.id))
+    .order("created_at", { ascending: false });
+  if (invitationError) throw new Error(invitationError.message);
+  const latest = new Map<string, Record<string, unknown>>();
+  for (const invitation of invitations ?? []) {
+    const row = invitation as Record<string, unknown>;
+    const expertId = String(row.expert_id ?? "");
+    if (expertId && !latest.has(expertId)) latest.set(expertId, row);
+  }
+  return rows.map((row) => {
+    const invitation = latest.get(row.id);
+    return {
+      ...row,
+      invitation_status: typeof invitation?.status === "string" ? invitation.status : null,
+      invitation_email: typeof invitation?.email === "string" ? invitation.email : null,
+      invitation_expires_at:
+        typeof invitation?.expires_at === "string" ? invitation.expires_at : null,
+    };
+  });
 }
 
 export async function saveAdminExpert(input: SaveAdminExpertInput): Promise<string> {

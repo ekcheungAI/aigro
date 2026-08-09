@@ -25,7 +25,6 @@ import ExpertTopInsights from "@/components/experts/ExpertTopInsights";
 import {
   expertFirstName,
   expertFullName,
-  experts,
   type Expert,
 } from "@/data/experts";
 import {
@@ -38,6 +37,11 @@ import {
   type ExpertProfileSocial,
 } from "@/lib/expertProfiles";
 import usePageMeta from "@/hooks/usePageMeta";
+import { useAdminQuery } from "@/components/admin/adminData";
+import {
+  fetchPublicInstructors,
+  type PublicInstructor,
+} from "@/lib/publicInstructors";
 
 /* ================= Local toast（頁面級原型提示） ================= */
 
@@ -190,10 +194,12 @@ function ExpertOverview({
   expert,
   bio,
   askHref,
+  chatReady,
 }: {
   expert: Expert;
   bio: string | null;
   askHref: string;
+  chatReady: boolean;
 }) {
   if (!bio) return null;
   const firstName = expertFirstName(expert);
@@ -242,13 +248,24 @@ function ExpertOverview({
               );
             })}
           </div>
-          <Link
-            to={askHref}
-            className="press mt-7 inline-flex h-11 items-center gap-2 rounded-md bg-ink-solid px-6 text-label text-on-accent hover:bg-ink-hover"
-          >
-            問 {firstName} 嘅 AI 分身
-            <ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-          </Link>
+          {chatReady ? (
+            <Link
+              to={askHref}
+              className="press mt-7 inline-flex h-11 items-center gap-2 rounded-md bg-ink-solid px-6 text-label text-on-accent hover:bg-ink-hover"
+            >
+              問 {firstName} 嘅 AI 分身
+              <ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+            </Link>
+          ) : (
+            <button
+              type="button"
+              disabled
+              className="mt-7 inline-flex h-11 cursor-not-allowed items-center gap-2 rounded-md border border-border-strong px-6 text-label text-text-muted opacity-70"
+            >
+              AI 分身聊天暫未開放
+              <span className="font-mono text-caption text-ink">Beta</span>
+            </button>
+          )}
         </Reveal>
       </div>
     </section>
@@ -257,7 +274,8 @@ function ExpertOverview({
 
 /* ================= Verified 專家 — Expert IP 主頁 ================= */
 
-function VerifiedProfile({ expert }: { expert: Expert }) {
+function VerifiedProfile({ instructor }: { instructor: PublicInstructor }) {
+  const { expert, chatReady } = instructor;
   const toast = useMiniToast();
   const firstName = expertFirstName(expert);
   const viewpoints = expert.viewpoints ?? [];
@@ -309,6 +327,7 @@ function VerifiedProfile({ expert }: { expert: Expert }) {
         headline={headline}
         bio={bio}
         askHref={askHref}
+        chatReady={chatReady}
       />
 
       {/* Section 2 — Key stats band(dark strip):自訂 stats + 真實動態統計 */}
@@ -316,7 +335,12 @@ function VerifiedProfile({ expert }: { expert: Expert }) {
 
       <ExpertProfileNav />
 
-      <ExpertOverview expert={expert} bio={bio} askHref={askHref} />
+      <ExpertOverview
+        expert={expert}
+        bio={bio}
+        askHref={askHref}
+        chatReady={chatReady}
+      />
 
       {/* Section 3 — 成就佐證 Strip(experts.ts 真實身份 chips) */}
       {expert.metrics && expert.metrics.length > 0 && (
@@ -343,6 +367,7 @@ function VerifiedProfile({ expert }: { expert: Expert }) {
         insights={topInsights}
         firstName={firstName}
         askHref={askHref}
+        chatReady={chatReady}
       />
 
       {/* Sections B–E — 風格雷達 / 核心特質 / 工作風格 / 決策原則
@@ -389,19 +414,27 @@ function VerifiedProfile({ expert }: { expert: Expert }) {
               viewport={{ once: true, amount: 0.2 }}
               transition={{ duration: 0.4, delay: shown.length * 0.07, ease: REVEAL_EASE }}
             >
-              <Link
-                to={askHref}
-                className="group flex h-full min-h-[148px] items-center justify-center rounded-md border border-dashed border-border-strong p-6 text-center transition-colors duration-180 hover:border-ink"
-              >
-                <span className="inline-flex items-center gap-1.5 text-body-sm text-text-secondary transition-colors duration-150 group-hover:text-ink">
-                  其餘 {remaining} 個觀點，在分身對話中探索
-                  <ArrowRight
-                    className="h-4 w-4 transition-transform duration-150 nudge-x"
-                    strokeWidth={1.5}
-                    aria-hidden="true"
-                  />
-                </span>
-              </Link>
+              {chatReady ? (
+                <Link
+                  to={askHref}
+                  className="group flex h-full min-h-[148px] items-center justify-center rounded-md border border-dashed border-border-strong p-6 text-center transition-colors duration-180 hover:border-ink"
+                >
+                  <span className="inline-flex items-center gap-1.5 text-body-sm text-text-secondary transition-colors duration-150 group-hover:text-ink">
+                    其餘 {remaining} 個觀點，在分身對話中探索
+                    <ArrowRight
+                      className="h-4 w-4 transition-transform duration-150 nudge-x"
+                      strokeWidth={1.5}
+                      aria-hidden="true"
+                    />
+                  </span>
+                </Link>
+              ) : (
+                <div className="flex h-full min-h-[148px] items-center justify-center rounded-md border border-dashed border-border-strong p-6 text-center opacity-70">
+                  <span className="text-body-sm text-text-muted">
+                    其餘 {remaining} 個觀點將於 AI 分身完成 Beta 後開放
+                  </span>
+                </div>
+              )}
             </motion.div>
           )}
         </div>
@@ -444,13 +477,24 @@ function VerifiedProfile({ expert }: { expert: Expert }) {
           >
             {/* Primary — 電光綠實心 + near-black 字(on-accent);專家色僅留
                 hero monogram 面板一處 */}
-            <Link
-              to={askHref}
-              className="inline-flex h-11 items-center gap-1.5 rounded-md bg-ink-solid px-6 text-label text-on-accent press hover:bg-ink-hover"
-            >
-              與 AI 分身對話
-              <ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-            </Link>
+            {chatReady ? (
+              <Link
+                to={askHref}
+                className="inline-flex h-11 items-center gap-1.5 rounded-md bg-ink-solid px-6 text-label text-on-accent press hover:bg-ink-hover"
+              >
+                與 AI 分身對話
+                <ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+              </Link>
+            ) : (
+              <button
+                type="button"
+                disabled
+                className="inline-flex h-11 cursor-not-allowed items-center gap-2 rounded-md border border-border-strong px-6 text-label text-text-muted opacity-70"
+              >
+                AI 分身聊天暫未開放
+                <span className="font-mono text-caption text-ink">Beta</span>
+              </button>
+            )}
             {/* Ghost 鎖定態 — 語音對話 VIP */}
             <button
               type="button"
@@ -480,7 +524,7 @@ function VerifiedProfile({ expert }: { expert: Expert }) {
           </motion.div>
           <Reveal delay={0.2}>
             <p className="mt-6 text-caption text-text-muted">
-              免費無限對話 · 限時開放
+              每日對話額度按帳戶級別計算 · 匿名每日 10 次 · 會員 20 次 · Pro 100 次 · VIP 200 次 · 香港時間每日重設
             </p>
           </Reveal>
         </div>
@@ -636,7 +680,11 @@ function PendingProfile({ expert }: { expert: Expert }) {
 
 export default function ExpertProfile() {
   const { slug } = useParams<{ slug: string }>();
-  const expert = experts.find((e) => e.slug === slug);
+  const { data: publicInstructors, loading, error } = useAdminQuery(
+    fetchPublicInstructors
+  );
+  const liveInstructor = publicInstructors?.find((item) => item.expert.slug === slug);
+  const expert = publicInstructors ? liveInstructor?.expert : undefined;
 
   /* F9:per-expert OG — canonical + og:type profile;真實肖像先至做 og:image */
   usePageMeta(
@@ -649,6 +697,14 @@ export default function ExpertProfile() {
     }
   );
 
+  if (!expert && loading) {
+    return (
+      <section className="mx-auto max-w-container px-6 py-24 text-center">
+        <p className="font-mono text-xs text-text-muted">正在載入領航專家檔案…</p>
+      </section>
+    );
+  }
+
   if (!expert) {
     return (
       <section className="mx-auto max-w-container px-6 py-24 text-center">
@@ -657,7 +713,7 @@ export default function ExpertProfile() {
           找不到這位領航專家
         </h1>
         <p className="mx-auto mt-6 max-w-[480px] text-body-lg text-text-secondary">
-          此領航檔案不存在或已移除。
+          {error ? "暫時未能載入此領航檔案。" : "此領航檔案不存在或已移除。"}
         </p>
         <Link
           to="/experts"
@@ -679,7 +735,7 @@ export default function ExpertProfile() {
       }
     >
       {expert.verified ? (
-        <VerifiedProfile key={expert.slug} expert={expert} />
+        <VerifiedProfile key={expert.slug} instructor={liveInstructor!} />
       ) : (
         <PendingProfile key={expert.slug} expert={expert} />
       )}

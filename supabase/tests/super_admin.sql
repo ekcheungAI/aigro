@@ -27,13 +27,13 @@ where user_id = '61000000-0000-0000-0000-000000000001';
 update public.account_access set app_role = 'admin'
 where user_id = '62000000-0000-0000-0000-000000000002';
 
-insert into public.leads (id, user_id, owner_id, persona, score)
-values (
+insert into public.leads (id, user_id, owner_id, expert_id, persona, score)
+select
   '64000000-0000-0000-0000-000000000004',
   '63000000-0000-0000-0000-000000000003',
   '63000000-0000-0000-0000-000000000003',
-  'platform', 25
-);
+  e.id, e.slug, 25
+from public.experts e where e.slug = 'elvin-cheung';
 
 set local role authenticated;
 select set_config('request.jwt.claims',
@@ -64,37 +64,39 @@ update public.account_access set tier = 'vip'
 where user_id = '63000000-0000-0000-0000-000000000003';
 select is(
   (select tier from public.account_access where user_id = '63000000-0000-0000-0000-000000000003'),
-  'vip',
-  'admin can manage a member tier'
+  'free',
+  'ordinary admin cannot directly mutate protected member tiers'
 );
 
-select lives_ok(
+select throws_ok(
   $$select public.upsert_admin_expert(
     null, 'rollback-expert', 'Rollback Expert', 'Rollback Expert', '',
     '測試導師', '只會存在 transaction 內', '#466A5E', array['測試'],
     '測試定位', '測試頭銜', false, '[]'::jsonb, array['審慎']
   )$$,
-  'admin can create a persisted expert draft'
+  '42501', 'super_admin_required_to_create_expert',
+  'ordinary admin cannot create an orphan instructor draft'
 );
 select is(
   (select status from public.experts where slug = 'rollback-expert'),
-  'draft',
-  'new expert remains draft until verified'
+  null::text,
+  'rejected instructor creation leaves no draft behind'
 );
-select ok(
-  exists (
-    select 1 from public.audit_events
+select is(
+  (select count(*) from public.audit_events
     where actor_id = '62000000-0000-0000-0000-000000000002'
       and action = 'expert.created'
-      and metadata ->> 'slug' = 'rollback-expert'
-  ),
-  'expert creation writes an audit event'
+      and metadata ->> 'slug' = 'rollback-expert'),
+  0::bigint,
+  'rejected instructor creation writes no false creation audit event'
 );
 
-select throws_like(
-  $$update public.account_access set app_role = 'admin'
-    where user_id = '63000000-0000-0000-0000-000000000003'$$,
-  '%row-level security policy%',
+update public.account_access set app_role = 'admin'
+where user_id = '63000000-0000-0000-0000-000000000003';
+select is(
+  (select app_role from public.account_access
+   where user_id = '63000000-0000-0000-0000-000000000003'),
+  'member',
   'admin cannot promote a member to admin'
 );
 

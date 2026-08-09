@@ -38,3 +38,13 @@ verify_jwt = false
 [functions.booking-notify]
 # Database webhook handler; authenticated with x-webhook-secret.
 verify_jwt = false
+
+[functions.social-sync-worker]
+# Database dispatcher supplies a dedicated x-worker-secret. TikHub credentials
+# stay server-side and this endpoint never accepts browser-originated jobs.
+verify_jwt = false
+
+[functions.invite-expert-owner]
+# Super-admin browser workflow. The function validates the caller JWT and the
+# protected account_access role before using service-only invitation methods.
+verify_jwt = true

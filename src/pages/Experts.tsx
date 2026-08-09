@@ -5,14 +5,16 @@ import { ArrowRight, Check } from "lucide-react";
 import Reveal, { REVEAL_EASE } from "@/components/Reveal";
 import MonogramAvatar, { PhotoAvatar } from "@/components/MonogramAvatar";
 import VerifiedBadge from "@/components/VerifiedBadge";
+import QueryState from "@/components/QueryState";
 import { EXPERT_EDITORIAL_PANEL } from "@/components/experts/ExpertIpHero";
 import {
   expertFullName,
   expertHasPhoto,
-  verifiedExperts,
   type Expert,
 } from "@/data/experts";
 import { appendInterest, EXPERT_INTEREST_KEY } from "@/lib/interest";
+import { useAdminQuery } from "@/components/admin/adminData";
+import { fetchPublicInstructors } from "@/lib/publicInstructors";
 
 /** 領航專家 monogram 字母(data 無此欄位,由 slug 映射) */
 const EXPERT_INITIALS: Record<string, string> = {
@@ -63,8 +65,8 @@ function PageHeader() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, delay: 0.2, ease: REVEAL_EASE }}
         >
-          AIGRO 係一個 growth hacking club — 兩位認證領航專家嘅 AI
-          分身基於授權內容蒸餾，隨時等你問，等會員跟住 playbook 做實驗。
+          AIGRO 係一個 growth hacking club — 認證領航專家嘅 AI
+          導師基於授權內容蒸餾；完成知識同角色評估後先開放聊天。
         </motion.p>
         <motion.p
           className="mt-5 text-caption text-band-text-muted"
@@ -372,22 +374,38 @@ function InviteSection() {
 /* ================= Page ================= */
 
 export default function Experts() {
+  const { data, loading, error, refetch } = useAdminQuery(fetchPublicInstructors);
+  const directory = data?.map((item) => item.expert) ?? [];
+
   return (
     <div>
       <PageHeader />
 
       {/* Section 2 — 領航專家大卡 */}
       <section className="mx-auto max-w-container px-6 pt-16 max-md:pt-12">
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          {verifiedExperts.map((expert, i) => (
-            <VerifiedExpertCard
-              key={expert.slug}
-              expert={expert}
-              index={i}
-              showVerifiedCaption={i === 0}
-            />
-          ))}
-        </div>
+        <QueryState
+          loading={loading}
+          error={error ? `領航專家目錄載入失敗：${error}` : null}
+          retry={refetch}
+          empty={data && directory.length === 0 ? (
+            <div className="rounded-md border border-dashed border-border-strong bg-surface px-6 py-14 text-center text-body-sm text-text-muted">
+              暫未有通過 release gate 嘅公開領航專家。
+            </div>
+          ) : null}
+        >
+          {data && directory.length > 0 && (
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              {directory.map((expert, i) => (
+                <VerifiedExpertCard
+                  key={expert.slug}
+                  expert={expert}
+                  index={i}
+                  showVerifiedCaption={i === 0}
+                />
+              ))}
+            </div>
+          )}
+        </QueryState>
       </section>
 
       <InviteSection />

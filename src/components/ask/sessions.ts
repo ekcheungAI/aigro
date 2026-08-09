@@ -194,12 +194,6 @@ function convMapDelete(sessionId: string): void {
   }
 }
 
-/** AiReply.source → messages.source(schema 註釋:kb / llm / guardrail / scripted) */
-function mapMessageSource(source: AiReply["source"]): string {
-  if (source === "general" || source === "unavailable") return "scripted";
-  return source ?? "kb";
-}
-
 /** 取得(或建立)呢個 session 嘅 conversations.id;失敗 / 無 env → null */
 export function ensureConversationId(
   sessionId: string,
@@ -221,34 +215,18 @@ export function ensureConversationId(
           .select("id")
           .eq("id", cached)
           .eq("owner_id", uid)
+          .eq("persona", personaKey)
           .maybeSingle();
         if (ownedConversation) return cached;
         convMapDelete(sessionId);
       }
-      const { data: authData } = await supabase.auth.getSession();
-      const profileUserId = authData.session?.user.is_anonymous ? null : uid;
-      const { data: expert, error: expertError } = await supabase
-        .from("experts")
-        .select("id")
-        .eq("slug", personaKey)
-        .eq("status", "active")
-        .maybeSingle();
-      if (expertError || !expert) return null;
-      const { data, error } = await supabase
-        .from("conversations")
-        .insert({
-          owner_id: uid,
-          user_id: profileUserId,
-          anon_id: null,
-          persona: personaKey,
-          expert_id: expert.id,
-          title,
-        })
-        .select("id")
-        .single();
-      if (error || !data) return null;
-      convMapSet(sessionId, data.id as string);
-      return data.id as string;
+      const { data, error } = await supabase.rpc("create_chat_conversation", {
+        p_persona_slug: personaKey,
+        p_title: title,
+      });
+      if (error || typeof data !== "string") return null;
+      convMapSet(sessionId, data);
+      return data;
     } catch {
       return null;
     }
@@ -256,173 +234,6 @@ export function ensureConversationId(
   pendingConv.set(sessionId, p);
   void p.finally(() => pendingConv.delete(sessionId));
   return p;
-}
-
-/** 一輪問答 → messages rows(user + assistant) */
-function roundToMessageRows(
-  conversationId: string,
-  round: ChatMessage[]
-): Record<string, unknown>[] {
-  const rows: Record<string, unknown>[] = [];
-  for (const m of round) {
-    if (m.role === "user") {
-      rows.push({
-        conversation_id: conversationId,
-        role: "user",
-        content: m.text ?? "",
-        source: "kb",
-        confidence: null,
-        citations: [],
-      });
-    } else if (m.reply) {
-      rows.push({
-        conversation_id: conversationId,
-        role: "assistant",
-        content: m.reply.text,
-        source: mapMessageSource(m.reply.source),
-        confidence: m.reply.confidence,
-        citations: m.reply.citations,
-      });
-    }
-  }
-  return rows;
-}
-
-/** fire-and-forget:確保 conversation 存在,然後寫入呢一輪嘅 messages */
-function logRoundToSupabase(
-  sessionId: string,
-  personaKey: string,
-  title: string,
-  round: ChatMessage[]
-): void {
-  if (!supabase || !supabaseReady) return;
-  // G2:每個訪客變 CRM lead — 同 messages 寫入互相獨立,各自靜默
-  void upsertLeadFromRound(personaKey, round);
-  void ensureConversationId(sessionId, personaKey, title)
-    .then(async (conversationId) => {
-      if (!conversationId || !supabase) return;
-      const rows = roundToMessageRows(conversationId, round);
-      if (rows.length === 0) return;
-      await supabase.from("messages").insert(rows);
-    })
-    .catch(() => {
-      /* 離線靜默 */
-    });
-}
-
-/* ================= G2:CRM leads 自動生成 =================
- * 每輪問答後 upsert `leads` 表(leads_insert_all 允許 anon insert;
- * leads_anon_update_own 允許 anon_id 非空嘅 row 被 update)。
- * RLS 限制:anon 唔可以 SELECT,所以採用「本地累積快照 + 絕對值寫入」:
- * - localStorage 累積 score / questions / signals(每分身一份)
- * - 先 update(anon_id+persona,count=exact)→ 0 rows → insert
- * 冇 select 依賴、唔會整出重複 lead;fire-and-forget,失敗靜默。
- */
-
-const LEAD_STATE_KEY = "aigro-ask-lead-state-v1";
-const LEAD_MAX_QUESTIONS = 20;
-const LEAD_MAX_SIGNALS = 20;
-/** 高意圖關鍵字 — 每中一個 +20 分 + 一條 signal */
-const HIGH_INTENT_RE = /收費|價錢|幾錢|預約|導入|合作|報名|加入/g;
-
-interface LeadSnapshot {
-  score: number;
-  questions: string[];
-  signals: string[];
-}
-
-function highIntentSignal(keyword: string): string {
-  if (/收費|價錢|幾錢/.test(keyword)) return "高意圖:詢問收費";
-  if (keyword === "預約") return "高意圖:預約查詢";
-  if (/導入|合作/.test(keyword)) return "高意圖:合作導入";
-  return "高意圖:報名加入";
-}
-
-function loadLeadStates(): Record<string, LeadSnapshot> {
-  try {
-    const raw = window.localStorage.getItem(LEAD_STATE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw) as Record<string, LeadSnapshot>;
-      if (parsed && typeof parsed === "object") return parsed;
-    }
-  } catch {
-    /* ignore */
-  }
-  return {};
-}
-
-function saveLeadState(personaKey: string, snap: LeadSnapshot): void {
-  try {
-    const all = loadLeadStates();
-    all[personaKey] = snap;
-    window.localStorage.setItem(LEAD_STATE_KEY, JSON.stringify(all));
-  } catch {
-    /* private mode — 靜默 */
-  }
-}
-
-/** 一輪問答 → 累積 lead 快照(每條用戶訊息 +5;高意圖關鍵字每中一個 +20 + signal) */
-function applyRoundToLead(personaKey: string, round: ChatMessage[]): LeadSnapshot | null {
-  const userTexts = round
-    .filter((m) => m.role === "user" && typeof m.text === "string" && m.text.trim())
-    .map((m) => (m.text as string).trim());
-  if (userTexts.length === 0) return null;
-  const prev = loadLeadStates()[personaKey] ?? { score: 0, questions: [], signals: [] };
-  let delta = 0;
-  const newSignals: string[] = [];
-  for (const text of userTexts) {
-    delta += 5;
-    for (const match of text.matchAll(HIGH_INTENT_RE)) {
-      delta += 20;
-      newSignals.push(highIntentSignal(match[0]));
-    }
-  }
-  const questions = [...prev.questions, ...userTexts].slice(-LEAD_MAX_QUESTIONS);
-  const signals = [...prev.signals];
-  for (const s of newSignals) {
-    if (!signals.includes(s)) signals.push(s);
-  }
-  const snap: LeadSnapshot = {
-    score: prev.score + delta,
-    questions,
-    signals: signals.slice(-LEAD_MAX_SIGNALS),
-  };
-  saveLeadState(personaKey, snap);
-  return snap;
-}
-
-/** fire-and-forget upsert:update 中就用快照絕對值;0 rows → insert 新線索 */
-async function upsertLeadFromRound(personaKey: string, round: ChatMessage[]): Promise<void> {
-  if (!supabase || !supabaseReady) return;
-  const snap = applyRoundToLead(personaKey, round);
-  if (!snap) return;
-  try {
-    const uid = await ensureAuthenticatedUser();
-    if (!uid) return;
-    const base = {
-      score: snap.score,
-      questions: snap.questions,
-      signals: snap.signals,
-      last_activity_at: new Date().toISOString(),
-    };
-    const { count, error } = await supabase
-      .from("leads")
-      .update(base, { count: "exact" })
-      .eq("owner_id", uid)
-      .eq("persona", personaKey);
-    if (!error && count && count > 0) return;
-    // 未存在(或 update 不可見)→ insert;anon_id 必帶(update policy 需要),登入咗加埋 user_id
-    await supabase.from("leads").insert({
-      owner_id: uid,
-      anon_id: null,
-      user_id: uid,
-      persona: personaKey,
-      stage: "新線索",
-      ...base,
-    });
-  } catch {
-    /* 離線 / RLS 靜默 — 本地快照已記低,下輪再試 */
-  }
 }
 
 /**
@@ -461,10 +272,7 @@ export function appendRound(
       ...(convId ? { conversationId: convId } : {}),
     };
     const nextList = [updated, ...list.filter((_, i) => i !== idx)];
-    // P0:fire-and-forget 寫入 Supabase(離線 / 無 env 靜默)
-    if (!skipRemoteLog) {
-      void logRoundToSupabase(updated.id, personaKey, updated.title, round);
-    }
+    void skipRemoteLog;
     return {
       aiMessageId,
       store: {
@@ -483,9 +291,7 @@ export function appendRound(
     ...(topicId ? { lastTopicId: topicId } : {}),
   };
   // P0:第一條訊息 — fire-and-forget 建 conversations row + 寫 messages
-  if (!skipRemoteLog) {
-    void logRoundToSupabase(created.id, personaKey, created.title, round);
-  }
+  void skipRemoteLog;
   return {
     aiMessageId,
     store: {

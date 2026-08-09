@@ -151,7 +151,7 @@ async function fetchProfileBundle(slug: string): Promise<ProfileBundle> {
 }
 
 function rlsHint(message: string): string {
-  return `${message} — 可能係表未建立或權限未開:請先喺 Supabase SQL Editor 執行 supabase/v3-policies.sql(expert_profiles 表 + expert update 自己 policy)。`;
+  return `${message} — 請由 Master Admin 檢查最新 migration、owner assignment 同 RLS readiness；唔好執行已退役嘅 legacy policy SQL。`;
 }
 
 /**
@@ -159,11 +159,11 @@ function rlsHint(message: string): string {
  * 左:編輯表單(顯示名稱/頭銜 headline/bio/專長 chips/品牌色/一句觀點
  *    + stats 動態列表 + socials 動態列表 + 置頂情報);
  * 右:live preview(同公開專家卡一致嘅渲染)。
- * 儲存 = upsert expert_profiles(slug PK)— 表有數據優先,
- * 否則 localStorage draft → experts.ts 靜態 fallback。
+ * 儲存由 membership-checked RPC 同步 experts + expert_profiles；
+ * localStorage 只係離線草稿 cache，唔係權限或公開資料 source of truth。
  */
 export default function PortalProfile() {
-  const { slug, expert } = usePortalExpert();
+  const { slug, expert, expertId } = usePortalExpert();
   const toast = useAdminToast();
   const [saved] = useState<ProfileDraft | null>(() => loadProfileDraft(slug));
 
@@ -278,22 +278,27 @@ export default function PortalProfile() {
     }
     setSaving(true);
     setSaveError(null);
-    const { error: upsertError } = await supabase
-      .from("expert_profiles")
-      .upsert({
-        slug,
-        headline: title.trim(),
-        bio: bio.trim(),
-        stats: stats.filter((s) => s.label.trim() && s.value.trim()),
-        socials: socials.filter((s) => s.label.trim() && s.url.trim()),
-        featured_ids: featuredIds,
-      });
+    const { error: upsertError } = await supabase.rpc(
+      "update_expert_public_profile",
+      {
+        p_expert_id: expertId,
+        p_display_name: displayName.trim(),
+        p_title: title.trim(),
+        p_bio: bio.trim(),
+        p_specialties: specialties,
+        p_brand_color: brandColor,
+        p_quote: quote.trim(),
+        p_stats: stats.filter((s) => s.label.trim() && s.value.trim()),
+        p_socials: socials.filter((s) => s.label.trim() && s.url.trim()),
+        p_featured_ids: featuredIds,
+      }
+    );
     setSaving(false);
     if (upsertError) {
       setSaveError(rlsHint(`同步失敗:${upsertError.message}`));
       return;
     }
-    toast("已儲存並同步上線 — 公開檔案頁會讀 expert_profiles");
+    toast("檔案已安全儲存；完成 release gate 後先會公開上線");
   };
 
   const initials = EXPERT_INITIALS[slug] ?? "·";
@@ -314,9 +319,8 @@ export default function PortalProfile() {
 
       {loadError && (
         <p className="rounded-md border border-[#A36A0F]/40 bg-card px-4 py-2.5 text-xs leading-relaxed text-[#A36A0F]">
-          讀取 expert_profiles 失敗:{loadError} —
-          請先喺 Supabase SQL Editor 執行 supabase/v3-policies.sql。
-          而家顯示嘅係 localStorage / 站內靜態 fallback。
+          讀取 expert_profiles 失敗:{loadError} — 請由 Master Admin 檢查 backend readiness；
+          而家只顯示本機草稿 cache。
         </p>
       )}
 

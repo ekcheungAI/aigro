@@ -1,137 +1,188 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
-  AtSign,
   CheckCircle2,
   Instagram,
-  Linkedin,
   Plug,
-  Podcast,
   RefreshCw,
-  Twitter,
+  ShieldCheck,
+  Unplug,
   Youtube,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useAdminToast } from "@/components/admin/AdminToast";
 import { usePortalExpert } from "@/components/portal/PortalLayout";
+import QueryState from "@/components/QueryState";
+import { useAdminQuery } from "@/components/admin/adminData";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
+import {
+  normalizeSocialAccountIdentifier,
+  socialConnectionCapability,
+  type SocialPlatform,
+} from "@/lib/socialConnections";
 
-type PortalPlatform = "YouTube" | "Instagram" | "X" | "Threads" | "LinkedIn" | "Podcast";
-
-interface SocialConnection {
-  platform: PortalPlatform;
-  connected: boolean;
-  handle?: string;
+interface SocialConnectionRow {
+  id: string;
+  expert_id: string;
+  platform: SocialPlatform;
+  source: "tikhub_public" | "official_oauth";
+  account_identifier: string;
+  canonical_url: string | null;
+  consent_status: "active" | "revoked";
+  consent_version: string;
+  consented_at: string;
+  revoked_at: string | null;
+  use_for_distillation: boolean;
+  sync_enabled: boolean;
+  last_synced_at: string | null;
+  next_sync_at: string | null;
+  last_error: string | null;
 }
 
-const PLATFORMS: PortalPlatform[] = [
-  "YouTube",
-  "Instagram",
-  "X",
-  "Threads",
-  "LinkedIn",
-  "Podcast",
+interface SocialPageData {
+  expertId: string;
+  socialSyncEnabled: boolean;
+  connections: SocialConnectionRow[];
+}
+
+interface PlatformDefinition {
+  key: SocialPlatform;
+  label: string;
+  icon: LucideIcon;
+  hint: string;
+}
+
+const PLATFORMS: PlatformDefinition[] = [
+  {
+    key: "tiktok",
+    label: "TikTok",
+    icon: Plug,
+    hint: "公開個人檔案及最新公開影片",
+  },
+  {
+    key: "instagram",
+    label: "Instagram",
+    icon: Instagram,
+    hint: "公開個人檔案、貼文及 Reels",
+  },
+  {
+    key: "youtube",
+    label: "YouTube",
+    icon: Youtube,
+    hint: "只會使用官方 OAuth／YouTube Data API；尚未接通",
+  },
 ];
 
-const PLATFORM_ICONS: Record<PortalPlatform, LucideIcon> = {
-  YouTube: Youtube,
-  Instagram: Instagram,
-  X: Twitter,
-  Threads: AtSign,
-  LinkedIn: Linkedin,
-  Podcast: Podcast,
-};
-
-const PLATFORM_HINT: Record<PortalPlatform, string> = {
-  YouTube: "影片主題 → 分身語料",
-  Instagram: "Reels 內容 → 語料",
-  X: "貼文觀點 → 語料",
-  Threads: "串文觀點 → 語料",
-  LinkedIn: "長文 → 語料",
-  Podcast: "逐字稿 → 語料",
-};
-
-/** 本機持久化 — 社交同步後端未接之前,handle 只存呢個瀏覽器 */
-function storageKey(slug: string) {
-  return `aigro-portal-socials-${slug}`;
+async function fetchSocialPage(expertId: string): Promise<SocialPageData> {
+  if (!supabase) throw new Error("Supabase 未連接");
+  const { data: expert, error: expertError } = await supabase
+    .from("experts")
+    .select("id,feature_flags")
+    .eq("id", expertId)
+    .maybeSingle();
+  if (expertError) throw new Error(expertError.message);
+  if (!expert) throw new Error("搵唔到已連結嘅導師身份");
+  const { data, error } = await supabase
+    .from("social_connections")
+    .select(
+      "id,expert_id,platform,source,account_identifier,canonical_url,consent_status,consent_version,consented_at,revoked_at,use_for_distillation,sync_enabled,last_synced_at,next_sync_at,last_error"
+    )
+    .eq("expert_id", expert.id)
+    .order("created_at");
+  if (error) throw new Error(error.message);
+  const flags = expert.feature_flags as Record<string, unknown> | null;
+  return {
+    expertId: expert.id as string,
+    socialSyncEnabled: flags?.social_sync_enabled === true,
+    connections: (data ?? []) as SocialConnectionRow[],
+  };
 }
 
-function loadConnections(slug: string): SocialConnection[] {
-  let saved: SocialConnection[] = [];
-  try {
-    const raw = window.localStorage.getItem(storageKey(slug));
-    if (raw) {
-      const parsed: unknown = JSON.parse(raw);
-      if (Array.isArray(parsed)) saved = parsed as SocialConnection[];
-    }
-  } catch {
-    /* private mode */
-  }
-  return PLATFORMS.map((p) => {
-    const hit = saved.find((s) => s.platform === p);
-    return hit && hit.connected && hit.handle
-      ? { platform: p, connected: true, handle: hit.handle }
-      : { platform: p, connected: false };
-  });
-}
-
-function persistConnections(slug: string, list: SocialConnection[]) {
-  try {
-    window.localStorage.setItem(storageKey(slug), JSON.stringify(list));
-  } catch {
-    /* noop */
-  }
-}
-
-/** 用戶輸入嘅 handle / 公開連結 — 原樣顯示,唔會虛構追蹤數 */
-function normalizeHandle(raw: string): string {
-  const v = raw.trim();
-  if (!v) return "";
-  if (/^https?:\/\//i.test(v) || v.startsWith("@")) return v;
-  return `@${v.replace(/^@+/, "")}`;
+function formatTimestamp(value: string | null): string {
+  if (!value) return "未同步";
+  return new Intl.DateTimeFormat("zh-HK", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "Asia/Hong_Kong",
+  }).format(new Date(value));
 }
 
 /**
- * PortalSocials `/portal/socials` — 社交連結。
- * 全部平台預設未連接(冇假 handle、冇假追蹤數);
- * 連接 = 記低你嘅 handle(localStorage),數據同步開放後先顯示真實指標。
+ * PortalSocials `/portal/socials` — 真實 consented social connections。
+ * TikHub 並非 OAuth；只接受公開 TikTok/Instagram identifiers。YouTube 保留官方 OAuth。
  */
 export default function PortalSocials() {
-  const { slug } = usePortalExpert();
+  const { expertId } = usePortalExpert();
   const toast = useAdminToast();
-  const [list, setList] = useState<SocialConnection[]>(() => loadConnections(slug));
-  const [drafting, setDrafting] = useState<PortalPlatform | null>(null);
-  const [handleDraft, setHandleDraft] = useState("");
+  const { data, loading, error, refetch } = useAdminQuery(
+    () => fetchSocialPage(expertId),
+    [expertId]
+  );
+  const [drafting, setDrafting] = useState<SocialPlatform | null>(null);
+  const [identifier, setIdentifier] = useState("");
+  const [consented, setConsented] = useState(false);
+  const [useForDistillation, setUseForDistillation] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  const connectedCount = list.filter((s) => s.connected).length;
+  const activeConnections = useMemo(
+    () => new Map(
+      (data?.connections ?? [])
+        .filter((connection) => connection.consent_status === "active")
+        .map((connection) => [connection.platform, connection])
+    ),
+    [data]
+  );
 
-  const update = (next: SocialConnection[]) => {
-    setList(next);
-    persistConnections(slug, next);
-  };
-
-  const startConnect = (platform: PortalPlatform) => {
-    setDrafting(platform);
-    setHandleDraft("");
-  };
-
-  const confirmConnect = (platform: PortalPlatform) => {
-    const handle = normalizeHandle(handleDraft);
-    if (!handle) return;
-    update(
-      list.map((s) =>
-        s.platform === platform ? { platform, connected: true, handle } : s
-      )
-    );
+  const resetDraft = () => {
     setDrafting(null);
-    setHandleDraft("");
-    toast(`${platform} 已記低 handle — 數據同步即將開放,開放後會顯示你嘅真實數據`);
+    setIdentifier("");
+    setConsented(false);
+    setUseForDistillation(true);
   };
 
-  const disconnect = (platform: PortalPlatform) => {
-    update(
-      list.map((s) => (s.platform === platform ? { platform, connected: false } : s))
-    );
-    toast(`${platform} 已解除連接`);
+  const connect = async (platform: SocialPlatform) => {
+    if (!supabase || !data || saving || !consented) return;
+    if (platform === "youtube") {
+      toast("YouTube 只會經官方 OAuth 連接；目前仍然係規劃中");
+      return;
+    }
+    let accountIdentifier: string;
+    try {
+      accountIdentifier = normalizeSocialAccountIdentifier(platform, identifier);
+    } catch (connectError) {
+      toast(connectError instanceof Error ? connectError.message : "公開帳號格式無效");
+      return;
+    }
+    setSaving(true);
+    const { error: connectError } = await supabase.rpc("upsert_social_connection", {
+      p_expert_id: data.expertId,
+      p_platform: platform,
+      p_account_identifier: accountIdentifier,
+      p_use_for_distillation: useForDistillation,
+    });
+    setSaving(false);
+    if (connectError) {
+      toast(`連接失敗：${connectError.message}`);
+      return;
+    }
+    resetDraft();
+    refetch();
+    toast("公開資料授權已記錄；同步會按導師 feature flag 啟用");
+  };
+
+  const revoke = async (connection: SocialConnectionRow) => {
+    if (!supabase || saving) return;
+    setSaving(true);
+    const { error: revokeError } = await supabase.rpc("revoke_social_connection", {
+      p_connection_id: connection.id,
+    });
+    setSaving(false);
+    if (revokeError) {
+      toast(`撤回失敗：${revokeError.message}`);
+      return;
+    }
+    refetch();
+    toast("授權已撤回；待處理工作已取消，相關蒸餾內容已移除");
   };
 
   return (
@@ -142,157 +193,184 @@ export default function PortalSocials() {
             Social Connections
           </p>
           <h1 className="mt-1 font-display text-[28px] font-medium text-text-primary">
-            社交連結
+            社交資料授權
           </h1>
-          <p className="mt-1 text-sm text-text-muted">
-            記低你嘅公開平台 handle — 蒸餾語料同數據同步會喺 pipeline 就位後開放。
+          <p className="mt-1 max-w-3xl text-sm leading-relaxed text-text-muted">
+            TikTok／Instagram 只會同步你授權嘅公開個人檔案同最新公開內容；
+            唔會要求密碼、cookies、私人訊息或私人 analytics。
           </p>
         </div>
-        <p className="font-mono text-xs text-text-muted">
-          已連接{" "}
-          <span className="text-lime-text">{connectedCount}</span>/{list.length}{" "}
-          個平台
-        </p>
+        <span className="rounded-sm border border-border bg-card px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-text-muted">
+          Beta
+        </span>
       </div>
 
-      {/* Platform rows */}
-      <div className="space-y-4">
-        {list.map((s) => {
-          const Icon = PLATFORM_ICONS[s.platform];
-          return (
-            <section
-              key={s.platform}
-              className="rounded-lg border border-border bg-surface"
-            >
-              <div className="flex flex-wrap items-center gap-4 px-5 py-4">
-                <span
-                  className={cn(
-                    "flex h-10 w-10 shrink-0 items-center justify-center rounded-md border",
-                    s.connected
-                      ? "border-lime/50 bg-lime-soft"
-                      : "border-border bg-card/60"
-                  )}
+      <QueryState
+        loading={loading}
+        error={error ? `載入失敗：${error}` : null}
+        retry={refetch}
+      >
+        {data && (
+          <div className="space-y-4">
+            {PLATFORMS.map((platform) => {
+              const Icon = platform.icon;
+              const capability = socialConnectionCapability(platform.key);
+              const connection = activeConnections.get(platform.key);
+              const isDrafting = drafting === platform.key;
+              const automaticSync = Boolean(
+                connection?.sync_enabled && data.socialSyncEnabled
+              );
+              return (
+                <section
+                  key={platform.key}
+                  className="rounded-lg border border-border bg-surface"
                 >
-                  <Icon
-                    className={cn(
-                      "h-5 w-5",
-                      s.connected ? "text-lime-text" : "text-text-muted"
+                  <div className="flex flex-wrap items-center gap-4 px-5 py-4">
+                    <span
+                      className={cn(
+                        "flex h-10 w-10 shrink-0 items-center justify-center rounded-md border",
+                        connection ? "border-lime/50 bg-lime-soft" : "border-border bg-card/60"
+                      )}
+                    >
+                      <Icon className={cn("h-5 w-5", connection ? "text-lime-text" : "text-text-muted")} />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-text-primary">
+                        {platform.label}
+                        <span className="rounded-sm border border-border px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-text-muted">
+                          {capability.status === "planned" ? "Planned" : "Beta"}
+                        </span>
+                      </p>
+                      {connection ? (
+                        <div className="mt-1 space-y-1 text-xs text-text-muted">
+                          <p className="flex flex-wrap items-center gap-1.5">
+                            <CheckCircle2 className="h-3.5 w-3.5 text-lime-text" />
+                            <span className="font-mono text-text-primary">@{connection.account_identifier}</span>
+                            <span>· consent {connection.consent_version}</span>
+                          </p>
+                          <p className="flex flex-wrap items-center gap-1.5">
+                            <RefreshCw className="h-3.5 w-3.5" />
+                            {automaticSync
+                              ? `每日同步已啟用 · 上次 ${formatTimestamp(connection.last_synced_at)}`
+                              : "授權已記錄；自動同步尚未由管理員啟用"}
+                          </p>
+                          {connection.last_error && (
+                            <p className="text-error">上次同步：{connection.last_error}</p>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="mt-0.5 text-xs text-text-muted">
+                          {platform.hint} · {capability.source === "tikhub_public" ? "TikHub 公開資料 adapter" : "官方 adapter"}
+                        </p>
+                      )}
+                    </div>
+                    {connection ? (
+                      <button
+                        type="button"
+                        disabled={saving}
+                        onClick={() => void revoke(connection)}
+                        className="press inline-flex items-center gap-1.5 rounded-md border border-border px-3.5 py-2 text-xs text-text-secondary hover:border-error hover:text-error disabled:opacity-50"
+                      >
+                        <Unplug className="h-3.5 w-3.5" />
+                        撤回授權
+                      </button>
+                    ) : capability.connectable ? (
+                      <button
+                        type="button"
+                        disabled={drafting !== null}
+                        onClick={() => {
+                          resetDraft();
+                          setDrafting(platform.key);
+                        }}
+                        className="press inline-flex items-center gap-1.5 rounded-md bg-lime px-4 py-2 text-sm font-medium text-on-accent disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <Plug className="h-4 w-4" />
+                        授權公開資料
+                      </button>
+                    ) : (
+                      <span className="rounded-md border border-border px-3 py-2 text-xs text-text-muted">
+                        官方 OAuth 尚未接通
+                      </span>
                     )}
-                  />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-text-primary">
-                    {s.platform}
-                  </p>
-                  {s.connected ? (
-                    <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-text-muted">
-                      <span className="inline-flex items-center gap-1 text-lime-text">
-                        <CheckCircle2 className="h-3.5 w-3.5" />
-                        已記低 handle
-                      </span>
-                      <span className="font-mono">{s.handle}</span>
-                      <span aria-hidden="true">·</span>
-                      <span className="inline-flex items-center gap-1">
-                        <RefreshCw className="h-3 w-3" />
-                        數據同步即將開放
-                      </span>
-                    </p>
-                  ) : (
-                    <p className="mt-0.5 text-xs text-text-muted">
-                      {PLATFORM_HINT[s.platform]}
-                    </p>
+                  </div>
+
+                  {!connection && isDrafting && platform.key !== "youtube" && (
+                    <form
+                      className="space-y-4 border-t border-border px-5 py-4"
+                      onSubmit={(event) => {
+                        event.preventDefault();
+                        void connect(platform.key);
+                      }}
+                    >
+                      <label className="block">
+                        <span className="mb-1 block text-xs text-text-secondary">
+                          {platform.label} 公開 handle 或個人檔案連結
+                        </span>
+                        <input
+                          autoFocus
+                          value={identifier}
+                          onChange={(event) => setIdentifier(event.target.value)}
+                          placeholder="例：@yourname 或公開 profile URL"
+                          className="h-10 w-full rounded-md border border-border-strong bg-surface px-3 font-mono text-sm text-text-primary placeholder:text-text-muted focus:border-lime focus:outline-none"
+                        />
+                      </label>
+                      <div className="rounded-md border border-border bg-card/60 px-4 py-3 text-xs leading-relaxed text-text-muted">
+                        <p className="flex items-center gap-1.5 font-medium text-text-primary">
+                          <ShieldCheck className="h-4 w-4 text-lime-text" />
+                          授權範圍
+                        </p>
+                        <p className="mt-1.5">
+                          AIGRO 會每日透過第三方 TikHub 讀取呢個帳號嘅公開 profile
+                          同最新公開內容，保存最少必要欄位，並可用於你嘅 AI 分身蒸餾。
+                          呢個唔係平台 OAuth；平台條款同第三方處理條款仍然適用。你可以隨時撤回。
+                        </p>
+                      </div>
+                      <label className="flex items-start gap-2.5 text-xs leading-relaxed text-text-secondary">
+                        <input
+                          type="checkbox"
+                          checked={useForDistillation}
+                          onChange={(event) => setUseForDistillation(event.target.checked)}
+                          className="mt-0.5 h-4 w-4 rounded border-border accent-[hsl(var(--lime))]"
+                        />
+                        將同步到嘅公開內容送入審批前蒸餾流程（未批准內容唔會用於聊天）
+                      </label>
+                      <label className="flex items-start gap-2.5 text-xs leading-relaxed text-text-secondary">
+                        <input
+                          type="checkbox"
+                          checked={consented}
+                          onChange={(event) => setConsented(event.target.checked)}
+                          className="mt-0.5 h-4 w-4 rounded border-border accent-[hsl(var(--lime))]"
+                        />
+                        我確認有權授權 AIGRO 處理以上公開資料，並同意上述每日擷取及第三方處理。
+                      </label>
+                      <div className="flex flex-wrap justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={resetDraft}
+                          className="press rounded-md border border-border px-4 py-2 text-sm text-text-secondary"
+                        >
+                          取消
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={!identifier.trim() || !consented || saving}
+                          className="press rounded-md bg-lime px-4 py-2 text-sm font-medium text-on-accent disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {saving ? "記錄中…" : "確認授權"}
+                        </button>
+                      </div>
+                    </form>
                   )}
-                </div>
-                {s.connected ? (
-                  <button
-                    type="button"
-                    onClick={() => disconnect(s.platform)}
-                    className="rounded-md border border-border px-3.5 py-2 text-xs text-text-secondary transition-colors hover:border-error hover:text-error"
-                  >
-                    解除連接
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    disabled={drafting !== null}
-                    onClick={() => startConnect(s.platform)}
-                    className={cn(
-                      "inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-medium transition-colors",
-                      drafting !== null
-                        ? "cursor-not-allowed bg-card text-text-muted"
-                        : "bg-lime text-on-accent hover:bg-lime-hover"
-                    )}
-                  >
-                    <Plug className="h-4 w-4" />
-                    連接
-                  </button>
-                )}
-              </div>
+                </section>
+              );
+            })}
+          </div>
+        )}
+      </QueryState>
 
-              {/* 連接 = 話我哋知你嘅 handle / 公開連結(唔係假 OAuth,唔虛構數據) */}
-              {!s.connected && drafting === s.platform && (
-                <form
-                  className="flex flex-wrap items-center gap-3 border-t border-border px-5 py-4"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    confirmConnect(s.platform);
-                  }}
-                >
-                  <label
-                    htmlFor={`handle-${s.platform}`}
-                    className="text-xs text-text-secondary"
-                  >
-                    你嘅 {s.platform} handle 或公開連結:
-                  </label>
-                  <input
-                    id={`handle-${s.platform}`}
-                    autoFocus
-                    value={handleDraft}
-                    onChange={(e) => setHandleDraft(e.target.value)}
-                    placeholder="例:@yourname 或 https://…"
-                    className="h-9 min-w-0 flex-1 rounded-md border border-border bg-surface px-3 font-mono text-sm text-text-primary placeholder:text-text-muted"
-                  />
-                  <button
-                    type="submit"
-                    disabled={!handleDraft.trim()}
-                    className={cn(
-                      "rounded-md px-4 py-2 text-sm font-medium transition-colors",
-                      handleDraft.trim()
-                        ? "bg-lime text-on-accent hover:bg-lime-hover"
-                        : "cursor-not-allowed bg-card text-text-muted"
-                    )}
-                  >
-                    確認連接
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setDrafting(null);
-                      setHandleDraft("");
-                    }}
-                    className="text-xs text-text-muted transition-colors hover:text-text-secondary"
-                  >
-                    取消
-                  </button>
-                  <p className="w-full text-[11px] text-text-muted">
-                    只會用公開內容做蒸餾語料;追蹤數等數據喺同步功能開放後先顯示,
-                    而家唔會虛構任何數字。
-                  </p>
-                </form>
-              )}
-            </section>
-          );
-        })}
-      </div>
-
-      {/* Explainer */}
       <p className="rounded-md border border-border bg-card/60 px-4 py-3 text-xs leading-relaxed text-text-muted">
-        <span className="font-medium text-lime-text">
-          連接越多,分身數據越準 —
-        </span>{" "}
-        每個已記低平台嘅公開內容,會喺 distillation pipeline 就位後轉成蒸餾語料,
-        令分身回答更貼近你嘅最新觀點;追蹤數等指標會喺同步功能開放後先顯示真實數字,
-        絕不讀取私人訊息。
+        自動同步完成後只會建立待審批 knowledge revision；導師或管理員批准前，
+        內容唔會進入 live chat。YouTube 因平台政策只保留官方 OAuth／Data API 路線。
       </p>
     </div>
   );

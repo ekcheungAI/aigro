@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   ArrowRight,
@@ -7,6 +7,7 @@ import {
   Check,
   Lock,
   LogOut,
+  MailCheck,
   MessageSquare,
   PenLine,
   ShieldCheck,
@@ -61,6 +62,14 @@ interface MemberBookingRow {
 interface AvailableSlot {
   starts_at: string;
   ends_at: string;
+}
+
+interface ExpertInvitationRow {
+  id: string;
+  expert_id: string;
+  expert_name: string;
+  expert_slug: string;
+  expires_at: string;
 }
 
 function bookingTime(value: string): string {
@@ -167,6 +176,7 @@ const PROFILE_ROWS: {
  */
 export default function Account() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const reduced = useReducedMotion();
   const { toast, showToast } = useToast();
   // 會員態 — useMember 響應式(saveMember/clearMember 廣播即時更新)
@@ -177,6 +187,9 @@ export default function Account() {
   const [bookingBusy, setBookingBusy] = useState<string | null>(null);
   const [rescheduleId, setRescheduleId] = useState<string | null>(null);
   const [rescheduleSlots, setRescheduleSlots] = useState<AvailableSlot[]>([]);
+  const [expertInvitations, setExpertInvitations] = useState<ExpertInvitationRow[]>([]);
+  const [invitationError, setInvitationError] = useState<string | null>(null);
+  const [invitationBusy, setInvitationBusy] = useState<string | null>(null);
   const sessions = useMemo(collectSessions, []);
   const mcpSignedUp = useMemo(() => {
     try {
@@ -208,6 +221,37 @@ export default function Account() {
     // member identity is the relevant subscription boundary.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [member?.email]);
+
+  useEffect(() => {
+    if (!supabase || !member) return;
+    void (async () => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session?.user || sessionData.session.user.is_anonymous) return;
+      const { data, error } = await supabase.rpc("list_my_expert_invitations");
+      if (error) {
+        setInvitationError(error.message);
+        return;
+      }
+      setExpertInvitations((data ?? []) as ExpertInvitationRow[]);
+      setInvitationError(null);
+    })();
+  }, [member]);
+
+  const acceptExpertInvitation = async (invitationId: string) => {
+    if (!supabase || invitationBusy) return;
+    setInvitationBusy(invitationId);
+    const { error } = await supabase.rpc("accept_expert_invitation", {
+      p_invitation_id: invitationId,
+    });
+    setInvitationBusy(null);
+    if (error) {
+      setInvitationError(error.message);
+      showToast(`接受邀請失敗：${error.message}`);
+      return;
+    }
+    showToast("導師邀請已接受，正在開啟你嘅專家 CRM");
+    window.setTimeout(() => window.location.assign("/portal"), 600);
+  };
 
   const cancelBooking = async (id: string) => {
     if (!supabase) return;
@@ -361,6 +405,47 @@ export default function Account() {
             </div>
           </div>
         </div>
+
+        {(expertInvitations.length > 0 || invitationError) && (
+          <section className="mt-8 rounded-md border border-lime/50 bg-lime-soft p-5">
+            <p className="flex items-center gap-2 text-label text-text-primary">
+              <MailCheck className="h-4 w-4 text-lime-text" strokeWidth={1.5} />
+              領航導師邀請
+            </p>
+            {invitationError && (
+              <p className="mt-2 text-caption text-error">{invitationError}</p>
+            )}
+            <div className="mt-3 space-y-3">
+              {expertInvitations.map((invitation) => {
+                const linked = searchParams.get("expert_invitation") === invitation.id;
+                return (
+                  <div
+                    key={invitation.id}
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-surface px-4 py-3"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-text-primary">
+                        {invitation.expert_name}
+                        {linked && <span className="ml-2 text-xs text-lime-text">電郵連結已核對</span>}
+                      </p>
+                      <p className="mt-0.5 text-xs text-text-muted">
+                        接受後會取得 {invitation.expert_slug} 專屬 Portal、CMS、CRM 同預約管理權限。
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={invitationBusy !== null}
+                      onClick={() => void acceptExpertInvitation(invitation.id)}
+                      className="press rounded-md bg-lime px-4 py-2 text-sm font-medium text-on-accent disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {invitationBusy === invitation.id ? "接受中…" : "接受邀請"}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         {/* ---- 方案卡 ---- */}
         <section className="mt-10 flex flex-col gap-4 rounded-md border bg-surface p-6 sm:flex-row sm:items-center md:p-8">

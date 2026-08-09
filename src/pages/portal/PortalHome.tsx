@@ -23,13 +23,13 @@ interface PortalHomeData {
   msgs: AdminMessageRow[];
 }
 
-/** 專家自己嘅真數據:conversations where persona = 我嘅 slug,加埋對應 messages */
-async function fetchPortalHome(slug: string): Promise<PortalHomeData> {
+/** 專家自己嘅真數據：immutable expert_id scoped conversations + messages。 */
+async function fetchPortalHome(expertId: string): Promise<PortalHomeData> {
   if (!supabase) throw new Error("Supabase 未連接");
   const convRes = await supabase
     .from("conversations")
-    .select("id,user_id,anon_id,persona,title,created_at")
-    .eq("persona", slug)
+    .select("id,user_id,anon_id,persona,expert_id,title,created_at")
+    .eq("expert_id", expertId)
     .order("created_at", { ascending: false })
     .limit(500);
   if (convRes.error) throw new Error(convRes.error.message);
@@ -55,10 +55,10 @@ async function fetchPortalHome(slug: string): Promise<PortalHomeData> {
  * 全部嚟自 conversations / messages 即時查詢;未有數據 → 0 + empty state。
  */
 export default function PortalHome() {
-  const { slug, expert } = usePortalExpert();
+  const { slug, expert, expertId } = usePortalExpert();
   const { data, loading, error, refetch } = useAdminQuery(
-    () => fetchPortalHome(slug),
-    [slug]
+    () => fetchPortalHome(expertId),
+    [expertId]
   );
 
   const firstName = expert?.nameEn.split(" ")[0] ?? slug;

@@ -17,6 +17,7 @@
 import type { AiReply, Citation } from "@/components/ask/AiMessage";
 import type { Expert } from "@/data/experts";
 import { expertFullName, experts } from "@/data/experts";
+import type { PublicInstructor } from "@/lib/publicInstructors";
 
 /** 問題類型 — 影響匹配加分(點樣做 → steps;邊個/推薦 → compare;係咩 → define) */
 export type QuestionType = "steps" | "compare" | "define";
@@ -74,6 +75,16 @@ export interface Persona {
   aboutLinkLabel: string;
   aboutLinkHref: string;
   aboutTransparency: string;
+  /** Live DB readiness gate; false means profile is public but chat is blocked. */
+  chatReady?: boolean;
+  /** Immutable database instructor id used by server-routed workflows. */
+  instructorId?: string;
+  /** Directory resolution failure for an explicitly requested instructor. */
+  directoryStatus?: "loading" | "error" | "missing";
+}
+
+export interface RuntimePersonaDirectoryState {
+  status: "loading" | "error" | "ready";
 }
 
 const INK_ACCENT = "hsl(var(--ink))";
@@ -1180,6 +1191,139 @@ export const personas: Persona[] = [
 
 export function getPersona(key: string | null): Persona {
   return personas.find((p) => p.key === key) ?? PLATFORM_PERSONA;
+}
+
+export function personasFromPublicInstructors(
+  instructors: PublicInstructor[]
+): Persona[] {
+  const runtime = instructors.map((instructor): Persona => {
+    const editorial = personas.find((item) => item.key === instructor.expert.slug);
+    if (editorial) {
+      return {
+        ...editorial,
+        expert: instructor.expert,
+        name: expertFullName(instructor.expert),
+        shortName: instructor.expert.nameEn.split(" ")[0] || instructor.expert.nameEn,
+        domainCaption: instructor.expert.specialties.join("・"),
+        signature: instructor.expert.quote || editorial.signature,
+        greetingBody: instructor.greeting,
+        aboutBio: instructor.expert.bio || editorial.aboutBio,
+        aboutTransparency:
+          instructor.expert.transparency || editorial.aboutTransparency,
+        chatReady: instructor.chatReady,
+        instructorId: instructor.id,
+      };
+    }
+
+    const name = expertFullName(instructor.expert);
+    const firstName = instructor.expert.nameEn.split(" ")[0] || name;
+    const suggestions = instructor.expert.specialties.slice(0, 4).map(
+      (specialty) => `${specialty} 應該由邊度開始？`
+    );
+    return {
+      key: instructor.expert.slug,
+      kind: "expert",
+      expert: instructor.expert,
+      name,
+      shortName: firstName,
+      domainCaption:
+        instructor.expert.specialties.join("・") || "授權知識・實戰建議",
+      signature: instructor.expert.quote || "有來源先回答，資料不足會講明",
+      accent: instructor.expert.brandColor ?? INK_ACCENT,
+      headerCaption: "AI 導師・基於已批准內容蒸餾",
+      greetingTitle: `想同 ${firstName} 嘅 AI 導師傾咩？`,
+      greetingBody: instructor.greeting,
+      suggestions: suggestions.length
+        ? suggestions
+        : ["你最常用嘅方法係咩？", "我應該由邊一步開始？"],
+      replies: [],
+      fallback: {
+        text: instructor.chatReady
+          ? "我會先按已批准知識庫檢索；如果資料未足夠，會清楚講明並建議下一步。"
+          : "呢位導師嘅公開檔案已上線，但知識、角色評估或模型設定仍未完成，所以聊天暫未開放。你可以先瀏覽導師檔案。",
+        citations: [],
+        confidence: 0,
+        source: instructor.chatReady ? "general" : "unavailable",
+      },
+      aboutBio: instructor.expert.bio || "",
+      aboutLinkLabel: `${firstName} 嘅領航專家檔案`,
+      aboutLinkHref: `/experts/${instructor.expert.slug}`,
+      aboutTransparency: instructor.expert.transparency || "",
+      chatReady: instructor.chatReady,
+      instructorId: instructor.id,
+    };
+  });
+  return [PLATFORM_PERSONA, ...runtime];
+}
+
+export function getRuntimePersona(
+  key: string | null,
+  runtimePersonas: Persona[],
+  directory: RuntimePersonaDirectoryState = { status: "ready" }
+): Persona {
+  const platform = runtimePersonas.find((item) => item.key === "platform") ??
+    PLATFORM_PERSONA;
+  if (!key || key === "platform") return platform;
+
+  const requested = runtimePersonas.find((item) => item.key === key);
+  if (directory.status === "ready" && requested) return requested;
+
+  const status = directory.status === "ready" ? "missing" : directory.status;
+  const message = status === "loading"
+    ? "正在載入指定 AI 導師資料，完成前唔會轉用平台 AI 代答。"
+    : status === "error"
+      ? "暫時未能載入指定 AI 導師。為免答錯身份，聊天已停用；請稍後再試。"
+      : "指定 AI 導師不存在或尚未公開，聊天已停用。請返回導師目錄重新選擇。";
+  const expert = requested?.expert ?? {
+    slug: key,
+    nameEn: "AI Instructor",
+    nameZh: "指定導師",
+    title: "AIGRO AI 導師",
+    image: "",
+    verified: false,
+    specialties: [],
+  };
+
+  return {
+    ...(requested ?? {
+      key,
+      kind: "expert" as const,
+      expert,
+      name: "指定 AI 導師",
+      shortName: "AI 導師",
+      domainCaption: "導師目錄狀態待確認",
+      signature: "未確認導師身份前不會代答",
+      accent: INK_ACCENT,
+      headerCaption: "AI 導師暫未可用",
+      greetingTitle: "呢位 AI 導師暫未可用",
+      greetingBody: message,
+      suggestions: [],
+      replies: [],
+      fallback: {
+        text: message,
+        citations: [],
+        confidence: 0,
+        source: "unavailable" as const,
+      },
+      aboutBio: message,
+      aboutLinkLabel: "返回領航專家總覽",
+      aboutLinkHref: "/experts",
+      aboutTransparency: "導師身份及發佈狀態未確認，系統不會用其他分身內容代答。",
+    }),
+    expert,
+    chatReady: false,
+    directoryStatus: status,
+    headerCaption: "AI 導師暫未可用",
+    greetingTitle: "呢位 AI 導師暫未可用",
+    greetingBody: message,
+    suggestions: [],
+    fallback: {
+      text: message,
+      citations: [],
+      confidence: 0,
+      source: "unavailable",
+    },
+  };
 }
 
 /* ---------------- Matching engine(v1.19) ---------------- */

@@ -97,11 +97,12 @@ async function fetchStudio(): Promise<StudioData> {
   };
 }
 
-const FLAGS = [
+export const STUDIO_FLAGS = [
   ["cms_ingestion_enabled", "素材蒸餾"],
   ["persona_compiler_enabled", "角色蒸餾"],
   ["rag_enabled", "RAG 回答"],
   ["booking_enabled", "真人預約"],
+  ["social_sync_enabled", "每日社交同步"],
 ] as const;
 
 export default function AdminStudio() {
@@ -119,9 +120,11 @@ export default function AdminStudio() {
   const setFlag = async (expert: ExpertRow, key: string, value: boolean) => {
     if (!supabase) return;
     setBusy(`${expert.id}:${key}`);
-    const { error: updateError } = await supabase.from("experts").update({
-      feature_flags: { ...expert.feature_flags, [key]: value },
-    }).eq("id", expert.id);
+    const { error: updateError } = await supabase.rpc("set_expert_feature_flag", {
+      p_expert_id: expert.id,
+      p_key: key,
+      p_enabled: value,
+    });
     setBusy(null);
     if (updateError) toast(`更新失敗：${updateError.message}`);
     else { toast(`${expert.display_name} 功能旗標已更新`); refetch(); }
@@ -181,9 +184,10 @@ export default function AdminStudio() {
   const dismissGap = async (id: string) => {
     if (!supabase) return;
     setBusy(id);
-    const { error: gapError } = await supabase.from("knowledge_gaps")
-      .update({ status: "dismissed", resolved_at: new Date().toISOString() })
-      .eq("id", id);
+    const { error: gapError } = await supabase.rpc("resolve_knowledge_gap", {
+      p_gap_id: id,
+      p_status: "dismissed",
+    });
     setBusy(null);
     if (gapError) toast(`更新失敗：${gapError.message}`);
     else refetch();
@@ -212,7 +216,7 @@ export default function AdminStudio() {
                       <p className="text-sm font-medium text-text-primary">{expert.display_name}</p>
                       <p className="font-mono text-[10px] text-text-muted">{expert.slug} · {expert.status}</p>
                     </div>
-                    {FLAGS.map(([key, label]) => (
+                    {STUDIO_FLAGS.map(([key, label]) => (
                       <div key={key} className="flex items-center gap-2">
                         <span className="text-xs text-text-secondary">{label}</span>
                         <AdminToggle

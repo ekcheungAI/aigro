@@ -25,6 +25,7 @@ describe("master admin module status", () => {
       "Sources",
       "Skills",
       "Engagement",
+      "Members",
       "Emails",
       "Settings",
     ]);

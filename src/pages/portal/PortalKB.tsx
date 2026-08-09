@@ -358,10 +358,10 @@ export default function PortalKB() {
     if (!supabase) return;
     setBusyId(source.id);
     const archived = !source.archived_at;
-    const { error: archiveError } = await supabase
-      .from("knowledge_sources")
-      .update({ archived_at: archived ? new Date().toISOString() : null })
-      .eq("id", source.id);
+    const { error: archiveError } = await supabase.rpc(
+      "set_knowledge_source_archived",
+      { p_source_id: source.id, p_archived: archived }
+    );
     setBusyId(null);
     if (archiveError) toast(`狀態更新失敗：${archiveError.message}`);
     else {

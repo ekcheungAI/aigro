@@ -25,8 +25,12 @@ const ROLE_FILTERS: RoleFilter[] = ["全部", "free", "founding", "expert", "adm
 const TIER_FILTERS: TierFilter[] = ["全部", "free", "pro", "vip"];
 const ROLE_ORDER: MemberRole[] = ["free", "founding", "expert", "admin", "super_admin"];
 const TIER_ORDER: MemberTier[] = ["free", "pro", "vip"];
-/** 已知分身 slug(datalist 建議,自訂都得) */
-const KNOWN_EXPERT_SLUGS = ["jimmy-lau", "elvin-cheung"];
+
+interface ExpertOption {
+  id: string;
+  slug: string;
+  display_name: string;
+}
 
 function roleChip(role: string | null) {
   if (role === "super_admin") return "bg-lime text-on-accent";
@@ -47,11 +51,12 @@ interface MembersData {
   profiles: AdminProfileRow[];
   total: number;
   mcpWaitlist: AdminWaitlistRow[];
+  experts: ExpertOption[];
 }
 
 async function fetchMembers(): Promise<MembersData> {
   if (!supabase) throw new Error("Supabase 未連接 — 請檢查環境變數。");
-  const [total, profilesRes, waitlistRes] = await Promise.all([
+  const [total, profilesRes, waitlistRes, expertsRes] = await Promise.all([
     countRows("profiles"),
     supabase
       .from("profiles")
@@ -62,9 +67,15 @@ async function fetchMembers(): Promise<MembersData> {
       .from("waitlist")
       .select("id,email,kind,vertical,role,note,source,created_at")
       .eq("kind", "mcp"),
+    supabase
+      .from("experts")
+      .select("id,slug,display_name")
+      .neq("slug", "platform")
+      .order("display_name"),
   ]);
   if (profilesRes.error) throw new Error(profilesRes.error.message);
   if (waitlistRes.error) throw new Error(waitlistRes.error.message);
+  if (expertsRes.error) throw new Error(expertsRes.error.message);
   return {
     profiles: (profilesRes.data ?? []).map((row) => {
       const accessRaw = Array.isArray(row.account_access) ? row.account_access[0] : row.account_access;
@@ -98,6 +109,7 @@ async function fetchMembers(): Promise<MembersData> {
     }),
     total,
     mcpWaitlist: (waitlistRes.data ?? []) as AdminWaitlistRow[],
+    experts: (expertsRes.data ?? []) as ExpertOption[],
   };
 }
 
@@ -108,12 +120,14 @@ function MemberRoleEditor({
   onSaved,
   onCancel,
   canManageAdmins,
+  expertOptions,
 }: {
   member: AdminProfileRow;
   /** 儲存成功後 callback(父層 refetch + 關閉) */
   onSaved: (role: MemberRole, tier: MemberTier) => void;
   onCancel: () => void;
   canManageAdmins: boolean;
+  expertOptions: ExpertOption[];
 }) {
   const [role, setRole] = useState<MemberRole>(
     (member.role as MemberRole) ?? "free"
@@ -132,16 +146,27 @@ function MemberRoleEditor({
     }
     setSaving(true);
     setSaveError(null);
-    let expertId: string | null = null;
-    if (role === "expert" && expertSlug.trim()) {
-      const { data: expert, error: expertError } = await supabase.from("experts")
-        .select("id").eq("slug", expertSlug.trim()).maybeSingle();
-      if (expertError || !expert) {
+    const selectedExpert = expertOptions.find((option) => option.slug === expertSlug.trim());
+    if (role === "expert" && !selectedExpert) {
+      setSaving(false);
+      setSaveError("請由清單選擇一個有效導師 workspace");
+      return;
+    }
+
+    if (role === "expert" && selectedExpert) {
+      const { error: ownerError } = await supabase.rpc("assign_expert_owner_with_tier", {
+        p_expert_id: selectedExpert.id,
+        p_user_id: member.id,
+        p_tier: tier,
+      });
+      if (ownerError) {
         setSaving(false);
-        setSaveError(expertError?.message ?? "找不到呢個專家 slug");
+        setSaveError(`導師擁有者連結失敗：${ownerError.message}`);
         return;
       }
-      expertId = expert.id;
+      setSaving(false);
+      onSaved(role, tier);
+      return;
     }
     const appRole = role === "super_admin"
       ? "super_admin"
@@ -154,7 +179,7 @@ function MemberRoleEditor({
       user_id: member.id,
       app_role: appRole,
       tier,
-      expert_id: expertId,
+      expert_id: null,
     });
     setSaving(false);
     if (updateError) {
@@ -197,7 +222,9 @@ function MemberRoleEditor({
             onChange={(e) => setRole(e.target.value as MemberRole)}
             className="mt-1.5 w-full rounded-md border border-border-strong bg-surface px-3 py-2 text-sm text-text-primary focus:border-lime focus:outline-none"
           >
-            {ROLE_ORDER.filter((r) => canManageAdmins || (r !== "admin" && r !== "super_admin")).map((r) => (
+            {ROLE_ORDER.filter((r) =>
+              canManageAdmins || (r !== "expert" && r !== "admin" && r !== "super_admin")
+            ).map((r) => (
               <option key={r} value={r}>
                 {ROLE_LABELS[r]}({r})
               </option>
@@ -232,22 +259,22 @@ function MemberRoleEditor({
             >
               專家分身 slug
             </label>
-            <input
+            <select
               id="me-slug"
-              list="known-expert-slugs"
               value={expertSlug}
               onChange={(e) => setExpertSlug(e.target.value)}
-              placeholder="例:jimmy-lau"
               className="mt-1.5 w-full rounded-md border border-border-strong bg-surface px-3 py-2 font-mono text-sm text-text-primary placeholder:text-text-muted focus:border-lime focus:outline-none"
-            />
-            <datalist id="known-expert-slugs">
-              {KNOWN_EXPERT_SLUGS.map((s) => (
-                <option key={s} value={s} />
+            >
+              <option value="">請選擇導師 workspace</option>
+              {expertOptions.map((option) => (
+                <option key={option.id} value={option.slug}>
+                  {option.display_name} ({option.slug})
+                </option>
               ))}
-            </datalist>
+            </select>
             <p className="mt-1.5 text-xs leading-relaxed text-text-muted">
-              連結佢嘅 AI 分身身份(jimmy-lau / elvin-cheung 或自訂 slug)—
-              設定後佢喺專家平台見到自己嘅分身數據;留空即未連結。
+              最高管理員會以原子 owner-assignment workflow 連結帳戶；同一 workspace
+              只可以有一位 owner，轉移後舊 owner 會即時失去存取權。
             </p>
           </div>
         )}
@@ -521,11 +548,12 @@ export default function AdminMembers() {
                       <td className="px-4 py-3 text-right">
                         <button
                           type="button"
+                          disabled={!canManageAdmins}
                           onClick={(e) => {
                             e.stopPropagation();
                             setEditId(m.id);
                           }}
-                          className="inline-flex items-center gap-1 rounded-md border border-border px-2.5 py-1 text-xs font-medium text-text-secondary transition-colors hover:border-lime hover:text-lime-text"
+                          className="inline-flex items-center gap-1 rounded-md border border-border px-2.5 py-1 text-xs font-medium text-text-secondary transition-colors hover:border-lime hover:text-lime-text disabled:cursor-not-allowed disabled:opacity-40"
                         >
                           <Pencil className="h-3 w-3" />
                           編輯
@@ -613,13 +641,13 @@ export default function AdminMembers() {
 
             <button
               type="button"
-              disabled={!canManageAdmins && (active.role === "admin" || active.role === "super_admin")}
+              disabled={!canManageAdmins}
               onClick={() => {
                 setOpenId(null);
                 setEditId(active.id);
               }}
-              title={!canManageAdmins && (active.role === "admin" || active.role === "super_admin")
-                ? "只有最高管理員可以修改管理員權限"
+              title={!canManageAdmins
+                ? "只有最高管理員可以修改會員權限、方案或導師擁有權"
                 : undefined}
               className="inline-flex items-center gap-1.5 rounded-md border border-border px-3.5 py-2 text-sm font-medium text-text-secondary transition-colors hover:border-lime hover:text-lime-text disabled:cursor-not-allowed disabled:opacity-40"
             >
@@ -641,6 +669,7 @@ export default function AdminMembers() {
           <MemberRoleEditor
             member={editing}
             canManageAdmins={canManageAdmins}
+            expertOptions={data?.experts ?? []}
             onCancel={() => setEditId(null)}
             onSaved={(role, tier) => {
               setEditId(null);

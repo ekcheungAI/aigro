@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(30);
+select plan(34);
 
 set local role postgres;
 insert into auth.users (
@@ -24,11 +24,35 @@ where user_id in (
 update public.experts set feature_flags = feature_flags || '{"booking_enabled":true,"rag_enabled":true}'::jsonb
 where slug = 'elvin-cheung';
 
+insert into public.expert_persona_versions (
+  id, expert_id, version, greeting, status, published_at
+)
+select
+  '50000000-0000-0000-0000-000000000009', id, 9001,
+  'Workflow test persona', 'published', now()
+from public.experts
+where slug = 'elvin-cheung';
+update public.experts
+set published_persona_version_id = '50000000-0000-0000-0000-000000000009'
+where slug = 'elvin-cheung';
+
 insert into public.conversations (id, owner_id, user_id, expert_id, persona, title)
 select '53000000-0000-0000-0000-000000000003',
   '51000000-0000-0000-0000-000000000001',
   '51000000-0000-0000-0000-000000000001', id, slug, 'Atomic chat'
 from public.experts where slug = 'elvin-cheung';
+
+do $$
+begin
+  perform public.reserve_chat_request(
+    '51000000-0000-0000-0000-000000000001',
+    '54000000-0000-0000-0000-000000000004',
+    '53000000-0000-0000-0000-000000000003',
+    (select id from public.experts where slug = 'elvin-cheung'),
+    encode(extensions.digest(convert_to('我想預約，請問價錢？', 'UTF8'), 'sha256'), 'hex')
+  );
+end;
+$$;
 
 select ok(
   public.persist_chat_round(
@@ -86,17 +110,28 @@ select isnt(
 set local role postgres;
 insert into auth.users (
   id, instance_id, aud, role, encrypted_password,
-  raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+  raw_app_meta_data, raw_user_meta_data, is_anonymous, created_at, updated_at
 ) values (
   '56000000-0000-0000-0000-000000000006',
   '00000000-0000-0000-0000-000000000000',
-  'authenticated', 'authenticated', '', '{}', '{}', now(), now()
+  'authenticated', 'authenticated', '', '{}', '{}', true, now(), now()
 );
 insert into public.conversations (id, owner_id, user_id, expert_id, persona, title)
 select '57000000-0000-0000-0000-000000000007',
   '56000000-0000-0000-0000-000000000006',
   '56000000-0000-0000-0000-000000000006', id, slug, 'Anonymous chat'
 from public.experts where slug = 'elvin-cheung';
+do $$
+begin
+  perform public.reserve_chat_request(
+    '56000000-0000-0000-0000-000000000006',
+    '58000000-0000-0000-0000-000000000008',
+    '57000000-0000-0000-0000-000000000007',
+    (select id from public.experts where slug = 'elvin-cheung'),
+    encode(extensions.digest(convert_to('請問價錢？', 'UTF8'), 'sha256'), 'hex')
+  );
+end;
+$$;
 select ok(
   public.persist_chat_round(
     '56000000-0000-0000-0000-000000000006',
@@ -117,8 +152,38 @@ select ok(
     select 1 from public.leads
     where owner_id = '56000000-0000-0000-0000-000000000006'
       and user_id is null
+      and owner_is_anonymous
   ),
-  'anonymous CRM lead is owned by Auth uid without a profile foreign key'
+  'anonymous CRM lead is labelled server-side and owned without a profile foreign key'
+);
+update auth.users
+set email = 'upgraded@test.local', email_confirmed_at = now(), is_anonymous = false
+where id = '56000000-0000-0000-0000-000000000006';
+select is(
+  (select user_id from public.leads
+   where owner_id = '56000000-0000-0000-0000-000000000006'),
+  '56000000-0000-0000-0000-000000000006'::uuid,
+  'anonymous upgrade immediately attaches the existing CRM lead to the new profile'
+);
+select isnt(
+  (select owner_is_anonymous from public.leads
+   where owner_id = '56000000-0000-0000-0000-000000000006'),
+  true,
+  'anonymous upgrade immediately corrects the CRM identity label'
+);
+select is(
+  (select count(*) from public.lead_interactions
+   where owner_id = '56000000-0000-0000-0000-000000000006'),
+  1::bigint,
+  'CRM raw question is normalized to one conversation-scoped interaction'
+);
+delete from public.conversations
+where id = '57000000-0000-0000-0000-000000000007';
+select is(
+  (select questions from public.leads
+   where owner_id = '56000000-0000-0000-0000-000000000006'),
+  '[]'::jsonb,
+  'deleting a conversation cascades its copied CRM question text'
 );
 
 set local role postgres;

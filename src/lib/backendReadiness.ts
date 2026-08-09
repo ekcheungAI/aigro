@@ -8,20 +8,27 @@ export interface BackendReadiness {
     distillation_requeue_cron: boolean;
     persona_requeue_cron: boolean;
     anonymous_purge_cron: boolean;
+    social_cron: boolean;
   };
   vault: {
     project_url: boolean;
     knowledge_worker_secret: boolean;
     persona_compiler_secret: boolean;
     booking_webhook_secret: boolean;
+    social_sync_worker_secret: boolean;
   };
   storage: { private_expert_kb: boolean };
   experts: {
     total: number;
+    instructor_total: number;
+    seat_used: number;
+    seat_limit: number;
+    archived: number;
     active: number;
     cms_enabled: number;
     rag_enabled: number;
     booking_enabled: number;
+    social_sync_enabled: number;
     published_persona: number;
   };
   knowledge: {
@@ -44,13 +51,25 @@ export interface BackendReadiness {
     messages: number;
     leads: number;
     knowledge_gaps: number;
+    quota_reservations: number;
+  };
+  social: {
+    active_connections: number;
+    eligible_connections: number;
+    recent_successful_connections: number;
+    active_errors: number;
+    completed_jobs: number;
+    last_success_at: string | null;
+    queued_or_processing_jobs: number;
+    failed_jobs: number;
+    content_items: number;
   };
 }
 
 export type ReadinessStatus = "live" | "beta" | "blocked";
 
 export interface BackendReadinessRow {
-  key: "dispatch" | "storage" | "knowledge" | "persona" | "booking" | "chat_crm";
+  key: "dispatch" | "storage" | "knowledge" | "persona" | "booking" | "chat_crm" | "social";
   label: string;
   status: ReadinessStatus;
   detail: string;
@@ -87,14 +106,26 @@ export function summarizeBackendReadiness(data: BackendReadiness): BackendReadin
     || data.booking.availability_rules > 0
     || data.vault.booking_webhook_secret;
 
+  const socialReady = data.workers.social_cron
+    && data.vault.project_url
+    && data.vault.social_sync_worker_secret
+    && data.social.eligible_connections > 0
+    && data.social.recent_successful_connections > 0
+    && data.social.completed_jobs > 0
+    && data.social.active_errors === 0;
+  const socialConfigured = data.workers.social_cron
+    || data.vault.project_url
+    || data.vault.social_sync_worker_secret
+    || data.social.active_connections > 0;
+
   return [
     {
       key: "dispatch",
       label: "Worker 排程與 Vault dispatch",
       status: partialStatus(dispatchReady, dispatchConfigured),
       detail: dispatchReady
-        ? "5 個排程及 4 個 Vault 連接項目齊備"
-        : `排程 ${Object.values(data.workers).filter(Boolean).length}/5 · Vault ${Object.values(data.vault).filter(Boolean).length}/4`,
+        ? `${Object.values(data.workers).length} 個排程及 ${Object.values(data.vault).length} 個 Vault 連接項目齊備`
+        : `排程 ${Object.values(data.workers).filter(Boolean).length}/${Object.values(data.workers).length} · Vault ${Object.values(data.vault).filter(Boolean).length}/${Object.values(data.vault).length}`,
     },
     {
       key: "storage",
@@ -125,6 +156,12 @@ export function summarizeBackendReadiness(data: BackendReadiness): BackendReadin
       label: "對話與 CRM 資料流",
       status: "beta",
       detail: `對話 ${data.chat_crm.conversations} · 訊息 ${data.chat_crm.messages} · leads ${data.chat_crm.leads} · gaps ${data.chat_crm.knowledge_gaps}`,
+    },
+    {
+      key: "social",
+      label: "公開社交資料同步",
+      status: partialStatus(socialReady, socialConfigured),
+      detail: `授權 ${data.social.active_connections} · 可同步 ${data.social.eligible_connections} · 48h 成功 ${data.social.recent_successful_connections} · completed ${data.social.completed_jobs} · active errors ${data.social.active_errors} · items ${data.social.content_items}`,
     },
   ];
 }

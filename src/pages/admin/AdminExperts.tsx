@@ -8,6 +8,7 @@ import QueryState from "@/components/QueryState";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
+import { useMember } from "@/hooks/useMember";
 import { experts, expertFullName } from "@/data/experts";
 import type { Expert, RadarDimension } from "@/data/experts";
 import {
@@ -34,6 +35,7 @@ import {
 
 type EditorTab = "基本資料" | "風格與原則" | "知識庫" | "數據 Data" | "線索 CRM" | "活動 Activity" | "發佈";
 const TABS: EditorTab[] = ["基本資料", "風格與原則", "知識庫", "數據 Data", "線索 CRM", "活動 Activity", "發佈"];
+const MAX_INSTRUCTORS = 20;
 
 interface ExpertDraft {
   nameEn: string;
@@ -75,6 +77,7 @@ const BRAND_PRESETS = [
 
 interface CreateForm {
   name: string;
+  ownerEmail: string;
   slug: string;
   slugTouched: boolean;
   credential: string;
@@ -85,6 +88,7 @@ interface CreateForm {
 
 const EMPTY_CREATE: CreateForm = {
   name: "",
+  ownerEmail: "",
   slug: "",
   slugTouched: false,
   credential: "",
@@ -95,6 +99,29 @@ const EMPTY_CREATE: CreateForm = {
 
 const FIELD =
   "w-full rounded-md border border-border-strong bg-surface px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:border-lime focus:outline-none";
+
+async function invitationErrorCopy(error: unknown): Promise<string> {
+  const context = error && typeof error === "object"
+    ? (error as { context?: unknown }).context
+    : null;
+  if (context instanceof Response) {
+    try {
+      const payload = await context.clone().json() as { code?: string };
+      if (payload.code === "expert_account_exists") {
+        return "此電郵已有帳戶，請到會員管理直接連結導師 workspace";
+      }
+      if (payload.code === "invitation_rollback_failed") {
+        return "邀請供應商失敗且自動回退未完成，請到邀請狀態檢查後再試";
+      }
+      if (payload.code === "invitation_provider_failed") {
+        return "邀請電郵未能送出；草稿已安全保留，可以重試";
+      }
+    } catch {
+      // Fall through to the SDK-safe message.
+    }
+  }
+  return error instanceof Error ? error.message : String(error);
+}
 
 function Avatar({ expert }: { expert: Expert }) {
   if (expert.image) {
@@ -118,51 +145,88 @@ function Avatar({ expert }: { expert: Expert }) {
 interface Expert360Data {
   conversations: AdminConversationRow[];
   leads: AdminLeadRow[];
+  summary: {
+    conversation_count: number;
+    lead_count: number;
+    high_intent_count: number;
+    following_up_count: number;
+    converted_count: number;
+  };
 }
 
-async function fetchExpert360(): Promise<Expert360Data> {
+function normalizeCount(value: unknown): number {
+  const count = Number(value);
+  return Number.isFinite(count) && count >= 0 ? count : 0;
+}
+
+function normalizeCrmSummary(value: unknown): Expert360Data["summary"] {
+  const row = value && typeof value === "object"
+    ? value as Record<string, unknown>
+    : {};
+  return {
+    conversation_count: normalizeCount(row.conversation_count),
+    lead_count: normalizeCount(row.lead_count),
+    high_intent_count: normalizeCount(row.high_intent_count),
+    following_up_count: normalizeCount(row.following_up_count),
+    converted_count: normalizeCount(row.converted_count),
+  };
+}
+
+async function fetchExpert360(expertId: string): Promise<Expert360Data> {
   if (!supabase) throw new Error("Supabase 未連接");
-  const [convRes, leadRes] = await Promise.all([
+  const [convRes, leadRes, summaryRes] = await Promise.all([
     supabase
       .from("conversations")
-      .select("id,user_id,anon_id,persona,title,created_at")
+      .select("id,user_id,anon_id,persona,expert_id,title,created_at")
+      .eq("expert_id", expertId)
       .order("created_at", { ascending: false })
       .limit(1000),
     supabase
       .from("leads")
       .select(
-        "id,user_id,anon_id,persona,score,signals,stage,questions,analysis,timeline,last_activity_at,created_at"
+        "id,expert_id,user_id,anon_id,owner_is_anonymous,persona,score,signals,stage,questions,analysis,timeline,next_follow_up_at,last_activity_at,created_at"
       )
+      .eq("expert_id", expertId)
       .order("last_activity_at", { ascending: false })
       .limit(500),
+    supabase
+      .rpc("get_expert_crm_summary", { p_expert_id: expertId })
+      .single(),
   ]);
   if (convRes.error) throw new Error(convRes.error.message);
   if (leadRes.error) throw new Error(leadRes.error.message);
+  if (summaryRes.error) throw new Error(summaryRes.error.message);
   return {
     conversations: (convRes.data ?? []) as AdminConversationRow[],
     leads: (leadRes.data ?? []) as AdminLeadRow[],
+    summary: normalizeCrmSummary(summaryRes.data),
   };
 }
 
-/** 單一專家嘅 360 tabs 內容 — conversations/leads 以 persona = expert slug 過濾 */
+/** 單一專家嘅 360 tabs 內容 — server query 已按 immutable expert_id 過濾。 */
 function Expert360Tabs({
   expert,
+  expertId,
   tab,
   closeEditor,
 }: {
   expert: Expert;
+  expertId: string;
   tab: EditorTab;
   closeEditor: () => void;
 }) {
-  const { data, loading, error, refetch } = useAdminQuery(fetchExpert360);
+  const { data, loading, error, refetch } = useAdminQuery(
+    () => fetchExpert360(expertId),
+    [expertId]
+  );
 
   const convos = useMemo(
-    () => (data?.conversations ?? []).filter((c) => c.persona === expert.slug),
-    [data, expert.slug]
+    () => data?.conversations ?? [],
+    [data]
   );
   const leads = useMemo(
-    () => (data?.leads ?? []).filter((l) => l.persona === expert.slug),
-    [data, expert.slug]
+    () => data?.leads ?? [],
+    [data]
   );
 
   return (
@@ -177,7 +241,7 @@ function Expert360Tabs({
           {/* ---- 數據 Data ---- */}
           {tab === "數據 Data" && (
             <>
-              {convos.length === 0 ? (
+              {data.summary.conversation_count === 0 ? (
                 <p className="rounded-md border border-dashed border-border-strong bg-card px-4 py-6 text-xs text-text-muted">
                   未有對話數據 — {personaLabel(expert.slug)}暫時未有人傾過偈,
                   有對話之後呢度會顯示總量、週趨勢同信心。
@@ -202,19 +266,23 @@ function Expert360Tabs({
                   const maxBar = Math.max(...days.map((d) => d.count), 1);
                   return (
                     <div>
-                      <p className="mb-2 text-xs text-text-muted">分身對話(真數據)</p>
+                      <p className="mb-2 text-xs text-text-muted">
+                        分身對話（總數精確；趨勢最多取最近 1,000 條）
+                      </p>
                       <div className="grid grid-cols-2 gap-2">
                         <div className="rounded-md border border-border bg-card px-3 py-2.5">
                           <p className="font-mono text-[16px] font-medium text-text-primary">
-                            {convos.length}
+                            {data.summary.conversation_count}
                           </p>
-                          <p className="mt-0.5 text-[11px] text-text-muted">總對話</p>
+                          <p className="mt-0.5 text-[11px] text-text-muted">總對話（精確）</p>
                         </div>
                         <div className="rounded-md border border-border bg-card px-3 py-2.5">
                           <p className="font-mono text-[16px] font-medium text-text-primary">
                             {weekCount}
                           </p>
-                          <p className="mt-0.5 text-[11px] text-text-muted">近 7 日</p>
+                          <p className="mt-0.5 text-[11px] text-text-muted">
+                            近 7 日（預覽）
+                          </p>
                         </div>
                       </div>
                       <div className="mt-3 rounded-md border border-border px-3 py-3">
@@ -250,7 +318,7 @@ function Expert360Tabs({
           {/* ---- 線索 CRM ---- */}
           {tab === "線索 CRM" && (
             <>
-              {leads.length === 0 ? (
+              {data.summary.lead_count === 0 ? (
                 <p className="rounded-md border border-dashed border-border-strong bg-card px-4 py-6 text-xs text-text-muted">
                   暫無屬於呢個分身嘅線索 — 分身對話出現高意圖訊號時,
                   leads 表會自動記低並喺呢度顯示。
@@ -260,7 +328,9 @@ function Expert360Tabs({
                   <div className="flex items-center justify-between">
                     <p className="text-xs text-text-muted">
                       {personaLabel(expert.slug)}相關線索
-                      <span className="ml-1 font-mono text-lime-text">{leads.length}</span>
+                      <span className="ml-1 font-mono text-lime-text">
+                        {data.summary.lead_count}
+                      </span>
                     </p>
                     <Link
                       to="/admin/crm"
@@ -271,14 +341,18 @@ function Expert360Tabs({
                       <ArrowUpRight className="h-3 w-3" />
                     </Link>
                   </div>
+                  <p className="text-[11px] text-text-muted">
+                    最近活動預覽：顯示 {leads.length} / {data.summary.lead_count}
+                    （最多 500 條）
+                  </p>
                   <ul className="divide-y divide-border rounded-md border border-border">
                     {leads.map((l) => (
                       <li key={l.id} className="px-3 py-2.5">
                         <div className="flex items-center gap-2">
                           <Target className="h-3.5 w-3.5 shrink-0 text-text-muted" />
                           <p className="min-w-0 flex-1 truncate text-sm font-medium text-text-primary">
-                            {l.anon_id
-                              ? `訪客 ${l.anon_id.slice(0, 8)}`
+                            {l.owner_is_anonymous || l.anon_id
+                              ? `訪客 ${l.anon_id?.slice(0, 8) ?? l.id.slice(0, 8)}`
                               : `會員 ${l.user_id?.slice(0, 8) ?? "—"}`}
                           </p>
                           <span
@@ -309,7 +383,7 @@ function Expert360Tabs({
           {/* ---- 活動 Activity ---- */}
           {tab === "活動 Activity" && (
             <>
-              {convos.length === 0 ? (
+              {data.summary.conversation_count === 0 ? (
                 <p className="rounded-md border border-dashed border-border-strong bg-card px-4 py-6 text-xs text-text-muted">
                   暫無互動記錄 — 訪客同呢個分身嘅對話會即時列喺呢度。
                 </p>
@@ -343,6 +417,8 @@ function Expert360Tabs({
 
 export default function AdminExperts() {
   const toast = useAdminToast();
+  const { member: currentMember } = useMember();
+  const canCreateInstructor = currentMember?.role === "super_admin";
   const {
     data: expertRows,
     loading: expertsLoading,
@@ -354,6 +430,10 @@ export default function AdminExperts() {
   const [draft, setDraft] = useState<ExpertDraft | null>(null);
   const [newTrait, setNewTrait] = useState("");
   const [saving, setSaving] = useState(false);
+  const [activating, setActivating] = useState(false);
+  const [ownerInviteEmail, setOwnerInviteEmail] = useState("");
+  const [invitingOwner, setInvitingOwner] = useState(false);
+  const [archivingWorkspace, setArchivingWorkspace] = useState(false);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [form, setForm] = useState<CreateForm>(EMPTY_CREATE);
@@ -361,6 +441,7 @@ export default function AdminExperts() {
   const [createSaving, setCreateSaving] = useState(false);
 
   const allExperts = (expertRows ?? []).map((row) => adminExpertToView(row, experts));
+  const capacityReached = allExperts.length >= MAX_INSTRUCTORS;
   const draftSlugs = new Set(
     (expertRows ?? []).filter((row) => row.status !== "active").map((row) => row.slug)
   );
@@ -374,6 +455,7 @@ export default function AdminExperts() {
     setDraft(toDraft(e));
     setTab(initialTab);
     setNewTrait("");
+    setOwnerInviteEmail("");
   };
 
   const closeEditor = () => {
@@ -388,22 +470,43 @@ export default function AdminExperts() {
     setForm((f) => ({ ...f, ...p }));
 
   const openCreate = () => {
+    if (!canCreateInstructor) {
+      toast("只有最高管理員可以建立導師 workspace 同發出 owner 邀請");
+      return;
+    }
+    if (capacityReached) {
+      toast(`導師席位已達 ${MAX_INSTRUCTORS}/${MAX_INSTRUCTORS}；請完成現有 onboarding，或封存未使用草稿釋放席位`);
+      return;
+    }
     setForm(EMPTY_CREATE);
     setNewSpecialty("");
     setCreateOpen(true);
   };
 
   const saveCreate = async () => {
+    if (!canCreateInstructor) {
+      toast("只有最高管理員可以建立導師 workspace");
+      return;
+    }
+    if (capacityReached) {
+      toast(`導師席位已達 ${MAX_INSTRUCTORS}/${MAX_INSTRUCTORS}`);
+      return;
+    }
     const name = form.name.trim();
     if (!name) {
       toast("請填寫導師姓名");
+      return;
+    }
+    const ownerEmail = form.ownerEmail.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ownerEmail)) {
+      toast("請填寫有效導師 owner 電郵");
       return;
     }
     const taken = (expertRows ?? []).map((row) => row.slug);
     const base = slugifyExpertName(form.slug.trim() || name);
     setCreateSaving(true);
     try {
-      await saveAdminExpert({
+      const expertId = await saveAdminExpert({
         id: null,
         slug: uniqueExpertSlug(base, taken),
         displayName: name,
@@ -419,9 +522,20 @@ export default function AdminExperts() {
         radar: [],
         traits: [],
       });
+      if (!supabase) throw new Error("Supabase 未連接");
+      const { error: inviteError } = await supabase.functions.invoke(
+        "invite-expert-owner",
+        { body: { expert_id: expertId, email: ownerEmail } }
+      );
+      if (inviteError) {
+        setCreateOpen(false);
+        refetchExperts();
+        toast(`導師草稿已建立，但邀請未送出：${await invitationErrorCopy(inviteError)}`);
+        return;
+      }
       setCreateOpen(false);
       refetchExperts();
-      toast("導師草稿已寫入 Supabase，並記錄 audit event");
+      toast("導師草稿已建立，owner 邀請已送出並記錄 audit event");
     } catch (error) {
       toast(`建立失敗:${error instanceof Error ? error.message : String(error)}`);
     } finally {
@@ -459,6 +573,61 @@ export default function AdminExperts() {
     }
   };
 
+  const activateExpert = async () => {
+    if (!supabase || !expertRecord || activating) return;
+    setActivating(true);
+    const { error: activateError } = await supabase.rpc("activate_expert", {
+      p_expert_id: expertRecord.id,
+    });
+    setActivating(false);
+    if (activateError) {
+      toast(`未能上線：${activateError.message}`);
+      return;
+    }
+    refetchExperts();
+    toast("導師已通過 release gate，公開 profile 同 RAG chat 已啟用");
+  };
+
+  const inviteExistingOwner = async () => {
+    if (!supabase || !expertRecord || invitingOwner || !canCreateInstructor) return;
+    const email = ownerInviteEmail.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast("請填寫有效導師 owner 電郵");
+      return;
+    }
+    setInvitingOwner(true);
+    const { error } = await supabase.functions.invoke("invite-expert-owner", {
+      body: { expert_id: expertRecord.id, email },
+    });
+    setInvitingOwner(false);
+    if (error) {
+      toast(`邀請未送出：${await invitationErrorCopy(error)}`);
+      return;
+    }
+    setOwnerInviteEmail("");
+    toast("Owner 邀請已寄出；對方接受前 workspace 仍維持草稿狀態");
+  };
+
+  const archiveWorkspace = async () => {
+    if (!supabase || !expertRecord || archivingWorkspace || !canCreateInstructor) return;
+    const confirmed = window.confirm(
+      `封存 ${expertRecord.display_name}？系統會下線公開頁及所有 AI／預約／社交同步功能、撤銷 owner 權限並釋放一個導師席位；私人資料及 audit history 會保留。`
+    );
+    if (!confirmed) return;
+    setArchivingWorkspace(true);
+    const { error } = await supabase.rpc("archive_expert_workspace", {
+      p_expert_id: expertRecord.id,
+    });
+    setArchivingWorkspace(false);
+    if (error) {
+      toast(`未能封存 workspace：${error.message}`);
+      return;
+    }
+    closeEditor();
+    refetchExperts();
+    toast("導師 workspace 已安全下線並釋放席位；私人資料及 audit history 已保留");
+  };
+
   return (
     <div className="mx-auto max-w-6xl">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
@@ -470,13 +639,21 @@ export default function AdminExperts() {
             專家管理
           </h1>
           <p className="mt-1 text-sm text-text-muted">
-            領航專家資料、風格檔案與知識庫蒸餾狀態 — 分身數據為 Supabase 即時查詢。
+            領航專家資料、風格檔案與知識庫蒸餾狀態 — 已使用 {allExperts.length}/{MAX_INSTRUCTORS} 個導師席位。
           </p>
         </div>
         <button
           type="button"
+          disabled={capacityReached || !canCreateInstructor}
           onClick={openCreate}
-          className="inline-flex items-center gap-1.5 rounded-md bg-lime px-4 py-2 text-sm font-medium text-on-accent transition-colors hover:bg-lime-hover"
+          title={
+            capacityReached
+              ? "已達 20 位導師上限"
+              : !canCreateInstructor
+              ? "只有最高管理員可以新增導師"
+              : undefined
+          }
+          className="inline-flex items-center gap-1.5 rounded-md bg-lime px-4 py-2 text-sm font-medium text-on-accent transition-colors hover:bg-lime-hover disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Plus className="h-4 w-4" />
           新增導師
@@ -557,6 +734,15 @@ export default function AdminExperts() {
                       邀請中
                     </span>
                   )}
+                  <p className="mt-1.5 font-mono text-[10px] text-text-muted">
+                    {(expertRows ?? []).find((row) => row.slug === e.slug)?.owner_user_id
+                      ? "Owner 已連結"
+                      : "Owner 未連結"}
+                    {" · "}
+                    {(expertRows ?? []).find((row) => row.slug === e.slug)?.public_profile_enabled
+                      ? "公開 profile"
+                      : "未公開"}
+                  </p>
                 </td>
                 <td className="px-4 py-3 font-mono text-xs text-text-secondary">
                   {e.kbUpdated ?? "—"}
@@ -680,6 +866,49 @@ export default function AdminExperts() {
                       </span>
                     </div>
                   </div>
+                  {expertRecord && (
+                    <div className="rounded-md border border-border bg-card px-4 py-3">
+                      <p className="text-sm font-medium text-text-primary">Workspace owner</p>
+                      {expertRecord.owner_user_id ? (
+                        <p className="mt-1 font-mono text-xs text-text-muted">
+                          已連結 {expertRecord.owner_user_id.slice(0, 8)}…
+                        </p>
+                      ) : canCreateInstructor ? (
+                        <div className="mt-2 space-y-2">
+                          {expertRecord.invitation_status && (
+                            <p className="text-xs text-text-muted">
+                              最新邀請：{expertRecord.invitation_status}
+                              {expertRecord.invitation_email ? ` · ${expertRecord.invitation_email}` : ""}
+                              {expertRecord.invitation_expires_at
+                                ? ` · 到期 ${formatDate(expertRecord.invitation_expires_at)}`
+                                : ""}
+                            </p>
+                          )}
+                          <div className="flex flex-col gap-2 sm:flex-row">
+                          <input
+                            type="email"
+                            className={FIELD}
+                            placeholder="instructor@example.com"
+                            value={ownerInviteEmail}
+                            onChange={(event) => setOwnerInviteEmail(event.target.value)}
+                          />
+                          <button
+                            type="button"
+                            disabled={invitingOwner}
+                            onClick={() => void inviteExistingOwner()}
+                            className="press shrink-0 rounded-md border border-border-strong px-3 py-2 text-xs font-medium text-text-primary disabled:opacity-50"
+                          >
+                            {invitingOwner ? "寄送中…" : "寄送／重試邀請"}
+                          </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="mt-1 text-xs text-text-muted">
+                          等待最高管理員完成 owner 邀請。
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </>
               )}
 
@@ -787,15 +1016,16 @@ export default function AdminExperts() {
                 </>
               )}
 
-              {/* ---- 知識庫(誠實 state — pipeline 已部署但未配置 provider) ---- */}
+              {/* ---- 知識庫（誠實 state — code ready，production 未完整部署） ---- */}
               {tab === "知識庫" && (
                 <div className="rounded-md border border-dashed border-border-strong bg-card px-4 py-8 text-center">
                   <p className="text-sm font-medium text-text-primary">
                     知識庫蒸餾 — Blocked
                   </p>
                   <p className="mx-auto mt-1.5 max-w-[360px] text-xs leading-relaxed text-text-muted">
-                    Private Storage、資料表、工作佇列同 Edge worker 已部署；
-                    Vault/provider secrets 同首個已批准 corpus 未配置前唔會啟用。
+                    Private Storage、資料表、工作佇列同 Edge worker 程式已準備；
+                    production migration/function、Vault/provider secrets 同首個已批准
+                    corpus 未完整驗收前唔會啟用。
                     呢度唔會顯示任何虛構素材數量。Prompt 版本:
                     <span className="font-mono text-text-secondary">
                       {expert.promptVersion ?? "—"}
@@ -813,8 +1043,8 @@ export default function AdminExperts() {
               )}
 
               {/* ---- 數據 Data / 線索 CRM / 活動 Activity(真查詢) ---- */}
-              {(tab === "數據 Data" || tab === "線索 CRM" || tab === "活動 Activity") && (
-                <Expert360Tabs expert={expert} tab={tab} closeEditor={closeEditor} />
+              {expertRecord && (tab === "數據 Data" || tab === "線索 CRM" || tab === "活動 Activity") && (
+                <Expert360Tabs expert={expert} expertId={expertRecord.id} tab={tab} closeEditor={closeEditor} />
               )}
 
               {/* ---- 發佈 ---- */}
@@ -823,17 +1053,41 @@ export default function AdminExperts() {
                   <div className="flex items-center justify-between rounded-md border border-border bg-card px-4 py-3">
                     <div>
                       <p className="text-sm font-medium text-text-primary">
-                        Verified 上線狀態
+                        導師身份已核實
                       </p>
                       <p className="mt-0.5 text-xs text-text-muted">
-                        呢個開關會寫入受保護 experts 記錄；AI 對話仍由獨立 RAG／persona feature flags 控制。
+                        呢個開關只代表身份核實，唔會繞過 owner、corpus、persona 同 evaluation 上線閘門。
                       </p>
                     </div>
                     <AdminToggle
                       checked={draft.verified}
                       onChange={(v) => patch({ verified: v })}
-                      label="Verified 上線狀態"
+                      label="導師身份已核實"
                     />
+                  </div>
+                  <div className="rounded-md border border-border bg-card px-4 py-3">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-medium text-text-primary">Release gate</p>
+                        <p className="mt-0.5 max-w-[340px] text-xs leading-relaxed text-text-muted">
+                          必須有 owner、兩個已發佈來源、chunks、published persona、25 條評估問題、通過評估，而且冇待處理工作。
+                        </p>
+                      </div>
+                      {expertRecord?.status === "active" ? (
+                        <span className="rounded-sm bg-lime-soft px-2.5 py-1 text-xs font-medium text-lime-text">
+                          已上線
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled={activating || saving}
+                          onClick={() => void activateExpert()}
+                          className="press rounded-md bg-lime px-3.5 py-2 text-xs font-medium text-on-accent disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {activating ? "檢查中…" : "檢查並上線"}
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <div className="rounded-md border border-border px-4 py-3">
                     <p className="text-xs text-text-muted">公開預覽連結</p>
@@ -861,7 +1115,24 @@ export default function AdminExperts() {
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-end gap-2 border-t border-border px-6 py-4">
+            <div className="flex items-center justify-between gap-2 border-t border-border px-6 py-4">
+              <div>
+                {canCreateInstructor && expertRecord && (
+                  <button
+                    type="button"
+                    disabled={archivingWorkspace}
+                    onClick={() => void archiveWorkspace()}
+                    className="rounded-md border border-border px-3 py-2 text-xs text-text-muted transition-colors hover:border-border-strong hover:text-text-primary disabled:opacity-50"
+                  >
+                    {archivingWorkspace
+                      ? "封存中…"
+                      : expertIsDraft && !expertRecord.owner_user_id
+                      ? "封存未使用草稿"
+                      : "封存導師 workspace"}
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={closeEditor}
@@ -878,6 +1149,7 @@ export default function AdminExperts() {
                 <Save className="h-4 w-4" />
                 {saving ? "儲存中…" : "儲存變更"}
               </button>
+              </div>
             </div>
           </div>
         )}
@@ -912,6 +1184,23 @@ export default function AdminExperts() {
                   )
                 }
               />
+            </label>
+
+            <label className="block">
+              <span className="mb-1 block text-xs text-text-muted">
+                Owner 登入電郵 <span className="text-lime-text">*</span>
+              </span>
+              <input
+                type="email"
+                autoComplete="off"
+                className={FIELD}
+                placeholder="instructor@example.com"
+                value={form.ownerEmail}
+                onChange={(e) => patchForm({ ownerEmail: e.target.value })}
+              />
+              <span className="mt-1 block text-[11px] leading-relaxed text-text-muted">
+                系統會寄出一次性 Supabase Auth 邀請；收件人以相同已驗證電郵接受後，先取得呢個 workspace 嘅 Portal／CRM 權限。
+              </span>
             </label>
 
             <label className="block">
@@ -1041,7 +1330,7 @@ export default function AdminExperts() {
               className="inline-flex items-center gap-1.5 rounded-md bg-lime px-4 py-2 text-sm font-medium text-on-accent transition-colors hover:bg-lime-hover"
             >
               <Plus className="h-4 w-4" />
-              {createSaving ? "建立中…" : "建立草稿"}
+              {createSaving ? "建立及寄送中…" : "建立草稿並邀請"}
             </button>
           </div>
         </div>

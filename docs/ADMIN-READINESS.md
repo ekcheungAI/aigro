@@ -1,6 +1,6 @@
 # AIGRO Master Admin & Backend Readiness
 
-> Production review: 2026-08-08 (Asia/Hong_Kong). This replaces the former
+> Production review: 2026-08-10 (Asia/Hong_Kong). This replaces the former
 > mock-era admin report. `Live` means the production read/write path was
 > exercised; `Beta` means the screen is useful but one linked capability is
 > incomplete; `Blocked` means required provider configuration is absent.
@@ -35,24 +35,25 @@ entry only for that role.
 | Backend readiness monitor | Live | Admin-only RPC reports Cron, Vault presence, private Storage, corpus/persona/booking counts and feature flags without returning secret values |
 | Content management | Live | Real `items` review/publish controls |
 | Sources | Beta | Source CRUD works; MCP output is not built |
-| Experts | Beta | Create/edit/Verified status and audit are persisted; public directory still uses verified static profiles and AI provider rollout remains blocked |
+| Experts | Beta | Dynamic sanitized directory, 20-seat cap, draft archive and owner invitation are implemented; the new migration/function and real invitation delivery are not yet production-verified |
 | Members | Live | Profiles/access data and protected role/tier mutation |
 | CRM | Beta | Real leads, atomic chat scoring, audited stage RPC; new flow depends on blocked AI chat |
 | Engagement | Beta | Real conversation/message reads; new visitor chat flow is blocked |
 | Emails | Beta | Waitlist capture and CSV export work; delivery/templates/campaign state do not |
 | Skills | Beta | Static catalog only; no managed skills backend |
-| Distillation Studio | Blocked | Schema/functions deployed; provider secrets, Vault worker dispatch and first approved corpus absent |
-| Persona Compiler | Blocked | Function deployed; provider secret, evaluation set and first published persona absent |
-| Instructor chat | Blocked | Function deployed and fail-closed; Anonymous Auth and model/Turnstile secrets absent |
+| Distillation Studio | Blocked | Migration/worker code is ready; production deploy, provider secrets, Vault dispatch and first approved corpus are absent |
+| Persona Compiler | Blocked | Hardened compiler code is ready; production deploy, provider secret, 25-question evaluation set and first published persona are absent |
+| Instructor chat | Blocked | Grounded streaming/idempotency code is ready; production deploy, Anonymous Auth and model/Turnstile secrets are absent |
 | Human booking | Blocked | Transaction/RLS foundation exists; availability, enabled expert, webhook/Resend and end-to-end test absent |
+| Public social sync | Blocked | Consent-scoped TikTok/Instagram worker is implemented; fail-closed identity tests, production schema/function, TikHub key, Vault dispatch, policy review and first successful run remain release gates |
 | Submissions | Planned | No backend table/workflow |
 | MCP server | Planned | No output endpoint |
 
 Every incomplete Admin module displays `Beta` in navigation and explains why.
 Admin Settings also separates `Live`, `Beta`, `Blocked` and `Planned`
-integrations. Its live readiness panel currently confirms all five database
-maintenance/dispatch schedules and the private `expert-kb` bucket are present.
-It also confirms all four required Vault entries are still absent, so worker
+integrations. Its live readiness panel checks six database maintenance/dispatch
+schedules, five required Vault entries and the private `expert-kb` bucket.
+Production currently has no required Vault entries, so worker
 dispatch remains blocked even though the Cron runs themselves succeed.
 
 ## Connected server workflows
@@ -98,9 +99,23 @@ until the external chat configuration below is complete.
    public `expert_profiles` headline/bio and writes an audit event.
 3. Verified profile status is separate from CMS/RAG/booking flags, so publishing
    an editorial profile cannot accidentally enable an untested AI pipeline.
-4. The public directory still uses the curated static profile set as its
-   verified presentation layer; replacing that layer with fully dynamic profile
-   rendering remains a Beta item.
+4. The public directory reads a sanitized RPC and only exposes active,
+   unarchived, editorially published profiles. Chat remains disabled unless the
+   stricter persona/corpus/evaluation readiness gate passes.
+
+### Instructor-owned public social sync
+
+1. Only the linked instructor—not an admin acting on their behalf—can grant
+   explicit consent for one public TikTok or Instagram account.
+2. TikHub is called with one AIGRO server credential; this is not platform OAuth
+   and never accepts creator cookies, private analytics or private accounts.
+3. A distributed lease runs at most one claimed job per invocation. Account
+   identity and post authorship must match the consented profile before storage.
+4. Disabling the feature or suspending the instructor blocks new queue, claim
+   and atomic persistence. Revoking consent or archiving the workspace also
+   archives and removes old derived knowledge.
+5. Synced text enters the same review/distillation pipeline and is not published
+   into chat until approval and release gates pass.
 
 ## External configuration still required
 
@@ -115,7 +130,9 @@ These are operational secrets/settings and must not be committed:
 - Persona Compiler: `PERSONA_COMPILER_SECRET` and MiniMax key.
 - Booking: `BOOKING_WEBHOOK_SECRET`, `RESEND_API_KEY`, verified
   `RESEND_FROM_EMAIL`.
-- Supabase Vault: project URL plus the three internal worker/webhook secrets,
+- Social sync: `TIKHUB_API_KEY` and a separate `SOCIAL_SYNC_WORKER_SECRET`;
+  enable only after the public-data terms/privacy review.
+- Supabase Vault: project URL plus the four internal worker/webhook secrets,
   matching the Edge Function values.
 - Supabase Auth security: enable leaked-password protection and require MFA for
   the super admin.
@@ -137,8 +154,10 @@ npm run check:production
 ```
 
 CI repeats application, Playwright, pgTAP and Edge helper tests. The production
-checker verifies the SPA route, public news, Auth settings, Edge Function guards
-and the admin health proxy without printing secrets.
+checker probes the SPA route, public news, Auth settings, all six Edge Function
+guards, the dynamic public-instructor RPC and the admin health proxy without
+printing secrets. A missing production function or schema path is reported as
+blocked; run it with `--strict` for a release gate.
 
 ## Security notes
 

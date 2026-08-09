@@ -13,6 +13,41 @@ import type { Persona } from "@/data/personas";
 import { ensureAuthenticatedUser, supabase, supabaseReady } from "@/lib/supabase";
 
 const TIMEOUT_MS = 30_000;
+const HONG_KONG_OFFSET_MS = 8 * 60 * 60 * 1000;
+
+export type ChatQuotaScope = "daily" | "monthly";
+
+export function quotaResetAt(
+  scope: ChatQuotaScope,
+  now = Date.now()
+): number {
+  const hongKongNow = new Date(now + HONG_KONG_OFFSET_MS);
+  const year = hongKongNow.getUTCFullYear();
+  const month = hongKongNow.getUTCMonth();
+  const day = hongKongNow.getUTCDate();
+  const nextBoundary = scope === "monthly"
+    ? Date.UTC(year, month + 1, 1)
+    : Date.UTC(year, month, day + 1);
+  return nextBoundary - HONG_KONG_OFFSET_MS;
+}
+
+export function safeClientCitationHref(value: unknown): string {
+  if (typeof value !== "string") return "";
+  const href = value.trim();
+  const hasUnsafeCharacter = [...href].some((character) => {
+    const code = character.charCodeAt(0);
+    return code <= 31 || code === 127 || character === "\\";
+  });
+  if (!href || hasUnsafeCharacter) return "";
+  if (href.startsWith("/") && !href.startsWith("//")) return href;
+  try {
+    const url = new URL(href);
+    if (url.protocol !== "https:" || url.username || url.password) return "";
+    return url.toString();
+  } catch {
+    return "";
+  }
+}
 
 /* ---------------- B. Guardrail ---------------- */
 
@@ -92,9 +127,40 @@ export function instructorUnavailableReply(persona: Persona): AiReply {
   };
 }
 
+export function chatQuotaReply(
+  persona: Persona,
+  scope: ChatQuotaScope = "daily"
+): AiReply {
+  return {
+    text: scope === "monthly"
+      ? `你同 ${persona.shortName} 嘅本月對話額度已用完。額度會按香港時間每月重設；你可以下個月再試，或者查看會員方案。`
+      : `你同 ${persona.shortName} 嘅今日對話額度已用完。額度會按香港時間每日重設；你可以聽日再試，或者查看會員方案。`,
+    citations: [],
+    confidence: 0,
+    source: "quota",
+    answerBasis: "general",
+    coverage: "none",
+    quotaScope: scope,
+    followUps: [],
+  };
+}
+
+export class InstructorChatError extends Error {
+  readonly code: string;
+  readonly status: number;
+
+  constructor(code: string, status: number) {
+    super(code);
+    this.code = code;
+    this.status = status;
+    this.name = "InstructorChatError";
+  }
+}
+
 /* ---------------- C. Grounded streaming instructor chat ---------------- */
 
 export interface StreamCitation {
+  marker?: string;
   title: string;
   href: string;
   excerpt?: string;
@@ -111,13 +177,14 @@ interface DoneEvent {
   answer_basis: "knowledge" | "general";
   coverage: "high" | "medium" | "none";
   citations: StreamCitation[];
+  booking_intent?: boolean;
 }
 
 interface StreamResult extends DoneEvent {
   text: string;
 }
 
-function parseSseBlock(block: string): { event: string; data: unknown } | null {
+export function parseSseBlock(block: string): { event: string; data: unknown } | null {
   let event = "message";
   const data: string[] = [];
   for (const line of block.split(/\r?\n/)) {
@@ -125,7 +192,11 @@ function parseSseBlock(block: string): { event: string; data: unknown } | null {
     if (line.startsWith("data:")) data.push(line.slice(5).trim());
   }
   if (!data.length) return null;
-  return { event, data: JSON.parse(data.join("\n")) };
+  try {
+    return { event, data: JSON.parse(data.join("\n")) };
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -169,16 +240,40 @@ export async function streamInstructorReply(
       }),
     });
     if (!response.ok || !response.body) {
-      const detail = await response.json().catch(() => ({})) as { error?: string };
-      throw new Error(detail.error || `Instructor request failed (${response.status})`);
+      const detail = await response.json().catch(() => ({})) as {
+        code?: string;
+      };
+      throw new InstructorChatError(
+        detail.code || (response.status === 429 ? "rate_limited" : "instructor_unavailable"),
+        response.status
+      );
     }
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let buffer = "";
     let fullText = "";
-    let citations: StreamCitation[] = [];
+    const citations: StreamCitation[] = [];
     let done: DoneEvent | null = null;
+    const handleBlock = (block: string) => {
+      const parsed = parseSseBlock(block);
+      if (!parsed) return;
+      const payload = parsed.data as Record<string, unknown>;
+      if (parsed.event === "retrieved_sources") {
+        // Retrieval candidates are intentionally not exposed as citations. Only
+        // the marker-validated citations in `done` are rendered or persisted.
+      } else if (parsed.event === "delta" && typeof payload.text === "string") {
+        fullText += payload.text;
+        onDelta(fullText);
+      } else if (parsed.event === "done") {
+        done = payload as unknown as DoneEvent;
+      } else if (parsed.event === "error") {
+        throw new InstructorChatError(
+          typeof payload.code === "string" ? payload.code : "instructor_unavailable",
+          503
+        );
+      }
+    };
     while (true) {
       const { value, done: streamDone } = await reader.read();
       if (streamDone) break;
@@ -186,35 +281,32 @@ export async function streamInstructorReply(
       const blocks = buffer.split(/\r?\n\r?\n/);
       buffer = blocks.pop() ?? "";
       for (const block of blocks) {
-        const parsed = parseSseBlock(block);
-        if (!parsed) continue;
-        const payload = parsed.data as Record<string, unknown>;
-        if (parsed.event === "sources" && Array.isArray(payload.sources)) {
-          citations = payload.sources as StreamCitation[];
-        } else if (parsed.event === "delta" && typeof payload.text === "string") {
-          fullText += payload.text;
-          onDelta(fullText);
-        } else if (parsed.event === "done") {
-          done = payload as unknown as DoneEvent;
-        } else if (parsed.event === "error") {
-          throw new Error(typeof payload.code === "string" ? payload.code : "Instructor stream failed");
-        }
+        handleBlock(block);
       }
     }
-    if (!done || !fullText.trim()) throw new Error("Instructor stream ended before completion");
+    buffer += decoder.decode();
+    if (buffer.trim()) handleBlock(buffer);
+    const completed = done as DoneEvent | null;
+    if (!completed || !fullText.trim()) {
+      throw new Error("Instructor stream ended before completion");
+    }
     const result: StreamResult = {
-      ...done,
+      ...completed,
       text: fullText.trim(),
-      citations: done.citations?.length ? done.citations : citations,
+      citations: completed.citations?.length ? completed.citations : citations,
     };
     return {
       text: result.text,
       citations: result.citations,
-      confidence: result.coverage === "high" ? 0.9 : result.coverage === "medium" ? 0.7 : 0,
+      // Legacy scripted answers still carry a numeric value. Live answers use
+      // server coverage as the only user-facing quality signal; this binary
+      // value exists solely for the old low-confidence CTA compatibility.
+      confidence: result.coverage === "none" ? 0 : 1,
       source: result.answer_basis === "knowledge" ? "kb" : "llm",
       ragUsed: result.answer_basis === "knowledge",
       answerBasis: result.answer_basis,
       coverage: result.coverage,
+      bookingIntent: result.booking_intent === true,
       followUps: persona.suggestions.slice(0, 2),
     };
   } finally {
