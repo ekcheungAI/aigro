@@ -92,7 +92,7 @@ export const ADMIN_MODULES: readonly AdminModule[] = [
     en: "Studio",
     icon: FlaskConical,
     status: "beta",
-    betaReason: "CMS、蒸餾同 Persona Compiler 程式已接通；六個 Edge Functions 尚未完整部署，provider secrets、匿名 Auth、Vault 排程同首個發佈版本仍未接通。",
+    betaReason: "CMS、蒸餾、Persona Compiler 同六個 Edge Functions 已部署；provider secrets、匿名 Auth、Vault 排程同首個發佈版本仍未接通。",
     reviewedAt: REVIEWED_AT,
   },
   {
@@ -146,7 +146,7 @@ export const ADMIN_MODULES: readonly AdminModule[] = [
     en: "Members",
     icon: UserRound,
     status: "beta",
-    betaReason: "會員級別、原子 owner assignment、導師 invitation email／accept／rollback 已接通；部署及真實電郵投遞驗收前維持 Beta。",
+    betaReason: "會員級別、原子 owner assignment、導師 invitation email／accept／rollback 已部署；真實 SMTP 投遞及接受流程驗收前維持 Beta。",
     reviewedAt: REVIEWED_AT,
   },
   {

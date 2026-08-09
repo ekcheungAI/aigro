@@ -6,8 +6,8 @@
 
 程式層已建立 20 位導師 onboarding、私有知識蒸餾、Persona Compiler、
 grounded AI chat、導師 CRM、真人預約基礎，以及經導師同意的 TikTok／Instagram
-公開資料同步。不過呢批新 migration、六個 Edge Functions、provider secrets、
-Anonymous Auth 及第一位導師的 release dataset 尚未在 production 完整驗收，
+公開資料同步。最新 migration 與六個 Edge Functions 已部署並通過 production
+guard smoke test；但 provider secrets、Vault、Anonymous Auth 及第一位導師的 release dataset 尚未完整驗收，
 所以相關 UI 必須維持 `Beta`／`Blocked`，不得聲稱已 live。
 
 ## 已在程式內接通
@@ -31,8 +31,8 @@ Anonymous Auth 及第一位導師的 release dataset 尚未在 production 完整
 
 ## Production 仍然欠缺
 
-- 套用並驗證最新 `supabase/migrations/`；production 目前未有新 invitation／
-  social schema，亦未部署 `invite-expert-owner`／`social-sync-worker`。
+- 最新 schema、`invite-expert-owner` 與 `social-sync-worker` 已部署；仍要在
+  provider／Auth 設定完成後跑真實邀請、同步、蒸餾及聊天 smoke test。
 - 在 Supabase Auth 開啟 Anonymous Sign-ins，設定 Site URL、redirect allow-list、
   SMTP、leaked-password protection，並為 super admin 啟用 MFA。
 - 設定 Edge secrets：MiniMax、OpenAI、Turnstile、Firecrawl、

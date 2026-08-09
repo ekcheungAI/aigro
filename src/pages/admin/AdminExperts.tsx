@@ -1016,15 +1016,15 @@ export default function AdminExperts() {
                 </>
               )}
 
-              {/* ---- 知識庫（誠實 state — code ready，production 未完整部署） ---- */}
+              {/* ---- 知識庫（誠實 state — deployed，provider rollout blocked） ---- */}
               {tab === "知識庫" && (
                 <div className="rounded-md border border-dashed border-border-strong bg-card px-4 py-8 text-center">
                   <p className="text-sm font-medium text-text-primary">
                     知識庫蒸餾 — Blocked
                   </p>
                   <p className="mx-auto mt-1.5 max-w-[360px] text-xs leading-relaxed text-text-muted">
-                    Private Storage、資料表、工作佇列同 Edge worker 程式已準備；
-                    production migration/function、Vault/provider secrets 同首個已批准
+                    Private Storage、資料表、工作佇列同 Edge worker 已部署；
+                    Vault/provider secrets 同首個已批准
                     corpus 未完整驗收前唔會啟用。
                     呢度唔會顯示任何虛構素材數量。Prompt 版本:
                     <span className="font-mono text-text-secondary">

@@ -35,17 +35,17 @@ entry only for that role.
 | Backend readiness monitor | Live | Admin-only RPC reports Cron, Vault presence, private Storage, corpus/persona/booking counts and feature flags without returning secret values |
 | Content management | Live | Real `items` review/publish controls |
 | Sources | Beta | Source CRUD works; MCP output is not built |
-| Experts | Beta | Dynamic sanitized directory, 20-seat cap, draft archive and owner invitation are implemented; the new migration/function and real invitation delivery are not yet production-verified |
+| Experts | Beta | Dynamic sanitized directory, 20-seat cap, draft archive and owner invitation are deployed; real SMTP invitation delivery and acceptance still need production verification |
 | Members | Live | Profiles/access data and protected role/tier mutation |
 | CRM | Beta | Real leads, atomic chat scoring, audited stage RPC; new flow depends on blocked AI chat |
 | Engagement | Beta | Real conversation/message reads; new visitor chat flow is blocked |
 | Emails | Beta | Waitlist capture and CSV export work; delivery/templates/campaign state do not |
 | Skills | Beta | Static catalog only; no managed skills backend |
-| Distillation Studio | Blocked | Migration/worker code is ready; production deploy, provider secrets, Vault dispatch and first approved corpus are absent |
-| Persona Compiler | Blocked | Hardened compiler code is ready; production deploy, provider secret, 25-question evaluation set and first published persona are absent |
-| Instructor chat | Blocked | Grounded streaming/idempotency code is ready; production deploy, Anonymous Auth and model/Turnstile secrets are absent |
+| Distillation Studio | Blocked | Schema/worker are deployed; provider secrets, Vault dispatch and first approved corpus are absent |
+| Persona Compiler | Blocked | Hardened compiler is deployed; provider secret, 25-question evaluation set and first published persona are absent |
+| Instructor chat | Blocked | Grounded streaming/idempotency function is deployed; Anonymous Auth, model/Turnstile configuration and a release-ready instructor are absent |
 | Human booking | Blocked | Transaction/RLS foundation exists; availability, enabled expert, webhook/Resend and end-to-end test absent |
-| Public social sync | Blocked | Consent-scoped TikTok/Instagram worker is implemented; fail-closed identity tests, production schema/function, TikHub key, Vault dispatch, policy review and first successful run remain release gates |
+| Public social sync | Blocked | Consent-scoped TikTok/Instagram schema/worker are deployed; TikHub key, worker secret, Vault dispatch, policy review and first successful run remain release gates |
 | Submissions | Planned | No backend table/workflow |
 | MCP server | Planned | No output endpoint |
 
