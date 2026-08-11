@@ -1,9 +1,16 @@
 import {
   buildEvidenceManifest,
   fidelityPassed,
+  hasCompleteRevisionCoverage,
   parseFidelityReport,
   validatePersonaBlueprint,
 } from "./persona-compiler.ts";
+
+Deno.test("authorization coverage validates 501 revisions independently of evidence cap", () => {
+  const expected = Array.from({ length: 501 }, (_, index) => `revision-${index}`);
+  assert(hasCompleteRevisionCoverage(expected, expected), "all 501 authorized revisions should validate");
+  assert(!hasCompleteRevisionCoverage(expected, expected.slice(0, 500)), "one missing authorization must fail closed");
+});
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);

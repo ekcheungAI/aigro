@@ -26,6 +26,7 @@ describe("knowledge source rights migration", () => {
     expect(sql).toContain("create or replace function public.queue_persona_synthesis");
     expect(sql).toContain("create or replace function public.is_expert_chat_ready");
     expect(sql).toContain("get_authorized_persona_evidence");
+    expect(sql).toContain("get_authorized_persona_revision_ids");
     expect(sql).not.toMatch(/security definer\s+set search_path = public/);
     expect(sql).toMatch(/row_number\(\) over \(partition by kr\.id order by kc\.chunk_index\)/);
     expect(sql).toMatch(/order by authorized\.chunk_rank, authorized\.revision_id[\s\S]*limit 500/);

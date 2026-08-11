@@ -3,6 +3,7 @@ import {
   buildEvidenceManifest,
   buildSynthesisPrompt,
   fidelityPassed,
+  hasCompleteRevisionCoverage,
   parseFidelityReport,
   type EvidenceRecord,
   type PersonaBlueprint,
@@ -119,10 +120,6 @@ async function loadEvidence(client: SupabaseClient, job: ClaimedJob): Promise<{
   });
   if (error) throw new Error(`Cannot load authorized persona evidence: ${error.message}`);
   const allChunks = (data ?? []) as AuthorizedEvidenceRow[];
-  const authorizedRevisions = new Set(allChunks.map((row) => row.revision_id));
-  if (authorizedRevisions.size !== job.source_revision_ids.length) {
-    throw new Error("A persona source is no longer published and rights-authorized");
-  }
   const grouped = new Map<string, AuthorizedEvidenceRow[]>();
   for (const revisionId of job.source_revision_ids) grouped.set(revisionId, []);
   for (const chunk of allChunks) grouped.get(chunk.revision_id)?.push(chunk);
@@ -157,6 +154,16 @@ async function loadEvidence(client: SupabaseClient, job: ClaimedJob): Promise<{
   });
   if (evidence.length < 4 || new Set(evidence.map((item) => item.revisionId)).size < 2) {
     throw new Error("Persona compilation needs evidence chunks from at least two published sources");
+  }
+  const { data: coverageData, error: coverageError } = await client.rpc("get_authorized_persona_revision_ids", {
+    p_expert_id: job.expert_id,
+    p_revision_ids: job.source_revision_ids,
+  });
+  if (coverageError) throw new Error(`Cannot revalidate persona source rights: ${coverageError.message}`);
+  const authorizedIds = ((coverageData ?? []) as Array<{ revision_id: string }>)
+    .map((row) => row.revision_id);
+  if (!hasCompleteRevisionCoverage(job.source_revision_ids, authorizedIds)) {
+    throw new Error("A persona source is no longer published and rights-authorized");
   }
   return { expertName: String(expert.display_name), evidence };
 }

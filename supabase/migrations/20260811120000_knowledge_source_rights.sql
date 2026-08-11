@@ -277,6 +277,34 @@ revoke all on function public.get_authorized_persona_evidence(uuid, uuid[])
 from public, anon, authenticated;
 grant execute on function public.get_authorized_persona_evidence(uuid, uuid[]) to service_role;
 
+create or replace function public.get_authorized_persona_revision_ids(
+  p_expert_id uuid,
+  p_revision_ids uuid[]
+)
+returns table (revision_id uuid)
+language sql
+security definer
+stable
+set search_path = pg_catalog, public
+as $$
+  select kr.id
+  from public.knowledge_revisions kr
+  join public.knowledge_sources ks
+    on ks.id = kr.source_id and ks.expert_id = p_expert_id
+  where kr.id = any(p_revision_ids)
+    and kr.status = 'approved'
+    and ks.published_revision_id = kr.id
+    and ks.archived_at is null
+    and ks.rights_status = 'granted'
+    and ks.revoked_at is null
+    and (ks.expires_at is null or ks.expires_at > now())
+  order by kr.id;
+$$;
+
+revoke all on function public.get_authorized_persona_revision_ids(uuid, uuid[])
+from public, anon, authenticated;
+grant execute on function public.get_authorized_persona_revision_ids(uuid, uuid[]) to service_role;
+
 create or replace function public.is_expert_chat_ready(p_expert_id uuid)
 returns boolean
 language sql

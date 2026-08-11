@@ -16,6 +16,14 @@ export interface EvidenceRecord {
   dimension?: EvidenceDimension;
 }
 
+export function hasCompleteRevisionCoverage(expected: string[], authorized: string[]): boolean {
+  const expectedIds = new Set(expected);
+  const authorizedIds = new Set(authorized);
+  return expectedIds.size === expected.length
+    && authorizedIds.size === expectedIds.size
+    && [...expectedIds].every((id) => authorizedIds.has(id));
+}
+
 export interface PersonaBlueprint {
   mental_models: Array<{
     name: string;
