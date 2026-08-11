@@ -19,23 +19,14 @@ interface ClaimedJob {
   attempts: number;
 }
 
-interface RevisionRow {
-  id: string;
+interface AuthorizedEvidenceRow {
+  revision_id: string;
   source_id: string;
   distilled_json: Record<string, unknown>;
-}
-
-interface SourceRow {
-  id: string;
-  title: string;
+  source_title: string;
   source_type: string;
-  published_revision_id: string | null;
   tags: string[];
-}
-
-interface ChunkRow {
-  id: string;
-  revision_id: string;
+  chunk_id: string;
   content: string;
   citation_meta: Record<string, unknown>;
 }
@@ -122,38 +113,20 @@ async function loadEvidence(client: SupabaseClient, job: ClaimedJob): Promise<{
     .select("display_name").eq("id", job.expert_id).single();
   if (expertError || !expert) throw new Error(`Expert unavailable: ${expertError?.message}`);
 
-  const { data: revisionData, error: revisionError } = await client.from("knowledge_revisions")
-    .select("id,source_id,distilled_json")
-    .in("id", job.source_revision_ids).eq("status", "approved");
-  if (revisionError) throw new Error(`Cannot load persona revisions: ${revisionError.message}`);
-  const revisions = (revisionData ?? []) as RevisionRow[];
-  if (revisions.length !== job.source_revision_ids.length) {
-    throw new Error("A persona source is no longer approved");
+  const { data, error } = await client.rpc("get_authorized_persona_evidence", {
+    p_expert_id: job.expert_id,
+    p_revision_ids: job.source_revision_ids,
+  });
+  if (error) throw new Error(`Cannot load authorized persona evidence: ${error.message}`);
+  const allChunks = (data ?? []) as AuthorizedEvidenceRow[];
+  const authorizedRevisions = new Set(allChunks.map((row) => row.revision_id));
+  if (authorizedRevisions.size !== job.source_revision_ids.length) {
+    throw new Error("A persona source is no longer published and rights-authorized");
   }
-
-  const sourceIds = revisions.map((revision) => revision.source_id);
-  const { data: sourceData, error: sourceError } = await client.from("knowledge_sources")
-    .select("id,title,source_type,published_revision_id,tags")
-    .in("id", sourceIds).is("archived_at", null);
-  if (sourceError) throw new Error(`Cannot load persona sources: ${sourceError.message}`);
-  const sources = (sourceData ?? []) as SourceRow[];
-  const sourceById = new Map(sources.map((source) => [source.id, source]));
-  for (const revision of revisions) {
-    if (sourceById.get(revision.source_id)?.published_revision_id !== revision.id) {
-      throw new Error("A persona source was superseded before compilation");
-    }
-  }
-
-  const { data: chunkData, error: chunkError } = await client.from("knowledge_chunks")
-    .select("id,revision_id,content,citation_meta")
-    .in("revision_id", job.source_revision_ids)
-    .order("revision_id").order("chunk_index").limit(500);
-  if (chunkError) throw new Error(`Cannot load persona evidence: ${chunkError.message}`);
-  const allChunks = (chunkData ?? []) as ChunkRow[];
-  const grouped = new Map<string, ChunkRow[]>();
+  const grouped = new Map<string, AuthorizedEvidenceRow[]>();
   for (const revisionId of job.source_revision_ids) grouped.set(revisionId, []);
   for (const chunk of allChunks) grouped.get(chunk.revision_id)?.push(chunk);
-  const chunks: ChunkRow[] = [];
+  const chunks: AuthorizedEvidenceRow[] = [];
   for (let index = 0; chunks.length < MAX_EVIDENCE; index += 1) {
     let added = false;
     for (const revisionId of job.source_revision_ids) {
@@ -165,21 +138,18 @@ async function loadEvidence(client: SupabaseClient, job: ClaimedJob): Promise<{
     }
     if (!added) break;
   }
-  const revisionById = new Map(revisions.map((revision) => [revision.id, revision]));
   const evidence: EvidenceRecord[] = chunks.map((chunk) => {
-    const revision = revisionById.get(chunk.revision_id);
-    const source = revision ? sourceById.get(revision.source_id) : undefined;
-    const tags = source?.tags ?? [];
+    const tags = chunk.tags ?? [];
     const dimension = tags.includes("external-view") ? "external_views"
       : tags.includes("timeline") || tags.includes("recent") ? "timeline"
       : tags.includes("decision") || tags.includes("case-study") ? "decisions"
-      : source?.source_type === "youtube" || tags.includes("interview") ? "conversations"
+      : chunk.source_type === "youtube" || tags.includes("interview") ? "conversations"
       : "writings";
     return {
-      ref: chunk.id,
+      ref: chunk.chunk_id,
       revisionId: chunk.revision_id,
-      sourceTitle: source?.title ?? "Untitled source",
-      sourceType: source?.source_type ?? "manual",
+      sourceTitle: chunk.source_title,
+      sourceType: chunk.source_type,
       content: chunk.content.slice(0, 1_800),
       locator: chunk.citation_meta ?? {},
       dimension,

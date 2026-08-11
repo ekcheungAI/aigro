@@ -14,10 +14,24 @@ alter table public.knowledge_sources
   add constraint knowledge_sources_rights_status_check
   check (rights_status in ('unknown', 'requested', 'granted', 'restricted', 'revoked'));
 
+-- Existing publication pointers predate explicit authorization and therefore fail closed.
+update public.knowledge_sources ks
+set published_revision_id = null, updated_at = now()
+where ks.published_revision_id is not null
+  and (
+    ks.rights_status <> 'granted'
+    or ks.revoked_at is not null
+    or (ks.expires_at is not null and ks.expires_at <= now())
+    or not exists (
+      select 1 from public.knowledge_revisions kr
+      where kr.id = ks.published_revision_id and kr.source_id = ks.id and kr.status = 'approved'
+    )
+  );
+
 create or replace function public.enforce_knowledge_publication_rights()
 returns trigger
 language plpgsql
-set search_path = public
+set search_path = pg_catalog, public
 as $$
 begin
   if new.published_revision_id is not null and (
@@ -53,7 +67,7 @@ create or replace function public.unpublish_expired_knowledge_sources()
 returns integer
 language plpgsql
 security definer
-set search_path = public
+set search_path = pg_catalog, public
 as $$
 declare affected integer;
 begin
@@ -89,7 +103,7 @@ create or replace function public.rollback_knowledge_source(
 returns void
 language plpgsql
 security definer
-set search_path = public
+set search_path = pg_catalog, public
 as $$
 declare source_row public.knowledge_sources%rowtype;
 begin
@@ -120,7 +134,7 @@ create or replace function public.review_knowledge_revision(
 returns void
 language plpgsql
 security definer
-set search_path = public
+set search_path = pg_catalog, public
 as $$
 declare
   revision_row public.knowledge_revisions%rowtype;
@@ -182,3 +196,112 @@ revoke all on function public.match_expert_knowledge(uuid, extensions.halfvec, i
 from public, anon, authenticated;
 grant execute on function public.match_expert_knowledge(uuid, extensions.halfvec, integer, double precision)
 to service_role;
+
+create or replace function public.queue_persona_synthesis(p_expert_id uuid)
+returns uuid
+language plpgsql
+security definer
+set search_path = pg_catalog, public
+as $$
+declare revision_ids uuid[]; job_id uuid;
+begin
+  if not public.owns_expert(p_expert_id) then raise exception 'not_allowed'; end if;
+  perform 1 from public.experts where id = p_expert_id for update;
+  if exists (
+    select 1 from public.persona_synthesis_jobs
+    where expert_id = p_expert_id and status in ('pending', 'processing', 'retry', 'review', 'approved')
+  ) then raise exception 'persona_synthesis_already_active'; end if;
+
+  select array_agg(kr.id order by kr.approved_at nulls last, kr.created_at)
+  into revision_ids
+  from public.knowledge_sources ks
+  join public.knowledge_revisions kr
+    on kr.id = ks.published_revision_id and kr.source_id = ks.id
+  where ks.expert_id = p_expert_id
+    and ks.archived_at is null
+    and ks.rights_status = 'granted'
+    and ks.revoked_at is null
+    and (ks.expires_at is null or ks.expires_at > now())
+    and kr.status = 'approved';
+  if coalesce(cardinality(revision_ids), 0) < 2 then raise exception 'persona_needs_two_published_sources'; end if;
+
+  insert into public.persona_synthesis_jobs (expert_id, source_revision_ids, created_by, research_cutoff_at)
+  values (p_expert_id, revision_ids, auth.uid(), now()) returning id into job_id;
+  insert into public.audit_events (actor_id, expert_id, action, entity_type, entity_id, metadata)
+  values (auth.uid(), p_expert_id, 'persona.synthesis_queued', 'persona_synthesis_job', job_id,
+    jsonb_build_object('source_revision_ids', revision_ids));
+  return job_id;
+end;
+$$;
+
+create or replace function public.get_authorized_persona_evidence(
+  p_expert_id uuid,
+  p_revision_ids uuid[]
+)
+returns table (
+  revision_id uuid, source_id uuid, distilled_json jsonb, source_title text,
+  source_type text, tags text[], chunk_id uuid, content text, citation_meta jsonb
+)
+language sql
+security definer
+stable
+set search_path = pg_catalog, public
+as $$
+  select kr.id, ks.id, kr.distilled_json, ks.title, ks.source_type, ks.tags,
+    kc.id, kc.content, kc.citation_meta
+  from public.knowledge_revisions kr
+  join public.knowledge_sources ks
+    on ks.id = kr.source_id and ks.expert_id = p_expert_id
+  join public.knowledge_chunks kc
+    on kc.revision_id = kr.id and kc.expert_id = p_expert_id
+  where kr.id = any(p_revision_ids)
+    and kr.status = 'approved'
+    and ks.published_revision_id = kr.id
+    and ks.archived_at is null
+    and ks.rights_status = 'granted'
+    and ks.revoked_at is null
+    and (ks.expires_at is null or ks.expires_at > now())
+  order by kr.id, kc.chunk_index
+  limit 500;
+$$;
+
+revoke all on function public.get_authorized_persona_evidence(uuid, uuid[])
+from public, anon, authenticated;
+grant execute on function public.get_authorized_persona_evidence(uuid, uuid[]) to service_role;
+
+create or replace function public.is_expert_chat_ready(p_expert_id uuid)
+returns boolean
+language sql
+security definer
+stable
+set search_path = pg_catalog, public
+as $$
+  select coalesce((select case when e.slug = 'platform' then false else
+    e.status = 'active' and e.archived_at is null and e.public_profile_enabled and e.verified
+    and exists (select 1 from public.account_access aa where aa.expert_id = e.id and aa.app_role = 'expert')
+    and coalesce((e.feature_flags ->> 'rag_enabled')::boolean, false)
+    and e.published_persona_version_id is not null
+    and exists (select 1 from public.expert_persona_versions epv
+      where epv.id = e.published_persona_version_id and epv.expert_id = e.id and epv.status = 'published')
+    and exists (
+      select 1 from public.knowledge_sources ks
+      join public.knowledge_revisions kr on kr.id = ks.published_revision_id and kr.source_id = ks.id
+      join public.knowledge_chunks kc on kc.revision_id = kr.id and kc.expert_id = e.id
+      where ks.expert_id = e.id and ks.archived_at is null and kr.status = 'approved'
+        and ks.rights_status = 'granted' and ks.revoked_at is null
+        and (ks.expires_at is null or ks.expires_at > now()) and kc.embedding is not null
+    )
+    and 2 <= (
+      select count(*) from public.knowledge_sources ks
+      join public.knowledge_revisions kr on kr.id = ks.published_revision_id and kr.source_id = ks.id
+      where ks.expert_id = e.id and ks.archived_at is null and kr.status = 'approved'
+        and ks.rights_status = 'granted' and ks.revoked_at is null
+        and (ks.expires_at is null or ks.expires_at > now())
+    )
+    and 25 <= (select count(*) from public.persona_evaluation_questions q where q.expert_id = e.id and q.active)
+    and public.has_current_passed_persona_evaluation(e.id, e.published_persona_version_id)
+  end from public.experts e where e.id = p_expert_id), false);
+$$;
+
+revoke all on function public.is_expert_chat_ready(uuid) from public, anon, authenticated;
+grant execute on function public.is_expert_chat_ready(uuid) to service_role;

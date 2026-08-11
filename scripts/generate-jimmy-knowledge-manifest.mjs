@@ -2,8 +2,8 @@
 
 import { createHash } from "node:crypto";
 import { execFile } from "node:child_process";
-import { lstat, readdir, readFile, writeFile } from "node:fs/promises";
-import { basename, relative, resolve, sep } from "node:path";
+import { writeFile } from "node:fs/promises";
+import { basename, resolve } from "node:path";
 import { promisify } from "node:util";
 import { pathToFileURL } from "node:url";
 
@@ -14,10 +14,6 @@ const execFileAsync = promisify(execFile);
 const SECRET_FILENAME_TOKEN = /(?:^|[._-])(?:env|api[-_]?keys?|access[-_]?tokens?|tokens?|passwords?|credentials?|secrets?|private[-_]?keys?)(?=$|[._-])/i;
 const SECRET_CONTENT = /(?:api[_-]?key|secret|token|password)\s*[:=]\s*["']?(?:sk-[a-z0-9_-]{20,}|[a-z0-9_/-]{32,})/i;
 const compare = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
-
-function posixPath(path) {
-  return path.split(sep).join("/");
-}
 
 function slug(text) {
   return text.toLowerCase().trim()
@@ -50,37 +46,11 @@ export function extractHeadingLocators(markdown) {
   return headings;
 }
 
-async function markdownFiles(root) {
-  const found = [];
-  async function visit(directory) {
-    const entries = await readdir(directory, { withFileTypes: true });
-    entries.sort((a, b) => compare(a.name, b.name));
-    for (const entry of entries) {
-      if (entry.name === ".git") continue;
-      const path = resolve(directory, entry.name);
-      const info = await lstat(path);
-      if (info.isSymbolicLink()) throw new Error(`symlink is not allowed: ${posixPath(relative(root, path))}`);
-      if (info.isDirectory()) await visit(path);
-      else if (info.isFile() && entry.name.toLowerCase().endsWith(".md")) found.push(path);
-    }
-  }
-  await visit(root);
-  return found.sort((a, b) => compare(posixPath(relative(root, a)), posixPath(relative(root, b))));
-}
-
-export async function buildJimmyKnowledgeManifest(repoDir, expectedSha, actualSha = expectedSha) {
-  if (expectedSha !== EXPECTED_JIMMY_COMMIT || actualSha !== expectedSha) {
-    throw new Error(`unexpected commit: expected ${EXPECTED_JIMMY_COMMIT}, received ${actualSha}`);
-  }
-  const root = resolve(repoDir);
-  const chapters = [];
-  for (const path of await markdownFiles(root)) {
-    const relativePath = posixPath(relative(root, path));
+export function buildManifestFromEntries(files, commit) {
+  const chapters = files.sort((a, b) => compare(a.path, b.path)).map(({ path: relativePath, bytes }) => {
     const markdownBasename = basename(relativePath).replace(/\.md$/i, "");
     if (SECRET_FILENAME_TOKEN.test(markdownBasename)) throw new Error(`secret-like filename: ${relativePath}`);
-    const info = await lstat(path);
-    if (info.size > MAX_MARKDOWN_BYTES) throw new Error(`${relativePath} exceeds ${MAX_MARKDOWN_BYTES} bytes`);
-    const bytes = await readFile(path);
+    if (bytes.length > MAX_MARKDOWN_BYTES) throw new Error(`${relativePath} exceeds ${MAX_MARKDOWN_BYTES} bytes`);
     if (bytes.includes(0)) throw new Error(`binary Markdown is not allowed: ${relativePath}`);
     const content = bytes.toString("utf8");
     if (SECRET_CONTENT.test(content)) throw new Error(`secret-like content: ${relativePath}`);
@@ -89,7 +59,7 @@ export async function buildJimmyKnowledgeManifest(repoDir, expectedSha, actualSh
       ?? /^(\d+)[-_ ]/.exec(relativePath);
     const chapterMatch = /(?:^|\/)(\d+)-(\d+)-[^/]+\.md$/i.exec(relativePath);
     const orderMatch = /(?:^|\/)(\d+)[-_ ]/.exec(relativePath);
-    chapters.push({
+    return {
       path: relativePath,
       stage: stageMatch ? Number(stageMatch[1]) : null,
       chapter: chapterMatch ? `${chapterMatch[1]}-${chapterMatch[2]}` : null,
@@ -97,20 +67,41 @@ export async function buildJimmyKnowledgeManifest(repoDir, expectedSha, actualSh
       title: headings[0]?.text ?? relativePath.replace(/\.md$/i, ""),
       byteLength: bytes.length,
       sha256: createHash("sha256").update(bytes).digest("hex"),
-      sourceUrl: `${REPOSITORY}/blob/${expectedSha}/${relativePath.split("/").map(encodeURIComponent).join("/")}`,
+      sourceUrl: `${REPOSITORY}/blob/${commit}/${relativePath.split("/").map(encodeURIComponent).join("/")}`,
       headings,
-    });
-  }
+    };
+  });
   return {
-    corpus: {
-      name: "Growth with AI Guide",
-      author: "Jimmy Lau",
-      repository: REPOSITORY,
-      commit: expectedSha,
-      fileCount: chapters.length,
-    },
+    corpus: { name: "Growth with AI Guide", author: "Jimmy Lau", repository: REPOSITORY, commit, fileCount: chapters.length },
     chapters,
   };
+}
+
+export async function buildPinnedGitManifest(repoDir, commit) {
+  const root = resolve(repoDir);
+  const { stdout } = await execFileAsync(
+    "git",
+    ["ls-tree", "-r", "-z", commit],
+    { cwd: root, encoding: "buffer", maxBuffer: 10 * 1024 * 1024 },
+  );
+  const entries = Buffer.from(stdout).toString("utf8").split("\0").filter(Boolean);
+  const treeFiles = [];
+  for (const entry of entries) {
+    const match = /^(\d+) (\w+) ([0-9a-f]+)\t([\s\S]+)$/.exec(entry);
+    if (!match) throw new Error("invalid Git tree entry");
+    const [, mode, type, objectId, path] = match;
+    if (mode === "120000") throw new Error(`symlink is not allowed: ${path}`);
+    if (mode === "160000" || type === "commit") throw new Error(`submodule is not allowed: ${path}`);
+    if (type !== "blob" || !path.toLowerCase().endsWith(".md")) continue;
+    const { stdout: blob } = await execFileAsync(
+      "git",
+      ["cat-file", "blob", objectId],
+      { cwd: root, encoding: "buffer", maxBuffer: MAX_MARKDOWN_BYTES + 1 },
+    );
+    treeFiles.push({ path, bytes: Buffer.from(blob) });
+  }
+
+  return buildManifestFromEntries(treeFiles, commit);
 }
 
 function parseArgs(argv) {
@@ -127,7 +118,10 @@ function parseArgs(argv) {
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const { stdout } = await execFileAsync("git", ["rev-parse", "HEAD"], { cwd: resolve(args.repo) });
-  const manifest = await buildJimmyKnowledgeManifest(args.repo, args["expected-sha"], stdout.trim());
+  if (args["expected-sha"] !== EXPECTED_JIMMY_COMMIT || stdout.trim() !== args["expected-sha"]) {
+    throw new Error(`unexpected commit: expected ${EXPECTED_JIMMY_COMMIT}, received ${stdout.trim()}`);
+  }
+  const manifest = await buildPinnedGitManifest(args.repo, args["expected-sha"]);
   const json = `${JSON.stringify(manifest, null, 2)}\n`;
   if (args.output) await writeFile(resolve(args.output), json, { flag: "w" });
   else process.stdout.write(json);

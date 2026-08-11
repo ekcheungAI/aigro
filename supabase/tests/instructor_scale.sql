@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(46);
+select plan(47);
 
 set local role postgres;
 
@@ -141,10 +141,10 @@ set published_persona_version_id = '85100000-0000-0000-0000-000000000005',
     feature_flags = feature_flags || '{"rag_enabled":true}'::jsonb
 where id = '85000000-0000-0000-0000-000000000005';
 insert into public.knowledge_sources (
-  id, expert_id, source_type, title
+  id, expert_id, source_type, title, rights_status, authorized_at
 ) values (
   '85200000-0000-0000-0000-000000000005',
-  '85000000-0000-0000-0000-000000000005', 'manual', 'Scale source'
+  '85000000-0000-0000-0000-000000000005', 'manual', 'Scale source', 'granted', now()
 );
 insert into public.knowledge_revisions (
   id, source_id, revision_no, extracted_text, status, approved_at
@@ -163,10 +163,10 @@ insert into public.knowledge_chunks (
   ('[' || array_to_string(array_fill(0, array[1536]), ',') || ']')::extensions.halfvec
 );
 insert into public.knowledge_sources (
-  id, expert_id, source_type, title
+  id, expert_id, source_type, title, rights_status, authorized_at
 ) values (
   '85400000-0000-0000-0000-000000000005',
-  '85000000-0000-0000-0000-000000000005', 'manual', 'Scale source two'
+  '85000000-0000-0000-0000-000000000005', 'manual', 'Scale source two', 'granted', now()
 );
 insert into public.knowledge_revisions (
   id, source_id, revision_no, extracted_text, status, approved_at
@@ -436,6 +436,10 @@ select ok(
   ),
   'sanitized public directory includes active profiles and truthful chat readiness'
 );
+update public.knowledge_sources set rights_status = 'revoked', revoked_at = now()
+where id = '85200000-0000-0000-0000-000000000005';
+select is(public.is_expert_chat_ready('85000000-0000-0000-0000-000000000005'), false,
+  'chat readiness fails immediately when a corpus grant is revoked');
 
 set local role authenticated;
 select set_config('request.jwt.claims',

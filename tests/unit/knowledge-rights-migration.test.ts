@@ -22,5 +22,10 @@ describe("knowledge source rights migration", () => {
     expect(sql).toContain("new.published_revision_id := null");
     expect(sql).toContain("unpublish_expired_knowledge_sources");
     expect(sql).toContain("aigro-unpublish-expired-knowledge");
+    expect(sql).toMatch(/update public\.knowledge_sources[\s\S]*set published_revision_id = null/);
+    expect(sql).toContain("create or replace function public.queue_persona_synthesis");
+    expect(sql).toContain("create or replace function public.is_expert_chat_ready");
+    expect(sql).toContain("get_authorized_persona_evidence");
+    expect(sql).not.toMatch(/security definer\s+set search_path = public/);
   });
 });

@@ -1,12 +1,45 @@
-import { mkdtemp, mkdir, symlink, writeFile } from "node:fs/promises";
+import { lstat, mkdtemp, mkdir, readdir, readFile, symlink, writeFile } from "node:fs/promises";
+import { execFile } from "node:child_process";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, relative } from "node:path";
+import { promisify } from "node:util";
 import { describe, expect, it } from "vitest";
 import {
   EXPECTED_JIMMY_COMMIT,
-  buildJimmyKnowledgeManifest,
+  buildPinnedGitManifest,
+  buildManifestFromEntries,
   extractHeadingLocators,
 } from "../../scripts/generate-jimmy-knowledge-manifest.mjs";
+
+const execFileAsync = promisify(execFile);
+
+async function buildJimmyKnowledgeManifest(root: string, commit: string) {
+  if (commit !== EXPECTED_JIMMY_COMMIT) throw new Error("unexpected commit");
+  const files: Array<{ path: string; bytes: Buffer }> = [];
+  async function visit(directory: string) {
+    for (const entry of await readdir(directory, { withFileTypes: true })) {
+      if (entry.name === ".git") continue;
+      const path = join(directory, entry.name);
+      const info = await lstat(path);
+      if (info.isSymbolicLink()) throw new Error("symlink");
+      if (info.isDirectory()) await visit(path);
+      else if (entry.name.toLowerCase().endsWith(".md")) {
+        files.push({ path: relative(root, path).split("/").join("/"), bytes: await readFile(path) });
+      }
+    }
+  }
+  await visit(root);
+  return buildManifestFromEntries(files, commit);
+}
+
+async function gitFixture() {
+  const root = await fixture();
+  await execFileAsync("git", ["init", "-q"], { cwd: root });
+  await execFileAsync("git", ["add", "."], { cwd: root });
+  await execFileAsync("git", ["-c", "user.name=AIGRO Test", "-c", "user.email=test@aigro.local", "commit", "-qm", "fixture"], { cwd: root });
+  const { stdout } = await execFileAsync("git", ["rev-parse", "HEAD"], { cwd: root });
+  return { root, commit: stdout.trim() };
+}
 
 async function fixture() {
   const root = await mkdtemp(join(tmpdir(), "aigro-jimmy-"));
@@ -21,6 +54,24 @@ async function fixture() {
 }
 
 describe("Jimmy Growth with AI manifest", () => {
+  it("reads immutable commit blobs despite dirty tracked and untracked Markdown", async () => {
+    const { root, commit } = await gitFixture();
+    const pinned = await buildPinnedGitManifest(root, commit);
+    await writeFile(join(root, "README.md"), "# Dirty tracked injection\n");
+    await writeFile(join(root, "untracked.md"), "# Dirty untracked injection\n");
+    const dirty = await buildPinnedGitManifest(root, commit);
+    expect(dirty).toEqual(pinned);
+    expect(dirty.chapters.some((chapter) => chapter.path === "untracked.md")).toBe(false);
+  });
+
+  it("rejects symlink entries from the pinned Git tree without reading their targets", async () => {
+    const { root } = await gitFixture();
+    await symlink("README.md", join(root, "pinned-link.md"));
+    await execFileAsync("git", ["add", "pinned-link.md"], { cwd: root });
+    await execFileAsync("git", ["-c", "user.name=AIGRO Test", "-c", "user.email=test@aigro.local", "commit", "-qm", "symlink"], { cwd: root });
+    const { stdout } = await execFileAsync("git", ["rev-parse", "HEAD"], { cwd: root });
+    await expect(buildPinnedGitManifest(root, stdout.trim())).rejects.toThrow("symlink");
+  });
   it("ignores heading-shaped text inside fenced code blocks", () => {
     expect(extractHeadingLocators("# Real\n\n```md\n## Not a heading\n```\n\n## Child\n"))
       .toEqual([

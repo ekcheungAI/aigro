@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(54);
+select plan(55);
 
 set local role postgres;
 insert into auth.users (
@@ -403,6 +403,20 @@ where user_id = '51000000-0000-0000-0000-000000000001';
 set local role authenticated;
 select set_config('request.jwt.claims',
   '{"sub":"51000000-0000-0000-0000-000000000001","role":"authenticated"}', true);
+set local role postgres;
+update public.knowledge_sources set rights_status = 'restricted'
+where id = '64000000-0000-0000-0000-000000000004';
+set local role authenticated;
+select throws_ok(
+  $$select public.queue_persona_synthesis((select id from public.experts where slug = 'elvin-cheung'))$$,
+  'P0001', 'persona_needs_two_published_sources',
+  'persona synthesis cannot queue from a rights-ineligible corpus'
+);
+set local role postgres;
+update public.knowledge_sources
+set rights_status = 'granted', published_revision_id = '74000000-0000-0000-0000-000000000004'
+where id = '64000000-0000-0000-0000-000000000004';
+set local role authenticated;
 select ok(
   public.queue_persona_synthesis((select id from public.experts where slug = 'elvin-cheung')) is not null,
   'expert or admin can queue persona synthesis from published knowledge'
