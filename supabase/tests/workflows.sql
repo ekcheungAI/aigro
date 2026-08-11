@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(34);
+select plan(39);
 
 set local role postgres;
 insert into auth.users (
@@ -187,11 +187,11 @@ select is(
 );
 
 set local role postgres;
-insert into public.knowledge_sources (id, expert_id, source_type, title)
-select '61000000-0000-0000-0000-000000000001', id, 'manual', 'Elvin published'
+insert into public.knowledge_sources (id, expert_id, source_type, title, rights_status, authorized_at)
+select '61000000-0000-0000-0000-000000000001', id, 'manual', 'Elvin published', 'granted', now()
 from public.experts where slug = 'elvin-cheung';
-insert into public.knowledge_sources (id, expert_id, source_type, title)
-select '62000000-0000-0000-0000-000000000002', id, 'manual', 'Jimmy published'
+insert into public.knowledge_sources (id, expert_id, source_type, title, rights_status, authorized_at)
+select '62000000-0000-0000-0000-000000000002', id, 'manual', 'Jimmy published', 'granted', now()
 from public.experts where slug = 'jimmy-lau';
 insert into public.knowledge_sources (id, expert_id, source_type, title)
 select '63000000-0000-0000-0000-000000000003', id, 'manual', 'Elvin unapproved'
@@ -239,9 +239,41 @@ select is(
   'retrieval does not leak another instructor content'
 );
 
+update public.knowledge_sources set rights_status = 'unknown'
+where id = '61000000-0000-0000-0000-000000000001';
+select is((select count(*) from public.match_expert_knowledge(
+  (select id from public.experts where slug = 'elvin-cheung'),
+  ('[' || '1,' || repeat('0,', 1534) || '0]')::extensions.halfvec(1536), 6, 0.70
+)), 0::bigint, 'unknown rights cannot retrieve');
+update public.knowledge_sources set rights_status = 'requested'
+where id = '61000000-0000-0000-0000-000000000001';
+select is((select count(*) from public.match_expert_knowledge(
+  (select id from public.experts where slug = 'elvin-cheung'),
+  ('[' || '1,' || repeat('0,', 1534) || '0]')::extensions.halfvec(1536), 6, 0.70
+)), 0::bigint, 'requested rights cannot retrieve');
+update public.knowledge_sources set rights_status = 'revoked', revoked_at = now()
+where id = '61000000-0000-0000-0000-000000000001';
+select is((select count(*) from public.match_expert_knowledge(
+  (select id from public.experts where slug = 'elvin-cheung'),
+  ('[' || '1,' || repeat('0,', 1534) || '0]')::extensions.halfvec(1536), 6, 0.70
+)), 0::bigint, 'revoked rights cannot retrieve');
+update public.knowledge_sources
+set rights_status = 'granted', revoked_at = null, authorized_at = now(), expires_at = now() - interval '1 minute'
+where id = '61000000-0000-0000-0000-000000000001';
+select is((select count(*) from public.match_expert_knowledge(
+  (select id from public.experts where slug = 'elvin-cheung'),
+  ('[' || '1,' || repeat('0,', 1534) || '0]')::extensions.halfvec(1536), 6, 0.70
+)), 0::bigint, 'expired rights cannot retrieve');
+update public.knowledge_sources set expires_at = now() + interval '1 day'
+where id = '61000000-0000-0000-0000-000000000001';
+select is((select count(*) from public.match_expert_knowledge(
+  (select id from public.experts where slug = 'elvin-cheung'),
+  ('[' || '1,' || repeat('0,', 1534) || '0]')::extensions.halfvec(1536), 6, 0.70
+)), 1::bigint, 'granted non-expired approved source can retrieve');
+
 -- Persona Compiler: published evidence -> synthesis -> fidelity gate -> approval -> immutable publish.
-insert into public.knowledge_sources (id, expert_id, source_type, title)
-select '64000000-0000-0000-0000-000000000004', id, 'manual', 'Elvin second published'
+insert into public.knowledge_sources (id, expert_id, source_type, title, rights_status, authorized_at)
+select '64000000-0000-0000-0000-000000000004', id, 'manual', 'Elvin second published', 'granted', now()
 from public.experts where slug = 'elvin-cheung';
 insert into public.knowledge_revisions (id, source_id, revision_no, status, content_hash, approved_at) values
   ('74000000-0000-0000-0000-000000000004', '64000000-0000-0000-0000-000000000004', 1, 'approved', 'hash-elvin-two', now());
