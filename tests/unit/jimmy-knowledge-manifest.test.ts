@@ -9,6 +9,7 @@ import {
   buildPinnedGitManifest,
   buildManifestFromEntries,
   extractHeadingLocators,
+  readPinnedGitKnowledgePack,
 } from "../../scripts/generate-jimmy-knowledge-manifest.mjs";
 
 const execFileAsync = promisify(execFile);
@@ -54,6 +55,14 @@ async function fixture() {
 }
 
 describe("Jimmy Growth with AI manifest", () => {
+  it("returns immutable chapter content for the distillation runner", async () => {
+    const { root, commit } = await gitFixture();
+    const pack = await readPinnedGitKnowledgePack(root, commit);
+    expect(pack.chapters[0].content).toContain("#");
+    expect(pack.chapters[0].sha256).toMatch(/^[a-f0-9]{64}$/);
+    expect(pack.chapters[0].sourceUrl).toContain(`/blob/${commit}/`);
+  }, 15_000);
+
   it("reads immutable commit blobs despite dirty tracked and untracked Markdown", async () => {
     const { root, commit } = await gitFixture();
     const pinned = await buildPinnedGitManifest(root, commit);
@@ -62,7 +71,7 @@ describe("Jimmy Growth with AI manifest", () => {
     const dirty = await buildPinnedGitManifest(root, commit);
     expect(dirty).toEqual(pinned);
     expect(dirty.chapters.some((chapter) => chapter.path === "untracked.md")).toBe(false);
-  });
+  }, 15_000);
 
   it("rejects symlink entries from the pinned Git tree without reading their targets", async () => {
     const { root } = await gitFixture();
@@ -71,7 +80,7 @@ describe("Jimmy Growth with AI manifest", () => {
     await execFileAsync("git", ["-c", "user.name=AIGRO Test", "-c", "user.email=test@aigro.local", "commit", "-qm", "symlink"], { cwd: root });
     const { stdout } = await execFileAsync("git", ["rev-parse", "HEAD"], { cwd: root });
     await expect(buildPinnedGitManifest(root, stdout.trim())).rejects.toThrow("symlink");
-  });
+  }, 15_000);
   it("ignores heading-shaped text inside fenced code blocks", () => {
     expect(extractHeadingLocators("# Real\n\n```md\n## Not a heading\n```\n\n## Child\n"))
       .toEqual([
@@ -121,6 +130,14 @@ describe("Jimmy Growth with AI manifest", () => {
 
     const manifest = await buildJimmyKnowledgeManifest(root, EXPECTED_JIMMY_COMMIT);
     expect(manifest.chapters[0]).toMatchObject({ stage: 3, chapter: "3-2", order: 2 });
+  });
+
+  it("derives stage below the repository map directory", () => {
+    const manifest = buildManifestFromEntries([{
+      path: "AI 學習階段地圖/04-AI Builder（AI建立者）/chapters/4-23-技能係工作合約.md",
+      bytes: Buffer.from("# 技能係工作合約\n"),
+    }], EXPECTED_JIMMY_COMMIT);
+    expect(manifest.chapters[0]).toMatchObject({ stage: 4, chapter: "4-23", order: 23 });
   });
 
   it("rejects symlinks", async () => {

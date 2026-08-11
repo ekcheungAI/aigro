@@ -56,6 +56,7 @@ export function buildManifestFromEntries(files, commit) {
     if (SECRET_CONTENT.test(content)) throw new Error(`secret-like content: ${relativePath}`);
     const headings = extractHeadingLocators(content);
     const stageMatch = /(?:^|\/)stage[-_ ]?(\d+)(?:\/|$)/i.exec(relativePath)
+      ?? /(?:^|\/)(\d+)-AI[^/]*\//i.exec(relativePath)
       ?? /^(\d+)[-_ ]/.exec(relativePath);
     const chapterMatch = /(?:^|\/)(\d+)-(\d+)-[^/]+\.md$/i.exec(relativePath);
     const orderMatch = /(?:^|\/)(\d+)[-_ ]/.exec(relativePath);
@@ -78,6 +79,11 @@ export function buildManifestFromEntries(files, commit) {
 }
 
 export async function buildPinnedGitManifest(repoDir, commit) {
+  const files = await readPinnedGitEntries(repoDir, commit);
+  return buildManifestFromEntries(files, commit);
+}
+
+async function readPinnedGitEntries(repoDir, commit) {
   const root = resolve(repoDir);
   const { stdout } = await execFileAsync(
     "git",
@@ -101,7 +107,20 @@ export async function buildPinnedGitManifest(repoDir, commit) {
     treeFiles.push({ path, bytes: Buffer.from(blob) });
   }
 
-  return buildManifestFromEntries(treeFiles, commit);
+  return treeFiles;
+}
+
+export async function readPinnedGitKnowledgePack(repoDir, commit) {
+  const files = await readPinnedGitEntries(repoDir, commit);
+  const manifest = buildManifestFromEntries(files, commit);
+  const contentByPath = new Map(files.map((file) => [file.path, file.bytes.toString("utf8")]));
+  return {
+    ...manifest,
+    chapters: manifest.chapters.map((chapter) => ({
+      ...chapter,
+      content: contentByPath.get(chapter.path) ?? "",
+    })),
+  };
 }
 
 function parseArgs(argv) {

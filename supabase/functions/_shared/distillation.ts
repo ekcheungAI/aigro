@@ -7,6 +7,13 @@ export interface TextChunk {
   citationMeta: { start_paragraph: number; end_paragraph: number };
 }
 
+export function mergeCitationProvenance(
+  locator: Record<string, unknown>,
+  sourceMeta: Record<string, unknown> | null | undefined,
+): Record<string, unknown> {
+  return { ...(sourceMeta ?? {}), ...locator };
+}
+
 export function normalizeSourceText(
   value: string,
   maxChars = DEFAULT_MAX_SOURCE_CHARS,

@@ -1,5 +1,6 @@
 import {
   chunkParagraphText,
+  mergeCitationProvenance,
   normalizeSourceText,
   sha256Hex,
 } from "./distillation.ts";
@@ -36,4 +37,17 @@ Deno.test("invalid chunk settings are rejected", () => {
     rejected = true;
   }
   assert(rejected, "overlap equal to target must be rejected");
+});
+
+Deno.test("citation provenance keeps pinned knowledge-pack identity", () => {
+  const citation = mergeCitationProvenance(
+    { start_paragraph: 2, end_paragraph: 4 },
+    { corpus: "growth-with-ai-guide", commit_sha: "abc", file_path: "stage/lesson.md", stage: 2 },
+  );
+  if (citation.commit_sha !== "abc" || citation.file_path !== "stage/lesson.md") {
+    throw new Error("pinned provenance missing");
+  }
+  if (citation.start_paragraph !== 2 || citation.stage !== 2) {
+    throw new Error("chunk locator missing");
+  }
 });

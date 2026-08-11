@@ -8,6 +8,7 @@ Deno.test("knowledge dedupe is scoped to the current instructor across sources",
   const scope = buildKnowledgeDuplicateScope({
     contentHash: "same-content-hash",
     currentRevisionId: "revision-current",
+    currentSourceId: "source-current",
     expertId: "expert-a",
   });
 
@@ -27,6 +28,7 @@ Deno.test("knowledge dedupe is scoped to the current instructor across sources",
     scope.currentRevisionId === "revision-current",
     "dedupe must exclude only the revision currently being processed",
   );
+  assert(scope.currentSourceId === "source-current", "same-source revisions must be excluded");
   assert(
     !scope.expertFilterColumn.includes("source_id"),
     "dedupe must continue to detect matching content in another source owned by the same instructor",
@@ -37,11 +39,13 @@ Deno.test("knowledge dedupe scopes identical content independently per instructo
   const first = buildKnowledgeDuplicateScope({
     contentHash: "same-content-hash",
     currentRevisionId: "revision-a",
+    currentSourceId: "source-a",
     expertId: "expert-a",
   });
   const second = buildKnowledgeDuplicateScope({
     contentHash: "same-content-hash",
     currentRevisionId: "revision-b",
+    currentSourceId: "source-b",
     expertId: "expert-b",
   });
 
@@ -50,4 +54,21 @@ Deno.test("knowledge dedupe scopes identical content independently per instructo
     first.expertId !== second.expertId,
     "identical content owned by different instructors must use different dedupe scopes",
   );
+});
+
+Deno.test("same source and content can be redistilled at a new pinned commit", () => {
+  const older = buildKnowledgeDuplicateScope({
+    contentHash: "same-content-hash",
+    currentRevisionId: "revision-old",
+    currentSourceId: "source-shared",
+    expertId: "expert-a",
+  });
+  const newer = buildKnowledgeDuplicateScope({
+    contentHash: "same-content-hash",
+    currentRevisionId: "revision-new",
+    currentSourceId: "source-shared",
+    expertId: "expert-a",
+  });
+  assert(older.currentSourceId === newer.currentSourceId, "test precondition: logical source is shared");
+  assert(older.currentRevisionId !== newer.currentRevisionId, "new commits use distinct revisions");
 });

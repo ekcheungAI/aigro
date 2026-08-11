@@ -1,6 +1,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import {
   chunkParagraphText,
+  mergeCitationProvenance,
   normalizeSourceText,
   sha256Hex,
 } from "../_shared/distillation.ts";
@@ -24,6 +25,7 @@ interface SourceRow {
   title: string;
   source_url: string | null;
   archived_at: string | null;
+  source_meta: Record<string, unknown>;
 }
 
 interface RevisionRow {
@@ -31,6 +33,7 @@ interface RevisionRow {
   source_id: string;
   raw_text: string | null;
   storage_path: string | null;
+  provider_meta: Record<string, unknown>;
 }
 
 interface ExtractedDocument {
@@ -298,14 +301,18 @@ async function processJob(
 ): Promise<void> {
   const { data: revisionData, error: revisionError } = await client
     .from("knowledge_revisions")
-    .select("id,source_id,raw_text,storage_path")
+    .select("id,source_id,raw_text,storage_path,provider_meta")
     .eq("id", job.revision_id)
     .single();
   if (revisionError || !revisionData) throw new Error(`Revision unavailable: ${revisionError?.message}`);
   const revision = revisionData as RevisionRow;
+  const revisionSourceMeta = revision.provider_meta?.knowledge_pack &&
+      typeof revision.provider_meta.knowledge_pack === "object"
+    ? revision.provider_meta.knowledge_pack as Record<string, unknown>
+    : {};
   const { data: sourceData, error: sourceError } = await client
     .from("knowledge_sources")
-    .select("id,expert_id,source_type,title,source_url,archived_at")
+    .select("id,expert_id,source_type,title,source_url,archived_at,source_meta")
     .eq("id", revision.source_id)
     .single();
   if (sourceError || !sourceData) throw new Error(`Source unavailable: ${sourceError?.message}`);
@@ -328,6 +335,7 @@ async function processJob(
   const duplicateScope = buildKnowledgeDuplicateScope({
     contentHash,
     currentRevisionId: revision.id,
+    currentSourceId: revision.source_id,
     expertId: source.expert_id,
   });
   const { data: duplicate, error: duplicateError } = await client
@@ -335,6 +343,7 @@ async function processJob(
     .select(duplicateScope.select)
     .eq("content_hash", duplicateScope.contentHash)
     .eq(duplicateScope.expertFilterColumn, duplicateScope.expertId)
+    .neq("source_id", duplicateScope.currentSourceId)
     .neq("id", duplicateScope.currentRevisionId)
     .limit(1)
     .maybeSingle();
@@ -359,12 +368,13 @@ async function processJob(
     p_provider_meta: {
       extraction: document.provider,
       embedding: Deno.env.get("OPENAI_EMBEDDING_MODEL") ?? "text-embedding-3-small",
+      knowledge_pack: revisionSourceMeta,
     },
     p_chunks: chunks.map((chunk, index) => ({
       chunk_index: index,
       content: chunk.content,
       embedding: `[${vectors[index].join(",")}]`,
-      citation_meta: chunk.citationMeta,
+      citation_meta: mergeCitationProvenance(chunk.citationMeta, revisionSourceMeta),
       token_count: Math.ceil(chunk.content.length / 3),
     })),
   });

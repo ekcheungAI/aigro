@@ -1,6 +1,7 @@
 export interface KnowledgeDuplicateScopeInput {
   contentHash: string;
   currentRevisionId: string;
+  currentSourceId: string;
   expertId: string;
 }
 
@@ -18,7 +19,7 @@ export interface KnowledgeDuplicateScope extends KnowledgeDuplicateScopeInput {
 export function buildKnowledgeDuplicateScope(
   input: KnowledgeDuplicateScopeInput,
 ): KnowledgeDuplicateScope {
-  if (!input.contentHash || !input.currentRevisionId || !input.expertId) {
+  if (!input.contentHash || !input.currentRevisionId || !input.currentSourceId || !input.expertId) {
     throw new Error("invalid_knowledge_duplicate_scope");
   }
 

@@ -32,3 +32,34 @@ a minute-level database sweep clears the stale publication pointer.
 
 Run `npm run test:db` with the local Supabase stack running. The pgTAP workflow covers
 authorization-state retrieval, automatic unpublishing, and review/rollback publication gates.
+
+## Full distillation run
+
+After migrations and both Edge Functions are deployed, run the idempotent end-to-end
+pipeline with a server-side Supabase credential:
+
+```sh
+SUPABASE_URL="..." SUPABASE_SECRET_KEY="..." npm run distill:jimmy -- \
+  --repo /path/to/growth-with-ai-guide \
+  --rights-holder "AIGRO / Jimmy Lau" \
+  --rights-evidence-ref "ekos-intake:2026-08-11_jimmy-lau-growth-with-ai-guide" \
+  --publish-persona
+```
+
+Never use the public anon key. The runner imports one stable source per chapter,
+reuses identical SHA-256 revisions, drives the existing workers, approves only
+rights-eligible revisions with distilled chunks, requires persona fidelity to pass,
+publishes atomically, and then verifies that every pinned chapter has:
+
+- an approved published revision;
+- at least one embedded chunk;
+- citation metadata matching the pinned commit and file path; and
+- inclusion in the published persona version.
+
+Success prints a JSON coverage report. A partial run is safe to rerun; a failed or
+missing chapter, stale right, fidelity failure, or citation mismatch exits non-zero.
+
+Production execution requires `SUPABASE_ACCESS_TOKEN` or database credentials to
+apply migrations, plus `SUPABASE_SECRET_KEY` (or the legacy service-role key) to run
+the service-only importer. Vercel's `VITE_SUPABASE_ANON_KEY` is intentionally
+insufficient.
