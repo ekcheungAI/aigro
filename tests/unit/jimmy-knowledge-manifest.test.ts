@@ -101,6 +101,24 @@ describe("Jimmy Growth with AI manifest", () => {
     },
   );
 
+  it.each(["prod-api-key.md", "github-token.md", "backup-credentials.md"])(
+    "rejects sensitive tokens at basename boundaries in %s",
+    async (filename) => {
+      const root = await fixture();
+      await writeFile(join(root, filename), "# Must not ingest\n");
+      await expect(buildJimmyKnowledgeManifest(root, EXPECTED_JIMMY_COMMIT))
+        .rejects.toThrow("secret-like filename");
+    },
+  );
+
+  it("allows ordinary words that merely contain a sensitive substring", async () => {
+    const root = await fixture();
+    await writeFile(join(root, "tokenization-notes.md"), "# Tokenization notes\n");
+    const manifest = await buildJimmyKnowledgeManifest(root, EXPECTED_JIMMY_COMMIT);
+    expect(manifest.chapters.some((chapter) => chapter.path === "tokenization-notes.md"))
+      .toBe(true);
+  });
+
   it("rejects oversized Markdown and binary Markdown", async () => {
     const oversizedRoot = await fixture();
     await writeFile(join(oversizedRoot, "huge.md"), Buffer.alloc(1_048_577, "a"));

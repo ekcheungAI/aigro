@@ -3,7 +3,7 @@
 import { createHash } from "node:crypto";
 import { execFile } from "node:child_process";
 import { lstat, readdir, readFile, writeFile } from "node:fs/promises";
-import { relative, resolve, sep } from "node:path";
+import { basename, relative, resolve, sep } from "node:path";
 import { promisify } from "node:util";
 import { pathToFileURL } from "node:url";
 
@@ -11,7 +11,7 @@ export const EXPECTED_JIMMY_COMMIT = "2a592eb59398f97800cfe811847bb5f9d85a5668";
 export const MAX_MARKDOWN_BYTES = 1_048_576;
 const REPOSITORY = "https://github.com/jimmylau-DOTAI/growth-with-ai-guide";
 const execFileAsync = promisify(execFile);
-const SECRET_FILENAME = /(?:^|\/)(?:\.env(?:\.[^/]*)?|api[-_]?keys?|access[-_]?tokens?|tokens?|passwords?|credentials?|secrets?|private[-_]?keys?)\.md$/i;
+const SECRET_FILENAME_TOKEN = /(?:^|[._-])(?:env|api[-_]?keys?|access[-_]?tokens?|tokens?|passwords?|credentials?|secrets?|private[-_]?keys?)(?=$|[._-])/i;
 const SECRET_CONTENT = /(?:api[_-]?key|secret|token|password)\s*[:=]\s*["']?(?:sk-[a-z0-9_-]{20,}|[a-z0-9_/-]{32,})/i;
 const compare = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 
@@ -76,7 +76,8 @@ export async function buildJimmyKnowledgeManifest(repoDir, expectedSha, actualSh
   const chapters = [];
   for (const path of await markdownFiles(root)) {
     const relativePath = posixPath(relative(root, path));
-    if (SECRET_FILENAME.test(relativePath)) throw new Error(`secret-like filename: ${relativePath}`);
+    const markdownBasename = basename(relativePath).replace(/\.md$/i, "");
+    if (SECRET_FILENAME_TOKEN.test(markdownBasename)) throw new Error(`secret-like filename: ${relativePath}`);
     const info = await lstat(path);
     if (info.size > MAX_MARKDOWN_BYTES) throw new Error(`${relativePath} exceeds ${MAX_MARKDOWN_BYTES} bytes`);
     const bytes = await readFile(path);
