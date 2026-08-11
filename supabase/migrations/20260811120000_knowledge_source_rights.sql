@@ -247,21 +247,29 @@ security definer
 stable
 set search_path = pg_catalog, public
 as $$
-  select kr.id, ks.id, kr.distilled_json, ks.title, ks.source_type, ks.tags,
-    kc.id, kc.content, kc.citation_meta
-  from public.knowledge_revisions kr
-  join public.knowledge_sources ks
-    on ks.id = kr.source_id and ks.expert_id = p_expert_id
-  join public.knowledge_chunks kc
-    on kc.revision_id = kr.id and kc.expert_id = p_expert_id
-  where kr.id = any(p_revision_ids)
-    and kr.status = 'approved'
-    and ks.published_revision_id = kr.id
-    and ks.archived_at is null
-    and ks.rights_status = 'granted'
-    and ks.revoked_at is null
-    and (ks.expires_at is null or ks.expires_at > now())
-  order by kr.id, kc.chunk_index
+  with authorized as (
+    select kr.id as revision_id, ks.id as source_id, kr.distilled_json,
+      ks.title as source_title, ks.source_type, ks.tags, kc.id as chunk_id,
+      kc.content, kc.citation_meta,
+      row_number() over (partition by kr.id order by kc.chunk_index) as chunk_rank
+    from public.knowledge_revisions kr
+    join public.knowledge_sources ks
+      on ks.id = kr.source_id and ks.expert_id = p_expert_id
+    join public.knowledge_chunks kc
+      on kc.revision_id = kr.id and kc.expert_id = p_expert_id
+    where kr.id = any(p_revision_ids)
+      and kr.status = 'approved'
+      and ks.published_revision_id = kr.id
+      and ks.archived_at is null
+      and ks.rights_status = 'granted'
+      and ks.revoked_at is null
+      and (ks.expires_at is null or ks.expires_at > now())
+  )
+  select authorized.revision_id, authorized.source_id, authorized.distilled_json,
+    authorized.source_title, authorized.source_type, authorized.tags,
+    authorized.chunk_id, authorized.content, authorized.citation_meta
+  from authorized
+  order by authorized.chunk_rank, authorized.revision_id
   limit 500;
 $$;
 
