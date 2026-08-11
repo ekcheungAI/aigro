@@ -11,7 +11,7 @@ export const EXPECTED_JIMMY_COMMIT = "2a592eb59398f97800cfe811847bb5f9d85a5668";
 export const MAX_MARKDOWN_BYTES = 1_048_576;
 const REPOSITORY = "https://github.com/jimmylau-DOTAI/growth-with-ai-guide";
 const execFileAsync = promisify(execFile);
-const SECRET_FILENAME = /(^|[._-])(\.env|credentials?|secrets?|private[-_]?key)([._-]|$)/i;
+const SECRET_FILENAME = /(?:^|\/)(?:\.env(?:\.[^/]*)?|api[-_]?keys?|access[-_]?tokens?|tokens?|passwords?|credentials?|secrets?|private[-_]?keys?)\.md$/i;
 const SECRET_CONTENT = /(?:api[_-]?key|secret|token|password)\s*[:=]\s*["']?(?:sk-[a-z0-9_-]{20,}|[a-z0-9_/-]{32,})/i;
 const compare = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 

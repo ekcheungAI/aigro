@@ -91,6 +91,16 @@ describe("Jimmy Growth with AI manifest", () => {
       .rejects.toThrow("secret-like content");
   });
 
+  it.each(["api-key.md", "access_token.md", "passwords.md", ".env.md", "private-key.md"])(
+    "rejects the obvious secret-like filename %s",
+    async (filename) => {
+      const root = await fixture();
+      await writeFile(join(root, filename), "# Must not ingest\n");
+      await expect(buildJimmyKnowledgeManifest(root, EXPECTED_JIMMY_COMMIT))
+        .rejects.toThrow("secret-like filename");
+    },
+  );
+
   it("rejects oversized Markdown and binary Markdown", async () => {
     const oversizedRoot = await fixture();
     await writeFile(join(oversizedRoot, "huge.md"), Buffer.alloc(1_048_577, "a"));

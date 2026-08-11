@@ -25,7 +25,13 @@ begin
     or new.revoked_at is not null
     or (new.expires_at is not null and new.expires_at <= now())
   ) then
-    raise exception 'knowledge_rights_not_granted';
+    if tg_op = 'UPDATE'
+       and old.published_revision_id is not null
+       and new.published_revision_id = old.published_revision_id then
+      new.published_revision_id := null;
+    else
+      raise exception 'knowledge_rights_not_granted';
+    end if;
   end if;
   if new.published_revision_id is not null and not exists (
     select 1 from public.knowledge_revisions kr
@@ -39,9 +45,42 @@ $$;
 
 drop trigger if exists knowledge_sources_publication_rights on public.knowledge_sources;
 create trigger knowledge_sources_publication_rights
-before insert or update of published_revision_id
+before insert or update of published_revision_id, rights_status, expires_at, revoked_at
 on public.knowledge_sources
 for each row execute function public.enforce_knowledge_publication_rights();
+
+create or replace function public.unpublish_expired_knowledge_sources()
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare affected integer;
+begin
+  update public.knowledge_sources
+  set published_revision_id = null, updated_at = now()
+  where published_revision_id is not null
+    and expires_at is not null
+    and expires_at <= now();
+  get diagnostics affected = row_count;
+  return affected;
+end;
+$$;
+
+revoke all on function public.unpublish_expired_knowledge_sources()
+from public, anon, authenticated;
+grant execute on function public.unpublish_expired_knowledge_sources() to service_role;
+
+do $$
+begin
+  perform cron.unschedule(jobid) from cron.job
+  where jobname = 'aigro-unpublish-expired-knowledge';
+  perform cron.schedule(
+    'aigro-unpublish-expired-knowledge',
+    '* * * * *',
+    'select public.unpublish_expired_knowledge_sources()'
+  );
+end $$;
 
 create or replace function public.rollback_knowledge_source(
   p_source_id uuid,

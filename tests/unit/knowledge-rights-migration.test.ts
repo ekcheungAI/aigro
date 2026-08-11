@@ -16,5 +16,11 @@ describe("knowledge source rights migration", () => {
     expect(sql).toMatch(/revoked_at is null/);
     expect(sql).toContain("knowledge_rights_not_granted");
     expect(sql).toContain("revision_not_approved");
+    expect(sql).toMatch(
+      /update of published_revision_id, rights_status, expires_at, revoked_at/,
+    );
+    expect(sql).toContain("new.published_revision_id := null");
+    expect(sql).toContain("unpublish_expired_knowledge_sources");
+    expect(sql).toContain("aigro-unpublish-expired-knowledge");
   });
 });

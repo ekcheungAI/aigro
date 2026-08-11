@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(39);
+select plan(54);
 
 set local role postgres;
 insert into auth.users (
@@ -245,31 +245,149 @@ select is((select count(*) from public.match_expert_knowledge(
   (select id from public.experts where slug = 'elvin-cheung'),
   ('[' || '1,' || repeat('0,', 1534) || '0]')::extensions.halfvec(1536), 6, 0.70
 )), 0::bigint, 'unknown rights cannot retrieve');
+select is((select published_revision_id from public.knowledge_sources
+  where id = '61000000-0000-0000-0000-000000000001'), null::uuid,
+  'unknown rights cannot retain publication');
+update public.knowledge_sources
+set rights_status = 'granted', revoked_at = null, expires_at = null,
+    published_revision_id = '71000000-0000-0000-0000-000000000001'
+where id = '61000000-0000-0000-0000-000000000001';
 update public.knowledge_sources set rights_status = 'requested'
 where id = '61000000-0000-0000-0000-000000000001';
 select is((select count(*) from public.match_expert_knowledge(
   (select id from public.experts where slug = 'elvin-cheung'),
   ('[' || '1,' || repeat('0,', 1534) || '0]')::extensions.halfvec(1536), 6, 0.70
 )), 0::bigint, 'requested rights cannot retrieve');
+select is((select published_revision_id from public.knowledge_sources
+  where id = '61000000-0000-0000-0000-000000000001'), null::uuid,
+  'requested rights cannot retain publication');
+select throws_ok(
+  $$update public.knowledge_sources
+    set published_revision_id = '71000000-0000-0000-0000-000000000001'
+    where id = '61000000-0000-0000-0000-000000000001'$$,
+  'P0001', 'knowledge_rights_not_granted', 'requested rights cannot publish directly'
+);
+update public.knowledge_sources
+set rights_status = 'granted', published_revision_id = '71000000-0000-0000-0000-000000000001'
+where id = '61000000-0000-0000-0000-000000000001';
+update public.knowledge_sources set rights_status = 'restricted'
+where id = '61000000-0000-0000-0000-000000000001';
+select is((select count(*) from public.match_expert_knowledge(
+  (select id from public.experts where slug = 'elvin-cheung'),
+  ('[' || '1,' || repeat('0,', 1534) || '0]')::extensions.halfvec(1536), 6, 0.70
+)), 0::bigint, 'restricted rights cannot retrieve');
+select is(
+  (select published_revision_id from public.knowledge_sources
+   where id = '61000000-0000-0000-0000-000000000001'),
+  null::uuid,
+  'invalidating rights atomically unpublishes an existing source'
+);
+update public.knowledge_sources
+set rights_status = 'granted', published_revision_id = '71000000-0000-0000-0000-000000000001'
+where id = '61000000-0000-0000-0000-000000000001';
 update public.knowledge_sources set rights_status = 'revoked', revoked_at = now()
 where id = '61000000-0000-0000-0000-000000000001';
 select is((select count(*) from public.match_expert_knowledge(
   (select id from public.experts where slug = 'elvin-cheung'),
   ('[' || '1,' || repeat('0,', 1534) || '0]')::extensions.halfvec(1536), 6, 0.70
 )), 0::bigint, 'revoked rights cannot retrieve');
+select is((select published_revision_id from public.knowledge_sources
+  where id = '61000000-0000-0000-0000-000000000001'), null::uuid,
+  'revoked rights cannot retain publication');
 update public.knowledge_sources
-set rights_status = 'granted', revoked_at = null, authorized_at = now(), expires_at = now() - interval '1 minute'
+set rights_status = 'granted', revoked_at = null, authorized_at = now(), expires_at = null,
+    published_revision_id = '71000000-0000-0000-0000-000000000001'
+where id = '61000000-0000-0000-0000-000000000001';
+update public.knowledge_sources set expires_at = now() - interval '1 minute'
 where id = '61000000-0000-0000-0000-000000000001';
 select is((select count(*) from public.match_expert_knowledge(
   (select id from public.experts where slug = 'elvin-cheung'),
   ('[' || '1,' || repeat('0,', 1534) || '0]')::extensions.halfvec(1536), 6, 0.70
 )), 0::bigint, 'expired rights cannot retrieve');
-update public.knowledge_sources set expires_at = now() + interval '1 day'
+select is((select published_revision_id from public.knowledge_sources
+  where id = '61000000-0000-0000-0000-000000000001'), null::uuid,
+  'expired rights cannot retain publication');
+update public.knowledge_sources
+set expires_at = now() + interval '1 day',
+    published_revision_id = '71000000-0000-0000-0000-000000000001'
 where id = '61000000-0000-0000-0000-000000000001';
 select is((select count(*) from public.match_expert_knowledge(
   (select id from public.experts where slug = 'elvin-cheung'),
   ('[' || '1,' || repeat('0,', 1534) || '0]')::extensions.halfvec(1536), 6, 0.70
 )), 1::bigint, 'granted non-expired approved source can retrieve');
+
+-- Publication RPCs retain approval requirements and additionally fail closed on rights.
+insert into public.knowledge_sources (id, expert_id, source_type, title)
+select '65000000-0000-0000-0000-000000000005', id, 'manual', 'Rights RPC fixture'
+from public.experts where slug = 'elvin-cheung';
+insert into public.knowledge_revisions (id, source_id, revision_no, status, content_hash) values
+  ('75000000-0000-0000-0000-000000000005', '65000000-0000-0000-0000-000000000005', 1, 'review', 'hash-rights-rpc');
+update public.account_access set app_role = 'admin'
+where user_id = '51000000-0000-0000-0000-000000000001';
+set local role authenticated;
+select set_config('request.jwt.claims',
+  '{"sub":"51000000-0000-0000-0000-000000000001","role":"authenticated"}', true);
+select throws_ok(
+  $$select public.review_knowledge_revision('75000000-0000-0000-0000-000000000005', 'approve')$$,
+  'P0001', 'knowledge_rights_not_granted', 'review cannot publish an unknown-rights source'
+);
+set local role postgres;
+update public.knowledge_sources set rights_status = 'granted', authorized_at = now(), expires_at = now() - interval '1 minute'
+where id = '65000000-0000-0000-0000-000000000005';
+set local role authenticated;
+select throws_ok(
+  $$select public.review_knowledge_revision('75000000-0000-0000-0000-000000000005', 'approve')$$,
+  'P0001', 'knowledge_rights_not_granted', 'review cannot publish an expired source'
+);
+set local role postgres;
+update public.knowledge_sources set rights_status = 'revoked', expires_at = null, revoked_at = now()
+where id = '65000000-0000-0000-0000-000000000005';
+set local role authenticated;
+select throws_ok(
+  $$select public.review_knowledge_revision('75000000-0000-0000-0000-000000000005', 'approve')$$,
+  'P0001', 'knowledge_rights_not_granted', 'review cannot publish a revoked source'
+);
+set local role postgres;
+update public.knowledge_sources set rights_status = 'granted', revoked_at = null
+where id = '65000000-0000-0000-0000-000000000005';
+set local role authenticated;
+select lives_ok(
+  $$select public.review_knowledge_revision('75000000-0000-0000-0000-000000000005', 'approve')$$,
+  'review publishes a granted approved source'
+);
+set local role postgres;
+update public.knowledge_sources set rights_status = 'restricted'
+where id = '65000000-0000-0000-0000-000000000005';
+set local role authenticated;
+select throws_ok(
+  $$select public.rollback_knowledge_source('65000000-0000-0000-0000-000000000005', '75000000-0000-0000-0000-000000000005')$$,
+  'P0001', 'knowledge_rights_not_granted', 'rollback cannot republish a restricted source'
+);
+set local role postgres;
+update public.knowledge_sources set rights_status = 'granted', expires_at = now() - interval '1 minute'
+where id = '65000000-0000-0000-0000-000000000005';
+set local role authenticated;
+select throws_ok(
+  $$select public.rollback_knowledge_source('65000000-0000-0000-0000-000000000005', '75000000-0000-0000-0000-000000000005')$$,
+  'P0001', 'knowledge_rights_not_granted', 'rollback cannot republish an expired source'
+);
+set local role postgres;
+update public.knowledge_sources set expires_at = null, rights_status = 'revoked', revoked_at = now()
+where id = '65000000-0000-0000-0000-000000000005';
+set local role authenticated;
+select throws_ok(
+  $$select public.rollback_knowledge_source('65000000-0000-0000-0000-000000000005', '75000000-0000-0000-0000-000000000005')$$,
+  'P0001', 'knowledge_rights_not_granted', 'rollback cannot republish a revoked source'
+);
+set local role postgres;
+update public.knowledge_sources set rights_status = 'granted', revoked_at = null
+where id = '65000000-0000-0000-0000-000000000005';
+set local role authenticated;
+select lives_ok(
+  $$select public.rollback_knowledge_source('65000000-0000-0000-0000-000000000005', '75000000-0000-0000-0000-000000000005')$$,
+  'rollback republishes a granted approved source'
+);
+set local role postgres;
 
 -- Persona Compiler: published evidence -> synthesis -> fidelity gate -> approval -> immutable publish.
 insert into public.knowledge_sources (id, expert_id, source_type, title, rights_status, authorized_at)

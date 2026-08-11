@@ -19,3 +19,12 @@ Only `granted` sources with a non-expired, non-revoked grant and an approved rev
 eligible. `rights_holder`, structured `rights_scope`, `rights_evidence_ref`, and authorization,
 expiry, and revocation timestamps record the capability without storing external evidence.
 No production grant is inserted by this migration.
+
+Changing a published source to a non-granted, revoked, or already-expired state atomically
+clears `published_revision_id`. Future expiry is enforced immediately at retrieval time and
+a minute-level database sweep clears the stale publication pointer.
+
+## Database verification
+
+Run `npm run test:db` with the local Supabase stack running. The pgTAP workflow covers
+authorization-state retrieval, automatic unpublishing, and review/rollback publication gates.
