@@ -24,7 +24,7 @@ export default function MobileAppNav() {
             end={"end" in item ? item.end : undefined}
             className={({ isActive }) =>
               cn(
-                "press relative flex min-h-11 min-w-0 flex-col items-center justify-center gap-1 text-[10px] leading-none",
+                "press relative flex min-h-11 min-w-0 flex-col items-center justify-center gap-1 text-[13px] leading-none",
                 isActive ? "text-ink" : "text-text-muted"
               )
             }

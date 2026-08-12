@@ -147,10 +147,10 @@
 | `body-sm` | 15 | 1.65 | 400 / 400 | 0 | 卡片摘要、AI 摘要 |
 | `label` | 14 | 1.4 | 500 / 500 | +0.01em | 按鈕、導航、表單標籤 |
 | `caption` | 13 | 1.45 | 400 / 400 | +0.01em | 時間戳、來源名 |
-| `overline` | 12 | 1.3 | 600 / 500 | Latin +0.12em 全大寫；CJK +0.2em 正常大小寫 | 分類標籤、section eyebrow |
+| `overline` | 13 | 1.3 | 600 / 500 | Latin +0.12em 全大寫；CJK +0.2em 正常大小寫 | 分類標籤、section eyebrow |
 | `metric` | 36 | 1.1 | Plex Mono 500 | 0 | 案例數據、KPI 數字 |
 
-規則：**標題用襯線，UI 用無襯線**。中文可讀文字不低於 13px；12px 僅限 Latin 全大寫 overline。文章正文最大行寬 44rem（≈38–42 CJK 字/行）。CJK 行內不加 letter-spacing，Latin run 可加 0.02em。
+規則：**標題用襯線，UI 用無襯線**。中文可讀文字不低於 13px；overline 統一使用 13px，避免中英混排時中文跌穿可讀下限。文章正文最大行寬 44rem（≈38–42 CJK 字/行）。CJK 行內不加 letter-spacing，Latin run 可加 0.02em。
 
 ---
 

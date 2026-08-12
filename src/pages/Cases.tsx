@@ -157,7 +157,7 @@ function SubmitBand() {
   return (
     <section className="border-y bg-surface">
       <Reveal y={16} duration={0.4} className="mx-auto max-w-container px-6 py-16 text-center">
-        <h4 className="font-display text-h4 text-text-primary">
+        <h4 className="font-sans text-h4 text-text-primary">
           你都有實戰成果？
         </h4>
         <p className="mx-auto mt-3 max-w-[520px] text-body-sm text-text-secondary">

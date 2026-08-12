@@ -466,7 +466,7 @@ export default function Account() {
               {!fullPlatformAccess && member.tier === "vip" && "真人導師一對一,新功能優先體驗。"}
             </p>
             {fullPlatformAccess && (
-              <p className="mt-2 font-mono text-[11px] uppercase tracking-[0.12em] text-lime-text">
+              <p className="mt-2 font-mono text-caption uppercase tracking-[0.12em] text-lime-text">
                 Platform owner · Effective access: unrestricted
               </p>
             )}

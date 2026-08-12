@@ -21,6 +21,7 @@ const Skills = lazy(() => import("@/pages/Skills"));
 const Sources = lazy(() => import("@/pages/Sources"));
 const Access = lazy(() => import("@/pages/Access"));
 const Branding = lazy(() => import("@/pages/Branding"));
+const GrowthMarketerGuide = lazy(() => import("@/pages/GrowthMarketerGuide"));
 const UXPreview = lazy(() => import("@/pages/UXPreview"));
 const Placeholder = lazy(() => import("@/pages/Placeholder"));
 const AdminLayout = lazy(() => import("@/components/admin/AdminLayout"));
@@ -62,6 +63,7 @@ function RouteMeta() {
     [/^\/sources/, "情報渠道", "AIGRO 情報渠道 — 公開透明嘅來源牆、數據流程與免費任用方式。"],
     [/^\/skills/, "Skills", "AIGRO Skills — 俾你嘅 AI agent 裝上專業能力。"],
     [/^\/branding/, "品牌指南 Branding", "AIGRO 品牌識別、標誌、色彩、字體、語氣與應用規範。"],
+    [/^\/guides\/100x-ai-growth-marketer/, "100x AI Growth Marketer 公開課程導讀", "AIGRO Class Review：DotAI × EK（ekcheungAI）聯合策劃及教學，由 Company Brand Brain、5 位 AI 員工、多平台內容與 Sales Funnel，走到可持續改善嘅 AI Marketing OS。"],
     [/^\/ux-preview/, "UX Direction Preview", "AIGRO 全站體驗優化概念預覽。"],
     [/^\/access/, "全級別入口", "AIGRO 全級別入口 — 訪客、會員、創始會員、領航專家、管理員示範登入。"],
     [/^\/login/, "登入", "登入 AIGRO Club — 無限分身對話、完整案例拆解、MCP 優先接入。"],
@@ -122,6 +124,7 @@ export default function App() {
         <Route path="developers" element={<Developers />} />
         <Route path="skills" element={<Skills />} />
         <Route path="branding" element={<Branding />} />
+        <Route path="guides/100x-ai-growth-marketer" element={<GrowthMarketerGuide />} />
         <Route path="sources" element={<Sources />} />
         {/* /data 併入 Insights 數據合作 tab — 舊連結 redirect 唔會死 */}
         <Route

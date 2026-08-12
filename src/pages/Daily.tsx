@@ -584,7 +584,7 @@ function DailyListCard({
           <span className="inline-block rounded-sm bg-ink-soft px-3 py-1.5 text-overline font-sans uppercase text-ink">
             {entry.category}
           </span>
-          <h4 className="mt-3 font-display text-h4 text-text-primary transition-colors duration-150 group-hover:text-ink">
+          <h4 className="mt-3 font-sans text-h4 text-text-primary transition-colors duration-150 group-hover:text-ink">
             {entry.title}
           </h4>
           <p className="mt-2 line-clamp-2 text-body-sm text-text-secondary">

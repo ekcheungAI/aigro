@@ -242,7 +242,7 @@ export default function Skills() {
                 </button>
               ))}
             </div>
-            <p className="ml-auto font-mono text-[12px] uppercase tracking-wider text-text-muted">
+            <p className="ml-auto font-mono text-caption uppercase tracking-wider text-text-muted">
               {filtered.length} 個技能
             </p>
           </div>
@@ -261,7 +261,7 @@ export default function Skills() {
           </div>
         ) : (
           <div className="border-y py-16 text-center">
-            <p className="font-mono text-[12px] uppercase tracking-wider text-text-muted">
+            <p className="font-mono text-caption uppercase tracking-wider text-text-muted">
               0 個技能
             </p>
             <p className="mt-3 text-body text-text-secondary">

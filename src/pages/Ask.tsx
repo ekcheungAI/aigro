@@ -866,7 +866,7 @@ export default function Ask() {
                       <p className="text-overline uppercase tracking-[0.12em] text-ink">
                         AIGRO Club
                       </p>
-                      <h4 className="mt-2 font-display text-h4 text-text-primary">
+                      <h4 className="mt-2 font-sans text-h4 text-text-primary">
                         想留住對話紀錄?
                       </h4>
                       <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5">
@@ -952,7 +952,7 @@ export default function Ask() {
                   transition={{ duration: 0.25 }}
                   className="rounded-md border bg-surface p-8 text-center"
                 >
-                  <h4 className="font-display text-h4 text-text-primary">
+                  <h4 className="font-sans text-h4 text-text-primary">
                     {exhaustedScope === "monthly" ? "本月對話額度已用完" : "今日對話額度已用完"}
                   </h4>
                   <p className="mx-auto mt-2 max-w-md text-body-sm text-text-secondary">

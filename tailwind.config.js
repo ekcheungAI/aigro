@@ -124,7 +124,7 @@ module.exports = {
         "body-sm": ["15px", { lineHeight: "1.65", fontWeight: "400" }],
         label: ["14px", { lineHeight: "1.4", letterSpacing: "0.01em", fontWeight: "500" }],
         caption: ["13px", { lineHeight: "1.45", letterSpacing: "0.01em", fontWeight: "400" }],
-        overline: ["12px", { lineHeight: "1.3", letterSpacing: "0.12em", fontWeight: "600" }],
+        overline: ["13px", { lineHeight: "1.3", letterSpacing: "0.12em", fontWeight: "600" }],
         metric: ["36px", { lineHeight: "1.1", fontWeight: "500" }],
       },
       /* Radius (design.md §4): sm 4 / md 8 / lg 12 — no full-round cards */

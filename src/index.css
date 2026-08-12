@@ -186,6 +186,10 @@
     scroll-behavior: smooth;
   }
 
+  html.guide-native-scroll {
+    scroll-behavior: auto;
+  }
+
   body {
     background-color: hsl(var(--bg));
     color: hsl(var(--text-primary));
@@ -252,6 +256,1080 @@
 }
 
 @layer components {
+  /* Course teaching-notes route: measured against the 611 notes page.
+     It uses one 1120px reading canvas, a 696/390 hero, compact panels,
+     16:9 teaching visuals, and conventional browser scrolling. */
+  .course-notes-page {
+    width: calc(100% - 40px);
+    max-width: 1120px;
+    margin-inline: auto;
+    padding-bottom: 44px;
+    font-size: 16px;
+    line-height: 1.72;
+  }
+
+  .course-notes-page h1,
+  .course-notes-page h2,
+  .course-notes-page .font-display {
+    font-family: var(--font-display);
+    font-feature-settings: "palt";
+  }
+
+  .course-notes-page h4 {
+    font-family: var(--font-sans);
+    font-feature-settings: "palt";
+  }
+
+  .course-notes-page h1,
+  .course-notes-page h2,
+  .course-notes-page h3,
+  .course-notes-page h4 {
+    font-weight: 700;
+  }
+
+  .course-guide-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 696px) 390px;
+    gap: 34px;
+    min-height: 589px;
+    padding: 46px 0 28px;
+  }
+
+  .course-guide-hero-copy {
+    min-width: 0;
+  }
+
+  .course-guide-kicker {
+    margin-top: 18px;
+    color: hsl(var(--ink));
+    font-family: var(--font-mono);
+    font-size: 19px;
+    font-weight: 600;
+    line-height: 1.72;
+    letter-spacing: 0.02em;
+  }
+
+  .course-guide-collaboration {
+    width: fit-content;
+    margin: 4px 0 10px;
+    padding: 4px 9px;
+    border-left: 2px solid hsl(var(--ink));
+    color: hsl(var(--text-secondary));
+    font-size: 14px;
+    font-weight: 650;
+    line-height: 1.55;
+  }
+
+  .course-guide-collaboration span {
+    color: hsl(var(--ink));
+  }
+
+  .course-guide-hero h1 {
+    max-width: 696px;
+    margin: 0;
+    color: hsl(var(--text-primary));
+    font-size: 48px;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+
+  .course-guide-lead {
+    max-width: 696px;
+    margin-top: 18px;
+    color: hsl(var(--text-secondary));
+    font-size: 18px;
+    line-height: 1.68;
+  }
+
+  .course-guide-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  .guide-button {
+    display: inline-flex;
+    min-height: 49.5px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1px solid hsl(var(--border-strong));
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 16px;
+    font-weight: 650;
+    line-height: 1.72;
+  }
+
+  .guide-button-primary {
+    border-color: hsl(var(--lime));
+    background: hsl(var(--lime));
+    color: hsl(var(--on-accent));
+  }
+
+  .guide-button-primary:hover {
+    border-color: hsl(var(--lime-hover));
+    background: hsl(var(--lime-hover));
+  }
+
+  .guide-button-secondary {
+    background: hsl(var(--surface));
+    color: hsl(var(--text-primary));
+  }
+
+  .guide-button-secondary:hover {
+    border-color: hsl(var(--ink));
+    color: hsl(var(--ink));
+  }
+
+  .course-guide-poster {
+    width: 390px;
+    height: 487px;
+    margin-top: 14px;
+    overflow: hidden;
+    border: 1px solid hsl(var(--border));
+    border-radius: 8px;
+    background: hsl(var(--card));
+  }
+
+  .course-guide-poster img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+  }
+
+  .notes-panel {
+    margin: 16px 0 24px;
+    padding: 22px;
+    border: 1px solid hsl(var(--border));
+    border-radius: 8px;
+    background: hsl(var(--surface));
+  }
+
+  .notes-panel-title {
+    margin: 0 0 10px;
+    color: hsl(var(--text-primary));
+    font-size: 20px;
+    line-height: 1.45;
+  }
+
+  .notes-panel-intro {
+    margin-bottom: 12px;
+    color: hsl(var(--text-secondary));
+  }
+
+  .guide-link-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 14px;
+  }
+
+  .guide-mini-card {
+    display: flex;
+    min-width: 0;
+    min-height: 158px;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 14px;
+    border: 1px solid hsl(var(--border));
+    border-radius: 8px;
+    background: hsl(var(--bg));
+    color: hsl(var(--text-primary));
+    transition: border-color 160ms ease, background-color 160ms ease;
+  }
+
+  .guide-mini-card:hover {
+    border-color: hsl(var(--ink));
+    background: hsl(var(--card));
+  }
+
+  .guide-mini-card h3 {
+    margin: 0;
+    font-size: 17px;
+    line-height: 1.72;
+  }
+
+  .guide-mini-card p {
+    margin-top: 4px;
+    color: hsl(var(--text-secondary));
+    font-size: 14px;
+    line-height: 1.72;
+  }
+
+  .guide-mini-card-cta {
+    display: flex;
+    min-height: 32px;
+    align-items: center;
+    gap: 6px;
+    margin-top: auto;
+    color: hsl(var(--ink));
+    font-size: 13px;
+    font-weight: 650;
+    line-height: 1.45;
+  }
+
+  .notes-eyebrow {
+    color: hsl(var(--ink));
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.72;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .notes-route-panel {
+    padding: 22px;
+  }
+
+  .notes-route-panel > h2 {
+    max-width: 44rem;
+    margin-top: 7px;
+    color: hsl(var(--text-primary));
+    font-size: 44px;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+
+  .notes-route-intro {
+    max-width: 44rem;
+    margin-top: 10px;
+    color: hsl(var(--text-secondary));
+  }
+
+  .notes-route-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .notes-route-card {
+    min-height: 386px;
+    overflow: hidden;
+    border: 1px solid hsl(var(--border));
+    border-radius: 8px;
+    background: hsl(var(--bg));
+  }
+
+  .notes-route-card > img {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    object-position: top center;
+  }
+
+  .notes-route-card-copy {
+    padding: 10px 14px 14px;
+  }
+
+  .notes-route-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: hsl(var(--ink));
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1.72;
+  }
+
+  .notes-route-card h3 {
+    margin-top: 5px;
+    font-size: 17px;
+    line-height: 1.72;
+  }
+
+  .notes-route-card p {
+    margin-top: 4px;
+    color: hsl(var(--text-secondary));
+    font-size: 14px;
+    line-height: 1.72;
+  }
+
+  .guide-summary {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    min-height: 120px;
+    margin-bottom: 28px;
+    overflow: hidden;
+    border: 1px solid hsl(var(--border));
+    border-radius: 8px;
+    background: hsl(var(--card));
+  }
+
+  .guide-summary > div {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    padding: 16px 18px;
+    border-right: 1px solid hsl(var(--border));
+  }
+
+  .guide-summary > div:last-child {
+    border-right: 0;
+  }
+
+  .guide-summary strong {
+    color: hsl(var(--ink));
+    font-family: var(--font-mono);
+    font-size: 13px;
+  }
+
+  .guide-summary span {
+    color: hsl(var(--text-primary));
+    font-size: 14px;
+    font-weight: 650;
+    line-height: 1.55;
+  }
+
+  .notes-section-head {
+    margin: 38px 0 18px;
+    padding-top: 28px;
+    border-top: 1px solid hsl(var(--border));
+  }
+
+  .notes-section-head h2 {
+    max-width: 44rem;
+    margin-top: 4px;
+    color: hsl(var(--text-primary));
+    font-size: 42px;
+    line-height: 1.14;
+    letter-spacing: -0.018em;
+  }
+
+  .notes-section-copy {
+    max-width: 44rem;
+    margin-top: 10px;
+    color: hsl(var(--text-secondary));
+  }
+
+  .guide-facts-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border-top: 1px solid hsl(var(--border));
+    border-left: 1px solid hsl(var(--border));
+  }
+
+  .guide-fact {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 3px 10px;
+    min-height: 94px;
+    align-content: center;
+    padding: 14px;
+    border-right: 1px solid hsl(var(--border));
+    border-bottom: 1px solid hsl(var(--border));
+    background: hsl(var(--bg));
+  }
+
+  .guide-fact span {
+    color: hsl(var(--text-muted));
+    font-size: 13px;
+  }
+
+  .guide-fact strong {
+    grid-column: 2;
+    font-size: 16px;
+  }
+
+  .guide-team-block {
+    display: grid;
+    grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr);
+    gap: 34px;
+    margin-top: 30px;
+    padding-top: 28px;
+    border-top: 1px solid hsl(var(--border));
+  }
+
+  .guide-team-block h3 {
+    margin-top: 5px;
+    font-size: 26px;
+    line-height: 1.25;
+  }
+
+  .guide-team-block > div > p:last-child {
+    margin-top: 10px;
+    color: hsl(var(--text-secondary));
+  }
+
+  .guide-team-block ol {
+    border-top: 1px solid hsl(var(--border));
+    border-left: 1px solid hsl(var(--border));
+  }
+
+  .guide-team-block li {
+    display: grid;
+    grid-template-columns: 42px minmax(150px, 0.7fr) minmax(0, 1.3fr);
+    align-items: center;
+    gap: 12px;
+    min-height: 64px;
+    padding: 10px 12px;
+    border-right: 1px solid hsl(var(--border));
+    border-bottom: 1px solid hsl(var(--border));
+  }
+
+  .guide-team-block li > span {
+    color: hsl(var(--ink));
+    font-family: var(--font-mono);
+    font-size: 13px;
+  }
+
+  .guide-team-block li strong {
+    font-size: 14px;
+  }
+
+  .guide-team-block li p {
+    color: hsl(var(--text-secondary));
+    font-size: 14px;
+    line-height: 1.55;
+  }
+
+  .notes-table-panel {
+    overflow: hidden;
+  }
+
+  .notes-table-scroll {
+    overflow-x: auto;
+    scrollbar-gutter: stable;
+  }
+
+  .notes-table-scroll:focus-visible {
+    border-radius: 4px;
+  }
+
+  .notes-table-panel table {
+    width: 100%;
+    min-width: 860px;
+    border-collapse: collapse;
+    background: hsl(var(--surface));
+    text-align: left;
+  }
+
+  .notes-table-panel th {
+    padding: 12px 14px;
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--card));
+    color: hsl(var(--text-muted));
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.72;
+  }
+
+  .notes-table-panel td {
+    padding: 12px 14px;
+    border: 1px solid hsl(var(--border));
+    color: hsl(var(--text-secondary));
+    font-size: 16px;
+    line-height: 1.72;
+    vertical-align: top;
+  }
+
+  .notes-table-panel td:first-child {
+    width: 13%;
+    color: hsl(var(--ink));
+    font-family: var(--font-mono);
+  }
+
+  .notes-table-panel td:nth-child(2) {
+    width: 22%;
+    color: hsl(var(--text-primary));
+  }
+
+  .guide-lesson {
+    margin: 24px 0 34px;
+    padding: 24px;
+    border: 1px solid hsl(var(--border));
+    border-radius: 8px;
+    background: hsl(var(--surface) / 0.88);
+  }
+
+  .guide-lesson-label {
+    color: hsl(var(--ink));
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.72;
+    letter-spacing: 0.04em;
+  }
+
+  .guide-lesson > h3 {
+    margin-top: 4px;
+    color: hsl(var(--text-primary));
+    font-size: 32px;
+    line-height: 1.22;
+  }
+
+  .guide-lesson-thesis {
+    max-width: 44rem;
+    margin-top: 10px;
+    color: hsl(var(--text-secondary));
+  }
+
+  .guide-lesson-visuals {
+    display: grid;
+    gap: 14px;
+    width: min(100%, 40rem);
+    margin: 16px auto 0;
+    padding: 12px;
+    border-radius: 8px;
+    background: hsl(var(--bg));
+  }
+
+  .guide-lesson-visuals figure {
+    overflow: hidden;
+    border: 1px solid hsl(var(--border));
+    border-radius: 8px;
+    background: hsl(var(--surface));
+  }
+
+  .guide-lesson-visuals img {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+  }
+
+  .guide-lesson-image-top {
+    object-position: top center;
+  }
+
+  .guide-lesson-image-bottom {
+    object-position: center 78%;
+  }
+
+  .guide-lesson-visuals figcaption,
+  .guide-outcomes-panel figcaption {
+    min-height: 40px;
+    padding: 8px 12px;
+    border-top: 1px solid hsl(var(--border));
+    color: hsl(var(--text-muted));
+    font-size: 13px;
+    line-height: 1.72;
+  }
+
+  .guide-lesson-notes {
+    max-width: 44rem;
+    margin-top: 16px;
+  }
+
+  .guide-lesson-notes h4 {
+    margin: 18px 0 6px;
+    font-size: 17px;
+    line-height: 1.72;
+  }
+
+  .guide-lesson-notes > h4:first-child {
+    margin-top: 0;
+  }
+
+  .guide-lesson-notes > p,
+  .guide-action-grid p {
+    color: hsl(var(--text-secondary));
+  }
+
+  .guide-check-list {
+    display: grid;
+    gap: 8px;
+  }
+
+  .guide-check-list li {
+    display: flex;
+    gap: 10px;
+    color: hsl(var(--text-secondary));
+    font-size: 16px;
+    line-height: 1.72;
+  }
+
+  .guide-check-icon {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 auto;
+    margin-top: 6px;
+    color: hsl(var(--ink));
+  }
+
+  .guide-action-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 20px;
+  }
+
+  .guide-action-grid section {
+    padding: 16px;
+    border: 1px solid hsl(var(--border));
+    border-radius: 8px;
+    background: hsl(var(--bg));
+  }
+
+  .guide-action-grid h4 {
+    margin-top: 8px;
+  }
+
+  .guide-system-steps {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+
+  .guide-system-steps li {
+    position: relative;
+    min-height: 152px;
+    padding: 14px;
+    border: 1px solid hsl(var(--border));
+    border-right: 0;
+    background: hsl(var(--bg));
+  }
+
+  .guide-system-steps li:last-child {
+    border-right: 1px solid hsl(var(--border));
+  }
+
+  .guide-system-steps li > div {
+    display: flex;
+    justify-content: space-between;
+    color: hsl(var(--text-muted));
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+
+  .guide-system-steps strong {
+    display: block;
+    margin-top: 22px;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .guide-system-steps p {
+    margin-top: 5px;
+    color: hsl(var(--text-secondary));
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .guide-system-arrow {
+    position: absolute;
+    z-index: 1;
+    top: 50%;
+    right: -9px;
+    width: 17px;
+    height: 17px;
+    color: hsl(var(--ink));
+  }
+
+  .guide-outcomes-panel > figure {
+    width: min(100%, 40rem);
+    margin-inline: auto;
+    overflow: hidden;
+    border: 1px solid hsl(var(--border));
+    border-radius: 8px;
+  }
+
+  .guide-outcomes-panel > figure img {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    object-position: top center;
+  }
+
+  .guide-outcomes-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 14px;
+  }
+
+  .guide-outcomes-grid > section {
+    padding: 18px;
+    border: 1px solid hsl(var(--border));
+    border-radius: 8px;
+    background: hsl(var(--bg));
+  }
+
+  .guide-outcomes-grid h3,
+  .guide-instructors h3,
+  .guide-course-info h3 {
+    margin: 5px 0 14px;
+    font-size: 24px;
+    line-height: 1.3;
+  }
+
+  .guide-outcomes-grid dl {
+    border-top: 1px solid hsl(var(--border));
+  }
+
+  .guide-outcomes-grid dl > div {
+    display: grid;
+    grid-template-columns: 0.45fr 1fr;
+    gap: 12px;
+    padding: 9px 0;
+    border-bottom: 1px solid hsl(var(--border));
+  }
+
+  .guide-outcomes-grid dt {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .guide-outcomes-grid dd {
+    color: hsl(var(--text-secondary));
+    font-size: 14px;
+  }
+
+  .guide-instructors {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .guide-instructors article {
+    padding: 18px;
+    border: 1px solid hsl(var(--border));
+    border-radius: 8px;
+    background: hsl(var(--bg));
+  }
+
+  .guide-instructors article > span {
+    display: flex;
+    width: 48px;
+    height: 48px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid hsl(var(--ink));
+    border-radius: 999px;
+    color: hsl(var(--ink));
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 650;
+  }
+
+  .guide-instructors article > strong {
+    color: hsl(var(--ink));
+    font-size: 14px;
+  }
+
+  .guide-instructors article > p {
+    margin-top: 10px;
+    color: hsl(var(--text-secondary));
+  }
+
+  .guide-course-info {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: 16px;
+  }
+
+  .guide-course-info > div,
+  .guide-course-info > aside {
+    padding: 18px;
+    border: 1px solid hsl(var(--border));
+    border-radius: 8px;
+    background: hsl(var(--bg));
+  }
+
+  .guide-price {
+    margin-top: 8px;
+    color: hsl(var(--text-primary));
+    font-family: var(--font-mono);
+    font-size: 40px;
+    font-weight: 650;
+    line-height: 1.2;
+  }
+
+  .guide-old-price {
+    margin: 4px 0 8px;
+    color: hsl(var(--text-muted));
+    text-decoration: line-through;
+  }
+
+  .guide-price-note {
+    margin-top: 10px;
+    color: hsl(var(--text-muted));
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .guide-course-info aside dl {
+    margin: 14px 0;
+    border-block: 1px solid hsl(var(--border));
+  }
+
+  .guide-course-info aside dl > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 9px 0;
+  }
+
+  .guide-course-info dt {
+    color: hsl(var(--text-secondary));
+  }
+
+  .guide-course-info dd {
+    font-weight: 650;
+    text-align: right;
+  }
+
+  .guide-faq {
+    display: grid;
+    grid-template-columns: 0.34fr 0.66fr;
+    gap: 28px;
+  }
+
+  .guide-faq details {
+    border-top: 1px solid hsl(var(--border));
+  }
+
+  .guide-faq details:last-child {
+    border-bottom: 1px solid hsl(var(--border));
+  }
+
+  .guide-faq summary {
+    display: flex;
+    min-height: 64px;
+    cursor: pointer;
+    list-style: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    font-size: 17px;
+    font-weight: 650;
+  }
+
+  .guide-faq summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .guide-faq details p {
+    padding-bottom: 16px;
+    color: hsl(var(--text-secondary));
+  }
+
+  .guide-next-step {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 30px;
+    margin-top: 34px;
+    padding: 28px;
+    border: 1px solid hsl(var(--border));
+    border-radius: 8px;
+    background: hsl(var(--card));
+  }
+
+  .guide-next-step h2 {
+    max-width: 780px;
+    margin-top: 5px;
+    font-size: 36px;
+    line-height: 1.2;
+  }
+
+  .guide-next-step p:last-child {
+    max-width: 44rem;
+    margin-top: 10px;
+    color: hsl(var(--text-secondary));
+  }
+
+  .guide-source-note {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    margin-top: 24px;
+    padding: 18px 0 0 18px;
+    border-top: 1px solid hsl(var(--border));
+    border-left: 2px solid hsl(var(--ink));
+    color: hsl(var(--text-muted));
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .guide-source-note a {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    flex: 0 0 auto;
+    color: hsl(var(--ink));
+    font-weight: 650;
+  }
+
+  @media (max-width: 899px) {
+    .course-guide-hero {
+      grid-template-columns: 1fr;
+      min-height: 0;
+      padding-bottom: 40px;
+    }
+
+    .course-guide-hero h1 {
+      font-size: 42px;
+    }
+
+    .course-guide-poster {
+      width: min(100%, 390px);
+      height: auto;
+      aspect-ratio: 4 / 5;
+      margin: 0 auto;
+    }
+
+    .notes-route-panel > h2,
+    .notes-section-head h2 {
+      font-size: 36px;
+    }
+
+    .guide-link-grid,
+    .notes-route-grid,
+    .guide-facts-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .notes-route-card:last-child {
+      grid-column: 1 / -1;
+    }
+
+    .guide-summary {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .guide-summary > div:nth-child(2) {
+      border-right: 0;
+    }
+
+    .guide-summary > div:nth-child(-n + 2) {
+      border-bottom: 1px solid hsl(var(--border));
+    }
+
+    .guide-team-block,
+    .guide-course-info,
+    .guide-faq {
+      grid-template-columns: 1fr;
+    }
+
+    .guide-system-steps {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .guide-system-steps li,
+    .guide-system-steps li:last-child {
+      border: 1px solid hsl(var(--border));
+    }
+
+    .guide-system-arrow {
+      display: none;
+    }
+  }
+
+  @media (max-width: 639px) {
+    .guide-site-header-inner,
+    .course-notes-page {
+      width: calc(100% - 28px);
+    }
+
+    .course-guide-hero {
+      gap: 28px;
+      padding-top: 28px;
+    }
+
+    .course-guide-kicker,
+    .course-guide-lead {
+      font-size: 17px;
+    }
+
+    .course-guide-hero h1 {
+      font-size: 34px;
+      line-height: 1.14;
+    }
+
+    .course-guide-actions {
+      display: grid;
+    }
+
+    .course-guide-poster {
+      width: min(100%, 320px);
+    }
+
+    .guide-button {
+      width: 100%;
+    }
+
+    .guide-link-grid,
+    .notes-route-grid,
+    .guide-facts-grid,
+    .guide-outcomes-grid,
+    .guide-instructors,
+    .guide-action-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .guide-mini-card {
+      min-height: 152px;
+    }
+
+    .notes-route-card:last-child {
+      grid-column: auto;
+    }
+
+    .notes-panel,
+    .notes-route-panel,
+    .guide-lesson {
+      padding: 16px;
+    }
+
+    .notes-route-panel > h2,
+    .notes-section-head h2 {
+      font-size: 30px;
+      line-height: 1.18;
+    }
+
+    .notes-section-head {
+      margin-top: 30px;
+      padding-top: 22px;
+    }
+
+    .guide-team-block li {
+      grid-template-columns: 34px 1fr;
+    }
+
+    .guide-team-block li p {
+      grid-column: 2;
+    }
+
+    .guide-lesson > h3 {
+      font-size: 27px;
+      line-height: 1.25;
+    }
+
+    .guide-lesson-visuals {
+      padding: 8px;
+    }
+
+    .guide-system-steps {
+      grid-template-columns: 1fr;
+    }
+
+    .guide-system-steps li {
+      min-height: 120px;
+    }
+
+    .guide-next-step {
+      grid-template-columns: 1fr;
+      padding: 20px;
+    }
+
+    .guide-next-step h2 {
+      font-size: 28px;
+    }
+
+    .guide-source-note {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+  }
+
   /* Hairline card chrome shared by content cards.
      180ms (≤300ms UI cap) + strong ease-out for transform hovers. */
   .card-hover {

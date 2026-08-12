@@ -716,7 +716,7 @@ function HotSignalsSection() {
           >
             <article className="py-6">
               <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-                <h4 className="font-display text-h4 text-text-primary">
+                <h4 className="font-sans text-h4 text-text-primary">
                   <a
                     href={topic.permalink}
                     target="_blank"
@@ -1199,7 +1199,7 @@ function WeeklyTab() {
                     {String(num).padStart(2, "0")}
                   </span>
                   <div className="min-w-0">
-                    <h4 className="font-display text-h4 text-text-primary transition-colors duration-150 group-hover:text-ink">
+                    <h4 className="font-sans text-h4 text-text-primary transition-colors duration-150 group-hover:text-ink">
                       {entry.title}
                     </h4>
                     <p className="mt-2 line-clamp-2 text-body-sm text-text-secondary">

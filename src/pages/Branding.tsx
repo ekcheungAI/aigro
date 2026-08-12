@@ -202,7 +202,7 @@ function CopyHex({ hex, name }: { hex: string; name: string }) {
       ) : (
         <Copy className="h-3.5 w-3.5" strokeWidth={1.5} aria-hidden="true" />
       )}
-      <span className="font-mono text-[12px]">{copied ? "已複製" : hex}</span>
+      <span className="font-mono text-caption">{copied ? "已複製" : hex}</span>
     </button>
   );
 }
@@ -303,7 +303,7 @@ export default function Branding() {
                     className="aspect-[16/10] w-full object-cover"
                   />
                   <figcaption className="flex items-center justify-between gap-4 border-t border-border bg-surface px-5 py-4">
-                    <span className="font-mono text-[11px] uppercase tracking-wider text-lime-text">
+                    <span className="font-mono text-caption uppercase tracking-wider text-lime-text">
                       {thumbnail.label}
                     </span>
                     <span className="text-caption text-text-muted">{thumbnail.title}</span>

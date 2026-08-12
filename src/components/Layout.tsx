@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
  */
 export default function Layout() {
   const { pathname } = useLocation();
+  const isCourseNotes = pathname.startsWith("/guides/");
   const isFocusedFlow =
     pathname.startsWith("/ask") ||
     pathname === "/login" ||
@@ -30,6 +31,7 @@ export default function Layout() {
 
   // Lenis smooth scroll (design.md §5.3); disabled under prefers-reduced-motion (§5.4)
   useEffect(() => {
+    if (isCourseNotes) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const lenis = new Lenis({ lerp: 0.1 });
     let rafId = 0;
@@ -42,7 +44,15 @@ export default function Layout() {
       cancelAnimationFrame(rafId);
       lenis.destroy();
     };
-  }, []);
+  }, [isCourseNotes]);
+
+  // Long-form teaching notes use conventional browser scrolling. This keeps
+  // wheel, trackpad, keyboard, and anchor navigation aligned with normal sites.
+  useEffect(() => {
+    if (!isCourseNotes) return;
+    document.documentElement.classList.add("guide-native-scroll");
+    return () => document.documentElement.classList.remove("guide-native-scroll");
+  }, [isCourseNotes]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -65,7 +75,7 @@ export default function Layout() {
       <main id="main-content" tabIndex={-1} className="flex-1 outline-none">
         <Outlet />
       </main>
-      {!isFocusedFlow && <Newsletter />}
+      {!isFocusedFlow && !isCourseNotes && <Newsletter />}
       {!isFocusedFlow && <Footer />}
       {showMobileAppNav && <MobileAppNav />}
     </div>

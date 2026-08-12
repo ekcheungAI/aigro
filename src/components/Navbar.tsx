@@ -321,7 +321,7 @@ export default function Navbar() {
         </div>
       </header>
 
-      {/* Mobile full-screen drawer (design.md §6.1: overlay bg, big serif links, 80ms stagger) */}
+      {/* Mobile full-screen drawer (design.md §6.1: solid overlay, big serif links, 80ms stagger) */}
       <AnimatePresence>
         {drawerOpen && (
           <motion.div
@@ -331,7 +331,7 @@ export default function Navbar() {
             aria-modal="true"
             aria-label="主選單"
             tabIndex={-1}
-            className="fixed inset-0 z-[60] flex flex-col bg-overlay/95 lg:hidden"
+            className="fixed inset-0 z-[60] flex flex-col overscroll-contain bg-overlay lg:hidden"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -374,10 +374,7 @@ export default function Navbar() {
                       to={link.to}
                       onClick={closeDrawer}
                       className={({ isActive }) =>
-                        cn(
-                          "block py-3 font-display text-h2 text-text-primary",
-                          isActive && "text-ink"
-                        )
+                        `block py-3 font-display text-h2 ${isActive ? "text-ink" : "text-text-primary"}`
                       }
                     >
                       {link.en} {link.zh}
