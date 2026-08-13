@@ -1244,8 +1244,6 @@ interface SectorDef {
   /** 芯片顯示名（如「AI 情報」「Beauty 美妝」） */
   name: string;
   icon: LucideIcon;
-  /** editorial 圖示（有即用 <img>,無 fallback 去 lucide icon） */
-  iconSrc?: string;
   live: boolean;
 }
 
@@ -1258,49 +1256,42 @@ const SECTORS: SectorDef[] = [
     key: "ai",
     name: "AI 情報",
     icon: Radar,
-    iconSrc: "/editorial/icon-ai.png",
     live: true,
   },
   {
     key: "beauty",
     name: "Beauty 美妝",
     icon: Flower2,
-    iconSrc: "/editorial/icon-beauty.png",
     live: false,
   },
   {
     key: "tech",
     name: "Technology 科技",
     icon: Cpu,
-    iconSrc: "/editorial/icon-technology.png",
     live: false,
   },
   {
     key: "finance",
     name: "Finance 金融",
     icon: Landmark,
-    iconSrc: "/editorial/icon-finance.png",
     live: false,
   },
   {
     key: "property",
     name: "Property 地產",
     icon: Building2,
-    iconSrc: "/editorial/icon-property.png",
     live: false,
   },
   {
     key: "retail",
     name: "Retail 零售",
     icon: ShoppingBag,
-    iconSrc: "/editorial/icon-retail.png",
     live: false,
   },
   {
     key: "more",
     name: "更多行業",
     icon: Plus,
-    iconSrc: "/editorial/icon-more.png",
     live: false,
   },
 ];
@@ -1520,34 +1511,21 @@ export default function Insights() {
                   onClick={() => selectSector(s.key)}
                   aria-pressed={isActive}
                   className={cn(
-                    "press inline-flex shrink-0 snap-start items-center gap-2.5 rounded-md border px-4 py-3 text-label transition-colors duration-150",
+                    "press relative inline-flex h-[52px] shrink-0 snap-start items-center gap-3 overflow-hidden rounded-md border bg-surface px-3.5 text-label transition-colors duration-150",
                     isActive
-                      ? "border-transparent bg-ink-solid text-on-accent"
+                      ? "border-ink text-text-primary"
                       : "border-border-strong bg-surface text-ink hover:border-ink"
                   )}
                 >
-                  {s.iconSrc ? (
-                    <img
-                      src={s.iconSrc}
-                      alt={`${s.name}圖標`}
-                      loading="lazy"
-                      className="h-10 w-10"
-                    />
-                  ) : (
-                    <Icon
-                      className="h-4 w-4"
-                      strokeWidth={1.5}
-                      aria-hidden="true"
-                    />
+                  {isActive && (
+                    <span className="absolute inset-y-0 left-0 w-1 bg-ink-solid" aria-hidden="true" />
                   )}
-                  {s.name}
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm bg-ink-soft text-ink">
+                    <Icon className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+                  </span>
+                  <span className="whitespace-nowrap">{s.name}</span>
                   <span
-                    className={cn(
-                      "rounded-sm px-1.5 py-0.5 text-overline font-sans uppercase",
-                      isActive
-                        ? "bg-on-accent/10 text-on-accent"
-                        : "bg-ink-soft text-ink"
-                    )}
+                    className="rounded-sm bg-ink-soft px-1.5 py-1 font-mono text-[10px] font-medium uppercase leading-none tracking-[0.08em] text-ink"
                   >
                     {isLive ? "Live" : isArchive ? "歷史快照" : "已開放"}
                   </span>
@@ -1564,33 +1542,24 @@ export default function Insights() {
                 aria-expanded={s.key === "more" ? mobileSectorsOpen : undefined}
                 aria-controls={s.key === "more" ? "sector-options" : undefined}
                 className={cn(
-                  "press inline-flex shrink-0 snap-start items-center gap-2.5 rounded-md border border-dashed px-4 py-3 text-label transition-[color,opacity] duration-150",
+                  "press inline-flex h-[52px] shrink-0 snap-start items-center gap-3 rounded-md border border-dashed px-3.5 text-label transition-[color,opacity] duration-150",
                   s.key !== "more" && !mobileSectorsOpen && "hidden",
                   isActive
                     ? "border-border-strong bg-surface text-text-secondary"
-                    : "border-border-strong text-text-muted opacity-60 hover:text-text-secondary hover:opacity-100"
+                    : "border-border-strong bg-transparent text-text-muted opacity-70 hover:bg-surface hover:text-text-secondary hover:opacity-100"
                 )}
               >
-                {s.iconSrc ? (
-                  <img
-                    src={s.iconSrc}
-                    alt={`${s.name}圖標`}
-                    loading="lazy"
-                    className="h-10 w-10 opacity-40 grayscale"
-                  />
-                ) : (
-                  <Icon
-                    className="h-4 w-4"
-                    strokeWidth={1.5}
-                    aria-hidden="true"
-                  />
-                )}
-                {s.key === "more"
-                  ? mobileSectorsOpen
-                    ? "收起行業路線圖"
-                    : "行業路線圖"
-                  : s.name}
-                <span className="rounded-sm border border-current px-1.5 py-0.5 text-overline font-sans">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm border border-border text-text-muted">
+                  <Icon className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+                </span>
+                <span className="whitespace-nowrap">
+                  {s.key === "more"
+                    ? mobileSectorsOpen
+                      ? "收起行業路線圖"
+                      : "行業路線圖"
+                    : s.name}
+                </span>
+                <span className="rounded-sm border border-current px-1.5 py-1 font-mono text-[10px] font-medium leading-none tracking-[0.06em]">
                   {s.key === "more" ? "規劃" : "情報即將推出"}
                 </span>
               </button>
