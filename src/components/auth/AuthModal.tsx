@@ -14,6 +14,7 @@ import {
   savePendingProfile,
   resendSignupConfirmation,
   sendPasswordReset,
+  signInWithGoogle,
   signUpWithPassword,
   validEmail,
 } from "@/components/auth/member";
@@ -57,6 +58,7 @@ export default function AuthModal() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [state, setState] = useState<SubmitState>("idle");
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [sentKind, setSentKind] = useState<SentKind>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [resendSeconds, setResendSeconds] = useState(0);
@@ -77,6 +79,7 @@ export default function AuthModal() {
 
   const close = () => {
     setState("idle");
+    setGoogleLoading(false);
     setSentKind(null);
     setMessage(null);
     setErrors({});
@@ -88,6 +91,7 @@ export default function AuthModal() {
 
   const switchMode = (nextMode: AuthMode) => {
     setState("idle");
+    setGoogleLoading(false);
     setSentKind(null);
     setMessage(null);
     setErrors({});
@@ -189,6 +193,22 @@ export default function AuthModal() {
     setMessage(`如果帳號有效，重設密碼電郵會發送至 ${email.trim()}`);
   };
 
+  const handleGoogle = async () => {
+    if (!supabaseReady || state === "loading" || googleLoading) return;
+    setErrors({});
+    setMessage(null);
+    setGoogleLoading(true);
+    const result = await signInWithGoogle(nextPath);
+    if (!result.ok) {
+      setGoogleLoading(false);
+      setMessage(
+        result.error === "offline"
+          ? "Google 登入暫時未開放，請改用 Email。"
+          : "暫時未能連接 Google，請稍後再試。"
+      );
+    }
+  };
+
   const handleResendConfirmation = async () => {
     if (resendSeconds > 0 || state === "loading") return;
     setState("loading");
@@ -264,8 +284,8 @@ export default function AuthModal() {
             </DialogTitle>
             <DialogDescription id="auth-modal-description" className="mt-2 text-body-sm text-text-secondary">
               {mode === "join"
-                ? "用 Email 註冊，所有新會員預設為免費會員。"
-                : "輸入 Email 和密碼繼續。"}
+                ? "使用 Google 或 Email 建立帳號，所有新會員預設為免費會員。"
+                : "使用 Google，或者輸入 Email 和密碼繼續。"}
             </DialogDescription>
 
             {state === "sent" ? (
@@ -301,29 +321,47 @@ export default function AuthModal() {
                 )}
               </div>
             ) : (
-              <form onSubmit={mode === "join" ? handleJoin : handleLogin} className="grid gap-4" noValidate>
-                {mode === "join" && (
+              <div>
+                <button
+                  type="button"
+                  onClick={handleGoogle}
+                  disabled={!supabaseReady || state === "loading" || googleLoading}
+                  className="press mt-6 inline-flex h-12 w-full items-center justify-center rounded-md border border-border-strong bg-surface px-5 text-label text-text-primary transition-colors duration-150 hover:border-ink hover:text-ink disabled:opacity-50"
+                >
+                  {googleLoading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin motion-reduce:animate-none" strokeWidth={1.5} aria-hidden="true" />
+                  ) : null}
+                  {mode === "join" ? "使用 Google 免費加入" : "使用 Google 登入"}
+                </button>
+
+                <div className="my-5 flex items-center gap-3 text-caption text-text-muted" aria-hidden="true">
+                  <span className="h-px flex-1 bg-border" />
+                  <span>或者使用 Email</span>
+                  <span className="h-px flex-1 bg-border" />
+                </div>
+
+                <form onSubmit={mode === "join" ? handleJoin : handleLogin} className="grid gap-4" noValidate>
+                  {mode === "join" && (
+                    <Field
+                      id="auth-name"
+                      label="顯示名稱"
+                      autoComplete="name"
+                      placeholder="你的名稱"
+                      value={name}
+                      error={errors.name}
+                      onChange={(event) => setName(event.target.value)}
+                    />
+                  )}
                   <Field
-                    id="auth-name"
-                    label="顯示名稱"
-                    autoComplete="name"
-                    placeholder="你的名稱"
-                    value={name}
-                    error={errors.name}
-                    onChange={(event) => setName(event.target.value)}
+                    id="auth-email"
+                    label="Email"
+                    type="email"
+                    autoComplete="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    error={errors.email}
+                    onChange={(event) => setEmail(event.target.value)}
                   />
-                )}
-                <Field
-                  id="auth-email"
-                  label="Email"
-                  type="email"
-                  autoComplete="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  error={errors.email}
-                  onChange={(event) => setEmail(event.target.value)}
-                />
-                {(mode === "login" || mode === "join") && (
                   <Field
                     id="auth-password"
                     label="密碼"
@@ -336,33 +374,33 @@ export default function AuthModal() {
                     error={errors.password}
                     onChange={(event) => setPassword(event.target.value)}
                   />
-                )}
 
-                {message && <p className="text-caption text-text-muted" role="status">{message}</p>}
+                  {message && <p className="text-caption text-text-muted" role="status">{message}</p>}
 
-                <button
-                  type="submit"
-                  disabled={state === "loading" || (mode === "login" && !supabaseReady)}
-                  className="press mt-2 inline-flex h-12 items-center justify-center gap-2 rounded-md bg-lime px-5 text-label text-on-accent hover:bg-lime-hover disabled:opacity-60"
-                >
-                  {state === "loading" ? (
-                    <Loader2 className="h-4 w-4 animate-spin motion-reduce:animate-none" strokeWidth={1.5} aria-hidden="true" />
-                  ) : null}
-                  {state === "loading" ? "處理中…" : mode === "join" ? "建立免費帳號" : "登入"}
-                  {state !== "loading" && <ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />}
-                </button>
-
-                {mode === "login" && (
                   <button
-                    type="button"
-                    onClick={handleForgotPassword}
-                    disabled={state === "loading"}
-                    className="press justify-self-start text-caption text-ink underline decoration-ink/35 underline-offset-4 hover:decoration-ink disabled:opacity-60"
+                    type="submit"
+                    disabled={state === "loading" || googleLoading || (mode === "login" && !supabaseReady)}
+                    className="press mt-2 inline-flex h-12 items-center justify-center gap-2 rounded-md bg-lime px-5 text-label text-on-accent hover:bg-lime-hover disabled:opacity-60"
                   >
-                    忘記密碼？
+                    {state === "loading" ? (
+                      <Loader2 className="h-4 w-4 animate-spin motion-reduce:animate-none" strokeWidth={1.5} aria-hidden="true" />
+                    ) : null}
+                    {state === "loading" ? "處理中…" : mode === "join" ? "建立免費帳號" : "登入"}
+                    {state !== "loading" && <ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />}
                   </button>
-                )}
-              </form>
+
+                  {mode === "login" && (
+                    <button
+                      type="button"
+                      onClick={handleForgotPassword}
+                      disabled={state === "loading"}
+                      className="press justify-self-start text-caption text-ink underline decoration-ink/35 underline-offset-4 hover:decoration-ink disabled:opacity-60"
+                    >
+                      忘記密碼？
+                    </button>
+                  )}
+                </form>
+              </div>
             )}
 
             <p className="mt-6 border-t border-border pt-5 text-caption leading-relaxed text-text-muted">
