@@ -3,10 +3,14 @@ import type { FormEvent } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowRight,
-  Check,
+  BadgeCheck,
   Loader2,
   Mail,
+  MessagesSquare,
+  Network,
+  Rocket,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import Field from "@/components/auth/Field";
 import {
   DEFAULT_NOTIFICATIONS,
@@ -31,11 +35,34 @@ type AuthMode = "join" | "login";
 type SubmitState = "idle" | "loading" | "sent" | "success";
 type SentKind = "confirmation" | "reset" | null;
 
-const MEMBER_BENEFITS = [
-  "YouTube 直播重溫",
-  "完整課堂筆記",
-  "AIGRO 會員內容更新",
-] as const;
+interface FoundingBenefit {
+  title: string;
+  description: string;
+  icon: LucideIcon;
+}
+
+const FOUNDING_MEMBER_BENEFITS: FoundingBenefit[] = [
+  {
+    title: "創始會員身份",
+    description: "專屬標記、限定禮遇及早鳥福利",
+    icon: BadgeCheck,
+  },
+  {
+    title: "首批 Beta 體驗",
+    description: "優先試用 Ask 與 Experts",
+    icon: Rocket,
+  },
+  {
+    title: "免費 MCP 使用權",
+    description: "優先連接 AIGRO MCP Network",
+    icon: Network,
+  },
+  {
+    title: "導師 Live Chat",
+    description: "與導師直接交流及即時答疑",
+    icon: MessagesSquare,
+  },
+];
 
 function safeNext(value: string | null, fallback: string): string {
   return value?.startsWith("/") && !value.startsWith("//") ? value : fallback;
@@ -70,7 +97,7 @@ export default function AuthModal() {
   const [errors, setErrors] = useState<{ name?: string; email?: string; password?: string }>({});
 
   const modalTitle = useMemo(
-    () => (mode === "join" ? "建立免費帳號" : "登入 AIGRO"),
+    () => (mode === "join" ? "免費建立創始會員帳號" : "登入 AIGRO"),
     [mode]
   );
   useEffect(() => {
@@ -121,8 +148,9 @@ export default function AuthModal() {
       email: email.trim(),
       interests: [],
       persona: null,
-      role: "free" as const,
+      role: "founding" as const,
       tier: "free" as const,
+      foundingMember: true,
       joinedAt: 0,
       notifications: { ...DEFAULT_NOTIFICATIONS },
       ...(supabaseReady ? {} : { demo: true as const }),
@@ -231,10 +259,10 @@ export default function AuthModal() {
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && close()}>
       <DialogContent
         aria-describedby="auth-modal-description"
-        className="data-[state=closed]:!animate-none data-[state=open]:!animate-none max-h-[min(92dvh,760px)] w-[calc(100%-24px)] !max-w-[760px] gap-0 overflow-y-auto border-border bg-surface p-0 shadow-card dark:shadow-none [&_[data-slot=dialog-close]]:right-4 [&_[data-slot=dialog-close]]:top-4 [&_[data-slot=dialog-close]]:flex [&_[data-slot=dialog-close]]:h-9 [&_[data-slot=dialog-close]]:w-9 [&_[data-slot=dialog-close]]:items-center [&_[data-slot=dialog-close]]:justify-center [&_[data-slot=dialog-close]]:rounded-md [&_[data-slot=dialog-close]]:border [&_[data-slot=dialog-close]]:border-border [&_[data-slot=dialog-close]]:bg-surface sm:[&_[data-slot=dialog-close]]:right-5 sm:[&_[data-slot=dialog-close]]:top-5"
+        className="data-[state=closed]:!animate-none data-[state=open]:!animate-none max-h-[min(94dvh,760px)] w-[calc(100%-24px)] !max-w-[1040px] gap-0 overflow-y-auto border-border bg-surface p-0 shadow-card dark:shadow-none [&_[data-slot=dialog-close]]:right-4 [&_[data-slot=dialog-close]]:top-4 [&_[data-slot=dialog-close]]:flex [&_[data-slot=dialog-close]]:h-9 [&_[data-slot=dialog-close]]:w-9 [&_[data-slot=dialog-close]]:items-center [&_[data-slot=dialog-close]]:justify-center [&_[data-slot=dialog-close]]:rounded-md [&_[data-slot=dialog-close]]:border [&_[data-slot=dialog-close]]:border-border [&_[data-slot=dialog-close]]:bg-surface sm:[&_[data-slot=dialog-close]]:right-5 sm:[&_[data-slot=dialog-close]]:top-5"
       >
-        <div className="grid md:grid-cols-[240px_1fr]">
-          <aside className="flex flex-col justify-between border-b border-logo-paper/10 bg-logo-navy p-4 text-logo-paper sm:p-5 md:min-h-[620px] md:border-b-0 md:border-r md:p-7">
+        <div className="grid lg:grid-cols-[380px_1fr]">
+          <aside className="flex flex-col border-b border-logo-paper/10 bg-logo-navy p-5 text-logo-paper sm:p-7 lg:min-h-[690px] lg:border-b-0 lg:border-r lg:p-9">
             <div>
               <img
                 src="/brand/aigro-wordmark-white-transparent.png"
@@ -243,27 +271,37 @@ export default function AuthModal() {
                 height={636}
                 className="h-7 w-auto"
               />
-              <p className="mt-4 font-mono text-overline uppercase tracking-[0.12em] text-lime md:mt-10">
+              <p className="mt-7 font-mono text-overline uppercase tracking-[0.12em] text-lime lg:mt-9">
                 AIGRO CLUB
               </p>
-              <h2 className="mt-3 font-sans text-h4 font-semibold leading-snug text-logo-paper">
-                免費會員專區
+              <h2 className="mt-3 font-sans text-h3 font-semibold leading-snug text-logo-paper">
+                成為 AIGRO 創始會員
               </h2>
-              <p className="mt-3 hidden text-caption leading-relaxed text-logo-paper/65 sm:block">
-                登入後即可瀏覽會員限定內容。
+              <p className="mt-2 text-body-sm leading-relaxed text-logo-paper/70">
+                早期註冊期間免費加入，鎖定首批 Beta 資格。
               </p>
             </div>
-            <ul className="mt-5 hidden grid-cols-2 gap-x-3 gap-y-2 sm:grid md:mt-12 md:grid-cols-1 md:gap-3" aria-label="會員內容">
-              {MEMBER_BENEFITS.map((benefit) => (
-                <li key={benefit} className="flex items-center gap-2 text-caption text-logo-paper/75 last:col-span-2 md:gap-3 md:text-body-sm md:last:col-span-1">
-                  <Check className="h-4 w-4 shrink-0 text-lime" strokeWidth={1.5} aria-hidden="true" />
-                  {benefit}
+            <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:mt-9 lg:grid-cols-1 lg:gap-5" aria-label="創始會員權益">
+              {FOUNDING_MEMBER_BENEFITS.map((benefit) => (
+                <li key={benefit.title} className="flex items-start gap-3.5">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-lime/35 bg-lime-soft/10 text-lime">
+                    <benefit.icon className="h-5 w-5" strokeWidth={1.5} aria-hidden="true" />
+                  </span>
+                  <span className="min-w-0 pt-0.5">
+                    <strong className="block text-label text-logo-paper">{benefit.title}</strong>
+                    <span className="mt-0.5 block text-caption leading-relaxed text-logo-paper/65">
+                      {benefit.description}
+                    </span>
+                  </span>
                 </li>
               ))}
             </ul>
+            <p className="mt-6 text-caption leading-relaxed text-logo-paper/50 lg:mt-auto lg:pt-7">
+              創始會員禮遇適用於早期體驗期間完成註冊嘅帳號，相關功能將按推出進度逐步開放。
+            </p>
           </aside>
 
-          <div className="p-5 sm:p-7 md:p-9">
+          <div className="p-5 sm:p-7 lg:p-9 lg:pr-12">
             <div className="grid grid-cols-2 rounded-md bg-card p-1" role="tablist" aria-label="會員登入選項">
               {(["join", "login"] as const).map((item) => (
                 <button
@@ -284,17 +322,17 @@ export default function AuthModal() {
               ))}
             </div>
 
-            <DialogTitle className="mt-6 font-sans text-h3 font-semibold text-text-primary md:mt-7">
+            <DialogTitle className="mt-5 font-sans text-h3 font-semibold text-text-primary lg:mt-6">
               {modalTitle}
             </DialogTitle>
             <DialogDescription id="auth-modal-description" className="mt-2 text-body-sm text-text-secondary">
               {mode === "join"
-                ? "使用 Google 或 Email 建立帳號，所有新會員預設為免費會員。"
-                : "使用 Google，或者輸入 Email 和密碼繼續。"}
+                ? "使用 Google 或 Email 免費加入，立即取得創始會員身份。"
+                : "使用 Google，或者輸入 Email 和密碼登入會員專區。"}
             </DialogDescription>
             {mode === "join" && betaFeature && (
-              <p className="mt-3 rounded-md border border-ink bg-lime-soft px-3 py-2 text-caption leading-relaxed text-text-secondary">
-                完成免費註冊後，你會列入 {betaFeature} 首批 Beta 開放名單，優先收到測試邀請。
+              <p className="mt-2 text-caption font-medium leading-relaxed text-ink">
+                你亦會列入 {betaFeature} 首批 Beta 開放名單，優先收到測試邀請。
               </p>
             )}
 
@@ -336,21 +374,29 @@ export default function AuthModal() {
                   type="button"
                   onClick={handleGoogle}
                   disabled={!supabaseReady || state === "loading" || googleLoading}
-                  className="press mt-5 inline-flex h-12 w-full items-center justify-center rounded-md border border-border-strong bg-surface px-5 text-label text-text-primary transition-colors duration-150 hover:border-ink hover:text-ink disabled:opacity-50 md:mt-6"
+                  className="press relative mt-5 inline-flex h-12 w-full items-center justify-center rounded-md border border-[hsl(var(--google-button-border))] bg-[hsl(var(--google-button-bg))] px-12 text-label text-[hsl(var(--google-button-text))] transition-colors duration-150 hover:bg-[hsl(var(--google-button-hover))] disabled:opacity-50 lg:mt-6"
                 >
                   {googleLoading ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin motion-reduce:animate-none" strokeWidth={1.5} aria-hidden="true" />
-                  ) : null}
-                  {mode === "join" ? "使用 Google 免費加入" : "使用 Google 登入"}
+                    <Loader2 className="absolute left-4 h-4 w-4 animate-spin motion-reduce:animate-none" strokeWidth={1.5} aria-hidden="true" />
+                  ) : (
+                    <img
+                      src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                      alt=""
+                      width={18}
+                      height={18}
+                      className="absolute left-4 h-[18px] w-[18px]"
+                    />
+                  )}
+                  {mode === "join" ? "使用 Google 註冊" : "使用 Google 登入"}
                 </button>
 
-                <div className="my-4 flex items-center gap-3 text-caption text-text-muted md:my-5" aria-hidden="true">
+                <div className="my-4 flex items-center gap-3 text-caption text-text-muted" aria-hidden="true">
                   <span className="h-px flex-1 bg-border" />
                   <span>或者使用 Email</span>
                   <span className="h-px flex-1 bg-border" />
                 </div>
 
-                <form onSubmit={mode === "join" ? handleJoin : handleLogin} className="grid gap-3.5 md:gap-4" noValidate>
+                <form onSubmit={mode === "join" ? handleJoin : handleLogin} className="grid gap-3.5" noValidate>
                   {mode === "join" && (
                     <Field
                       id="auth-name"
@@ -395,7 +441,7 @@ export default function AuthModal() {
                     {state === "loading" ? (
                       <Loader2 className="h-4 w-4 animate-spin motion-reduce:animate-none" strokeWidth={1.5} aria-hidden="true" />
                     ) : null}
-                    {state === "loading" ? "處理中…" : mode === "join" ? "建立免費帳號" : "登入"}
+                    {state === "loading" ? "處理中…" : mode === "join" ? "免費加入並成為創始會員" : "登入"}
                     {state !== "loading" && <ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />}
                   </button>
 
@@ -413,7 +459,7 @@ export default function AuthModal() {
               </div>
             )}
 
-            <p className="mt-5 border-t border-border pt-4 text-caption leading-relaxed text-text-muted md:mt-6 md:pt-5">
+            <p className="mt-5 border-t border-border pt-4 text-caption leading-relaxed text-text-muted">
               繼續即代表你同意 AIGRO 以會員服務所需方式處理帳戶資料。
             </p>
           </div>

@@ -26,16 +26,16 @@ const ROLE_CARDS: RoleCard[] = [
     id: "free",
     icon: UserRound,
     title: "免費會員 Free",
-    caption: "任何人註冊即有",
+    caption: "基本免費會員方案",
     perks: ["無限 AI 分身對話", "情報閱讀 + 香港視角解讀", "對話紀錄跨裝置同步", "收藏情報同案例"],
   },
   {
     id: "founding",
     icon: Sparkles,
     title: "創始會員 Founding",
-    caption: "Club 付費會員",
-    tag: "方案預覽",
-    perks: ["免費會員全部權限", "案例上架後解鎖完整拆解", "MCP 開放時優先通知", "授權專家 AI 分身"],
+    caption: "早期體驗期間完成註冊",
+    tag: "早期會員",
+    perks: ["創始會員專屬身份", "Ask 與 Experts 首批 Beta", "免費 MCP 使用權", "導師 Live Chat 優先體驗"],
   },
   {
     id: "expert",
@@ -150,12 +150,12 @@ export default function Access() {
           <KeyRound className="mt-0.5 h-5 w-5 shrink-0 text-ink" strokeWidth={1.5} />
           <div>
             <p className="text-label text-text-primary">
-              登入用 magic link;角色由平台團隊分配
+              使用 Google 或 Email 登入;高權限角色由平台團隊分配
             </p>
             <p className="mt-1 text-body-sm text-text-secondary">
-              AIGRO 用 Email magic link 登入,唔使密碼。註冊後預設係免費會員;
-              創始會員經 Club 會員制升級;領航專家同管理員由平台團隊邀請同分配,
-              唔可以自行切換。
+              早期體驗期間完成註冊會獲得創始會員身份，帳戶仍然使用免費方案。
+              MCP、導師 Live Chat、Ask 同 Experts 會按 Beta 進度逐步開放。
+              領航專家同管理員由平台團隊邀請同分配，唔可以自行切換。
             </p>
             <Link
               to="/login"

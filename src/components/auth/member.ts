@@ -76,6 +76,8 @@ export interface AigroMember {
   persona: string | null;
   /** 帳號級別(權限)— 預設 free */
   role: MemberRole;
+  /** 早期體驗期註冊身份；不會自行提升付費權限 */
+  foundingMember?: boolean;
   /** 入口角色(專家平台 gate)— 預設由 role 衍生 */
   portalRole?: MemberPortalRole;
   tier: MemberTier;
@@ -200,6 +202,7 @@ function sanitize(raw: unknown): AigroMember | null {
     persona:
       typeof m.persona === "string" && m.persona ? m.persona : legacyPersona,
     role: isMemberRole(m.role) ? m.role : roleFromTier(tier),
+    foundingMember: m.foundingMember === true ? true : undefined,
     portalRole:
       m.portalRole === "founding" ||
       m.portalRole === "expert" ||
@@ -289,10 +292,12 @@ interface ProfileRow {
   created_at: string | null;
   account_access?: {
     app_role: "member" | "expert" | "admin" | "super_admin";
+    member_class?: "free" | "founding";
     tier: MemberTier;
     experts?: { slug: string } | null;
   } | Array<{
     app_role: "member" | "expert" | "admin" | "super_admin";
+    member_class?: "free" | "founding";
     tier: MemberTier;
     experts?: { slug: string } | null;
   }> | null;
@@ -397,7 +402,9 @@ function profileToMember(row: ProfileRow): AigroMember {
     : access?.app_role === "expert"
     ? "expert"
     : tier === "free"
-    ? "free"
+    ? access?.member_class === "founding"
+      ? "founding"
+      : "free"
     : "founding";
   const clean = sanitize({
     name: row.name ?? undefined,
@@ -405,6 +412,7 @@ function profileToMember(row: ProfileRow): AigroMember {
     interests: row.interests ?? [],
     persona: row.persona ?? undefined,
     role,
+    foundingMember: access?.member_class === "founding",
     tier,
     joinedAt: row.created_at ? Date.parse(row.created_at) : Date.now(),
     notifications: row.notifications ?? undefined,
@@ -466,7 +474,7 @@ async function hydrateProfile(user: User): Promise<void> {
   try {
     const { data: row } = await supabase
       .from("profiles")
-      .select("*,account_access(app_role,tier,experts(slug))")
+      .select("*,account_access(app_role,member_class,tier,experts(slug))")
       .eq("id", user.id)
       .maybeSingle();
     const pending = readPendingProfile();

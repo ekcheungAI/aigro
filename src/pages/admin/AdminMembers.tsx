@@ -60,7 +60,7 @@ async function fetchMembers(): Promise<MembersData> {
     countRows("profiles"),
     supabase
       .from("profiles")
-      .select("id,email,name,persona,interests,created_at,account_access(app_role,tier,expert_id,experts(slug))")
+      .select("id,email,name,persona,interests,created_at,account_access(app_role,member_class,tier,expert_id,experts(slug))")
       .order("created_at", { ascending: false })
       .limit(500),
     supabase
@@ -81,6 +81,7 @@ async function fetchMembers(): Promise<MembersData> {
       const accessRaw = Array.isArray(row.account_access) ? row.account_access[0] : row.account_access;
       const access = accessRaw as {
         app_role?: string;
+        member_class?: string;
         tier?: string;
         experts?: { slug?: string } | Array<{ slug?: string }> | null;
       } | null;
@@ -92,7 +93,7 @@ async function fetchMembers(): Promise<MembersData> {
         ? "admin"
         : access?.app_role === "expert"
         ? "expert"
-        : access?.tier && access.tier !== "free"
+        : access?.member_class === "founding" || (access?.tier && access.tier !== "free")
         ? "founding"
         : "free";
       return {

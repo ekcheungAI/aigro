@@ -62,7 +62,7 @@ function RouteMeta() {
     [/^\/ux-preview/, "UX Direction Preview", "AIGRO 全站體驗優化概念預覽。"],
     [/^\/access/, "全級別入口", "AIGRO 全級別入口 — 訪客、會員、創始會員、領航專家、管理員示範登入。"],
     [/^\/login/, "登入", "登入 AIGRO Club — 無限分身對話、完整案例拆解、MCP 優先接入。"],
-    [/^\/join/, "加入 Club", "加入 AIGRO Club — 三步成為會員,免費開始,隨時升級。"],
+    [/^\/join/, "免費加入 Club", "免費加入 AIGRO Club，成為創始會員，優先體驗 Ask、Experts、MCP 同導師 Live Chat。"],
     [/^\/reset-password/, "設定新密碼", "安全更新你嘅 AIGRO 帳號密碼。"],
     [/^\/account/, "會員專區", "你嘅 AIGRO 會員專區 — 層級、對話紀錄、MCP 名單與設定。"],
     [/^\/admin/, "AIGRO Admin", "內部管理後台。"],

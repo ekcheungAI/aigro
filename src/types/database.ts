@@ -39,6 +39,7 @@ export type Database = {
           app_role: string
           created_at: string
           expert_id: string | null
+          member_class: string
           tier: string
           updated_at: string
           user_id: string
@@ -47,6 +48,7 @@ export type Database = {
           app_role?: string
           created_at?: string
           expert_id?: string | null
+          member_class?: string
           tier?: string
           updated_at?: string
           user_id: string
@@ -55,6 +57,7 @@ export type Database = {
           app_role?: string
           created_at?: string
           expert_id?: string | null
+          member_class?: string
           tier?: string
           updated_at?: string
           user_id?: string

@@ -36,6 +36,12 @@
     --logo-blue: 219 83% 56%;    /* #2F6FEB */
     --logo-gray: 220 9% 46%;     /* #6B7280 */
 
+    /* Google Identity button, exact light-theme branding tokens. */
+    --google-button-bg: 0 0% 100%;
+    --google-button-hover: 220 14% 96%;
+    --google-button-border: 180 1% 46%;
+    --google-button-text: 0 0% 12%;
+
     /* Legacy aliases — cascade the rebrand to every page without page edits.
        `ink` now reads brand-green; `gold` (ex-Verified/VIP accent) reads green. */
     --ink: var(--lime-text);        /* text/link accent on light */
@@ -123,6 +129,12 @@
     --text-muted: 214 15% 58%;   /* #8593A5 */
     --border: 216 50% 22%;       /* #1C3355 */
     --border-strong: 215 45% 31%;/* #2C4A73 */
+
+    /* Google Identity button, exact dark-theme branding tokens. */
+    --google-button-bg: 240 3% 8%;
+    --google-button-hover: 240 2% 12%;
+    --google-button-border: 140 1% 56%;
+    --google-button-text: 0 0% 89%;
 
     /* Dark green aliases — on deep navy the full brand green passes AAA (9.1:1),
        so text accent = fills = pure brand green; legacy tokens flip automatically. */
