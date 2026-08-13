@@ -269,12 +269,9 @@ export default function AuthModal() {
                 alt="AIGRO"
                 width={1267}
                 height={636}
-                className="h-7 w-auto"
+                className="h-8 w-auto"
               />
-              <p className="mt-7 font-mono text-overline uppercase tracking-[0.12em] text-lime lg:mt-9">
-                AIGRO CLUB
-              </p>
-              <h2 className="mt-3 font-sans text-h3 font-semibold leading-snug text-logo-paper">
+              <h2 className="mt-8 font-sans text-h3 font-semibold leading-snug text-logo-paper lg:mt-10">
                 成為 AIGRO 創始會員
               </h2>
               <p className="mt-2 text-body-sm leading-relaxed text-logo-paper/70">
@@ -283,9 +280,9 @@ export default function AuthModal() {
             </div>
             <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:mt-9 lg:grid-cols-1 lg:gap-5" aria-label="創始會員權益">
               {FOUNDING_MEMBER_BENEFITS.map((benefit) => (
-                <li key={benefit.title} className="flex items-start gap-3.5">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-lime/35 bg-lime-soft/10 text-lime">
-                    <benefit.icon className="h-5 w-5" strokeWidth={1.5} aria-hidden="true" />
+                <li key={benefit.title} className="flex items-start gap-3">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-lime/35 bg-lime-soft/10 text-lime">
+                    <benefit.icon className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
                   </span>
                   <span className="min-w-0 pt-0.5">
                     <strong className="block text-label text-logo-paper">{benefit.title}</strong>
