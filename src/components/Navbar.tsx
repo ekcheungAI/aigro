@@ -100,7 +100,7 @@ export default function Navbar() {
           overHero ? "border-transparent bg-transparent" : "bg-surface"
         )}
       >
-        <div className="mx-auto flex h-full max-w-container items-center gap-6 px-6">
+        <div className="mx-auto flex h-full max-w-container items-center gap-3 px-6 2xl:gap-6">
           <Link to="/" className="flex min-h-11 shrink-0 items-center gap-2" aria-label="AIGRO 首頁">
             <img
               src="/brand/aigro-wordmark-navy-transparent.png"
@@ -141,13 +141,13 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop nav — bilingual labels */}
-          <nav className="mx-auto hidden h-full items-center gap-1 lg:flex" aria-label="主導航">
+          <nav className="mx-auto hidden h-full min-w-0 items-center gap-1 lg:flex" aria-label="主導航">
             {NAV_LINKS.map((link) => (
               <NavLink
                 key={link.to}
                 to={link.to}
                 className={({ isActive }) => cn(
-                  "relative inline-flex h-full min-h-11 items-center gap-1.5 px-3 font-sans text-label transition-colors duration-150 xl:px-4",
+                  "relative inline-flex h-full min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap px-2.5 font-sans text-label transition-colors duration-150 2xl:px-4",
                   overHero
                     ? "text-band-text-secondary hover:text-band-text"
                     : "text-text-secondary hover:text-text-primary",
@@ -158,7 +158,7 @@ export default function Navbar() {
                   <>
                     <span>{link.en}</span>
                     <span className={cn(
-                      "text-caption",
+                      "hidden text-caption 2xl:inline",
                       isActive
                         ? overHero ? "text-band-ink" : "text-ink"
                         : overHero ? "text-band-text-muted" : "text-text-muted"
@@ -166,7 +166,7 @@ export default function Navbar() {
                       {link.zh}
                     </span>
                     {"comingSoon" in link && link.comingSoon && (
-                      <span className="ml-1 rounded-sm bg-card px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase leading-none tracking-[0.06em] text-text-muted">
+                      <span className="ml-1 hidden rounded-sm bg-card px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase leading-none tracking-[0.06em] text-text-muted 2xl:inline-flex">
                         Coming Soon
                       </span>
                     )}
@@ -174,7 +174,7 @@ export default function Navbar() {
                       <span
                         aria-hidden="true"
                         className={cn(
-                          "absolute inset-x-3 bottom-0 h-0.5 xl:inset-x-4",
+                          "absolute inset-x-2.5 bottom-0 h-0.5 2xl:inset-x-4",
                           overHero ? "bg-band-ink" : "bg-ink"
                         )}
                       />
@@ -186,7 +186,7 @@ export default function Navbar() {
           </nav>
 
           {/* Right: theme toggle + subscribe */}
-          <div className="ml-auto flex items-center gap-3 lg:ml-0">
+          <div className="ml-auto flex shrink-0 items-center gap-3 lg:ml-0">
             <button
               type="button"
               onClick={toggleTheme}
@@ -205,7 +205,7 @@ export default function Navbar() {
               )}
             </button>
             {member && (
-              <div ref={accountMenuRef} className="relative hidden sm:block">
+              <div ref={accountMenuRef} className="relative hidden shrink-0 sm:block">
                 <button
                   type="button"
                   onClick={() => setAccountOpen((open) => !open)}
@@ -214,7 +214,7 @@ export default function Navbar() {
                   aria-expanded={accountOpen}
                   aria-controls="account-navigation"
                   className={cn(
-                    "press inline-flex h-11 items-center gap-2 rounded-md border pl-1.5 pr-2.5 font-sans",
+                    "press inline-flex h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-md border pl-1.5 pr-2.5 font-sans",
                     overHero
                       ? "border-band-border-strong hover:bg-band-ink-soft"
                       : "border-border-strong bg-surface hover:bg-ink-soft"
@@ -227,7 +227,7 @@ export default function Navbar() {
                     {memberInitial(member.name)}
                   </span>
                   <span className={cn(
-                    "hidden text-label xl:inline",
+                    "hidden text-label 2xl:inline",
                     overHero ? "text-band-text" : "text-text-primary"
                   )}>
                     {memberAreaLabel}
