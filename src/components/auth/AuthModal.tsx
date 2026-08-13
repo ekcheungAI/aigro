@@ -53,6 +53,11 @@ export default function AuthModal() {
   const open = authParam === "join" || authParam === "login";
   const mode: AuthMode = authParam === "login" ? "login" : "join";
   const nextPath = safeNext(searchParams.get("next"), location.pathname);
+  const betaFeature = nextPath.startsWith("/ask")
+    ? "Ask AI 問答"
+    : nextPath.startsWith("/experts")
+      ? "Experts 專家平台"
+      : null;
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -287,6 +292,11 @@ export default function AuthModal() {
                 ? "使用 Google 或 Email 建立帳號，所有新會員預設為免費會員。"
                 : "使用 Google，或者輸入 Email 和密碼繼續。"}
             </DialogDescription>
+            {mode === "join" && betaFeature && (
+              <p className="mt-3 rounded-md border border-ink bg-lime-soft px-3 py-2 text-caption leading-relaxed text-text-secondary">
+                完成免費註冊後，你會列入 {betaFeature} 首批 Beta 開放名單，優先收到測試邀請。
+              </p>
+            )}
 
             {state === "sent" ? (
               <div className="rounded-md border border-ink bg-lime-soft p-5" role="status">

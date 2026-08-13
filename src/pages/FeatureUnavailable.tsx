@@ -1,10 +1,11 @@
-import { Link } from "react-router-dom";
-import { ArrowRight, LockKeyhole, Newspaper } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { ArrowRight, LockKeyhole, Newspaper, Sparkles } from "lucide-react";
 
 interface FeatureUnavailableProps {
   eyebrow: string;
   title: string;
   description: string;
+  betaMessage: string;
   screenshotSrc: string;
   screenshotAlt: string;
   screenshotPosition?: string;
@@ -15,10 +16,14 @@ export default function FeatureUnavailable({
   eyebrow,
   title,
   description,
+  betaMessage,
   screenshotSrc,
   screenshotAlt,
   screenshotPosition = "center top",
 }: FeatureUnavailableProps) {
+  const { pathname } = useLocation();
+  const joinSearch = `?auth=join&next=${encodeURIComponent(pathname)}`;
+
   return (
     <section className="mx-auto max-w-container px-6 py-12 md:py-20">
       <div className="relative min-h-[620px] overflow-hidden rounded-lg border border-border-strong bg-card md:min-h-[680px]">
@@ -50,12 +55,21 @@ export default function FeatureUnavailable({
               <p className="mt-4 max-w-xl text-body-lg text-text-secondary">
                 {description}
               </p>
+              <div className="mt-6 flex max-w-xl gap-3 rounded-md border border-ink bg-lime-soft p-4">
+                <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-lime-text" strokeWidth={1.5} aria-hidden="true" />
+                <div>
+                  <p className="text-label text-text-primary">首批 Beta 優先體驗</p>
+                  <p className="mt-1 text-body-sm leading-relaxed text-text-secondary">
+                    {betaMessage}
+                  </p>
+                </div>
+              </div>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
-                  to="/join"
+                  to={joinSearch}
                   className="press inline-flex h-11 items-center gap-2 rounded-md bg-lime px-5 text-label text-on-accent hover:bg-lime-hover"
                 >
-                  加入 Club
+                  免費註冊・優先試用
                   <ArrowRight className="h-4 w-4 nudge-x" strokeWidth={1.5} aria-hidden="true" />
                 </Link>
                 <Link
