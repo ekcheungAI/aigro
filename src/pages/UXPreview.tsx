@@ -49,7 +49,7 @@ const PROGRAMMES = [
   {
     category: "香港視角" as Category,
     title: "香港團隊導入 AI：由一條流程開始",
-    instructor: "AIGRO 編輯部",
+    instructor: "AIGRO 助手",
     detail: "5 節 · 24 分鐘",
     image: "/editorial/thumbnails/hong-kong-adoption.jpg",
     progress: 0,

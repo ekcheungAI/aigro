@@ -813,6 +813,75 @@ export type Database = {
           },
         ]
       }
+      invitations: {
+        Row: {
+          accepted_at: string | null
+          auth_user_id: string | null
+          created_at: string
+          delivered_at: string | null
+          delivery_status: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string
+          last_error_code: string | null
+          last_sent_at: string | null
+          member_class: string
+          name: string
+          personal_message: string | null
+          provider_message_id: string | null
+          send_count: number
+          sent_at: string | null
+          status: string
+          tier: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          auth_user_id?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          delivery_status?: string
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by: string
+          last_error_code?: string | null
+          last_sent_at?: string | null
+          member_class?: string
+          name: string
+          personal_message?: string | null
+          provider_message_id?: string | null
+          send_count?: number
+          sent_at?: string | null
+          status?: string
+          tier?: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          auth_user_id?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          delivery_status?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string
+          last_error_code?: string | null
+          last_sent_at?: string | null
+          member_class?: string
+          name?: string
+          personal_message?: string | null
+          provider_message_id?: string | null
+          send_count?: number
+          sent_at?: string | null
+          status?: string
+          tier?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       knowledge_chunks: {
         Row: {
           chunk_index: number
@@ -1544,6 +1613,9 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_path: string | null
+          avatar_seed: string | null
+          avatar_updated_at: string | null
           city: string | null
           company: string | null
           created_at: string | null
@@ -1564,6 +1636,9 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          avatar_path?: string | null
+          avatar_seed?: string | null
+          avatar_updated_at?: string | null
           city?: string | null
           company?: string | null
           created_at?: string | null
@@ -1584,6 +1659,9 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          avatar_path?: string | null
+          avatar_seed?: string | null
+          avatar_updated_at?: string | null
           city?: string | null
           company?: string | null
           created_at?: string | null
@@ -2364,6 +2442,7 @@ export type Database = {
         Args: { p_worker_id: string }
         Returns: undefined
       }
+      public_member_count: { Args: never; Returns: number }
       requeue_stuck_distillation_jobs: { Args: never; Returns: undefined }
       requeue_stuck_persona_synthesis_jobs: { Args: never; Returns: undefined }
       requeue_stuck_social_sync_jobs: { Args: never; Returns: undefined }

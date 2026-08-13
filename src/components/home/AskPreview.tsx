@@ -67,7 +67,7 @@ export default function AskPreview() {
             <div className="mt-4 flex justify-start">
               <div className="max-w-[92%] rounded-lg bg-ink-soft px-4 py-3">
                 <p className="text-overline font-sans uppercase text-ink">
-                  AIGRO 編輯部
+                  AIGRO 助手
                 </p>
                 <p className="mt-1.5 text-body-sm text-text-primary">
                   由免費額度開始已經夠:用 AI

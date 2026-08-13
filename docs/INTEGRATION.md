@@ -61,13 +61,13 @@
 全部 fire-and-forget、離線靜默;`sessionId ↔ conversationId` 映射持久喺 `aigro-ask-conv-map`。
 **下一步:** 讀取路徑 migrate 去 Supabase、登入後 claim 匿名對話。
 
-### 3. Personas / AI 回答 — `src/data/personas.ts`【L】
-**現狀:** 每個分身 = keywords regex → `ScriptedReply`,無命中行 fallback
-(信心 <0.6 → Club 優先預約 toast)。語氣、開場白、建議問題全部人工寫。
-**換法:** 保留 personas.ts 做 **system prompt 同 UX 殼**(greeting、suggestions、
-fallback、transparency 文案繼續用);回答生成換 Edge Function:
-message → embed → pgvector match `expert_knowledge_base` → LLM 生成 → 附來源引用
-(`AiReply` 已有 `sources` 結構)。呢個係最大工程,分期做。
+### 3. Personas / AI 回答 — `src/data/personas.ts`【M · MiniMax-M3 已接線】
+**現狀:** keywords regex 命中仍用已核實 `ScriptedReply`;零命中經 Supabase
+`ask-answer` Edge Function 呼叫 **MiniMax-M3**。API key、model ID、persona system prompt
+全部留 server-side;瀏覽器冇 provider secret。語氣、開場白、建議問題繼續由
+personas.ts 提供 UX 殼。Function 失敗會回落內建一般知識模板,UI 唔會 hang。
+**下一步:** 套用 `supabase/v4-minimax.sql`、deploy function、設定 MiniMax secrets;
+之後加 embed → pgvector match approved knowledge → 附來源引用。
 
 ### 4. 情報數據 — `src/data/aihot.ts`【M】
 **現狀:** `scripts/fetch-aihot.mjs` build 時打 AIHOT 公共 API →

@@ -10,30 +10,25 @@ import {
   MailCheck,
   MessageSquare,
   PenLine,
-  ShieldCheck,
   Zap,
 } from "lucide-react";
 import Toast, { useToast } from "@/components/auth/Toast";
 import QueryState from "@/components/QueryState";
 import ProfileEditor from "@/components/auth/ProfileEditor";
+import MemberCredential from "@/components/auth/MemberCredential";
 import useMember from "@/hooks/useMember";
 import {
   clearMember,
   adminEntryPath,
-  greeting,
-  hasFullPlatformAccess,
   isFoundingTier,
-  memberInitial,
   milestonesFor,
   profileCompletion,
   referralLabel,
-  ROLE_LABELS,
   saveMember,
   teamSizeLabel,
-  TIER_LABEL,
   unlockedMilestones,
 } from "@/components/auth/member";
-import type { AigroMember, MemberRole } from "@/components/auth/member";
+import type { AigroMember } from "@/components/auth/member";
 import { loadSessionStore } from "@/components/ask/sessions";
 import { getPersona } from "@/data/personas";
 import { ensureAuthenticatedUser, supabase, supabaseReady } from "@/lib/supabase";
@@ -105,39 +100,6 @@ function formatTime(ts: number): string {
     month: "short",
     day: "numeric",
   });
-}
-
-/**
- * 角色 chip(4 級制度)— founding = lime;expert = VerifiedBadge 同族
- * (near-black disc + 1.5px lime ring);admin = 深色;free = 髮絲邊框。
- */
-function RoleChip({ role }: { role: MemberRole }) {
-  if (role === "expert") {
-    return (
-      <span
-        className="inline-flex items-center rounded-full px-2.5 py-0.5 text-caption"
-        style={{
-          boxShadow: "inset 0 0 0 1.5px hsl(var(--lime))",
-          backgroundColor: "hsl(var(--on-accent))",
-          color: "hsl(45 29% 97%)",
-        }}
-      >
-        {ROLE_LABELS.expert}
-      </span>
-    );
-  }
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center rounded-full px-2.5 py-0.5 text-caption",
-        role === "founding" && "bg-lime text-on-accent",
-        (role === "admin" || role === "super_admin") && "bg-ink-solid text-on-accent",
-        role === "free" && "border border-border-strong text-text-muted"
-      )}
-    >
-      {ROLE_LABELS[role]}
-    </span>
-  );
 }
 
 /** 檔案欄位總覽(完成度卡)— 空值顯示「未填寫」一 click 編輯 anchor */
@@ -362,7 +324,6 @@ export default function Account() {
 
   const completion = profileCompletion(member);
   const founding = isFoundingTier(member);
-  const fullPlatformAccess = hasFullPlatformAccess(member);
   const masterAdminPath = adminEntryPath(member);
   const milestones = milestonesFor(member);
 
@@ -387,24 +348,12 @@ export default function Account() {
         animate={reduced ? { opacity: 1 } : { opacity: 1, y: 0 }}
         transition={{ duration: 0.45, ease: [0.4, 0, 0.2, 1] }}
       >
-        {/* ---- 問候 ---- */}
-        <div className="flex items-center gap-4">
-          <span
-            aria-hidden="true"
-            className="flex h-14 w-14 items-center justify-center rounded-full bg-lime-soft font-display text-[22px] font-medium text-ink"
-          >
-            {memberInitial(member.name)}
-          </span>
-          <div>
-            <h1 className="font-display text-h2 text-text-primary">
-              {member.name},{greeting()}
-            </h1>
-            <div className="mt-1.5 flex items-center gap-2">
-              <p className="text-body-sm text-text-muted">{member.email}</p>
-              <RoleChip role={member.role} />
-            </div>
-          </div>
-        </div>
+        <MemberCredential
+          member={member}
+          completion={completion}
+          adminPath={masterAdminPath}
+          onAvatarNotice={showToast}
+        />
 
         {(expertInvitations.length > 0 || invitationError) && (
           <section className="mt-8 rounded-md border border-lime/50 bg-lime-soft p-5">
@@ -447,51 +396,6 @@ export default function Account() {
           </section>
         )}
 
-        {/* ---- 方案卡 ---- */}
-        <section className="mt-10 flex flex-col gap-4 rounded-md border bg-surface p-6 sm:flex-row sm:items-center md:p-8">
-          <div className="flex-1">
-            <p className="text-overline uppercase tracking-[0.12em] text-text-muted">
-              目前方案
-            </p>
-            <p className="mt-2 font-display text-h3 text-text-primary">
-              {fullPlatformAccess ? "全平台存取" : TIER_LABEL[member.tier]}
-            </p>
-            <p className="mt-1 text-body-sm text-text-secondary">
-              {fullPlatformAccess &&
-                "最高管理員擁有所有會員方案、Admin、專家 Portal、CMS、AI 對話及真人預約權限。"}
-              {!fullPlatformAccess && member.tier === "free" &&
-                "每日情報任讀;升級創始會員解鎖無限分身對話與完整案例拆解。"}
-              {!fullPlatformAccess && member.tier === "pro" &&
-                "無限分身對話、完整案例拆解、MCP 優先接入、專家活動優先席。"}
-              {!fullPlatformAccess && member.tier === "vip" && "真人導師一對一,新功能優先體驗。"}
-            </p>
-            {fullPlatformAccess && (
-              <p className="mt-2 font-mono text-caption uppercase tracking-[0.12em] text-lime-text">
-                Platform owner · Effective access: unrestricted
-              </p>
-            )}
-          </div>
-          {masterAdminPath && (
-            <Link
-              to={masterAdminPath}
-              className="press inline-flex h-12 shrink-0 items-center gap-2 self-start rounded-md bg-ink-solid px-6 text-label text-on-accent hover:bg-ink-solid/90 sm:self-center"
-            >
-              <ShieldCheck className="h-4 w-4" strokeWidth={1.5} />
-              Master Admin 管理後台
-              <ArrowRight className="h-4 w-4" strokeWidth={1.5} />
-            </Link>
-          )}
-          {!masterAdminPath && !fullPlatformAccess && member.tier !== "vip" && (
-            <Link
-              to="/pricing"
-              className="press inline-flex h-12 shrink-0 items-center gap-2 self-start rounded-md bg-lime px-6 text-label text-on-accent hover:bg-lime-hover sm:self-center"
-            >
-              {member.tier === "free" ? "升級方案" : "睇 VIP"}
-              <ArrowRight className="h-4 w-4" strokeWidth={1.5} />
-            </Link>
-          )}
-        </section>
-
         {/* ---- 檔案完成度 + 解鎖里程碑 ---- */}
         <section className="mt-6 rounded-md border bg-surface p-6 md:p-8">
           <div className="flex flex-wrap items-start justify-between gap-4">
@@ -527,9 +431,9 @@ export default function Account() {
           </p>
 
           {founding && (
-            <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-lime-soft px-3 py-1 text-caption text-ink">
+            <p className="mt-3 inline-flex items-center gap-1.5 rounded-sm border border-border bg-card px-3 py-1 text-caption text-text-secondary">
               <Zap className="h-3.5 w-3.5" strokeWidth={1.5} />
-              創始會員加成 — 創始會員專屬加速,門檻降至 40 / 60 / 80%
+              創始會員加成：專屬門檻降至 40 / 60 / 80%
             </p>
           )}
 
@@ -550,7 +454,7 @@ export default function Account() {
                     className={cn(
                       "flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
                       unlocked
-                        ? "bg-lime text-on-accent"
+                        ? "border border-border-strong bg-lime-soft text-ink"
                         : "border border-border-strong text-text-muted"
                     )}
                   >
@@ -785,17 +689,21 @@ export default function Account() {
                     aria-checked={on}
                     aria-label={row.label}
                     onClick={() => toggleNotification(row.key)}
-                    className={cn(
-                      "press relative h-6 w-11 shrink-0 rounded-full transition-colors duration-150",
-                      on ? "bg-lime" : "bg-border-strong"
-                    )}
+                    className="press grid h-11 w-11 shrink-0 place-items-center rounded-full"
                   >
                     <span
                       className={cn(
-                        "absolute top-0.5 h-5 w-5 rounded-full bg-surface transition-[left] duration-150",
-                        on ? "left-[22px]" : "left-0.5"
+                        "pointer-events-none relative block h-6 w-11 rounded-full transition-colors duration-150",
+                        on ? "bg-lime" : "bg-border-strong"
                       )}
-                    />
+                    >
+                      <span
+                        className={cn(
+                          "absolute top-0.5 h-5 w-5 rounded-full bg-surface transition-[left] duration-150",
+                          on ? "left-[22px]" : "left-0.5"
+                        )}
+                      />
+                    </span>
                   </button>
                 </div>
               );

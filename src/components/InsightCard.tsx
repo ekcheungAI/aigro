@@ -29,12 +29,12 @@ export default function InsightCard({ insight, className }: InsightCardProps) {
     >
       <div className="overflow-hidden border-b bg-card">
         <img
-          src={editorialThumbnailFor(insight.category, insight.slug)}
+          src={editorialThumbnailFor(insight.category)}
           alt=""
           loading="lazy"
           width={1586}
           height={992}
-          className="aspect-[16/10] w-full object-cover transition-transform duration-300 card-image-zoom"
+          className="aspect-video w-full object-cover transition-transform duration-300 card-image-zoom"
         />
       </div>
       {/* Hairline lime corner tick — editor's pick (score ≥ 90) */}

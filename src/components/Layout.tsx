@@ -19,7 +19,7 @@ export default function Layout() {
   const { pathname } = useLocation();
   const isCourseNotes = pathname.startsWith("/guides/");
   const isFocusedFlow =
-    pathname.startsWith("/ask") ||
+    pathname.startsWith("/__capture/ask") ||
     pathname === "/login" ||
     pathname === "/join" ||
     pathname.startsWith("/account");

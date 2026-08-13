@@ -1,3 +1,8 @@
+import {
+  bookingSubject,
+  renderBookingEmail,
+} from "../_shared/booking-email.ts";
+
 interface BookingWebhook {
   type?: "INSERT" | "UPDATE";
   table?: string;
@@ -18,35 +23,6 @@ function authorized(request: Request): boolean {
   return Boolean(expected && request.headers.get("x-webhook-secret") === expected);
 }
 
-function hkTime(value: string): string {
-  return new Intl.DateTimeFormat("zh-HK", {
-    dateStyle: "full",
-    timeStyle: "short",
-    timeZone: "Asia/Hong_Kong",
-  }).format(new Date(value));
-}
-
-function subject(status: string): string {
-  const labels: Record<string, string> = {
-    requested: "已收到你嘅導師預約申請",
-    confirmed: "導師預約已確認",
-    declined: "導師未能接受今次預約",
-    cancelled_member: "你已取消導師預約",
-    cancelled_expert: "導師已取消預約",
-  };
-  return labels[status] ?? "AIGRO 導師預約更新";
-}
-
-function escapeHtml(value: string): string {
-  return value.replace(/[&<>"']/g, (character) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;",
-  })[character] ?? character);
-}
-
 Deno.serve(async (request) => {
   if (request.method !== "POST") return new Response("Method not allowed", { status: 405 });
   if (!authorized(request)) return new Response("Unauthorized", { status: 401 });
@@ -59,6 +35,7 @@ Deno.serve(async (request) => {
   const serviceKey = Deno.env.get("SUPABASE_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const resendKey = Deno.env.get("RESEND_API_KEY");
   const from = Deno.env.get("RESEND_FROM_EMAIL");
+  const replyTo = Deno.env.get("RESEND_REPLY_TO");
   if (!supabaseUrl || !serviceKey || !resendKey || !from) {
     return Response.json({ error: "Notification provider is not configured" }, { status: 503 });
   }
@@ -88,21 +65,22 @@ Deno.serve(async (request) => {
   }
 
   const action = booking.status ?? "updated";
-  const detail = [
-    `<p>預約時間：${hkTime(booking.starts_at)}</p>`,
-    booking.meeting_url
-      ? `<p>會面連結：<a href="${escapeHtml(booking.meeting_url)}">${escapeHtml(booking.meeting_url)}</a></p>`
-      : "<p>會面連結會由導師確認後提供。</p>",
-    '<p><a href="https://aigro-blue.vercel.app/account">到會員專區查看</a></p>',
-  ].join("");
+  const email = renderBookingEmail({
+    status: action,
+    startsAt: booking.starts_at,
+    meetingUrl: booking.meeting_url,
+    accountUrl: "https://aigro.io/account",
+  });
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       from,
       to: [...recipients],
-      subject: subject(action),
-      html: `<div style="font-family:Arial,sans-serif;line-height:1.6"><h1 style="font-size:22px">${subject(action)}</h1>${detail}</div>`,
+      ...(replyTo ? { reply_to: replyTo } : {}),
+      subject: bookingSubject(action),
+      html: email.html,
+      text: email.text,
     }),
   });
   const result = await response.json().catch(() => ({}));

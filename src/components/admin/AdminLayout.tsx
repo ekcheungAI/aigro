@@ -11,7 +11,9 @@ import {
 import { cn } from "@/lib/utils";
 import { AdminToastProvider } from "@/components/admin/AdminToast";
 import { useMember } from "@/hooks/useMember";
-import { memberInitial, memberRoleLabel } from "@/components/auth/member";
+import { memberRoleLabel } from "@/components/auth/member";
+import ProtectedAreaLoading from "@/components/auth/ProtectedAreaLoading";
+import MemberAvatar from "@/components/auth/MemberAvatar";
 import { supabaseReady } from "@/lib/supabase";
 import {
   ADMIN_MODULES,
@@ -22,9 +24,9 @@ function BetaBadge({ active = false }: { active?: boolean }) {
   return (
     <span
       className={cn(
-        "rounded-full border px-1.5 py-0.5 font-mono text-[8px] font-semibold uppercase tracking-[0.1em]",
+        "rounded-sm border px-1.5 py-0.5 font-mono text-[9px] font-medium uppercase leading-none tracking-[0.08em]",
         active
-          ? "border-on-accent/30 text-on-accent"
+          ? "border-lime/50 bg-lime/10 text-lime"
           : "border-lime/40 text-lime"
       )}
     >
@@ -35,7 +37,7 @@ function BetaBadge({ active = false }: { active?: boolean }) {
 
 function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   return (
-    <nav className="flex flex-col gap-0.5 px-3">
+    <nav aria-label="Admin 模組" className="flex flex-col gap-1 px-4">
       {ADMIN_MODULES.map((item) => (
         <NavLink
           key={item.to}
@@ -44,10 +46,10 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
           onClick={onNavigate}
           className={({ isActive }) =>
             cn(
-              "group flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors",
+              "press group relative grid min-h-14 grid-cols-[2.25rem_1fr_auto] items-center gap-x-2 rounded-md px-3 py-2 text-sm transition-colors",
               isActive
-                ? "bg-lime text-on-accent"
-                : "text-[#B8C4D0] hover:bg-[#0E2547] hover:text-[#EAF0F6]"
+                ? "bg-logo-paper/[0.07] text-logo-paper"
+                : "text-logo-paper/70 hover:bg-logo-paper/[0.04] hover:text-logo-paper"
             )
           }
         >
@@ -55,22 +57,30 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
             <>
               <item.icon
                 className={cn(
-                  "h-4 w-4 shrink-0",
-                  isActive ? "text-on-accent" : "text-[#8593A5]"
+                  "h-[18px] w-[18px] justify-self-center",
+                  isActive ? "text-lime" : "text-logo-paper/45"
                 )}
+                strokeWidth={1.5}
+                aria-hidden="true"
               />
-              <span className="font-medium">{item.zh}</span>
-              <span className="ml-auto flex items-center gap-1.5">
-                {item.status === "beta" && <BetaBadge active={isActive} />}
+              <span className="min-w-0">
+                <span className="block truncate font-medium leading-5">{item.zh}</span>
                 <span
                   className={cn(
-                    "font-mono text-[10px] uppercase tracking-wider",
-                    isActive ? "text-on-accent/70" : "text-[#8593A5]"
+                    "block truncate font-mono text-[10px] uppercase leading-4 tracking-[0.08em]",
+                    isActive ? "text-logo-paper/55" : "text-logo-paper/40"
                   )}
                 >
                   {item.en}
                 </span>
               </span>
+              {item.status === "beta" && <BetaBadge active={isActive} />}
+              {isActive && (
+                <span
+                  aria-hidden="true"
+                  className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-lime"
+                />
+              )}
             </>
           )}
         </NavLink>
@@ -81,17 +91,24 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
 
 function Wordmark() {
   return (
-    <div className="flex items-baseline gap-2 px-3">
-      <span className="font-display text-[18px] font-medium uppercase tracking-[0.04em] text-[#EAF0F6]">
-        AIGRO<span className="text-lime">.</span>
+    <div className="flex items-center gap-3 px-4">
+      <img
+        src="/brand/aigro-wordmark-white-transparent.png"
+        alt="AIGRO"
+        width={1267}
+        height={636}
+        className="h-8 w-auto"
+      />
+      <span aria-hidden="true" className="h-5 w-px bg-logo-paper/15" />
+      <span className="font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-logo-paper/55">
+        Admin
       </span>
-      <span className="text-[11px] tracking-wide text-[#8593A5]">Admin</span>
     </div>
   );
 }
 
 /** 未登入 / 非 admin — 誠實 gate,唔顯示任何後台數據 */
-function AdminGate({ loading }: { loading: boolean }) {
+function AdminGate() {
   return (
     <main className="flex min-h-[100dvh] items-center justify-center bg-bg px-4 py-16">
       <div className="w-full max-w-md rounded-lg border border-border bg-surface p-8 text-center shadow-card">
@@ -105,11 +122,6 @@ function AdminGate({ loading }: { loading: boolean }) {
           Admin 後台直接讀 Supabase 真實數據 — 只有管理員或最高管理員帳號
           先可以睇到。請用獲授權帳號登入。
         </p>
-        {loading && (
-          <p className="mt-4 font-mono text-xs text-text-muted">
-            正在檢查登入狀態…
-          </p>
-        )}
         <Link
           to="/login"
           className="mt-5 inline-flex w-full items-center justify-center gap-1.5 rounded-md bg-lime px-4 py-2.5 text-sm font-medium text-on-accent transition-colors hover:bg-lime-hover"
@@ -145,10 +157,18 @@ export default function AdminLayout() {
   const isAdmin = member !== null &&
     (member.role === "admin" || member.role === "super_admin");
 
-  if (loading || !isAdmin) {
+  if (loading) {
     return (
       <AdminToastProvider>
-        <AdminGate loading={loading} />
+        <ProtectedAreaLoading />
+      </AdminToastProvider>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <AdminToastProvider>
+        <AdminGate />
       </AdminToastProvider>
     );
   }
@@ -157,22 +177,22 @@ export default function AdminLayout() {
     <AdminToastProvider>
       <div className="min-h-[100dvh] bg-bg text-text-primary">
         {/* ---- Desktop sidebar ---- */}
-        <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-[#1C3355] bg-[#02122C] lg:flex">
-          <div className="border-b border-[#1C3355] py-5">
+        <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-logo-paper/10 bg-logo-navy lg:flex">
+          <div className="flex h-20 items-center border-b border-logo-paper/10">
             <Wordmark />
           </div>
-          <div className="flex-1 overflow-y-auto py-4">
+          <div className="flex-1 overflow-y-auto py-5">
             <SidebarNav />
           </div>
-          <div className="border-t border-[#1C3355] px-6 py-4">
-            <p className="font-mono text-[10px] uppercase tracking-wider text-[#8593A5]">
-              內部後台 · Module status
+          <div className="border-t border-logo-paper/10 px-6 py-4">
+            <p className="font-mono text-[10px] uppercase tracking-wider text-logo-paper/40">
+              內部後台 · System
             </p>
-            <p className="mt-1 flex items-center gap-1.5 text-xs text-[#8593A5]">
+            <p className="mt-1.5 flex items-center gap-2 text-xs text-logo-paper/55">
               <span
                 className={cn(
                   "h-1.5 w-1.5 rounded-full",
-                  supabaseReady ? "bg-lime" : "bg-[#A63A30]"
+                  supabaseReady ? "bg-lime" : "bg-error"
                 )}
               />
               {supabaseReady ? "Supabase client 已設定" : "Supabase 未設定"}
@@ -191,25 +211,25 @@ export default function AdminLayout() {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
                 onClick={() => setDrawerOpen(false)}
-                className="fixed inset-0 z-[90] bg-[#02122C]/50 lg:hidden"
+                className="fixed inset-0 z-[90] bg-logo-navy/60 lg:hidden"
               />
               <motion.aside
                 key="nav-drawer"
-                initial={{ y: "-100%" }}
-                animate={{ y: 0 }}
-                exit={{ y: "-100%" }}
+                initial={{ transform: "translateY(-100%)" }}
+                animate={{ transform: "translateY(0)" }}
+                exit={{ transform: "translateY(-100%)" }}
                 transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-                className="fixed inset-x-0 top-0 z-[95] border-b border-[#1C3355] bg-[#02122C] pb-4 lg:hidden"
+                className="fixed inset-x-0 top-0 z-[95] max-h-[100dvh] overflow-y-auto border-b border-logo-paper/10 bg-logo-navy pb-4 lg:hidden"
               >
-                <div className="flex items-center justify-between border-b border-[#1C3355] px-3 py-4">
+                <div className="flex h-20 items-center justify-between border-b border-logo-paper/10 pr-4">
                   <Wordmark />
                   <button
                     type="button"
                     aria-label="關閉選單"
                     onClick={() => setDrawerOpen(false)}
-                    className="rounded-md p-2 text-[#B8C4D0] hover:bg-[#0E2547]"
+                    className="press rounded-md p-2 text-logo-paper/70 hover:bg-logo-paper/[0.06] hover:text-logo-paper"
                   >
-                    <X className="h-5 w-5" />
+                    <X className="h-5 w-5" strokeWidth={1.5} />
                   </button>
                 </div>
                 <div className="pt-3">
@@ -221,7 +241,7 @@ export default function AdminLayout() {
         </AnimatePresence>
 
         {/* ---- Main column ---- */}
-        <div className="flex min-h-[100dvh] flex-col lg:pl-60">
+        <div className="flex min-h-[100dvh] flex-col lg:pl-64">
           {/* Top bar */}
           <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-surface px-4 sm:px-6">
             <button
@@ -248,9 +268,7 @@ export default function AdminLayout() {
                 <ArrowUpRight className="h-3.5 w-3.5" />
               </Link>
               <div className="flex items-center gap-2 rounded-full border border-border bg-card py-1 pl-1 pr-3">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-lime font-mono text-[11px] font-semibold text-on-accent">
-                  {memberInitial(member.name)}
-                </span>
+                <MemberAvatar member={member} size={24} />
                 <span className="text-xs text-text-primary">
                   {member.name}{" "}
                   <span className="text-text-muted">· {memberRoleLabel(member)}</span>

@@ -1,18 +1,17 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import {
   Check,
   Loader2,
-  Mail,
   MessagesSquare,
   NotebookText,
   Plug,
 } from "lucide-react";
 import Field from "@/components/auth/Field";
 import Toast, { useToast } from "@/components/auth/Toast";
-import { sendMagicLink, validEmail } from "@/components/auth/member";
+import { sendPasswordReset, validEmail } from "@/components/auth/member";
 import { supabase, supabaseReady } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 
@@ -27,12 +26,18 @@ type SubmitState = "idle" | "loading" | "success";
 /**
  * Login `/login` — 會員登入(真 Supabase Auth)。
  * 置中 split card(max-w-4xl):左 = 品牌板(near-black + lime 條紋,
- * 「會員專區」serif H2 + 3 個會員價值);右 = 表單。
- * 密碼登入行 signInWithPassword;magic link 行 signInWithOtp。
+ * 「會員專區」sans H2 + 3 個會員價值);右 = 表單。
+ * Email 密碼登入行 signInWithPassword。
  * 無 env(示範模式)→ 密碼 form disabled + 誠實提示,唔會假裝成功。
  */
 export default function Login() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const requestedPath = searchParams.get("next");
+  const nextPath =
+    requestedPath?.startsWith("/") && !requestedPath.startsWith("//")
+      ? requestedPath
+      : "/account";
   const reduced = useReducedMotion();
   const { toast, showToast } = useToast();
 
@@ -40,9 +45,6 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [state, setState] = useState<SubmitState>("idle");
-  // magic-link 真發送狀態
-  const [linkSending, setLinkSending] = useState(false);
-  const [linkSent, setLinkSent] = useState(false);
   // 忘記密碼發送狀態
   const [resetSending, setResetSending] = useState(false);
 
@@ -72,7 +74,7 @@ export default function Login() {
       }
       setState("success");
       showToast("登入成功");
-      window.setTimeout(() => navigate("/account"), 700);
+      window.setTimeout(() => navigate(nextPath), 700);
     } catch {
       setState("idle");
       showToast("登入失敗，請稍後再試");
@@ -89,40 +91,16 @@ export default function Login() {
     setErrors({});
     setResetSending(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: window.location.origin,
-      });
+      const result = await sendPasswordReset(email);
       showToast(
-        error
-          ? `發送失敗:${error.message}`
-          : `重設密碼連結已發送至 ${email.trim()}`
+        result.ok
+          ? `如果帳號有效，重設密碼電郵會發送至 ${email.trim()}`
+          : `發送失敗:${result.error ?? "請稍後再試"}`
       );
     } catch {
       showToast("發送失敗，請稍後再試");
     }
     setResetSending(false);
-  };
-
-  const handleMagicLink = async () => {
-    if (!validEmail(email)) {
-      setErrors((prev) => ({ ...prev, email: "先輸入 Email,先可以寄登入連結" }));
-      return;
-    }
-    setErrors({});
-    if (!supabaseReady) {
-      // 誠實提示:無 env 發唔到,唔假裝成功
-      showToast("示範模式未連接 Supabase — magic link 暫時發唔到");
-      return;
-    }
-    setLinkSending(true);
-    const res = await sendMagicLink(email);
-    setLinkSending(false);
-    if (res.ok) {
-      setLinkSent(true);
-      showToast("連結已發送，去你嘅信箱 click 連結登入");
-    } else {
-      showToast(`發送失敗:${res.error ?? "請稍後再試"}`);
-    }
   };
 
   return (
@@ -242,41 +220,20 @@ export default function Login() {
               {state === "loading" ? "登入中…" : state === "success" ? "登入成功" : "登入"}
             </button>
 
-            <button
-              type="button"
-              onClick={handleMagicLink}
-              disabled={linkSending}
-              className={cn(
-                "press inline-flex h-12 items-center justify-center gap-2 rounded-md border text-label disabled:opacity-80",
-                linkSent
-                  ? "border-transparent bg-lime-soft text-ink"
-                  : "border-border-strong text-text-primary hover:border-ink hover:text-ink"
-              )}
-            >
-              {linkSending ? (
-                <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />
-              ) : linkSent ? (
-                <Check className="h-4 w-4" strokeWidth={2} />
-              ) : (
-                <Mail className="h-4 w-4" strokeWidth={1.5} />
-              )}
-              {linkSending
-                ? "發送中…"
-                : linkSent
-                  ? "連結已發送，去你嘅信箱"
-                  : "用 Email 連結登入"}
-            </button>
           </form>
 
           <p className="mt-8 border-t pt-6 text-body-sm text-text-secondary">
             未有帳號?
-            <Link to="/join" className="link-underline ml-1 text-ink">
+            <Link
+              to={`/join?next=${encodeURIComponent(nextPath)}&plan=free`}
+              className="link-underline ml-1 text-ink"
+            >
               立即加入
             </Link>
           </p>
           <p className="mt-3 text-caption text-text-muted">
             {supabaseReady
-              ? "用 Email 連結登入 — 無需記密碼"
+              ? "使用 Email 加密碼登入"
               : "示範模式 — 未設定 Supabase env,登入功能暫時未開放"}
           </p>
         </div>

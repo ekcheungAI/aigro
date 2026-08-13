@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Pencil, Search, UserRound } from "lucide-react";
+import { Loader2, MailPlus, Pencil, RotateCcw, Search, UserRound } from "lucide-react";
 import AdminSlideOver from "@/components/admin/AdminSlideOver";
 import { useAdminToast } from "@/components/admin/AdminToast";
 import QueryState from "@/components/QueryState";
@@ -13,11 +13,21 @@ import {
   useAdminQuery,
 } from "@/components/admin/adminData";
 import type {
+  AdminInvitationRow,
   AdminProfileRow,
   AdminWaitlistRow,
 } from "@/components/admin/adminData";
 import { ROLE_LABELS, TIER_LABEL } from "@/components/auth/member";
 import type { MemberRole, MemberTier } from "@/components/auth/member";
+import { memberRoleFromAccess } from "@/components/auth/accountAccessRole";
+import {
+  resendAdminInvitation,
+  sendAdminInvitation,
+} from "@/lib/adminInvitations";
+import type {
+  InvitationMemberClass,
+  InvitationTier,
+} from "@/lib/adminInvitations";
 
 type RoleFilter = "全部" | MemberRole;
 type TierFilter = "全部" | MemberTier;
@@ -52,11 +62,12 @@ interface MembersData {
   total: number;
   mcpWaitlist: AdminWaitlistRow[];
   experts: ExpertOption[];
+  invitations: AdminInvitationRow[];
 }
 
 async function fetchMembers(): Promise<MembersData> {
   if (!supabase) throw new Error("Supabase 未連接 — 請檢查環境變數。");
-  const [total, profilesRes, waitlistRes, expertsRes] = await Promise.all([
+  const [total, profilesRes, waitlistRes, expertsRes, invitationsRes] = await Promise.all([
     countRows("profiles"),
     supabase
       .from("profiles")
@@ -72,10 +83,16 @@ async function fetchMembers(): Promise<MembersData> {
       .select("id,slug,display_name")
       .neq("slug", "platform")
       .order("display_name"),
+    supabase
+      .from("invitations")
+      .select("id,email,name,member_class,tier,personal_message,status,delivery_status,send_count,sent_at,delivered_at,accepted_at,expires_at,created_at")
+      .order("created_at", { ascending: false })
+      .limit(100),
   ]);
   if (profilesRes.error) throw new Error(profilesRes.error.message);
   if (waitlistRes.error) throw new Error(waitlistRes.error.message);
   if (expertsRes.error) throw new Error(expertsRes.error.message);
+  if (invitationsRes.error) throw new Error(invitationsRes.error.message);
   return {
     profiles: (profilesRes.data ?? []).map((row) => {
       const accessRaw = Array.isArray(row.account_access) ? row.account_access[0] : row.account_access;
@@ -87,15 +104,11 @@ async function fetchMembers(): Promise<MembersData> {
       } | null;
       const expertRaw = access?.experts;
       const expert = Array.isArray(expertRaw) ? expertRaw[0] : expertRaw;
-      const role = access?.app_role === "super_admin"
-        ? "super_admin"
-        : access?.app_role === "admin"
-        ? "admin"
-        : access?.app_role === "expert"
-        ? "expert"
-        : access?.member_class === "founding" || (access?.tier && access.tier !== "free")
-        ? "founding"
-        : "free";
+      const role = memberRoleFromAccess({
+        app_role: access?.app_role,
+        member_class: access?.member_class,
+        tier: access?.tier,
+      });
       return {
         id: row.id,
         email: row.email,
@@ -111,7 +124,179 @@ async function fetchMembers(): Promise<MembersData> {
     total,
     mcpWaitlist: (waitlistRes.data ?? []) as AdminWaitlistRow[],
     experts: (expertsRes.data ?? []) as ExpertOption[],
+    invitations: (invitationsRes.data ?? []) as AdminInvitationRow[],
   };
+}
+
+const INVITATION_STATUS_LABEL: Record<AdminInvitationRow["status"], string> = {
+  pending: "建立中",
+  sent: "已寄出",
+  delivered: "已送達",
+  accepted: "已接受",
+  expired: "已過期",
+  revoked: "已撤回",
+  failed: "失敗",
+};
+
+function displayInvitationStatus(invitation: AdminInvitationRow): AdminInvitationRow["status"] {
+  if (
+    ["pending", "sent", "delivered"].includes(invitation.status) &&
+    Date.parse(invitation.expires_at) < Date.now()
+  ) return "expired";
+  return invitation.status;
+}
+
+function invitationStatusClass(status: AdminInvitationRow["status"]): string {
+  if (status === "accepted" || status === "delivered") return "bg-lime-soft text-lime-text";
+  if (status === "failed" || status === "expired" || status === "revoked") {
+    return "border border-border-strong text-text-muted";
+  }
+  return "bg-card text-text-secondary";
+}
+
+function InviteMemberForm({
+  onSent,
+  onCancel,
+}: {
+  onSent: (email: string) => void;
+  onCancel: () => void;
+}) {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [memberClass, setMemberClass] = useState<InvitationMemberClass>("founding");
+  const [tier, setTier] = useState<InvitationTier>("free");
+  const [personalMessage, setPersonalMessage] = useState("");
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
+
+  const submit = async () => {
+    setSending(true);
+    setSendError(null);
+    const result = await sendAdminInvitation({
+      email,
+      name,
+      memberClass,
+      tier,
+      personalMessage,
+    });
+    setSending(false);
+    if (!result.ok) {
+      setSendError(result.error);
+      return;
+    }
+    onSent(email.trim().toLowerCase());
+  };
+
+  return (
+    <form
+      className="flex h-full flex-col"
+      onSubmit={(event) => {
+        event.preventDefault();
+        void submit();
+      }}
+    >
+      <div className="flex-1 space-y-5 px-6 py-5">
+        <div>
+          <label htmlFor="invite-name" className="text-xs font-medium text-text-secondary">
+            姓名
+          </label>
+          <input
+            id="invite-name"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            required
+            maxLength={80}
+            autoComplete="off"
+            className="mt-1.5 w-full rounded-md border border-border-strong bg-surface px-3 py-2 text-sm text-text-primary focus:border-lime focus:outline-none"
+          />
+        </div>
+        <div>
+          <label htmlFor="invite-email" className="text-xs font-medium text-text-secondary">
+            Email
+          </label>
+          <input
+            id="invite-email"
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            required
+            maxLength={320}
+            autoComplete="off"
+            className="mt-1.5 w-full rounded-md border border-border-strong bg-surface px-3 py-2 text-sm text-text-primary focus:border-lime focus:outline-none"
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label htmlFor="invite-member-class" className="text-xs font-medium text-text-secondary">
+              會員級別
+            </label>
+            <select
+              id="invite-member-class"
+              value={memberClass}
+              onChange={(event) => setMemberClass(event.target.value as InvitationMemberClass)}
+              className="mt-1.5 w-full rounded-md border border-border-strong bg-surface px-3 py-2 text-sm text-text-primary focus:border-lime focus:outline-none"
+            >
+              <option value="founding">創始會員</option>
+              <option value="free">免費會員</option>
+            </select>
+          </div>
+          <div>
+            <label htmlFor="invite-tier" className="text-xs font-medium text-text-secondary">
+              層級
+            </label>
+            <select
+              id="invite-tier"
+              value={tier}
+              onChange={(event) => setTier(event.target.value as InvitationTier)}
+              className="mt-1.5 w-full rounded-md border border-border-strong bg-surface px-3 py-2 text-sm text-text-primary focus:border-lime focus:outline-none"
+            >
+              <option value="free">Free</option>
+              <option value="pro">Pro</option>
+              <option value="vip">VIP</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label htmlFor="invite-message" className="text-xs font-medium text-text-secondary">
+            私人訊息（可選）
+          </label>
+          <textarea
+            id="invite-message"
+            value={personalMessage}
+            onChange={(event) => setPersonalMessage(event.target.value)}
+            maxLength={1000}
+            rows={6}
+            placeholder="寫低邀請原因或歡迎說話…"
+            className="mt-1.5 w-full resize-none rounded-md border border-border-strong bg-surface px-3 py-2 text-sm leading-relaxed text-text-primary placeholder:text-text-muted focus:border-lime focus:outline-none"
+          />
+          <p className="mt-1 text-right font-mono text-[11px] text-text-muted">
+            {personalMessage.length} / 1000
+          </p>
+        </div>
+        {sendError && <p role="alert" className="text-sm text-error">{sendError}</p>}
+        <p className="rounded-md border border-border bg-card px-3 py-2.5 text-xs leading-relaxed text-text-muted">
+          系統會建立安全 Auth 邀請連結並由 AIGRO 經 Resend 寄出。接受邀請後，所選會員級別同層級先會套用。
+        </p>
+      </div>
+      <div className="flex gap-2 border-t border-border px-6 py-4">
+        <button
+          type="submit"
+          disabled={sending}
+          className="press inline-flex flex-1 items-center justify-center gap-2 rounded-md bg-lime px-4 py-2.5 text-sm font-medium text-on-accent disabled:opacity-50"
+        >
+          {sending && <Loader2 className="h-4 w-4 animate-spin motion-reduce:animate-none" strokeWidth={1.5} />}
+          {sending ? "寄送中…" : "寄出邀請信"}
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="press rounded-md border border-border px-4 py-2.5 text-sm text-text-secondary"
+        >
+          取消
+        </button>
+      </div>
+    </form>
+  );
 }
 
 /* ---------------- 會員級別編輯(真 update profiles) ---------------- */
@@ -179,6 +364,7 @@ function MemberRoleEditor({
     const { error: updateError } = await supabase.from("account_access").upsert({
       user_id: member.id,
       app_role: appRole,
+      member_class: role === "founding" ? "founding" : "free",
       tier,
       expert_id: null,
     });
@@ -315,6 +501,9 @@ export default function AdminMembers() {
   const [tierFilter, setTierFilter] = useState<TierFilter>("全部");
   const [openId, setOpenId] = useState<string | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [resendingId, setResendingId] = useState<string | null>(null);
+  const [inviteActionError, setInviteActionError] = useState<string | null>(null);
 
   const list = useMemo(() => data?.profiles ?? [], [data]);
   const active = list.find((m) => m.id === openId) ?? null;
@@ -354,18 +543,43 @@ export default function AdminMembers() {
   }, [data]);
   const maxVertical = Math.max(...verticalCounts.map(([, c]) => c), 1);
 
+  const resendInvitation = async (invitation: AdminInvitationRow) => {
+    setResendingId(invitation.id);
+    setInviteActionError(null);
+    const result = await resendAdminInvitation(invitation.id);
+    setResendingId(null);
+    if (!result.ok) {
+      setInviteActionError(result.error);
+      return;
+    }
+    toast(`邀請信已重新寄去 ${invitation.email}`);
+    refetch();
+  };
+
   return (
     <div className="mx-auto max-w-6xl">
-      <div className="mb-6">
-        <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-lime-text">
-          Members
-        </p>
-        <h1 className="mt-1 font-display text-[28px] font-medium text-text-primary">
-          會員管理
-        </h1>
-        <p className="mt-1 text-sm text-text-muted">
-          profiles 表即時列表 — 總數 {loading ? "…" : (data?.total ?? 0)} 位。
-        </p>
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-lime-text">
+            Members
+          </p>
+          <h1 className="mt-1 font-display text-[28px] font-medium text-text-primary">
+            會員管理
+          </h1>
+          <p className="mt-1 text-sm text-text-muted">
+            profiles 表即時列表 — 總數 {loading ? "…" : (data?.total ?? 0)} 位。
+          </p>
+        </div>
+        {canManageAdmins && (
+          <button
+            type="button"
+            onClick={() => setInviteOpen(true)}
+            className="press inline-flex items-center gap-2 rounded-md bg-lime px-4 py-2.5 text-sm font-medium text-on-accent"
+          >
+            <MailPlus className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+            發送邀請
+          </button>
+        )}
       </div>
 
       <QueryState
@@ -373,14 +587,14 @@ export default function AdminMembers() {
         error={error ? `載入失敗:${error}` : null}
         retry={refetch}
         empty={
-          data && data.total === 0 ? (
+          data && data.total === 0 && data.invitations.length === 0 ? (
             <div className="rounded-lg border border-dashed border-border-strong bg-surface px-6 py-16 text-center">
               <UserRound className="mx-auto h-6 w-6 text-text-muted" />
               <p className="mt-3 text-sm font-medium text-text-primary">
                 未有會員
               </p>
               <p className="mx-auto mt-1.5 max-w-[360px] text-xs leading-relaxed text-text-muted">
-                profiles 表而家係 0 — 第一位完成 Email 註冊嘅會員會即時出現喺呢度。
+                profiles 表而家係 0 — 第一位完成 Email 確認嘅會員會即時出現喺呢度。
               </p>
             </div>
           ) : null
@@ -445,6 +659,92 @@ export default function AdminMembers() {
                 )}
               </section>
             </div>
+
+            {canManageAdmins && data.invitations.length > 0 && (
+              <section className="mt-6 rounded-lg border border-border bg-surface">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3">
+                  <div>
+                    <h2 className="font-display text-[16px] font-medium text-text-primary">
+                      邀請記錄
+                    </h2>
+                    <p className="mt-0.5 text-xs text-text-muted">
+                      Auth 帳戶、Resend 投遞同接受狀態。
+                    </p>
+                    {inviteActionError && (
+                      <p role="alert" className="mt-1 text-xs text-error">
+                        {inviteActionError}
+                      </p>
+                    )}
+                  </div>
+                  <span className="font-mono text-xs text-text-muted">
+                    {data.invitations.length} 封
+                  </span>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[720px] text-left text-sm">
+                    <thead>
+                      <tr className="border-b border-border text-xs text-text-muted">
+                        <th className="px-4 py-3 font-medium">收件人</th>
+                        <th className="px-4 py-3 font-medium">帳戶</th>
+                        <th className="px-4 py-3 font-medium">狀態</th>
+                        <th className="px-4 py-3 font-medium">投遞</th>
+                        <th className="px-4 py-3 font-medium">建立日期</th>
+                        <th className="px-4 py-3 text-right font-medium">操作</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {data.invitations.map((invitation) => {
+                        const status = displayInvitationStatus(invitation);
+                        return (
+                          <tr key={invitation.id}>
+                            <td className="px-4 py-3">
+                              <p className="font-medium text-text-primary">{invitation.name}</p>
+                              <p className="mt-0.5 text-xs text-text-muted">{invitation.email}</p>
+                            </td>
+                            <td className="px-4 py-3 text-xs text-text-secondary">
+                              {invitation.member_class === "founding" ? "創始會員" : "免費會員"}
+                              {` · ${TIER_LABEL[invitation.tier]}`}
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className={cn(
+                                "rounded-sm px-2 py-0.5 text-xs font-medium",
+                                invitationStatusClass(status)
+                              )}>
+                                {INVITATION_STATUS_LABEL[status]}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 font-mono text-xs text-text-secondary">
+                              {invitation.delivery_status}
+                            </td>
+                            <td className="px-4 py-3 font-mono text-xs text-text-secondary">
+                              {formatDate(invitation.created_at)}
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              {status !== "accepted" && status !== "revoked" && (
+                                <button
+                                  type="button"
+                                  aria-label={`重新發送 ${invitation.email}`}
+                                  disabled={resendingId === invitation.id}
+                                  onClick={() => void resendInvitation(invitation)}
+                                  className="press inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-text-secondary disabled:opacity-50"
+                                >
+                                  {resendingId === invitation.id ? (
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin motion-reduce:animate-none" strokeWidth={1.5} />
+                                  ) : (
+                                    <RotateCcw className="h-3.5 w-3.5" strokeWidth={1.5} />
+                                  )}
+                                  重新發送
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            )}
 
             {/* Search + role filter */}
             <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -577,6 +877,22 @@ export default function AdminMembers() {
       </QueryState>
 
       {/* Member detail slide-over(read-only,全部真欄位) */}
+      <AdminSlideOver
+        open={inviteOpen}
+        onClose={() => setInviteOpen(false)}
+        title="邀請新會員"
+        subtitle="只有最高管理員可以建立帳戶邀請"
+      >
+        <InviteMemberForm
+          onCancel={() => setInviteOpen(false)}
+          onSent={(email) => {
+            setInviteOpen(false);
+            toast(`邀請信已寄去 ${email}`);
+            refetch();
+          }}
+        />
+      </AdminSlideOver>
+
       <AdminSlideOver
         open={active !== null}
         onClose={() => setOpenId(null)}

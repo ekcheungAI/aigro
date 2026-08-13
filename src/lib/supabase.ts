@@ -24,7 +24,7 @@ export const supabaseReady: boolean = Boolean(URL && ANON_KEY);
 export const supabase: SupabaseClient | null = supabaseReady
   ? createClient(URL as string, ANON_KEY as string, {
       auth: {
-        // magic-link session 存 localStorage,跨 refresh 保留
+        // auth session 存 localStorage,跨 refresh 保留
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,

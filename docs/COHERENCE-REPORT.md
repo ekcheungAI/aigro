@@ -55,7 +55,7 @@
 | OG image(黑底綠字 AIGRO.) | A | 品牌一致 |
 | Sitemap(25 URLs 絕對路徑) | A | 自動生成 script 有 |
 | Daily 日報刊頭 | A | 報紙式,動態期號 |
-| Ask 分身回答(廣東話) | B+ | 真誠但 scripted — 等 Kimi K3 |
+| Ask 分身回答(廣東話) | B+ | 已接 MiniMax-M3；本地 KB direct reply + server-side general fallback |
 | Signup/Join 流程 | A | 3 步清晰,success 狀態靚 |
 | Account 檔案完成度 | A | 進度條 + milestones 解鎖 |
 | CRM follow-up email 模板 | B | 可用但平 — 接 DB 後值得執靚 |

@@ -9,7 +9,7 @@
  *   - src/data/insights.ts  → INSIGHT_ARTICLES keys (站內長文 only;AIHOT
  *     外部情報無站內詳情頁,不收錄)
  *   - src/data/cases.ts     → cases[] slugs
- *   - src/data/experts.ts   → experts[] slugs where verified: true
+ *   - Public product routes only; temporarily gated product areas stay excluded.
  *
  * Run: npm run sitemap
  */
@@ -18,7 +18,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const BASE = "https://aigro-blue.vercel.app";
+const BASE = "https://aigro.io";
 
 const read = (rel) => readFileSync(join(ROOT, rel), "utf8");
 
@@ -67,14 +67,8 @@ const casesSrc = read("src/data/cases.ts");
 const casesBlock = block(casesSrc, "cases", "[", "]");
 const caseSlugs = [...casesBlock.matchAll(/slug: "([^"]+)"/g)].map((m) => m[1]);
 
-// --- experts:僅 verified(草稿席不出 sitemap) ---
-const expertsSrc = read("src/data/experts.ts");
-const expertsBlock = block(expertsSrc, "experts", "[", "]");
-const expertSlugs = [
-  ...expertsBlock.matchAll(/slug: "([^"]+)"[\s\S]*?verified: (true|false)/g),
-]
-  .filter((m) => m[2] === "true")
-  .map((m) => m[1]);
+// Experts / Ask / Pricing are temporarily gated and intentionally omitted.
+const expertSlugs = [];
 
 const urls = [
   ...STATIC_ROUTES.map((r) => ({ loc: r.path, ...r })),

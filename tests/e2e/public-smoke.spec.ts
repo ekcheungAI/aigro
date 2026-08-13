@@ -9,8 +9,7 @@ test("public routes load without console errors", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await page.goto("/ask?expert=elvin-cheung");
-  await expect(page.getByRole("heading", { name: "Ask 問答" })).toBeAttached();
-  await expect(page.getByText("AI 分身 · Beta").first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "AI 問答功能準備中" })).toBeVisible();
   expect(errors).toEqual([]);
 });
 
@@ -25,10 +24,10 @@ test("signup and login share one modal without losing page context", async ({ pa
   await page.goto("/join");
   await expect(page).toHaveURL(/\?auth=join&next=%2F$/);
   const dialog = page.getByRole("dialog");
-  await expect(dialog.getByRole("heading", { name: "免費加入 AIGRO" })).toBeVisible();
+  await expect(dialog.getByRole("heading", { name: "免費建立創始會員帳號" })).toBeVisible();
   await expect(dialog.getByLabel("顯示名稱")).toBeVisible();
   await dialog.getByRole("tab", { name: "登入" }).click();
-  await expect(dialog.getByRole("heading", { name: "歡迎返嚟" })).toBeVisible();
+  await expect(dialog.getByRole("heading", { name: "登入 AIGRO" })).toBeVisible();
   await expect(page).toHaveURL(/\?auth=login&next=%2F/);
 });
 
@@ -42,7 +41,7 @@ test("Class Review blocks signed-out visitors and opens auth in place", async ({
   );
   await page.getByRole("link", { name: "免費註冊睇重溫" }).click();
   await expect(page).toHaveURL(/\/guides\/100x-ai-growth-marketer\?auth=join/);
-  await expect(page.getByRole("dialog").getByRole("heading", { name: "免費加入 AIGRO" })).toBeVisible();
+  await expect(page.getByRole("dialog").getByRole("heading", { name: "免費建立創始會員帳號" })).toBeVisible();
 });
 
 test("Class Review is discoverable and the responsive course shell stays consistent", async ({ page }) => {

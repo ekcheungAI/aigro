@@ -21,6 +21,7 @@ import { AdminToastProvider } from "@/components/admin/AdminToast";
 import MonogramAvatar from "@/components/MonogramAvatar";
 import type { AigroMember } from "@/components/auth/member";
 import { useMember } from "@/hooks/useMember";
+import ProtectedAreaLoading from "@/components/auth/ProtectedAreaLoading";
 import { supabase } from "@/lib/supabase";
 import { experts } from "@/data/experts";
 import type { Expert } from "@/data/experts";
@@ -135,7 +136,7 @@ function Wordmark() {
 
 /* ---------------- 專家登入 gate ---------------- */
 
-function PortalGate({ loading }: { loading: boolean }) {
+function PortalGate() {
   return (
     <main className="flex min-h-[100dvh] items-center justify-center px-4 py-16">
       <div className="w-full max-w-md rounded-lg border border-border bg-surface p-8 text-center shadow-card">
@@ -149,11 +150,6 @@ function PortalGate({ loading }: { loading: boolean }) {
           專家平台而家直接讀 Supabase 真實數據 — 只有領航專家帳號
           （受保護 account_access = expert / admin）先可以管理授權 AI 分身。
         </p>
-        {loading && (
-          <p className="mt-4 font-mono text-xs text-text-muted">
-            正在檢查登入狀態…
-          </p>
-        )}
         <Link
           to="/login"
           className="mt-5 inline-flex w-full items-center justify-center gap-1.5 rounded-md bg-lime px-4 py-2.5 text-sm font-medium text-on-accent transition-colors hover:bg-lime-hover"
@@ -287,11 +283,19 @@ export default function PortalLayout() {
     ? selectedSlug
     : portalSlugs[0] ?? null;
 
-  if (memberLoading || !authorized) {
+  if (memberLoading) {
+    return (
+      <AdminToastProvider>
+        <ProtectedAreaLoading />
+      </AdminToastProvider>
+    );
+  }
+
+  if (!authorized) {
     return (
       <AdminToastProvider>
         <div className="min-h-[100dvh] bg-bg text-text-primary">
-          <PortalGate loading={memberLoading} />
+          <PortalGate />
         </div>
       </AdminToastProvider>
     );
@@ -300,11 +304,7 @@ export default function PortalLayout() {
   if (slugLoading) {
     return (
       <AdminToastProvider>
-        <div className="flex min-h-[100dvh] items-center justify-center bg-bg">
-          <p className="font-mono text-xs text-text-muted">
-            正在載入專家身份…
-          </p>
-        </div>
+        <ProtectedAreaLoading label="正在載入專家身份…" />
       </AdminToastProvider>
     );
   }

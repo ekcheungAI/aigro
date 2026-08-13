@@ -130,6 +130,23 @@ export interface AdminWaitlistRow {
   created_at: string | null;
 }
 
+export interface AdminInvitationRow {
+  id: string;
+  email: string;
+  name: string;
+  member_class: "free" | "founding";
+  tier: "free" | "pro" | "vip";
+  personal_message: string | null;
+  status: "pending" | "sent" | "delivered" | "accepted" | "expired" | "revoked" | "failed";
+  delivery_status: "queued" | "sent" | "delivered" | "delayed" | "opened" | "clicked" | "bounced" | "complained" | "failed";
+  send_count: number;
+  sent_at: string | null;
+  delivered_at: string | null;
+  accepted_at: string | null;
+  expires_at: string;
+  created_at: string;
+}
+
 export interface AdminConversationRow {
   id: string;
   user_id: string | null;

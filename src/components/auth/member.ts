@@ -12,7 +12,16 @@
 
 import { supabase, supabaseReady } from "@/lib/supabase";
 import { getAuthRedirectUrl } from "@/lib/authRedirect";
+import { authUserDisplayName } from "@/lib/authUserProfile";
+import {
+  DEFAULT_NEW_MEMBER_CLASS,
+  memberRoleFromAccess,
+} from "@/components/auth/accountAccessRole";
 import type { User } from "@supabase/supabase-js";
+import {
+  AVATAR_BUCKET,
+  versionedAvatarUrl,
+} from "@/components/auth/memberAvatarPreferences";
 
 export type MemberTier = "free" | "pro" | "vip";
 
@@ -98,6 +107,14 @@ export interface AigroMember {
   social?: string;
   /** 點知我哋 */
   referral?: ReferralSource;
+  /** 本地 identicon 選擇；未設定時以 email 作穩定種子。 */
+  avatarSeed?: string;
+  /** Supabase Storage object path（不含 bucket）。 */
+  avatarPath?: string;
+  /** 上載版本，用於 CDN/browser cache busting。 */
+  avatarUpdatedAt?: string;
+  /** 由 avatarPath 衍生的公開顯示 URL，不寫入 profiles。 */
+  avatarUrl?: string;
   /**
    * 示範/訪客帳號標記 — demo 帳號(Login/Access/Portal gate 一 click 登入)
    * 只存本機,唔會寫入 Supabase;真 Supabase 會員無呢個 flag。
@@ -225,6 +242,10 @@ function sanitize(raw: unknown): AigroMember | null {
       : undefined,
     social: cleanString(m.social),
     referral: isReferralSource(m.referral) ? m.referral : undefined,
+    avatarSeed: cleanString(m.avatarSeed),
+    avatarPath: cleanString(m.avatarPath),
+    avatarUpdatedAt: cleanString(m.avatarUpdatedAt),
+    avatarUrl: cleanString(m.avatarUrl),
     demo: m.demo === true ? true : undefined,
   };
 }
@@ -289,6 +310,9 @@ interface ProfileRow {
   referral: string | null;
   notifications: Partial<MemberNotifications> | null;
   expert_slug: string | null;
+  avatar_seed: string | null;
+  avatar_path: string | null;
+  avatar_updated_at: string | null;
   created_at: string | null;
   account_access?: {
     app_role: "member" | "expert" | "admin" | "super_admin";
@@ -387,7 +411,16 @@ function memberToProfile(member: AigroMember, userId: string): Record<string, un
     social: member.social ?? null,
     referral: member.referral ?? null,
     notifications: member.notifications,
+    avatar_seed: member.avatarSeed ?? null,
+    avatar_path: member.avatarPath ?? null,
+    avatar_updated_at: member.avatarUpdatedAt ?? null,
   };
+}
+
+function avatarPublicUrl(path: string | null, updatedAt: string | null): string | undefined {
+  if (!supabase || !path) return undefined;
+  const { data } = supabase.storage.from(AVATAR_BUCKET).getPublicUrl(path);
+  return versionedAvatarUrl(data.publicUrl, updatedAt ?? undefined);
 }
 
 function profileToMember(row: ProfileRow): AigroMember {
@@ -395,17 +428,11 @@ function profileToMember(row: ProfileRow): AigroMember {
     ? row.account_access[0]
     : row.account_access;
   const tier = access?.tier ?? "free";
-  const role: MemberRole = access?.app_role === "super_admin"
-    ? "super_admin"
-    : access?.app_role === "admin"
-    ? "admin"
-    : access?.app_role === "expert"
-    ? "expert"
-    : tier === "free"
-    ? access?.member_class === "founding"
-      ? "founding"
-      : "free"
-    : "founding";
+  const role: MemberRole = memberRoleFromAccess({
+    app_role: access?.app_role,
+    member_class: access?.member_class,
+    tier,
+  });
   const clean = sanitize({
     name: row.name ?? undefined,
     email: row.email,
@@ -423,6 +450,10 @@ function profileToMember(row: ProfileRow): AigroMember {
     goals: row.goals ?? undefined,
     social: row.social ?? undefined,
     referral: row.referral ?? undefined,
+    avatarSeed: row.avatar_seed ?? undefined,
+    avatarPath: row.avatar_path ?? undefined,
+    avatarUpdatedAt: row.avatar_updated_at ?? undefined,
+    avatarUrl: avatarPublicUrl(row.avatar_path, row.avatar_updated_at),
   });
   // sanitize 保證非 null(email 必填);雙重保險
   return (
@@ -483,13 +514,14 @@ async function hydrateProfile(user: User): Promise<void> {
     if (!row) {
       // 第一次登入:用 pending(Join onboarding)或 email 預設建立 profile
       const seed = sanitize({
+        name: authUserDisplayName(user.user_metadata, email),
         interests: [],
         persona: null,
         joinedAt: Date.now(),
         notifications: { ...DEFAULT_NOTIFICATIONS },
         ...pending,
         email,
-        role: "free",
+        role: DEFAULT_NEW_MEMBER_CLASS,
         tier: "free",
       });
       if (!seed) return;

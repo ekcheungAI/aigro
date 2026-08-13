@@ -18,9 +18,9 @@ import { cn } from "@/lib/utils";
 import { REVEAL_EASE } from "@/components/Reveal";
 import {
   clearMember,
-  memberInitial,
   ROLE_LABELS,
 } from "@/components/auth/member";
+import MemberAvatar from "@/components/auth/MemberAvatar";
 import useModalDialog from "@/hooks/useModalDialog";
 
 const NAV_LINKS = [
@@ -225,12 +225,7 @@ export default function Navbar() {
                       : "border-border-strong bg-surface hover:bg-ink-soft"
                   )}
                 >
-                  <span
-                    aria-hidden="true"
-                    className="flex h-8 w-8 items-center justify-center rounded-full bg-lime font-display text-[13px] font-medium text-on-accent"
-                  >
-                    {memberInitial(member.name)}
-                  </span>
+                  <MemberAvatar member={member} size={32} />
                   <span className={cn(
                     "hidden text-label 2xl:inline",
                     overHero ? "text-band-text" : "text-text-primary"
@@ -254,9 +249,12 @@ export default function Navbar() {
                     aria-label="帳戶導覽"
                     className="absolute right-0 top-full z-20 mt-2 w-64 rounded-md border bg-surface p-2 shadow-card dark:shadow-none"
                   >
-                    <div className="border-b px-3 pb-3 pt-2">
-                      <p className="truncate text-label text-text-primary">{member.name}</p>
-                      <p className="mt-1 text-caption text-text-muted">{ROLE_LABELS[member.role]}</p>
+                    <div className="flex items-center gap-3 border-b px-3 pb-3 pt-2">
+                      <MemberAvatar member={member} size={40} />
+                      <div className="min-w-0">
+                        <p className="truncate text-label text-text-primary">{member.name}</p>
+                        <p className="mt-1 text-caption text-text-muted">{ROLE_LABELS[member.role]}</p>
+                      </div>
                     </div>
                     <Link
                       to={memberChipTo}
@@ -385,7 +383,7 @@ export default function Navbar() {
                       to={link.to}
                       onClick={closeDrawer}
                       className={({ isActive }) => cn(
-                        "flex min-h-14 items-center gap-3 py-3 font-display text-h2",
+                        "flex min-h-14 items-center gap-3 py-3 font-display text-[32px] leading-[1.25]",
                         isActive ? "text-ink" : "text-text-primary"
                       )}
                     >
@@ -411,12 +409,7 @@ export default function Navbar() {
                     onClick={closeDrawer}
                     className="inline-flex h-11 items-center gap-2 rounded-md border border-border-strong pl-1.5 pr-4 text-label text-text-primary"
                   >
-                    <span
-                      aria-hidden="true"
-                      className="flex h-7 w-7 items-center justify-center rounded-full bg-lime font-display text-[13px] font-medium text-on-accent"
-                    >
-                      {memberInitial(member.name)}
-                    </span>
+                    <MemberAvatar member={member} size={28} />
                     {member.role === "expert"
                       ? "專家平台"
                       : member.role === "admin" || member.role === "super_admin"

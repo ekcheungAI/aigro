@@ -20,6 +20,46 @@ pop3_port = 54336
 port = 54337
 backend = "postgres"
 
+[auth]
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000/**", "https://aigro.io/**"]
+
+[auth.external.google]
+enabled = true
+client_id = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID)"
+secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET)"
+skip_nonce_check = false
+
+[auth.email.template.confirmation]
+subject = "確認你嘅 AIGRO 帳號"
+content_path = "./supabase/templates/confirmation.html"
+
+[auth.email.template.recovery]
+subject = "重設你嘅 AIGRO 密碼"
+content_path = "./supabase/templates/recovery.html"
+
+[auth.email.template.invite]
+subject = "你獲邀加入 AIGRO"
+content_path = "./supabase/templates/invite.html"
+
+[auth.email.template.magic_link]
+subject = "登入 AIGRO"
+content_path = "./supabase/templates/magic-link.html"
+
+[auth.email.template.email_change]
+subject = "確認你嘅 AIGRO 新電郵地址"
+content_path = "./supabase/templates/email-change.html"
+
+[auth.email.notification.password_changed]
+enabled = true
+subject = "你嘅 AIGRO 密碼已更新"
+content_path = "./templates/password-changed.html"
+
+[auth.email.notification.email_changed]
+enabled = true
+subject = "你嘅 AIGRO 帳號電郵已更新"
+content_path = "./templates/email-changed.html"
+
 [functions.ask-answer]
 # Visitors sign in with Supabase Anonymous Auth, so every chat has a real JWT
 # and auth.uid() owner. This must stay enabled in every deployed environment.
@@ -48,3 +88,13 @@ verify_jwt = false
 # Super-admin browser workflow. The function validates the caller JWT and the
 # protected account_access role before using service-only invitation methods.
 verify_jwt = true
+
+[functions.admin-send-invite]
+# Called from the admin browser with the signed-in user's JWT. The function also
+# checks public.is_super_admin() before touching Auth Admin or Resend APIs.
+verify_jwt = true
+
+[functions.resend-webhook]
+# Resend signs every webhook with Svix headers; the handler verifies those
+# headers using RESEND_WEBHOOK_SECRET before accepting a delivery update.
+verify_jwt = false

@@ -21,9 +21,8 @@
 - **但冇一行數據係真嘅**:auth 係 localStorage JSON,對話係 localStorage,
   專家/會員/CRM/emails 全部寫死喺 `src/data/*.ts`,Payments 係展示頁,
   MCP 報名存單機。任何 refresh 後嘅「真實性」都係幻覺。
-- **安全風險(要即刻處理)**:`llmFallback.ts` 用 `VITE_LLM_API_KEY` 由瀏覽器
-  直 call OpenAI-compatible endpoint — key 會入 client bundle,任何人可攞走。
-  接 Kimi K3 時必須改做 server-side proxy(見 P1-4)。
+- **LLM credential 已修正:** browser-side `VITE_LLM_API_KEY` 路徑已移除；
+  `llmFallback.ts` 只呼叫 Supabase `ask-answer`，MiniMax key 留 server-side。
 
 **Top 5 priorities(按槓桿排序):**
 
@@ -33,8 +32,8 @@
    strip 三個入口而家全部漏數據;一張表即刻止血。【S】
 3. **Conversation logging**(`conversations` + `messages`)— Ask 對話係 CRM leads、
    專家統計、KB 改善嘅唯一原料;而家全部留喺用戶瀏覽器。【S】
-4. **LLM key 搬 server-side + Kimi K3 live answers** — 分身由 scripted regex
-   升級做真回答;順手堵咗 bundle 洩 key 嘅窿。【M】
+4. **MiniMax-M3 live answers** — server-side provider 接線已完成；下一步 deploy
+   Edge Function 同加入 approved knowledge RAG。【M】
 5. **自家情報 pipeline(Firecrawl → `items` 表)** — 擺脫對 AIHOT 第三方 API
    嘅單點依賴,admin content queue 即刻有真嘢審。【M】
 
@@ -104,7 +103,7 @@ Table 次序:`profiles → waitlist → conversations → messages`(INTEGRATION.
 
 | # | 項目 | UI 現狀 | 後端件 | Effort |
 |---|------|--------|--------|--------|
-| P1-4 | **LLM live answers(Kimi K3)** | personas.ts 語氣/greeting/suggestions/followUps 保留做 system prompt 素材;llmFallback 管線、AiReply citations 結構、guardrails 全部現成 | Edge Function `ask-answer`:message →(初期)prompt + Kimi K3 生成 →(之後)pgvector 檢索 `expert_knowledge_base` → 生成附引用。**KIMI_K3_API_KEY 只存 server-side**;同時移除 `VITE_LLM_*` 直 call(堵 bundle 洩 key);`usage_logs` 記每次 call(provider/cost)— 風險 R1 嘅硬要求 | **M**(RAG 部分 L,可再拆) |
+| P1-4 | **LLM live answers(MiniMax-M3)** | personas.ts 語氣/greeting/suggestions/followUps 保留做 UX 素材;llmFallback、AiReply citations 結構、guardrails 保留 | `ask-answer` Edge Function 已接 MiniMax-M3;**MINIMAX_API_KEY 只存 server-side**;舊 `VITE_LLM_*` browser direct call 已移除。下一步係 deploy + pgvector 檢索 approved knowledge → 生成附引用。`usage_logs` 記 provider/model/tokens/latency | **M**(provider 接線 done;RAG 部分 L) |
 | P1-5 | **自家情報 pipeline(取代 AIHOT 依賴)** | Insights/Daily/HotTopics 全部經 typed `Insight` adapter;AdminContent 審核 queue UI 現成;AdminSettings sources UI 現成 | `sources` 表 → Edge Function cron 經 **Firecrawl** fetch → fingerprint dedupe → score → `items`(status pending/reviewed/published)→ admin queue 審核 → 前端 adapter 改讀 `items`。`Insight` 介面同 `items` columns 近 1:1;AIHOT snapshot 留做过渡 fallback | **M** |
 | P1-6 | **CRM leads 自動生成** | AdminCRM 全 UI(階段 pills、360 drawer、timeline)現成;PortalLeads 現成 | `leads`(user_id, expert_id, source_message_id, intent, score, stage)由高意圖 message / 預約 click / MCP 報名 trigger insert;AdminCRM 全表 + PortalLeads RLS(`expert_id` 對 `auth.uid()`);crmKpis 改聚合 view | **M** |
 | P1-7 | **experts 表 + portal 真數據** | Portal 6 頁全部按 slug scoped 讀 portal-mock,形狀已係 RLS 查詢 | `experts` 表;`expert_insights`(含 max-3 quota check);portalStats/RecentConversations 改聚合 views;`expertSlugForEmail()` 退役改 profile ↔ expert FK;PortalInsights CRUD 換 optimistic mutation | **M** |
@@ -135,14 +134,15 @@ function 已經係 view spec,照譯 SQL。Admin 用 `role='admin'` RLS policy。
 | `VITE_SUPABASE_URL` | Supabase client | client bundle | `.env.example` 已有 placeholder,P0 必填 |
 | `VITE_SUPABASE_ANON_KEY` | Supabase client(公開,RLS 保護) | client bundle | 同上 |
 | `SUPABASE_SERVICE_ROLE_KEY` | admin 操作、Edge Functions | **server-side only** | P0(Edge Functions 起用時) |
-| `KIMI_K3_API_KEY`(+ `KIMI_K3_BASE_URL` / model 名) | Ask live answers | **server-side only**(Edge Function) | P1;用戶將提供 key |
+| `MINIMAX_API_KEY` | Ask live answers | **server-side only**(Edge Function) | 必填;唔准用 `VITE_` prefix |
+| `MINIMAX_BASE_URL` / `MINIMAX_MODEL` | MiniMax endpoint / model | Edge Function config | 預設 `https://api.minimax.io/v1` / `MiniMax-M3` |
 | `FIRECRAWL_API_KEY` | 情報 scraper + 專家材料蒸餾 | server-side only | `.env.example` 已有;**用戶已有 key** |
 | `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET` | Payments + webhook | server-side only | P2 |
 | `VITE_STRIPE_PUBLISHABLE_KEY` | Stripe.js | client bundle | P2 |
 | `RESEND_API_KEY` | 交易式 + digest email | server-side only | P2 |
 | Embedding provider key(pgvector 用,Kimi embedding 或 OpenAI) | KB chunks 向量化 | server-side only | P1(RAG)/ P2(蒸餾) |
 | `AIHOT_BASE_URL` | 過渡期 snapshot fetch | build script | 已有,可選 |
-| ~~`VITE_LLM_BASE_URL` / `VITE_LLM_API_KEY` / `VITE_LLM_MODEL`~~ | 而家嘅瀏覽器直 call fallback | client bundle | **P1 時移除** — VITE_* 入 bundle,key 會洩漏;Kimi K3 接入後由 server-side proxy 取代 |
+| ~~`VITE_LLM_BASE_URL` / `VITE_LLM_API_KEY` / `VITE_LLM_MODEL`~~ | 舊 browser direct call | client bundle | **已移除** — provider secrets 全部經 `ask-answer` |
 
 ---
 
