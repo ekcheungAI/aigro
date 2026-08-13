@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react";
+import { Link } from "react-router-dom";
 import {
   ArrowRight,
   BookOpen,
@@ -10,8 +11,11 @@ import {
   ExternalLink,
   FileCheck2,
   FileText,
+  Instagram,
   Layers3,
   Library,
+  LockKeyhole,
+  LogIn,
   MessageSquareText,
   Network,
   RefreshCw,
@@ -19,11 +23,17 @@ import {
   Search,
   ShieldCheck,
   Target,
+  UserPlus,
   Users,
+  Youtube,
 } from "lucide-react";
+import useMember from "@/hooks/useMember";
 
 const COURSE_URL =
   "https://dotai.hk/academy/100x-ai-growth-marketer-level-1-level-2-21-hours";
+const GUIDE_PATH = "/guides/100x-ai-growth-marketer";
+const INSTAGRAM_URL = "https://www.instagram.com/aigro.hk/";
+const YOUTUBE_REPLAY_URL = "https://www.youtube.com/@ekcheungAI";
 const COURSE_IMAGE =
   "https://framerusercontent.com/images/JkhpxyB22gtACenKHlpHHjKsLqg.png?scale-down-to=1024&width=1672&height=941";
 const COURSE_VISUALS = {
@@ -411,7 +421,71 @@ function CheckList({ items }: { items: readonly string[] }) {
   );
 }
 
+function GuideAccessGate({ loading = false }: { loading?: boolean }) {
+  const next = encodeURIComponent(GUIDE_PATH);
+
+  return (
+    <div className="course-access-page">
+      <section className="course-access-card" aria-busy={loading || undefined}>
+        <div className="course-access-copy">
+          <span className="course-access-icon" aria-hidden="true">
+            <LockKeyhole strokeWidth={1.5} />
+          </span>
+          <p className="course-guide-kicker">AIGRO MEMBER REPLAY · 會員限定</p>
+          <h1>登入會員，解鎖直播重溫</h1>
+          <p className="course-access-lead">
+            {loading
+              ? "正在確認你嘅會員狀態，請稍候。"
+              : "YouTube 直播重溫影片同完整課堂筆記，只限已註冊 AIGRO 會員查看。免費加入後即可解鎖。"}
+          </p>
+          {!loading && (
+            <div className="course-guide-actions">
+              <Link
+                to={`?auth=join&next=${next}`}
+                className="guide-button guide-button-primary press"
+              >
+                <UserPlus className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+                免費註冊睇重溫
+              </Link>
+              <Link
+                to={`?auth=login&next=${next}`}
+                className="guide-button guide-button-secondary press"
+              >
+                <LogIn className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+                已有帳號？登入
+              </Link>
+            </div>
+          )}
+        </div>
+
+        {!loading && (
+          <aside className="course-access-aside" aria-label="AIGRO Instagram 更新">
+            <Instagram className="h-6 w-6" strokeWidth={1.5} aria-hidden="true" />
+            <p className="notes-eyebrow">FOLLOW AIGRO</p>
+            <h2>緊貼下一場直播</h2>
+            <p>Follow @aigro.hk，第一時間收到直播、課堂重溫同會員內容更新。</p>
+            <a
+              href={INSTAGRAM_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="guide-button guide-button-secondary press"
+            >
+              Follow @aigro.hk
+              <ExternalLink className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+            </a>
+          </aside>
+        )}
+      </section>
+    </div>
+  );
+}
+
 export default function GrowthMarketerGuide() {
+  const { member, loading } = useMember();
+
+  if (loading) return <GuideAccessGate loading />;
+  if (!member) return <GuideAccessGate />;
+
   return (
     <div className="course-notes-page">
       <section className="course-guide-hero">
@@ -428,17 +502,19 @@ export default function GrowthMarketerGuide() {
             Brain、5 位 AI 員工與多平台內容，行到 Sales Funnel、CRM 同每週 Growth Loop。
           </p>
           <div className="course-guide-actions">
-            <a href="#route" className="guide-button guide-button-primary press">
-              開始：三段導讀路線
-            </a>
             <a
-              href={COURSE_URL}
+              href={YOUTUBE_REPLAY_URL}
               target="_blank"
               rel="noreferrer"
-              className="guide-button guide-button-secondary press"
+              className="guide-button guide-button-youtube press"
             >
-              到 DotAI 核對及報讀
+              <Youtube className="h-5 w-5" strokeWidth={1.5} aria-hidden="true" />
+              YouTube 直播重溫影片
               <ExternalLink className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+            </a>
+            <a href="#course-links" className="guide-button guide-button-secondary press">
+              <BookOpen className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+              直播重溫筆記
             </a>
           </div>
         </div>

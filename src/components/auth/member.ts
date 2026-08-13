@@ -1,5 +1,5 @@
 /**
- * AIGRO 會員 — Supabase Auth(magic link)+ localStorage 快取。
+ * AIGRO 會員 — Supabase Auth(Google + Email/password)+ localStorage 快取。
  *
  * 雙層設計(P0 接入,graceful fallback):
  * - 有 env + 已登入 → `profiles` 表係 source of truth,localStorage 係
@@ -11,6 +11,7 @@
  */
 
 import { supabase, supabaseReady } from "@/lib/supabase";
+import { getAuthRedirectUrl } from "@/lib/authRedirect";
 import type { User } from "@supabase/supabase-js";
 
 export type MemberTier = "free" | "pro" | "vip";
@@ -97,7 +98,7 @@ export interface AigroMember {
   referral?: ReferralSource;
   /**
    * 示範/訪客帳號標記 — demo 帳號(Login/Access/Portal gate 一 click 登入)
-   * 只存本機,唔會寫入 Supabase;真 magic-link 會員無呢個 flag。
+   * 只存本機,唔會寫入 Supabase;真 Supabase 會員無呢個 flag。
    */
   demo?: boolean;
 }
@@ -263,7 +264,7 @@ export function clearMember(): void {
 }
 
 /* ================= Supabase Auth(P0)=================
- * magic-link 登入 + profiles 表同步 + auth state listener。
+ * Google / Email-password 登入 + profiles 表同步 + auth state listener。
  * 全部 grace­ful:無 env / 離線 → 純 localStorage 示範模式。
  */
 
@@ -330,13 +331,13 @@ export function getAuthUserId(): string | null {
   return currentUserId;
 }
 
-/* ---------------- pending profile(magic-link 空窗期嘅 onboarding 欄位) ---------------- */
+/* ---------------- pending profile(email confirmation 空窗期嘅 onboarding 欄位) ---------------- */
 
 const PENDING_PROFILE_KEY = "aigro-pending-profile";
 
 /**
  * Join 完成後暫存 onboarding 欄位(name/interests/goals/persona/tier)。
- * magic-link 要clickemail 先有 session,呢啲欄位等 `initAuth` 喺
+ * confirmation 要 click email 先有 session,呢啲欄位等 `initAuth` 喺
  * SIGNED_IN 時先 upsert 入 profiles。
  */
 export function savePendingProfile(fields: Partial<AigroMember>): void {
@@ -554,30 +555,106 @@ export function initAuth(): void {
   });
 }
 
-/**
- * 發送 magic-link 登入 email。回傳 ok / error(離線或無 env → ok:false)。
- * 成功後用戶要clickemail 連結先建立 session(之後 initAuth 接手)。
- */
-export async function sendMagicLink(
-  email: string
+/** 建立 Email + password 帳號；已有 anonymous session 時原地升級，保留訪客資料歸屬。 */
+export async function signUpWithPassword(
+  email: string,
+  password: string,
+  redirectPath = "/account"
 ): Promise<{ ok: boolean; error?: string }> {
   if (!supabase || !supabaseReady) return { ok: false, error: "offline" };
   try {
     const { data: sessionData } = await supabase.auth.getSession();
-    if (sessionData.session?.user.is_anonymous) {
-      const { error: upgradeError } = await supabase.auth.updateUser(
-        { email: email.trim() },
-        { emailRedirectTo: window.location.origin }
-      );
-      if (upgradeError) return { ok: false, error: upgradeError.message };
-      return { ok: true };
-    }
+    const redirectTo = getAuthRedirectUrl(redirectPath);
+    const { error } = sessionData.session?.user.is_anonymous
+      ? await supabase.auth.updateUser(
+          { email: email.trim(), password },
+          { emailRedirectTo: redirectTo }
+        )
+      : await supabase.auth.signUp({
+          email: email.trim(),
+          password,
+          options: { emailRedirectTo: redirectTo },
+        });
+    return error ? { ok: false, error: error.message } : { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "unknown" };
+  }
+}
+
+/** Google OAuth signup/login；Supabase 會按 identity 自動建立或重用同一個 user。 */
+export async function signInWithGoogle(
+  redirectPath = "/account"
+): Promise<{ ok: boolean; error?: string }> {
+  if (!supabase || !supabaseReady) return { ok: false, error: "offline" };
+  try {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: getAuthRedirectUrl(redirectPath) },
+    });
+    return error ? { ok: false, error: error.message } : { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "unknown" };
+  }
+}
+
+/** Backward-compatible magic-link helper for legacy auth entry components. */
+export async function sendMagicLink(
+  email: string,
+  redirectPath = "/account"
+): Promise<{ ok: boolean; error?: string }> {
+  if (!supabase || !supabaseReady) return { ok: false, error: "offline" };
+  try {
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
-      options: { emailRedirectTo: window.location.origin },
+      options: { emailRedirectTo: getAuthRedirectUrl(redirectPath) },
     });
-    if (error) return { ok: false, error: error.message };
-    return { ok: true };
+    return error ? { ok: false, error: error.message } : { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "unknown" };
+  }
+}
+
+/** 重發 signup confirmation；固定沿用 allowlisted app callback。 */
+export async function resendSignupConfirmation(
+  email: string,
+  redirectPath = "/account"
+): Promise<{ ok: boolean; error?: string }> {
+  if (!supabase || !supabaseReady) return { ok: false, error: "offline" };
+  try {
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: email.trim(),
+      options: { emailRedirectTo: getAuthRedirectUrl(redirectPath) },
+    });
+    return error ? { ok: false, error: error.message } : { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "unknown" };
+  }
+}
+
+/** 發送 password recovery email；回程只可進入專用 reset page。 */
+export async function sendPasswordReset(
+  email: string
+): Promise<{ ok: boolean; error?: string }> {
+  if (!supabase || !supabaseReady) return { ok: false, error: "offline" };
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: getAuthRedirectUrl("/reset-password"),
+    });
+    return error ? { ok: false, error: error.message } : { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "unknown" };
+  }
+}
+
+/** Recovery session 建立後更新密碼。 */
+export async function updatePassword(
+  password: string
+): Promise<{ ok: boolean; error?: string }> {
+  if (!supabase || !supabaseReady) return { ok: false, error: "offline" };
+  try {
+    const { error } = await supabase.auth.updateUser({ password });
+    return error ? { ok: false, error: error.message } : { ok: true };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "unknown" };
   }

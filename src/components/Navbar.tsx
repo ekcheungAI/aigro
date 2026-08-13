@@ -43,6 +43,8 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const accountMenuRef = useRef<HTMLDivElement>(null);
   const { pathname } = useLocation();
+  const authSearch = (mode: "join" | "login") =>
+    `?auth=${mode}&next=${encodeURIComponent(pathname)}`;
   // 會員態 — useMember 響應式(auth state change / 跨分頁 / demo 登入都即時更新)
   const { member } = useMember();
   const closeDrawer = useCallback(() => setDrawerOpen(false), []);
@@ -284,7 +286,7 @@ export default function Navbar() {
               /* 未登入:登入 ghost + 加入 Club lime primary */
               <div className="hidden items-center gap-2 sm:flex">
                 <Link
-                  to="/login"
+                  to={authSearch("login")}
                   className={cn(
                     "press inline-flex h-11 items-center rounded-md px-4 text-label",
                     overHero
@@ -295,7 +297,7 @@ export default function Navbar() {
                   登入
                 </Link>
                 <Link
-                  to="/join"
+                  to={authSearch("join")}
                   className="press inline-flex h-11 items-center rounded-md bg-lime px-4 text-label text-on-accent hover:bg-lime-hover"
                 >
                   加入 Club
@@ -409,14 +411,14 @@ export default function Navbar() {
                 ) : (
                   <>
                     <Link
-                      to="/login"
+                      to={authSearch("login")}
                       onClick={closeDrawer}
                       className="inline-flex h-11 items-center rounded-md border border-border-strong px-6 text-label text-text-primary"
                     >
                       登入
                     </Link>
                     <Link
-                      to="/join"
+                      to={authSearch("join")}
                       onClick={closeDrawer}
                       className="inline-flex h-11 items-center rounded-md bg-lime px-6 text-label text-on-accent"
                     >

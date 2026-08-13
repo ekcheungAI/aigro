@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Newsletter from "@/components/Newsletter";
 import MobileAppNav from "@/components/MobileAppNav";
+import AuthModal from "@/components/auth/AuthModal";
 import { cn } from "@/lib/utils";
 
 /**
@@ -72,6 +73,7 @@ export default function Layout() {
         跳到主要內容
       </a>
       <Navbar />
+      <AuthModal />
       <main id="main-content" tabIndex={-1} className="flex-1 outline-none">
         <Outlet />
       </main>

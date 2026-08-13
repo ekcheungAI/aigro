@@ -14,14 +14,13 @@ const ExpertProfile = lazy(() => import("@/pages/ExpertProfile"));
 const Ask = lazy(() => import("@/pages/Ask"));
 const Pricing = lazy(() => import("@/pages/Pricing"));
 const Developers = lazy(() => import("@/pages/Developers"));
-const Login = lazy(() => import("@/pages/Login"));
-const Join = lazy(() => import("@/pages/Join"));
 const Account = lazy(() => import("@/pages/Account"));
 const Skills = lazy(() => import("@/pages/Skills"));
 const Sources = lazy(() => import("@/pages/Sources"));
 const Access = lazy(() => import("@/pages/Access"));
 const Branding = lazy(() => import("@/pages/Branding"));
 const GrowthMarketerGuide = lazy(() => import("@/pages/GrowthMarketerGuide"));
+const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
 const UXPreview = lazy(() => import("@/pages/UXPreview"));
 const Placeholder = lazy(() => import("@/pages/Placeholder"));
 const AdminLayout = lazy(() => import("@/components/admin/AdminLayout"));
@@ -68,6 +67,7 @@ function RouteMeta() {
     [/^\/access/, "全級別入口", "AIGRO 全級別入口 — 訪客、會員、創始會員、領航專家、管理員示範登入。"],
     [/^\/login/, "登入", "登入 AIGRO Club — 無限分身對話、完整案例拆解、MCP 優先接入。"],
     [/^\/join/, "加入 Club", "加入 AIGRO Club — 三步成為會員,免費開始,隨時升級。"],
+    [/^\/reset-password/, "設定新密碼", "安全更新你嘅 AIGRO 帳號密碼。"],
     [/^\/account/, "會員專區", "你嘅 AIGRO 會員專區 — 層級、對話紀錄、MCP 名單與設定。"],
     [/^\/admin/, "AIGRO Admin", "內部管理後台。"],
     [/^\/portal\/kb/, "專家知識庫", "管理已授權嘅專家知識、來源與 AI 分身內容。"],
@@ -94,6 +94,16 @@ function RouteMeta() {
     isNotFound ? "此頁面不存在或已移除。返回 AIGRO 瀏覽最新 AI・增長情報。" : activeMeta?.[1] || undefined
   );
   return null;
+}
+
+function AuthRouteRedirect({ mode }: { mode: "join" | "login" }) {
+  const { search } = useLocation();
+  const incoming = new URLSearchParams(search);
+  const requested = incoming.get("next");
+  const nextPath =
+    requested?.startsWith("/") && !requested.startsWith("//") ? requested : "/";
+  const modalSearch = new URLSearchParams({ auth: mode, next: nextPath });
+  return <Navigate to={`${nextPath}?${modalSearch.toString()}`} replace />;
 }
 
 /**
@@ -132,8 +142,9 @@ export default function App() {
           element={<Navigate to="/insights?tab=data" replace />}
         />
         <Route path="access" element={<Access />} />
-        <Route path="login" element={<Login />} />
-        <Route path="join" element={<Join />} />
+        <Route path="login" element={<AuthRouteRedirect mode="login" />} />
+        <Route path="join" element={<AuthRouteRedirect mode="join" />} />
+        <Route path="reset-password" element={<ResetPassword />} />
         <Route path="account" element={<Account />} />
         <Route
           path="*"

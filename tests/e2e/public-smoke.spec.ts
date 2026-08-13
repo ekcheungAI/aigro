@@ -21,7 +21,47 @@ test("protected CMS routes keep their authentication gates", async ({ page }) =>
   await expect(page.getByRole("heading", { name: "需要 admin 帳號登入" })).toBeVisible();
 });
 
+test("signup and login share one modal without losing page context", async ({ page }) => {
+  await page.goto("/join");
+  await expect(page).toHaveURL(/\?auth=join&next=%2F$/);
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByRole("heading", { name: "免費加入 AIGRO" })).toBeVisible();
+  await expect(dialog.getByLabel("顯示名稱")).toBeVisible();
+  await dialog.getByRole("tab", { name: "登入" }).click();
+  await expect(dialog.getByRole("heading", { name: "歡迎返嚟" })).toBeVisible();
+  await expect(page).toHaveURL(/\?auth=login&next=%2F/);
+});
+
+test("Class Review blocks signed-out visitors and opens auth in place", async ({ page }) => {
+  await page.goto("/guides/100x-ai-growth-marketer");
+  await expect(page.getByRole("heading", { name: "登入會員，解鎖直播重溫" })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "導讀目錄" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: /Follow @aigro.hk/ })).toHaveAttribute(
+    "href",
+    "https://www.instagram.com/aigro.hk/"
+  );
+  await page.getByRole("link", { name: "免費註冊睇重溫" }).click();
+  await expect(page).toHaveURL(/\/guides\/100x-ai-growth-marketer\?auth=join/);
+  await expect(page.getByRole("dialog").getByRole("heading", { name: "免費加入 AIGRO" })).toBeVisible();
+});
+
 test("Class Review is discoverable and the responsive course shell stays consistent", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem(
+      "aigro-member",
+      JSON.stringify({
+        name: "Test Member",
+        email: "member@example.com",
+        interests: [],
+        persona: null,
+        role: "free",
+        tier: "free",
+        joinedAt: 0,
+        notifications: { daily: true, weekly: true, product: false },
+        demo: true,
+      })
+    );
+  });
   await page.setViewportSize({ width: 824, height: 691 });
   await page.goto("/guides/100x-ai-growth-marketer");
 
@@ -34,6 +74,14 @@ test("Class Review is discoverable and the responsive course shell stays consist
     name: "100x AI Growth Marketer 養成課｜Level 1 + Level 2 導讀",
   })).toBeVisible();
   await expect(page.getByRole("navigation", { name: "導讀目錄" })).toBeVisible();
+  await expect(page.getByRole("link", { name: /YouTube 直播重溫影片/ })).toHaveAttribute(
+    "href",
+    /^https:\/\/www\.youtube\.com\//
+  );
+  await expect(page.getByRole("link", { name: /直播重溫筆記/ })).toHaveAttribute(
+    "href",
+    "#course-links"
+  );
   await expect(page.getByRole("region", {
     name: "100x AI Growth Marketer 四階段學習時間線",
   })).toHaveAttribute("tabindex", "0");
