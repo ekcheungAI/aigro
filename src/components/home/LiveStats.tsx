@@ -7,11 +7,11 @@ import {
 } from "@/data/aihot";
 import { useLiveFetchedAt, useLiveItems } from "@/data/liveItems";
 import { verifiedExperts } from "@/data/experts";
-import { supabase } from "@/lib/supabase";
 
 /* 統計以數據時鐘(live fetchedAt,未成熟時用 snapshot 嘅 aihotFetchedAt)為基準 —
    數字永遠同頁面展示嘅情報吻合,唔會因為數據日期同訪客「今日」有落差而顯示 0。 */
 const SNAPSHOT_FETCH_TIME = new Date(aihotFetchedAt).getTime();
+const MEMBER_BASE_COUNT = 100;
 
 function countWithinHours(
   items: { publishedAt: string }[],
@@ -99,24 +99,6 @@ function CountUp({
 export default function LiveStats() {
   const liveItems = useLiveItems();
   const liveFetchedAt = useLiveFetchedAt();
-  const [memberCount, setMemberCount] = useState<number | null | undefined>(() =>
-    supabase ? undefined : null,
-  );
-
-  useEffect(() => {
-    if (!supabase) return;
-    let active = true;
-    void supabase.rpc("get_public_member_count").then(({ data, error }) => {
-      const count = typeof data === "number" ? data : Number(data);
-      if (!active) return;
-      setMemberCount(
-        !error && Number.isSafeInteger(count) && count >= 0 ? count : null,
-      );
-    });
-    return () => {
-      active = false;
-    };
-  }, []);
 
   const stats = useMemo<Stat[]>(() => {
     if (!liveItems) return SNAPSHOT_STATS;
@@ -139,22 +121,17 @@ export default function LiveStats() {
     <div>
       <dl className="border-t border-band-border pt-5">
         <div className="flex flex-wrap items-end gap-x-4 gap-y-1">
-          <dt className="pb-1 text-label text-band-text-muted">會員總數</dt>
-          <dd className="flex items-baseline gap-2" aria-live="polite">
-            {memberCount === undefined ? (
-              <span className="font-sans text-label text-band-text-muted">讀取中</span>
-            ) : memberCount === null ? (
-              <span className="font-sans text-label text-band-text-muted">暫未能讀取</span>
-            ) : (
-              <>
-                <CountUp
-                  value={memberCount}
-                  delay={0}
-                  className="font-display text-h2 leading-none text-band-text"
-                />
-                <span className="font-sans text-caption text-band-text-muted">位已註冊會員</span>
-              </>
-            )}
+          <dt className="pb-1 text-label text-band-text-muted">會員社群</dt>
+          <dd className="flex items-baseline gap-2">
+            <span className="flex items-baseline">
+              <CountUp
+                value={MEMBER_BASE_COUNT}
+                delay={0}
+                className="font-display text-h2 leading-none text-band-text"
+              />
+              <span className="font-display text-h3 leading-none text-band-text">+</span>
+            </span>
+            <span className="font-sans text-caption text-band-text-muted">位成員</span>
           </dd>
         </div>
       </dl>
