@@ -74,14 +74,12 @@ test("Class Review is discoverable and the responsive course shell stays consist
     name: "100x AI Growth Marketer 養成課｜Level 1 + Level 2 導讀",
   })).toBeVisible();
   await expect(page.getByRole("navigation", { name: "導讀目錄" })).toBeVisible();
-  await expect(page.getByRole("link", { name: /YouTube 直播重溫影片/ })).toHaveAttribute(
-    "href",
-    /^https:\/\/www\.youtube\.com\//
-  );
-  await expect(page.getByRole("link", { name: /直播重溫筆記/ })).toHaveAttribute(
-    "href",
-    "#course-links"
-  );
+  await expect(
+    page.getByRole("button", { name: "YouTube 直播重溫影片 Coming Soon" })
+  ).toBeDisabled();
+  await expect(
+    page.getByRole("button", { name: "直播重溫筆記 Coming Soon" })
+  ).toBeDisabled();
   await expect(page.getByRole("region", {
     name: "100x AI Growth Marketer 四階段學習時間線",
   })).toHaveAttribute("tabindex", "0");

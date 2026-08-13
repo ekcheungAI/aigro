@@ -354,6 +354,23 @@
     line-height: 1.72;
   }
 
+  .guide-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.68;
+  }
+
+  .guide-button-status {
+    border: 1px solid currentColor;
+    border-radius: 999px;
+    padding: 2px 6px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    line-height: 1.3;
+    text-transform: uppercase;
+  }
+
   .guide-button-primary {
     border-color: hsl(var(--lime));
     background: hsl(var(--lime));
@@ -370,7 +387,7 @@
     color: hsl(var(--text-primary));
   }
 
-  .guide-button-secondary:hover {
+  .guide-button-secondary:not(:disabled):hover {
     border-color: hsl(var(--ink));
     color: hsl(var(--ink));
   }
@@ -381,7 +398,7 @@
     color: hsl(var(--band-text));
   }
 
-  .guide-button-youtube:hover {
+  .guide-button-youtube:not(:disabled):hover {
     border-color: hsl(var(--ink));
     color: hsl(var(--band-ink));
   }

@@ -33,7 +33,6 @@ const COURSE_URL =
   "https://dotai.hk/academy/100x-ai-growth-marketer-level-1-level-2-21-hours";
 const GUIDE_PATH = "/guides/100x-ai-growth-marketer";
 const INSTAGRAM_URL = "https://www.instagram.com/aigro.hk/";
-const YOUTUBE_REPLAY_URL = "https://www.youtube.com/@ekcheungAI";
 const COURSE_IMAGE =
   "https://framerusercontent.com/images/JkhpxyB22gtACenKHlpHHjKsLqg.png?scale-down-to=1024&width=1672&height=941";
 const COURSE_VISUALS = {
@@ -502,20 +501,24 @@ export default function GrowthMarketerGuide() {
             Brain、5 位 AI 員工與多平台內容，行到 Sales Funnel、CRM 同每週 Growth Loop。
           </p>
           <div className="course-guide-actions">
-            <a
-              href={YOUTUBE_REPLAY_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="guide-button guide-button-youtube press"
+            <button
+              type="button"
+              disabled
+              className="guide-button guide-button-youtube"
             >
               <Youtube className="h-5 w-5" strokeWidth={1.5} aria-hidden="true" />
-              YouTube 直播重溫影片
-              <ExternalLink className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-            </a>
-            <a href="#course-links" className="guide-button guide-button-secondary press">
+              <span>YouTube 直播重溫影片</span>
+              <span className="guide-button-status">Coming Soon</span>
+            </button>
+            <button
+              type="button"
+              disabled
+              className="guide-button guide-button-secondary"
+            >
               <BookOpen className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-              直播重溫筆記
-            </a>
+              <span>直播重溫筆記</span>
+              <span className="guide-button-status">Coming Soon</span>
+            </button>
           </div>
         </div>
 
