@@ -9,10 +9,7 @@ const Daily = lazy(() => import("@/pages/Daily"));
 const InsightDetail = lazy(() => import("@/pages/InsightDetail"));
 const Cases = lazy(() => import("@/pages/Cases"));
 const CaseDetail = lazy(() => import("@/pages/CaseDetail"));
-const Experts = lazy(() => import("@/pages/Experts"));
-const ExpertProfile = lazy(() => import("@/pages/ExpertProfile"));
-const Ask = lazy(() => import("@/pages/Ask"));
-const Pricing = lazy(() => import("@/pages/Pricing"));
+const FeatureUnavailable = lazy(() => import("@/pages/FeatureUnavailable"));
 const Developers = lazy(() => import("@/pages/Developers"));
 const Account = lazy(() => import("@/pages/Account"));
 const Skills = lazy(() => import("@/pages/Skills"));
@@ -57,7 +54,6 @@ function RouteMeta() {
     [/^\/experts\/[^/]+/, "專家檔案", "領航專家個人頁 — 成就佐證、授權透明度、AI 分身對話入口。"],
     [/^\/experts/, "領航專家 Experts", "由領航專家帶領嘅 growth hacking club — AI 分身基於授權內容蒸餾。"],
     [/^\/ask/, "Ask 問答", "問 AI 編輯部任何 AI、增長、營銷問題 — 命中已批准知識時顯示可核實來源。"],
-    [/^\/pricing/, "方案 Pricing", "免費/進階/VIP 三層會員方案 — 解鎖無限 AI 對話與領航專家分身。"],
     [/^\/developers/, "AIGRO MCP Network", "行業情報 MCP server — 你嘅 AI 工具一連接,即刻有行業雷達。AI 行業優先名單開放中。"],
     [/^\/sources/, "情報渠道", "AIGRO 情報渠道 — 公開透明嘅來源牆、數據流程與免費任用方式。"],
     [/^\/skills/, "Skills", "AIGRO Skills — 俾你嘅 AI agent 裝上專業能力。"],
@@ -127,10 +123,33 @@ export default function App() {
           path="library"
           element={<Navigate to="/insights" replace />}
         />
-        <Route path="experts" element={<Experts />} />
-        <Route path="experts/:slug" element={<ExpertProfile />} />
-        <Route path="ask" element={<Ask />} />
-        <Route path="pricing" element={<Pricing />} />
+        <Route
+          path="experts/*"
+          element={
+            <FeatureUnavailable
+              eyebrow="Experts · 暫未開放"
+              title="領航專家平台即將開放"
+              description="我哋正完成專家授權、資料核實同預約流程。正式開放前，公開專家名單及個人頁暫時封鎖。"
+              screenshotSrc="/previews/experts-product.jpg"
+              screenshotAlt="AIGRO 領航專家平台產品預覽，展示已認證專家資料卡"
+              screenshotPosition="center top"
+            />
+          }
+        />
+        <Route
+          path="ask"
+          element={
+            <FeatureUnavailable
+              eyebrow="Ask · 暫未開放"
+              title="AI 問答功能準備中"
+              description="我哋正完成答案來源、知識授權同品質檢查。Ask 問答會喺準備好之後重新開放。"
+              screenshotSrc="/previews/ask-product.jpg"
+              screenshotAlt="AIGRO Ask AI 問答產品預覽，展示分身選擇、對話介面及來源資料"
+              screenshotPosition="center top"
+            />
+          }
+        />
+        <Route path="pricing" element={<Navigate to="/join" replace />} />
         <Route path="developers" element={<Developers />} />
         <Route path="skills" element={<Skills />} />
         <Route path="branding" element={<Branding />} />

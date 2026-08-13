@@ -26,9 +26,8 @@ import useModalDialog from "@/hooks/useModalDialog";
 const NAV_LINKS = [
   { to: "/insights", en: "Insights", zh: "情報" },
   { to: "/skills", en: "Skills", zh: "技能" },
-  { to: "/experts", en: "Experts", zh: "專家" },
-  { to: "/ask", en: "Ask", zh: "問答" },
-  { to: "/pricing", en: "Pricing", zh: "方案" },
+  { to: "/experts", en: "Experts", zh: "專家", comingSoon: true },
+  { to: "/ask", en: "Ask", zh: "問答", comingSoon: true },
 ] as const;
 
 /**
@@ -166,6 +165,11 @@ export default function Navbar() {
                     )}>
                       {link.zh}
                     </span>
+                    {"comingSoon" in link && link.comingSoon && (
+                      <span className="ml-1 rounded-sm bg-card px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase leading-none tracking-[0.06em] text-text-muted">
+                        Coming Soon
+                      </span>
+                    )}
                     {isActive && (
                       <span
                         aria-hidden="true"
@@ -375,11 +379,17 @@ export default function Navbar() {
                     <NavLink
                       to={link.to}
                       onClick={closeDrawer}
-                      className={({ isActive }) =>
-                        `block py-3 font-display text-h2 ${isActive ? "text-ink" : "text-text-primary"}`
-                      }
+                      className={({ isActive }) => cn(
+                        "flex min-h-14 items-center gap-3 py-3 font-display text-h2",
+                        isActive ? "text-ink" : "text-text-primary"
+                      )}
                     >
-                      {link.en} {link.zh}
+                      <span>{link.en} {link.zh}</span>
+                      {"comingSoon" in link && link.comingSoon && (
+                        <span className="rounded-sm bg-card px-2 py-1 font-mono text-[10px] font-medium uppercase leading-none tracking-[0.06em] text-text-muted">
+                          Coming Soon
+                        </span>
+                      )}
                     </NavLink>
                   </motion.div>
                 )

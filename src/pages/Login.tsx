@@ -147,7 +147,7 @@ export default function Login() {
             <p className="text-overline uppercase tracking-[0.12em] text-band-ink">
               AIGRO Club
             </p>
-            <h2 className="mt-3 font-display text-h2 text-band-text">會員專區</h2>
+            <h2 className="mt-3 font-sans text-h2 font-semibold text-band-text">會員專區</h2>
             <p className="mt-3 text-body-sm text-band-text-secondary">
               加入香港 AI × Growth 圈，情報、分身、案例一次解鎖。
             </p>
@@ -171,7 +171,7 @@ export default function Login() {
 
         {/* ---- 右:登入表單 ---- */}
         <div className="p-8 md:p-10">
-          <h1 className="font-display text-h3 text-text-primary">登入</h1>
+          <h1 className="font-sans text-h3 font-semibold text-text-primary">登入</h1>
           <p className="mt-2 text-body-sm text-text-secondary">
             歡迎返嚟。用 Email 登入你嘅 AIGRO 帳號。
           </p>

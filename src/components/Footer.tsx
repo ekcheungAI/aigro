@@ -107,7 +107,6 @@ export default function Footer() {
               <li><Link className="text-band-text-secondary transition-colors duration-150 hover:text-band-ink" to="/skills">Skills 技能</Link></li>
               <li><Link className="text-band-text-secondary transition-colors duration-150 hover:text-band-ink" to="/experts">Experts 專家</Link></li>
               <li><Link className="text-band-text-secondary transition-colors duration-150 hover:text-band-ink" to="/ask">Ask 問答</Link></li>
-              <li><Link className="text-band-text-secondary transition-colors duration-150 hover:text-band-ink" to="/pricing">Pricing 方案</Link></li>
               <li><Link className="text-band-text-secondary transition-colors duration-150 hover:text-band-ink" to="/experts">領航專家邀請制</Link></li>
             </ul>
           </nav>

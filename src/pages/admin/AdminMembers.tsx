@@ -379,7 +379,7 @@ export default function AdminMembers() {
                 未有會員
               </p>
               <p className="mx-auto mt-1.5 max-w-[360px] text-xs leading-relaxed text-text-muted">
-                profiles 表而家係 0 — 第一位用 magic link 登入嘅會員會即時出現喺呢度。
+                profiles 表而家係 0 — 第一位完成 Email 註冊嘅會員會即時出現喺呢度。
               </p>
             </div>
           ) : null
