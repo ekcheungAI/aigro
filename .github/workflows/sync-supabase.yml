@@ -34,7 +34,7 @@ jobs:
       - name: Sync argro items → Supabase
         env:
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
-          SUPABASE_URL: https://mxjgavuzzpcvazxdnuzg.supabase.co
+          SUPABASE_URL: https://zpdwalqnhkbxhmaagkfc.supabase.co
           ARGRO_API_BASE: https://argro-api.zeabur.app
           ARGRO_API_KEY: ${{ secrets.ARGRO_API_KEY }}
         run: node scripts/sync-argro-to-supabase.mjs
