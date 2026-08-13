@@ -226,10 +226,10 @@ export default function AuthModal() {
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && close()}>
       <DialogContent
         aria-describedby="auth-modal-description"
-        className="data-[state=closed]:!animate-none data-[state=open]:!animate-none max-h-[min(92dvh,680px)] w-[calc(100%-24px)] !max-w-[760px] gap-0 overflow-y-auto border-border bg-surface p-0 shadow-card dark:shadow-none [&_[data-slot=dialog-close]]:right-5 [&_[data-slot=dialog-close]]:top-5 [&_[data-slot=dialog-close]]:flex [&_[data-slot=dialog-close]]:h-9 [&_[data-slot=dialog-close]]:w-9 [&_[data-slot=dialog-close]]:items-center [&_[data-slot=dialog-close]]:justify-center [&_[data-slot=dialog-close]]:rounded-md [&_[data-slot=dialog-close]]:border [&_[data-slot=dialog-close]]:border-border [&_[data-slot=dialog-close]]:bg-surface"
+        className="data-[state=closed]:!animate-none data-[state=open]:!animate-none max-h-[min(92dvh,760px)] w-[calc(100%-24px)] !max-w-[760px] gap-0 overflow-y-auto border-border bg-surface p-0 shadow-card dark:shadow-none [&_[data-slot=dialog-close]]:right-4 [&_[data-slot=dialog-close]]:top-4 [&_[data-slot=dialog-close]]:flex [&_[data-slot=dialog-close]]:h-9 [&_[data-slot=dialog-close]]:w-9 [&_[data-slot=dialog-close]]:items-center [&_[data-slot=dialog-close]]:justify-center [&_[data-slot=dialog-close]]:rounded-md [&_[data-slot=dialog-close]]:border [&_[data-slot=dialog-close]]:border-border [&_[data-slot=dialog-close]]:bg-surface sm:[&_[data-slot=dialog-close]]:right-5 sm:[&_[data-slot=dialog-close]]:top-5"
       >
         <div className="grid md:grid-cols-[240px_1fr]">
-          <aside className="flex flex-col justify-between border-b border-logo-paper/10 bg-logo-navy p-5 text-logo-paper md:min-h-[540px] md:border-b-0 md:border-r md:p-7">
+          <aside className="flex flex-col justify-between border-b border-logo-paper/10 bg-logo-navy p-4 text-logo-paper sm:p-5 md:min-h-[620px] md:border-b-0 md:border-r md:p-7">
             <div>
               <img
                 src="/brand/aigro-wordmark-white-transparent.png"
@@ -238,17 +238,17 @@ export default function AuthModal() {
                 height={636}
                 className="h-7 w-auto"
               />
-              <p className="mt-5 font-mono text-overline uppercase tracking-[0.12em] text-lime md:mt-10">
+              <p className="mt-4 font-mono text-overline uppercase tracking-[0.12em] text-lime md:mt-10">
                 AIGRO CLUB
               </p>
               <h2 className="mt-3 font-sans text-h4 font-semibold leading-snug text-logo-paper">
                 免費會員專區
               </h2>
-              <p className="mt-3 text-caption leading-relaxed text-logo-paper/65">
+              <p className="mt-3 hidden text-caption leading-relaxed text-logo-paper/65 sm:block">
                 登入後即可瀏覽會員限定內容。
               </p>
             </div>
-            <ul className="mt-5 grid grid-cols-2 gap-x-3 gap-y-2 md:mt-12 md:grid-cols-1 md:gap-3" aria-label="會員內容">
+            <ul className="mt-5 hidden grid-cols-2 gap-x-3 gap-y-2 sm:grid md:mt-12 md:grid-cols-1 md:gap-3" aria-label="會員內容">
               {MEMBER_BENEFITS.map((benefit) => (
                 <li key={benefit} className="flex items-center gap-2 text-caption text-logo-paper/75 last:col-span-2 md:gap-3 md:text-body-sm md:last:col-span-1">
                   <Check className="h-4 w-4 shrink-0 text-lime" strokeWidth={1.5} aria-hidden="true" />
@@ -258,7 +258,7 @@ export default function AuthModal() {
             </ul>
           </aside>
 
-          <div className="p-6 sm:p-8 md:p-9">
+          <div className="p-5 sm:p-7 md:p-9">
             <div className="grid grid-cols-2 rounded-md bg-card p-1" role="tablist" aria-label="會員登入選項">
               {(["join", "login"] as const).map((item) => (
                 <button
@@ -279,7 +279,7 @@ export default function AuthModal() {
               ))}
             </div>
 
-            <DialogTitle className="mt-7 font-sans text-h3 font-semibold text-text-primary">
+            <DialogTitle className="mt-6 font-sans text-h3 font-semibold text-text-primary md:mt-7">
               {modalTitle}
             </DialogTitle>
             <DialogDescription id="auth-modal-description" className="mt-2 text-body-sm text-text-secondary">
@@ -326,7 +326,7 @@ export default function AuthModal() {
                   type="button"
                   onClick={handleGoogle}
                   disabled={!supabaseReady || state === "loading" || googleLoading}
-                  className="press mt-6 inline-flex h-12 w-full items-center justify-center rounded-md border border-border-strong bg-surface px-5 text-label text-text-primary transition-colors duration-150 hover:border-ink hover:text-ink disabled:opacity-50"
+                  className="press mt-5 inline-flex h-12 w-full items-center justify-center rounded-md border border-border-strong bg-surface px-5 text-label text-text-primary transition-colors duration-150 hover:border-ink hover:text-ink disabled:opacity-50 md:mt-6"
                 >
                   {googleLoading ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin motion-reduce:animate-none" strokeWidth={1.5} aria-hidden="true" />
@@ -334,13 +334,13 @@ export default function AuthModal() {
                   {mode === "join" ? "使用 Google 免費加入" : "使用 Google 登入"}
                 </button>
 
-                <div className="my-5 flex items-center gap-3 text-caption text-text-muted" aria-hidden="true">
+                <div className="my-4 flex items-center gap-3 text-caption text-text-muted md:my-5" aria-hidden="true">
                   <span className="h-px flex-1 bg-border" />
                   <span>或者使用 Email</span>
                   <span className="h-px flex-1 bg-border" />
                 </div>
 
-                <form onSubmit={mode === "join" ? handleJoin : handleLogin} className="grid gap-4" noValidate>
+                <form onSubmit={mode === "join" ? handleJoin : handleLogin} className="grid gap-3.5 md:gap-4" noValidate>
                   {mode === "join" && (
                     <Field
                       id="auth-name"
@@ -403,7 +403,7 @@ export default function AuthModal() {
               </div>
             )}
 
-            <p className="mt-6 border-t border-border pt-5 text-caption leading-relaxed text-text-muted">
+            <p className="mt-5 border-t border-border pt-4 text-caption leading-relaxed text-text-muted md:mt-6 md:pt-5">
               繼續即代表你同意 AIGRO 以會員服務所需方式處理帳戶資料。
             </p>
           </div>

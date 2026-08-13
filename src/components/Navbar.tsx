@@ -166,7 +166,12 @@ export default function Navbar() {
                       {link.zh}
                     </span>
                     {"comingSoon" in link && link.comingSoon && (
-                      <span className="ml-1 hidden rounded-sm bg-card px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase leading-none tracking-[0.06em] text-text-muted 2xl:inline-flex">
+                      <span className={cn(
+                        "ml-1 inline-flex shrink-0 rounded-sm border px-1.5 py-[3px] font-mono text-[9px] font-medium uppercase leading-none tracking-[0.06em]",
+                        overHero
+                          ? "border-band-border bg-band-card text-band-text-muted"
+                          : "border-border bg-card text-text-muted"
+                      )}>
                         Coming Soon
                       </span>
                     )}
