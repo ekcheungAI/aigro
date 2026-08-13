@@ -99,14 +99,14 @@ function Hero() {
               : "香港視角・資料快照 Hong Kong Edition"}
           </motion.p>
 
-          {/* H1 — MasterClass-scale Fraunces, slower line reveal
+          {/* H1 — AIGRO's Hong Kong builder positioning
               (40px + opacity, 120ms stagger, 750ms — GPU transform only) */}
           <h1 className="mt-8 font-display text-[44px] leading-[1.1] tracking-[-0.01em] text-band-text md:text-display-hero">
             {[
               <>
-                <span className="text-band-ink">可信賴的</span>
+                <span className="text-band-ink">香港 No.1</span>
               </>,
-              <>AI・增長・商業情報平台</>,
+              <>AI Builder Club</>,
             ].map((line, i) => (
               <span key={i} className="block overflow-hidden pb-1">
                 <motion.span
@@ -132,8 +132,8 @@ function Hero() {
             transition={{ duration: 0.5, delay: 0.4, ease: REVEAL_EASE }}
           >
             <p className="mt-8 max-w-[560px] text-body-lg text-band-text-secondary">
-              每日精選全球 AI 情報，由領航專家嘅 AI 分身陪你落地 —
-              香港 marketer 與 founder 嘅增長情報平台。
+              每日精選全球 AI 情報，連接香港 builders、導師與 MCP，
+              將情報變成實戰成果。
             </p>
             <div className="mt-10 flex flex-wrap items-center gap-6">
               <Link

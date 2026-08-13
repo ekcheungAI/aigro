@@ -1996,6 +1996,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_public_member_count: { Args: never; Returns: number }
       accept_expert_invitation: {
         Args: { p_invitation_id: string }
         Returns: string
