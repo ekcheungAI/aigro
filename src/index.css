@@ -182,14 +182,6 @@
     border-color: hsl(var(--border));
   }
 
-  html {
-    scroll-behavior: smooth;
-  }
-
-  html.guide-native-scroll {
-    scroll-behavior: auto;
-  }
-
   body {
     background-color: hsl(var(--bg));
     color: hsl(var(--text-primary));

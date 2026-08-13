@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
-import Lenis from "lenis";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Newsletter from "@/components/Newsletter";
@@ -14,8 +13,7 @@ import { cn } from "@/lib/utils";
  * with the children pattern.
  *
  * Owns: sticky Navbar, Newsletter band (design.md §6.9 全站共用), Footer,
- * Lenis smooth scrolling (lerp 0.1, §5.3 — disabled for reduced motion),
- * scroll-to-top on route change.
+ * native browser scrolling, and scroll-to-top on route change.
  */
 export default function Layout() {
   const { pathname } = useLocation();
@@ -29,31 +27,6 @@ export default function Layout() {
     pathname === "/" ||
     pathname.startsWith("/insights") ||
     pathname.startsWith("/skills");
-
-  // Lenis smooth scroll (design.md §5.3); disabled under prefers-reduced-motion (§5.4)
-  useEffect(() => {
-    if (isCourseNotes) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const lenis = new Lenis({ lerp: 0.1 });
-    let rafId = 0;
-    const raf = (time: number) => {
-      lenis.raf(time);
-      rafId = requestAnimationFrame(raf);
-    };
-    rafId = requestAnimationFrame(raf);
-    return () => {
-      cancelAnimationFrame(rafId);
-      lenis.destroy();
-    };
-  }, [isCourseNotes]);
-
-  // Long-form teaching notes use conventional browser scrolling. This keeps
-  // wheel, trackpad, keyboard, and anchor navigation aligned with normal sites.
-  useEffect(() => {
-    if (!isCourseNotes) return;
-    document.documentElement.classList.add("guide-native-scroll");
-    return () => document.documentElement.classList.remove("guide-native-scroll");
-  }, [isCourseNotes]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
