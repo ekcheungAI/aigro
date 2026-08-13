@@ -7,6 +7,7 @@ import {
 } from "@/data/aihot";
 import { useLiveFetchedAt, useLiveItems } from "@/data/liveItems";
 import { verifiedExperts } from "@/data/experts";
+import { supabase } from "@/lib/supabase";
 
 /* 統計以數據時鐘(live fetchedAt,未成熟時用 snapshot 嘅 aihotFetchedAt)為基準 —
    數字永遠同頁面展示嘅情報吻合,唔會因為數據日期同訪客「今日」有落差而顯示 0。 */
@@ -99,6 +100,20 @@ function CountUp({
 export default function LiveStats() {
   const liveItems = useLiveItems();
   const liveFetchedAt = useLiveFetchedAt();
+  const [databaseSignups, setDatabaseSignups] = useState(0);
+
+  useEffect(() => {
+    if (!supabase) return;
+    let active = true;
+    void supabase.rpc("get_public_member_count").then(({ data, error }) => {
+      const count = typeof data === "number" ? data : Number(data);
+      if (!active || error || !Number.isSafeInteger(count) || count < 0) return;
+      setDatabaseSignups(count);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const stats = useMemo<Stat[]>(() => {
     if (!liveItems) return SNAPSHOT_STATS;
@@ -125,7 +140,7 @@ export default function LiveStats() {
           <dd className="flex items-baseline gap-2">
             <span className="flex items-baseline">
               <CountUp
-                value={MEMBER_BASE_COUNT}
+                value={MEMBER_BASE_COUNT + databaseSignups}
                 delay={0}
                 className="font-display text-h2 leading-none text-band-text"
               />
