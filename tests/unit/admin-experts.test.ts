@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { adminExpertToView, type AdminExpertRecord } from "@/lib/adminExperts";
 
@@ -17,6 +18,12 @@ const row: AdminExpertRecord = {
   radar: [{ label: "實戰", score: 88, note: "重視落地" }],
   traits: ["務實"],
   status: "draft",
+  owner_user_id: null,
+  public_profile_enabled: false,
+  invitation_status: null,
+  invitation_email: null,
+  invitation_expires_at: null,
+  archived_at: null,
 };
 
 describe("admin expert records", () => {
@@ -48,5 +55,17 @@ describe("admin expert records", () => {
     expect(expert.image).toBe("/portrait.jpg");
     expect(expert.heuristics?.[0].name).toBe("原則");
     expect(expert.pendingNote).toBeUndefined();
+  });
+
+  it("keeps archived recovery super-admin-only and fail-closed in the UI", () => {
+    const source = readFileSync(
+      "src/pages/admin/AdminExperts.tsx",
+      "utf8"
+    );
+
+    expect(source).toContain("canCreateInstructor && (");
+    expect(source).toContain('supabase.rpc("restore_expert_workspace"');
+    expect(source).toContain("確認復原為私人草稿");
+    expect(source).toContain("唔會恢復原 owner、公開 profile、RAG、預約、角色編譯或社交同步");
   });
 });

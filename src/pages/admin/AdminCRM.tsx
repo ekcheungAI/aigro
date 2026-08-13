@@ -1,7 +1,9 @@
 import { useMemo, useState } from "react";
 import {
   ArrowRight,
+  CalendarClock,
   MessagesSquare,
+  Save,
   Sparkles,
   StickyNote,
   Target,
@@ -35,6 +37,12 @@ interface AdminCrmSummary {
 interface AdminCrmData {
   preview: AdminLeadRow[];
   summary: AdminCrmSummary;
+}
+
+interface LeadNoteRow {
+  id: string;
+  body: string;
+  created_at: string;
 }
 
 const STAGES: { key: LeadStage; en: string }[] = [
@@ -80,7 +88,7 @@ async function fetchLeads(): Promise<AdminCrmData> {
     supabase
       .from("leads")
       .select(
-        "id,user_id,anon_id,owner_is_anonymous,persona,score,signals,stage,questions,analysis,timeline,last_activity_at,created_at"
+        "id,expert_id,user_id,anon_id,owner_is_anonymous,persona,score,signals,stage,questions,analysis,timeline,next_follow_up_at,contact_consented_at,last_activity_at,created_at"
       )
       .order("last_activity_at", { ascending: false })
       .limit(500),
@@ -92,6 +100,27 @@ async function fetchLeads(): Promise<AdminCrmData> {
     preview: (previewResult.data ?? []) as AdminLeadRow[],
     summary: normalizeSummary(summaryResult.data),
   };
+}
+
+async function fetchLeadNotes(leadId: string | null): Promise<LeadNoteRow[]> {
+  if (!leadId) return [];
+  if (!supabase) throw new Error("Supabase 未連接");
+  const { data, error } = await supabase
+    .from("lead_notes")
+    .select("id,body,created_at")
+    .eq("lead_id", leadId)
+    .order("created_at", { ascending: false })
+    .limit(50);
+  if (error) throw new Error(error.message);
+  return (data ?? []) as LeadNoteRow[];
+}
+
+function toLocalDateTime(value: string | null | undefined): string {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  return local.toISOString().slice(0, 16);
 }
 
 /** 意向評分錶盤 — 大 mono 數字 + hairline 圓環 */
@@ -132,6 +161,16 @@ export default function AdminCRM() {
   const [stageFilter, setStageFilter] = useState<StageFilter>("全部");
   const [openId, setOpenId] = useState<string | null>(null);
   const [moving, setMoving] = useState(false);
+  const [stageDraft, setStageDraft] = useState<LeadStage>("新線索");
+  const [noteDraft, setNoteDraft] = useState("");
+  const [followUpDraft, setFollowUpDraft] = useState("");
+  const [saving, setSaving] = useState(false);
+  const {
+    data: notes,
+    loading: notesLoading,
+    error: notesError,
+    refetch: refetchNotes,
+  } = useAdminQuery(() => fetchLeadNotes(openId), [openId]);
 
   const list = useMemo(() => data?.preview ?? [], [data]);
   const active = list.find((l) => l.id === openId) ?? null;
@@ -163,6 +202,34 @@ export default function AdminCRM() {
       ? `訪客 ${l.anon_id?.slice(0, 8) ?? l.id.slice(0, 8)}`
       : `會員 ${l.user_id?.slice(0, 8) ?? "—"}`;
 
+  const openLead = (lead: AdminLeadRow) => {
+    setOpenId(lead.id);
+    setStageDraft(lead.stage);
+    setNoteDraft("");
+    setFollowUpDraft(toLocalDateTime(lead.next_follow_up_at));
+  };
+
+  const saveFollowUp = async () => {
+    if (!supabase || !active || saving) return;
+    setSaving(true);
+    const nextFollowUp = followUpDraft ? new Date(followUpDraft).toISOString() : null;
+    const { error: updateError } = await supabase.rpc("update_expert_lead", {
+      p_lead_id: active.id,
+      p_stage: stageDraft,
+      p_note: noteDraft.trim() || null,
+      p_next_follow_up_at: nextFollowUp,
+    });
+    setSaving(false);
+    if (updateError) {
+      toast(`儲存失敗：${updateError.message}`);
+      return;
+    }
+    setNoteDraft("");
+    refetch();
+    refetchNotes();
+    toast("CRM 階段、備註同跟進日期已儲存並寫入 audit");
+  };
+
   const moveStage = async (lead: AdminLeadRow, stage: LeadStage) => {
     if (!supabase || moving) return;
     setMoving(true);
@@ -181,7 +248,7 @@ export default function AdminCRM() {
 
   const kpis = [
     { label: "總線索", value: data?.summary.lead_count ?? 0, lime: false },
-    { label: "高意向", value: data?.summary.high_intent_count ?? 0, lime: true },
+    { label: "高意向 (70+)", value: data?.summary.high_intent_count ?? 0, lime: true },
     { label: "本週新增", value: data?.summary.week_new_count ?? 0, lime: false },
     { label: "跟進中", value: stageCount("跟進中"), lime: false },
   ];
@@ -290,7 +357,7 @@ export default function AdminCRM() {
                     {filtered.map((l) => (
                       <tr
                         key={l.id}
-                        onClick={() => setOpenId(l.id)}
+                        onClick={() => openLead(l)}
                         className="cursor-pointer transition-colors hover:bg-card/60"
                       >
                         <td className="px-4 py-3">
@@ -351,7 +418,7 @@ export default function AdminCRM() {
                             aria-label={`開啟 ${leadLabel(l)} 詳情`}
                             onClick={(e) => {
                               e.stopPropagation();
-                              setOpenId(l.id);
+                              openLead(l);
                             }}
                             className="rounded-md border border-border p-1.5 text-text-muted transition-colors hover:border-lime hover:text-lime-text"
                           >
@@ -395,7 +462,7 @@ export default function AdminCRM() {
                       <div className="flex items-center justify-between gap-2">
                         <button
                           type="button"
-                          onClick={() => setOpenId(l.id)}
+                          onClick={() => openLead(l)}
                           className="truncate text-sm font-medium text-text-primary hover:text-lime-text"
                         >
                           {leadLabel(l)}
@@ -516,6 +583,85 @@ export default function AdminCRM() {
                   <p className="mt-3 border-t border-border pt-3 text-xs leading-relaxed text-lime-text">
                     {active.analysis}
                   </p>
+                )}
+              </section>
+
+              {/* Admin follow-up workspace */}
+              <section className="rounded-lg border border-border bg-surface p-4">
+                <div className="flex items-center gap-2">
+                  <CalendarClock className="h-4 w-4 text-lime-text" strokeWidth={1.5} aria-hidden="true" />
+                  <h3 className="font-display text-[15px] font-medium text-text-primary">
+                    跟進設定
+                  </h3>
+                </div>
+                <p className="mt-1 text-xs text-text-muted">
+                  {active.contact_consented_at
+                    ? `已記錄聯絡同意 · ${timeAgo(active.contact_consented_at)}`
+                    : "未記錄聯絡同意；跟進前請先確認合適聯絡基礎。"}
+                </p>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <label className="block">
+                    <span className="mb-1 block text-xs text-text-muted">階段</span>
+                    <select
+                      value={stageDraft}
+                      onChange={(event) => setStageDraft(event.target.value as LeadStage)}
+                      className="h-10 w-full rounded-md border border-border-strong bg-card px-3 text-sm text-text-primary outline-none focus:border-lime focus:ring-1 focus:ring-lime"
+                    >
+                      {STAGES.map((stage) => <option key={stage.key} value={stage.key}>{stage.key}</option>)}
+                    </select>
+                  </label>
+                  <label className="block">
+                    <span className="mb-1 block text-xs text-text-muted">下一次跟進</span>
+                    <input
+                      type="datetime-local"
+                      value={followUpDraft}
+                      onChange={(event) => setFollowUpDraft(event.target.value)}
+                      className="h-10 w-full rounded-md border border-border-strong bg-card px-3 text-sm text-text-primary outline-none focus:border-lime focus:ring-1 focus:ring-lime"
+                    />
+                  </label>
+                </div>
+                <label className="mt-3 block">
+                  <span className="mb-1 block text-xs text-text-muted">私人備註</span>
+                  <textarea
+                    value={noteDraft}
+                    onChange={(event) => setNoteDraft(event.target.value)}
+                    maxLength={2000}
+                    rows={3}
+                    placeholder="記低需要跟進嘅背景、承諾或下一步…"
+                    className="w-full rounded-md border border-border-strong bg-card px-3 py-2 text-sm text-text-primary outline-none placeholder:text-text-muted focus:border-lime focus:ring-1 focus:ring-lime"
+                  />
+                </label>
+                <button
+                  type="button"
+                  disabled={saving}
+                  onClick={() => void saveFollowUp()}
+                  className="press mt-3 inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-lime px-4 text-sm font-medium text-on-accent disabled:opacity-40"
+                >
+                  <Save className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+                  {saving ? "儲存中…" : "儲存跟進"}
+                </button>
+              </section>
+
+              <section>
+                <div className="flex items-center gap-2">
+                  <StickyNote className="h-4 w-4 text-lime-text" strokeWidth={1.5} aria-hidden="true" />
+                  <h3 className="font-display text-[15px] font-medium text-text-primary">私人備註</h3>
+                </div>
+                {notesLoading ? (
+                  <p className="mt-3 text-xs text-text-muted" role="status">正在載入備註…</p>
+                ) : notesError ? (
+                  <p className="mt-3 text-xs text-error" role="alert">備註載入失敗：{notesError}</p>
+                ) : notes && notes.length > 0 ? (
+                  <ul className="mt-3 space-y-2">
+                    {notes.map((note) => (
+                      <li key={note.id} className="rounded-md border border-border bg-card px-3 py-2.5">
+                        <p className="whitespace-pre-wrap text-xs leading-relaxed text-text-primary">{note.body}</p>
+                        <p className="mt-1 font-mono text-[10px] text-text-muted">{timeAgo(note.created_at)}</p>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="mt-3 rounded-md border border-dashed border-border px-3 py-4 text-xs text-text-muted">未有私人備註。</p>
                 )}
               </section>
 

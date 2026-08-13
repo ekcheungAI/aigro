@@ -1,9 +1,19 @@
 import { useMemo, useState } from "react";
-import { BrainCircuit, Check, FlaskConical, MessageSquareWarning, ShieldCheck, X } from "lucide-react";
+import { BrainCircuit, Check, FlaskConical, MessageSquareWarning, ShieldCheck, Trash2, X } from "lucide-react";
 import AdminToggle from "@/components/admin/AdminToggle";
 import { useAdminToast } from "@/components/admin/AdminToast";
 import QueryState from "@/components/QueryState";
 import { useAdminQuery } from "@/components/admin/adminData";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { supabase } from "@/lib/supabase";
 
 interface ExpertRow {
@@ -11,6 +21,7 @@ interface ExpertRow {
   slug: string;
   display_name: string;
   status: "draft" | "active" | "suspended";
+  owner_user_id: string | null;
   feature_flags: Record<string, boolean>;
   published_persona_version_id: string | null;
 }
@@ -70,7 +81,7 @@ export const STUDIO_REVIEW_SELECT =
 async function fetchStudio(): Promise<StudioData> {
   if (!supabase) throw new Error("Supabase 未連接");
   const [experts, reviews, gaps, personaJobs] = await Promise.all([
-    supabase.from("experts").select("id,slug,display_name,status,feature_flags,published_persona_version_id").order("display_name"),
+    supabase.from("experts").select("id,slug,display_name,status,owner_user_id,feature_flags,published_persona_version_id").is("archived_at", null).order("display_name"),
     supabase.from("knowledge_revisions")
       .select(STUDIO_REVIEW_SELECT)
       .eq("status", "review")
@@ -105,6 +116,15 @@ export const STUDIO_FLAGS = [
   ["social_sync_enabled", "每日社交同步"],
 ] as const;
 
+type StudioFlagKey = typeof STUDIO_FLAGS[number][0];
+
+interface PendingFlagChange {
+  expert: ExpertRow;
+  key: StudioFlagKey;
+  label: string;
+  value: boolean;
+}
+
 export default function AdminStudio() {
   const toast = useAdminToast();
   const { data, loading, error, refetch } = useAdminQuery(fetchStudio);
@@ -112,6 +132,8 @@ export default function AdminStudio() {
   const [personaExpertId, setPersonaExpertId] = useState("");
   const [greeting, setGreeting] = useState("");
   const [reviewNotes, setReviewNotes] = useState("");
+  const [pendingFlag, setPendingFlag] = useState<PendingFlagChange | null>(null);
+  const [archiveTarget, setArchiveTarget] = useState<ExpertRow | null>(null);
 
   const experts = useMemo(() => data?.experts ?? [], [data]);
   const selectedExpert = experts.find((expert) => expert.id === personaExpertId) ?? experts[0];
@@ -128,6 +150,41 @@ export default function AdminStudio() {
     setBusy(null);
     if (updateError) toast(`更新失敗：${updateError.message}`);
     else { toast(`${expert.display_name} 功能旗標已更新`); refetch(); }
+  };
+
+  const requestFlagChange = (
+    expert: ExpertRow,
+    key: StudioFlagKey,
+    label: string,
+    value: boolean
+  ) => {
+    if (value && ["rag_enabled", "booking_enabled", "social_sync_enabled"].includes(key)) {
+      setPendingFlag({ expert, key, label, value });
+      return;
+    }
+    void setFlag(expert, key, value);
+  };
+
+  const archiveWorkspace = async () => {
+    if (!supabase || !archiveTarget) return;
+    const unusedDraft = archiveTarget.status === "draft" && !archiveTarget.owner_user_id;
+    setBusy(`archive:${archiveTarget.id}`);
+    const { error: archiveError } = await supabase.rpc(
+      unusedDraft ? "archive_unused_expert_draft" : "archive_expert_workspace",
+      { p_expert_id: archiveTarget.id }
+    );
+    setBusy(null);
+    if (archiveError) {
+      toast(`${unusedDraft ? "未能刪除草稿" : "未能封存 workspace"}：${archiveError.message}`);
+      return;
+    }
+    setArchiveTarget(null);
+    toast(
+      unusedDraft
+        ? "未使用導師草稿已安全刪除並釋放席位"
+        : "導師 workspace 已安全封存；公開功能已停用，私人資料及 audit history 已保留"
+    );
+    refetch();
   };
 
   const review = async (revisionId: string, decision: "approve" | "reject") => {
@@ -223,10 +280,22 @@ export default function AdminStudio() {
                           checked={expert.feature_flags?.[key] === true}
                           disabled={busy === `${expert.id}:${key}`}
                           label={`${expert.display_name} ${label}`}
-                          onChange={(next) => void setFlag(expert, key, next)}
+                          onChange={(next) => requestFlagChange(expert, key, label, next)}
                         />
+                        <span className="w-4 font-mono text-[10px] text-text-muted">
+                          {expert.feature_flags?.[key] === true ? "開" : "關"}
+                        </span>
                       </div>
                     ))}
+                    <button
+                      type="button"
+                      disabled={busy === `archive:${expert.id}`}
+                      onClick={() => setArchiveTarget(expert)}
+                      className="press inline-flex items-center gap-1 rounded-md border border-error/40 px-2.5 py-1.5 text-xs text-error transition-colors hover:border-error hover:bg-error/5 disabled:opacity-40"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} />
+                      {expert.status === "draft" && !expert.owner_user_id ? "刪除草稿" : "封存"}
+                    </button>
                   </div>
                 ))}
               </div>
@@ -343,6 +412,72 @@ export default function AdminStudio() {
           </>
         )}
       </QueryState>
+
+      <AlertDialog
+        open={pendingFlag !== null}
+        onOpenChange={(open) => !open && setPendingFlag(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-display font-medium text-text-primary">
+              啟用 {pendingFlag?.label}？
+            </AlertDialogTitle>
+            <AlertDialogDescription className="leading-relaxed text-text-secondary">
+              呢個係對外功能。系統會先執行依賴檢查；未符合 release gate 就會拒絕更新，唔會靜默開啟。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="press">取消</AlertDialogCancel>
+            <AlertDialogAction
+              className="press bg-lime text-on-accent hover:bg-lime-hover"
+              onClick={() => {
+                if (!pendingFlag) return;
+                void setFlag(pendingFlag.expert, pendingFlag.key, pendingFlag.value);
+                setPendingFlag(null);
+              }}
+            >
+              檢查並啟用
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={archiveTarget !== null}
+        onOpenChange={(open) => {
+          if (!open && busy !== `archive:${archiveTarget?.id ?? ""}`) setArchiveTarget(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-display font-medium text-text-primary">
+              {archiveTarget?.status === "draft" && !archiveTarget.owner_user_id
+                ? "刪除未使用草稿？"
+                : "封存導師 workspace？"}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="leading-relaxed text-text-secondary">
+              {archiveTarget?.status === "draft" && !archiveTarget.owner_user_id
+                ? `${archiveTarget.display_name} 未連結 owner；系統只會刪除未使用草稿並釋放席位。`
+                : `${archiveTarget?.display_name ?? "呢個導師"} 嘅公開頁、AI、預約及社交同步會即時下線；私人資料同 audit history 會保留。`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="press" disabled={busy?.startsWith("archive:")}>
+              取消
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="press bg-error text-destructive-foreground hover:bg-error/90"
+              disabled={busy?.startsWith("archive:")}
+              onClick={(event) => {
+                event.preventDefault();
+                void archiveWorkspace();
+              }}
+            >
+              {busy?.startsWith("archive:") ? "處理中…" : "確認"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

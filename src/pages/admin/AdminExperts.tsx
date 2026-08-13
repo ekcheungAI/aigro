@@ -1,11 +1,21 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowUpRight, Plus, Save, Target, X } from "lucide-react";
+import { Archive, ArrowUpRight, Plus, RotateCcw, Save, Target, X } from "lucide-react";
 import AdminSlideOver from "@/components/admin/AdminSlideOver";
 import AdminToggle from "@/components/admin/AdminToggle";
 import { useAdminToast } from "@/components/admin/AdminToast";
 import QueryState from "@/components/QueryState";
 import VerifiedBadge from "@/components/VerifiedBadge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import { useMember } from "@/hooks/useMember";
@@ -13,6 +23,7 @@ import { experts, expertFullName } from "@/data/experts";
 import type { Expert, RadarDimension } from "@/data/experts";
 import {
   daysAgoUtcStartIso,
+  countRows,
   formatDate,
   personaLabel,
   timeAgo,
@@ -29,9 +40,11 @@ import {
 } from "@/components/admin/draftExperts";
 import {
   adminExpertToView,
+  fetchArchivedAdminExperts,
   fetchAdminExperts,
   saveAdminExpert,
 } from "@/lib/adminExperts";
+import type { AdminExpertRecord } from "@/lib/adminExperts";
 
 type EditorTab = "基本資料" | "風格與原則" | "知識庫" | "數據 Data" | "線索 CRM" | "活動 Activity" | "發佈";
 const TABS: EditorTab[] = ["基本資料", "風格與原則", "知識庫", "數據 Data", "線索 CRM", "活動 Activity", "發佈"];
@@ -84,6 +97,12 @@ interface CreateForm {
   specialties: string[];
   brandColor: string;
   quote: string;
+}
+
+interface ArchiveTarget {
+  id: string;
+  name: string;
+  unusedDraft: boolean;
 }
 
 const EMPTY_CREATE: CreateForm = {
@@ -172,34 +191,49 @@ function normalizeCrmSummary(value: unknown): Expert360Data["summary"] {
   };
 }
 
-async function fetchExpert360(expertId: string): Promise<Expert360Data> {
+async function fetchExpert360(expertId: string, tab: EditorTab): Promise<Expert360Data> {
   if (!supabase) throw new Error("Supabase 未連接");
-  const [convRes, leadRes, summaryRes] = await Promise.all([
+  if (tab === "線索 CRM") {
+    const [leadRes, summaryRes] = await Promise.all([
+      supabase
+        .from("leads")
+        .select(
+          "id,expert_id,user_id,anon_id,owner_is_anonymous,persona,score,signals,stage,questions,analysis,timeline,next_follow_up_at,last_activity_at,created_at"
+        )
+        .eq("expert_id", expertId)
+        .order("last_activity_at", { ascending: false })
+        .limit(500),
+      supabase.rpc("get_expert_crm_summary", { p_expert_id: expertId }).single(),
+    ]);
+    if (leadRes.error) throw new Error(leadRes.error.message);
+    if (summaryRes.error) throw new Error(summaryRes.error.message);
+    return {
+      conversations: [],
+      leads: (leadRes.data ?? []) as AdminLeadRow[],
+      summary: normalizeCrmSummary(summaryRes.data),
+    };
+  }
+
+  const [convRes, conversationCount] = await Promise.all([
     supabase
       .from("conversations")
       .select("id,user_id,anon_id,persona,expert_id,title,created_at")
       .eq("expert_id", expertId)
       .order("created_at", { ascending: false })
       .limit(1000),
-    supabase
-      .from("leads")
-      .select(
-        "id,expert_id,user_id,anon_id,owner_is_anonymous,persona,score,signals,stage,questions,analysis,timeline,next_follow_up_at,last_activity_at,created_at"
-      )
-      .eq("expert_id", expertId)
-      .order("last_activity_at", { ascending: false })
-      .limit(500),
-    supabase
-      .rpc("get_expert_crm_summary", { p_expert_id: expertId })
-      .single(),
+    countRows("conversations", (query) => query.eq("expert_id", expertId)),
   ]);
   if (convRes.error) throw new Error(convRes.error.message);
-  if (leadRes.error) throw new Error(leadRes.error.message);
-  if (summaryRes.error) throw new Error(summaryRes.error.message);
   return {
     conversations: (convRes.data ?? []) as AdminConversationRow[],
-    leads: (leadRes.data ?? []) as AdminLeadRow[],
-    summary: normalizeCrmSummary(summaryRes.data),
+    leads: [],
+    summary: {
+      conversation_count: conversationCount,
+      lead_count: 0,
+      high_intent_count: 0,
+      following_up_count: 0,
+      converted_count: 0,
+    },
   };
 }
 
@@ -216,8 +250,8 @@ function Expert360Tabs({
   closeEditor: () => void;
 }) {
   const { data, loading, error, refetch } = useAdminQuery(
-    () => fetchExpert360(expertId),
-    [expertId]
+    () => fetchExpert360(expertId, tab),
+    [expertId, tab]
   );
 
   const convos = useMemo(
@@ -361,7 +395,7 @@ function Expert360Tabs({
                               (l.score ?? 0) >= 70
                                 ? "bg-lime-soft text-lime-text"
                                 : (l.score ?? 0) >= 40
-                                  ? "bg-card text-[#A36A0F]"
+                                  ? "bg-card text-warning"
                                   : "bg-card text-text-muted"
                             )}
                           >
@@ -425,6 +459,15 @@ export default function AdminExperts() {
     error: expertsError,
     refetch: refetchExperts,
   } = useAdminQuery(fetchAdminExperts);
+  const {
+    data: archivedExpertRows,
+    loading: archivedExpertsLoading,
+    error: archivedExpertsError,
+    refetch: refetchArchivedExperts,
+  } = useAdminQuery(
+    () => canCreateInstructor ? fetchArchivedAdminExperts() : Promise.resolve([]),
+    [canCreateInstructor]
+  );
   const [openSlug, setOpenSlug] = useState<string | null>(null);
   const [tab, setTab] = useState<EditorTab>("基本資料");
   const [draft, setDraft] = useState<ExpertDraft | null>(null);
@@ -434,6 +477,9 @@ export default function AdminExperts() {
   const [ownerInviteEmail, setOwnerInviteEmail] = useState("");
   const [invitingOwner, setInvitingOwner] = useState(false);
   const [archivingWorkspace, setArchivingWorkspace] = useState(false);
+  const [archiveTarget, setArchiveTarget] = useState<ArchiveTarget | null>(null);
+  const [restoreTarget, setRestoreTarget] = useState<AdminExpertRecord | null>(null);
+  const [restoringWorkspace, setRestoringWorkspace] = useState(false);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [form, setForm] = useState<CreateForm>(EMPTY_CREATE);
@@ -449,6 +495,11 @@ export default function AdminExperts() {
   const expert = allExperts.find((e) => e.slug === openSlug) ?? null;
   const expertRecord = (expertRows ?? []).find((row) => row.slug === openSlug) ?? null;
   const expertIsDraft = expert !== null && draftSlugs.has(expert.slug);
+  const hasValidPublicLifecycle = Boolean(
+    expertRecord?.status === "active"
+      && expertRecord.owner_user_id
+      && expertRecord.public_profile_enabled
+  );
 
   const openEditor = (e: Expert, initialTab: EditorTab = "基本資料") => {
     setOpenSlug(e.slug);
@@ -609,23 +660,57 @@ export default function AdminExperts() {
   };
 
   const archiveWorkspace = async () => {
-    if (!supabase || !expertRecord || archivingWorkspace || !canCreateInstructor) return;
-    const confirmed = window.confirm(
-      `封存 ${expertRecord.display_name}？系統會下線公開頁及所有 AI／預約／社交同步功能、撤銷 owner 權限並釋放一個導師席位；私人資料及 audit history 會保留。`
-    );
-    if (!confirmed) return;
+    if (!supabase || !archiveTarget || archivingWorkspace || !canCreateInstructor) return;
     setArchivingWorkspace(true);
-    const { error } = await supabase.rpc("archive_expert_workspace", {
-      p_expert_id: expertRecord.id,
-    });
+    const { error } = await supabase.rpc(
+      archiveTarget.unusedDraft
+        ? "archive_unused_expert_draft"
+        : "archive_expert_workspace",
+      {
+        p_expert_id: archiveTarget.id,
+      }
+    );
     setArchivingWorkspace(false);
     if (error) {
-      toast(`未能封存 workspace：${error.message}`);
+      toast(`${archiveTarget.unusedDraft ? "未能刪除草稿" : "未能封存 workspace"}：${error.message}`);
       return;
     }
-    closeEditor();
+    const wasUnusedDraft = archiveTarget.unusedDraft;
+    setArchiveTarget(null);
     refetchExperts();
-    toast("導師 workspace 已安全下線並釋放席位；私人資料及 audit history 已保留");
+    refetchArchivedExperts();
+    toast(
+      wasUnusedDraft
+        ? "未使用草稿已安全刪除並釋放席位；系統保留最少 audit 記錄"
+        : "導師 workspace 已安全下線並釋放席位；私人資料及 audit history 已保留"
+    );
+  };
+
+  const restoreWorkspace = async () => {
+    if (!supabase || !restoreTarget || restoringWorkspace || !canCreateInstructor) return;
+    setRestoringWorkspace(true);
+    const { error } = await supabase.rpc("restore_expert_workspace", {
+      p_expert_id: restoreTarget.id,
+    });
+    setRestoringWorkspace(false);
+    if (error) {
+      toast(`未能復原 workspace：${error.message}`);
+      return;
+    }
+    setRestoreTarget(null);
+    refetchExperts();
+    refetchArchivedExperts();
+    toast("Workspace 已復原為私人草稿；owner、公開頁同所有功能仍然關閉");
+  };
+
+  const requestArchive = () => {
+    if (!expertRecord) return;
+    setArchiveTarget({
+      id: expertRecord.id,
+      name: expertRecord.display_name,
+      unusedDraft: expertIsDraft && !expertRecord.owner_user_id,
+    });
+    closeEditor();
   };
 
   return (
@@ -679,8 +764,12 @@ export default function AdminExperts() {
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {allExperts.map((e) => (
-              <tr
+            {allExperts.map((e) => {
+              const record = (expertRows ?? []).find((row) => row.slug === e.slug);
+              const lifecycleMismatch = record?.status === "active"
+                && (!record.owner_user_id || !record.public_profile_enabled);
+              return (
+                <tr
                 key={e.slug}
                 onClick={() => openEditor(e)}
                 className="cursor-pointer transition-colors hover:bg-card/60"
@@ -721,12 +810,16 @@ export default function AdminExperts() {
                   </div>
                 </td>
                 <td className="px-4 py-3">
-                  {e.verified ? (
+                  {lifecycleMismatch ? (
+                    <span className="inline-flex items-center gap-1.5 rounded-sm border border-warning/40 bg-card px-2 py-0.5 text-xs font-medium text-warning">
+                      狀態需修復
+                    </span>
+                  ) : e.verified ? (
                     <span className="inline-flex items-center gap-1.5 rounded-sm bg-lime-soft px-2 py-0.5 text-xs font-medium text-lime-text">
                       Verified
                     </span>
                   ) : draftSlugs.has(e.slug) ? (
-                    <span className="inline-flex items-center gap-1.5 rounded-sm border border-dashed border-[#A36A0F]/50 bg-card px-2 py-0.5 text-xs font-medium text-[#A36A0F]">
+                    <span className="inline-flex items-center gap-1.5 rounded-sm border border-dashed border-warning/50 bg-card px-2 py-0.5 text-xs font-medium text-warning">
                       草稿 — 未發佈
                     </span>
                   ) : (
@@ -735,11 +828,11 @@ export default function AdminExperts() {
                     </span>
                   )}
                   <p className="mt-1.5 font-mono text-[10px] text-text-muted">
-                    {(expertRows ?? []).find((row) => row.slug === e.slug)?.owner_user_id
+                    {record?.owner_user_id
                       ? "Owner 已連結"
                       : "Owner 未連結"}
                     {" · "}
-                    {(expertRows ?? []).find((row) => row.slug === e.slug)?.public_profile_enabled
+                    {record?.public_profile_enabled
                       ? "公開 profile"
                       : "未公開"}
                   </p>
@@ -759,12 +852,89 @@ export default function AdminExperts() {
                     編輯
                   </button>
                 </td>
-              </tr>
-            ))}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>}
       </QueryState>
+
+      {canCreateInstructor && (
+        <section className="mt-8" aria-labelledby="archived-experts-heading">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2
+                id="archived-experts-heading"
+                className="flex items-center gap-2 font-display text-[17px] font-medium text-text-primary"
+              >
+                <Archive className="h-4 w-4 text-text-muted" strokeWidth={1.5} />
+                已封存 workspace
+              </h2>
+              <p className="mt-1 text-xs text-text-muted">
+                復原後只會回到私人草稿；唔會恢復 owner、公開頁或任何 AI／預約功能。
+              </p>
+            </div>
+            <span className="rounded-full border border-border px-2.5 py-1 font-mono text-[11px] text-text-muted">
+              {archivedExpertRows?.length ?? 0} 個
+            </span>
+          </div>
+          <QueryState
+            loading={archivedExpertsLoading}
+            error={archivedExpertsError ? `載入封存資料失敗：${archivedExpertsError}` : null}
+            retry={refetchArchivedExperts}
+            skeletonRows={2}
+            empty={archivedExpertRows && archivedExpertRows.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-border bg-surface px-5 py-8 text-center text-sm text-text-muted">
+                暫時冇已封存 workspace。
+              </div>
+            ) : null}
+          >
+            {archivedExpertRows && archivedExpertRows.length > 0 && (
+              <div className="overflow-x-auto rounded-lg border border-border bg-surface">
+                <table className="w-full min-w-[620px] text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-border text-xs text-text-muted">
+                      <th className="px-4 py-3 font-medium">導師</th>
+                      <th className="px-4 py-3 font-medium">封存日期</th>
+                      <th className="px-4 py-3 font-medium">復原狀態</th>
+                      <th className="px-4 py-3 text-right font-medium">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {archivedExpertRows.map((row) => (
+                      <tr key={row.id}>
+                        <td className="px-4 py-3">
+                          <p className="font-medium text-text-primary">{row.display_name}</p>
+                          <p className="mt-0.5 font-mono text-[11px] text-text-muted">{row.slug}</p>
+                        </td>
+                        <td className="px-4 py-3 font-mono text-xs text-text-muted">
+                          {formatDate(row.archived_at)}
+                        </td>
+                        <td className="px-4 py-3 text-xs text-text-secondary">
+                          私人草稿 · 無 owner · 功能全關
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <button
+                            type="button"
+                            disabled={capacityReached || restoringWorkspace}
+                            onClick={() => setRestoreTarget(row)}
+                            title={capacityReached ? `導師席位已達 ${MAX_INSTRUCTORS}/${MAX_INSTRUCTORS}` : undefined}
+                            className="press inline-flex items-center gap-1.5 rounded-md border border-border-strong px-3 py-1.5 text-xs font-medium text-text-primary transition-colors hover:border-lime hover:text-lime-text disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            <RotateCcw className="h-3.5 w-3.5" strokeWidth={1.5} />
+                            復原為草稿
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </QueryState>
+        </section>
+      )}
 
       {/* Editor slide-over */}
       <AdminSlideOver
@@ -943,7 +1113,7 @@ export default function AdminExperts() {
                                 next[i] = { ...r, score: Number(e.target.value) };
                                 patch({ radar: next });
                               }}
-                              className="mt-1 w-full accent-[#42CAAC]"
+                              className="mt-1 w-full accent-lime"
                             />
                           </div>
                         ))}
@@ -1073,9 +1243,13 @@ export default function AdminExperts() {
                           必須有 owner、兩個已發佈來源、chunks、published persona、25 條評估問題、通過評估，而且冇待處理工作。
                         </p>
                       </div>
-                      {expertRecord?.status === "active" ? (
+                      {hasValidPublicLifecycle ? (
                         <span className="rounded-sm bg-lime-soft px-2.5 py-1 text-xs font-medium text-lime-text">
                           已上線
+                        </span>
+                      ) : expertRecord?.status === "active" ? (
+                        <span className="rounded-sm border border-warning/40 bg-surface px-2.5 py-1 text-xs font-medium text-warning">
+                          狀態需修復
                         </span>
                       ) : (
                         <button
@@ -1088,10 +1262,15 @@ export default function AdminExperts() {
                         </button>
                       )}
                     </div>
+                    {expertRecord?.status === "active" && !hasValidPublicLifecycle && (
+                      <p className="mt-3 border-t border-border pt-3 text-xs leading-relaxed text-warning">
+                        呢個舊有紀錄標記為 active，但未同時具備 owner 同公開 profile。請先重新連結 owner，或者安全封存 workspace，避免介面錯誤顯示為已上線。
+                      </p>
+                    )}
                   </div>
                   <div className="rounded-md border border-border px-4 py-3">
                     <p className="text-xs text-text-muted">公開預覽連結</p>
-                    {expert.verified ? (
+                    {expert.verified && hasValidPublicLifecycle ? (
                       <Link
                         to={`/experts/${expert.slug}`}
                         className="mt-1.5 inline-flex items-center gap-1 text-sm font-medium text-lime-text hover:underline"
@@ -1101,7 +1280,7 @@ export default function AdminExperts() {
                       </Link>
                     ) : (
                       <p className="mt-1.5 text-sm text-text-muted">
-                        草稿狀態暫無公開頁 — 完成認證後自動生成。
+                        暫無公開預覽 — 必須通過 release gate、連結 owner 並啟用公開 profile。
                       </p>
                     )}
                   </div>
@@ -1121,13 +1300,13 @@ export default function AdminExperts() {
                   <button
                     type="button"
                     disabled={archivingWorkspace}
-                    onClick={() => void archiveWorkspace()}
-                    className="rounded-md border border-border px-3 py-2 text-xs text-text-muted transition-colors hover:border-border-strong hover:text-text-primary disabled:opacity-50"
+                    onClick={requestArchive}
+                    className="rounded-md border border-error/40 px-3 py-2 text-xs text-error transition-colors hover:border-error hover:bg-error/5 disabled:opacity-50"
                   >
                     {archivingWorkspace
-                      ? "封存中…"
+                      ? "處理中…"
                       : expertIsDraft && !expertRecord.owner_user_id
-                      ? "封存未使用草稿"
+                      ? "刪除未使用草稿"
                       : "封存導師 workspace"}
                   </button>
                 )}
@@ -1154,6 +1333,78 @@ export default function AdminExperts() {
           </div>
         )}
       </AdminSlideOver>
+
+      <AlertDialog
+        open={archiveTarget !== null}
+        onOpenChange={(open) => {
+          if (!open && !archivingWorkspace) setArchiveTarget(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-display font-medium text-text-primary">
+              {archiveTarget?.unusedDraft ? "刪除未使用草稿？" : "封存導師 workspace？"}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="leading-relaxed text-text-secondary">
+              {archiveTarget?.unusedDraft
+                ? `${archiveTarget.name} 未連結 owner；系統會安全移除草稿並釋放導師席位。呢個動作只適用於未使用草稿。`
+                : `${archiveTarget?.name ?? "呢個導師"} 會即時下線公開頁、AI、預約及社交同步，撤銷 owner 權限並釋放席位；私人資料及 audit history 會保留。`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="press" disabled={archivingWorkspace}>
+              取消
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={archivingWorkspace}
+              onClick={(event) => {
+                event.preventDefault();
+                void archiveWorkspace();
+              }}
+              className="press bg-error text-destructive-foreground hover:bg-error/90"
+            >
+              {archivingWorkspace
+                ? "處理中…"
+                : archiveTarget?.unusedDraft
+                  ? "確認刪除草稿"
+                  : "確認安全封存"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={restoreTarget !== null}
+        onOpenChange={(open) => {
+          if (!open && !restoringWorkspace) setRestoreTarget(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-display font-medium text-text-primary">
+              復原「{restoreTarget?.display_name}」為私人草稿？
+            </AlertDialogTitle>
+            <AlertDialogDescription className="leading-relaxed text-text-secondary">
+              Workspace 會重新佔用一個導師席位，但唔會恢復原 owner、公開 profile、RAG、預約、角色編譯或社交同步。你需要重新邀請 owner，並完整通過 release gate 先可以再次上線。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="press" disabled={restoringWorkspace}>
+              取消
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={restoringWorkspace}
+              onClick={(event) => {
+                event.preventDefault();
+                void restoreWorkspace();
+              }}
+              className="press bg-lime text-on-accent hover:bg-lime-hover"
+            >
+              {restoringWorkspace ? "復原中…" : "確認復原為私人草稿"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* 新增導師 slide-over */}
       <AdminSlideOver

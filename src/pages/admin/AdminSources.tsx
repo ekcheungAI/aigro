@@ -12,6 +12,16 @@ import {
 import AdminSlideOver from "@/components/admin/AdminSlideOver";
 import { useAdminToast } from "@/components/admin/AdminToast";
 import QueryState from "@/components/QueryState";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import {
   argroStatusDot,
@@ -31,6 +41,11 @@ import type { AdminItemRow, AdminSourceRow } from "@/components/admin/adminData"
 const FIELD =
   "w-full rounded-md border border-border-strong bg-surface px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:border-lime focus:outline-none";
 
+export const SOURCE_CATALOGUE_NOTICE =
+  "呢度嘅新增、啟用同暫停只會更新 Supabase 目錄，唔會改動 Argro runtime。";
+export const SOURCE_CREATE_RESULT =
+  "已加入來源目錄；尚未接入 Argro 抓取管道";
+
 const SOURCE_TYPES: { key: AdminSourceRow["type"]; label: string }[] = [
   { key: "rss", label: "RSS" },
   { key: "api", label: "API" },
@@ -41,30 +56,32 @@ const STATUS_FILTERS = ["全部", "active", "paused", "pending", "error"] as con
 type StatusFilter = (typeof STATUS_FILTERS)[number];
 
 const SOURCE_STATUS_LABEL: Record<string, string> = {
-  active: "啟用中",
-  paused: "已暫停",
+  active: "目錄啟用",
+  paused: "目錄暫停",
   pending: "待接入",
   error: "異常",
 };
 
 function sourceStatusDot(status: AdminSourceRow["status"]) {
   if (status === "active") return "bg-lime";
-  if (status === "error") return "bg-[#A63A30]";
-  if (status === "pending") return "bg-[#A36A0F]";
+  if (status === "error") return "bg-error";
+  if (status === "pending") return "bg-warning";
   return "bg-border-strong";
 }
 
-function healthDot(health: AdminSourceRow["health"]) {
-  if (health === "ok") return "bg-lime";
-  if (health === "warn") return "bg-[#A36A0F]";
-  if (health === "down") return "bg-[#A63A30]";
+function healthDot(source: AdminSourceRow) {
+  if (!source.last_fetched_at) return "bg-border-strong";
+  if (source.health === "ok") return "bg-lime";
+  if (source.health === "warn") return "bg-warning";
+  if (source.health === "down") return "bg-error";
   return "bg-border-strong";
 }
 
-function healthLabel(health: AdminSourceRow["health"]) {
-  if (health === "ok") return "正常";
-  if (health === "warn") return "注意";
-  if (health === "down") return "中斷";
+function healthLabel(source: AdminSourceRow) {
+  if (!source.last_fetched_at) return "未驗證";
+  if (source.health === "ok") return "正常";
+  if (source.health === "warn") return "注意";
+  if (source.health === "down") return "中斷";
   return "未有數據";
 }
 
@@ -107,7 +124,7 @@ function SourceRecentItems({ sourceId }: { sourceId: string }) {
     return <p className="text-xs text-text-muted">載入中…</p>;
   }
   if (error) {
-    return <p className="text-xs text-[#A63A30]">載入失敗:{error}</p>;
+    return <p className="text-xs text-error">載入失敗：{error}</p>;
   }
   if (!data || data.length === 0) {
     return (
@@ -205,7 +222,7 @@ function EnrichmentBar({
  * fetch 失敗 → 離線模式卡 + 下面嘅靜態來源表繼續做 fallback;
  * 有舊數據時失敗 → amber 提示 + 繼續顯示上次成功數據。
  */
-function PipelineHealthSection() {
+function PipelineHealthSection({ catalogSources }: { catalogSources: AdminSourceRow[] }) {
   const { data, error, loading, lastUpdated, refresh } = useArgroHealth();
 
   const a = data?.articles ?? null;
@@ -213,6 +230,13 @@ function PipelineHealthSection() {
   const offline = data === null && error !== null;
   const stale = data !== null && error !== null;
   const backlog = a ? a.unclassified + a.untranslated_zh_tw : null;
+  const healthBadge = offline
+    ? { label: "Offline · 30s 重試", className: "bg-card text-error", dot: "bg-error" }
+    : stale
+      ? { label: "Stale · 等待重試", className: "bg-card text-warning", dot: "bg-warning" }
+      : data
+        ? { label: "Live · 30s 更新", className: "bg-lime-soft text-lime-text", dot: "bg-lime" }
+        : { label: "Checking · 連線中", className: "bg-card text-text-muted", dot: "bg-border-strong" };
 
   const sortedSources = useMemo(
     () =>
@@ -225,6 +249,7 @@ function PipelineHealthSection() {
         ),
     [data]
   );
+  const countMismatch = data !== null && sortedSources.length !== catalogSources.length;
 
   return (
     <section className="mb-8">
@@ -242,16 +267,16 @@ function PipelineHealthSection() {
           <span
             className={cn(
               "inline-flex items-center gap-1.5 rounded-sm px-2 py-0.5 font-mono text-[11px] font-medium",
-              offline ? "bg-card text-[#A63A30]" : "bg-lime-soft text-lime-text"
+              healthBadge.className
             )}
           >
             <span
               className={cn(
                 "h-1.5 w-1.5 rounded-full",
-                offline ? "bg-[#A63A30]" : "bg-lime"
+                healthBadge.dot
               )}
             />
-            Live · 30s 更新
+            {healthBadge.label}
           </span>
           {lastUpdated && (
             <span className="font-mono text-[11px] text-text-muted">
@@ -269,10 +294,25 @@ function PipelineHealthSection() {
         </div>
       </div>
 
+      {data && (
+        <div className={cn(
+          "mb-3 rounded-md border px-3 py-2 text-xs",
+          countMismatch
+            ? "border-warning/40 bg-card text-warning"
+            : "border-border bg-surface text-text-muted"
+        )}>
+          <span className="font-medium text-text-primary">來源口徑：</span>{" "}
+          Argro runtime health 回傳 {sortedSources.length} 個；Supabase 管理目錄有 {catalogSources.length} 個。
+          {countMismatch
+            ? " 兩邊係獨立資料面，數量未同步；請勿將其中一個當成另一邊嘅總數。"
+            : " 兩邊目前數量一致。"}
+        </div>
+      )}
+
       {/* stale 提示:有舊數據但最近一次更新失敗 */}
       {stale && lastUpdated && (
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-md border border-[#A36A0F]/40 bg-card px-3 py-2">
-          <p className="text-xs text-[#A36A0F]">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-md border border-warning/40 bg-card px-3 py-2">
+          <p className="text-xs text-warning">
             最近一次更新失敗 — 顯示 {fmtClock(lastUpdated)} 嘅數據,30
             秒後自動重試。
           </p>
@@ -328,7 +368,7 @@ function PipelineHealthSection() {
             llm
               ? llm.configured
                 ? "bg-lime"
-                : "bg-[#A63A30]"
+                : "bg-error"
               : "bg-border-strong"
           }
         />
@@ -336,16 +376,16 @@ function PipelineHealthSection() {
 
       {offline ? (
         /* 離線模式:連唔到 argro-api — 保留上一份數據,來源管理(下面)讀 Supabase sources 表 */
-        <div className="mt-3 rounded-lg border border-[#A63A30]/40 bg-surface p-5">
+        <div className="mt-3 rounded-lg border border-error/40 bg-surface p-5">
           <div className="flex items-center gap-2">
-            <WifiOff className="h-4 w-4 text-[#A63A30]" />
+            <WifiOff className="h-4 w-4 text-error" strokeWidth={1.5} />
             <p className="text-sm font-medium text-text-primary">
               管線暫時連唔到 argro-api — 顯示離線模式
             </p>
           </div>
           <p className="mt-1.5 text-xs text-text-muted">
-            下面嘅來源管理表繼續可用(靜態快照);live 數據每 30
-            秒自動重試,無需刷新頁面。
+            Argro live 數據暫時不可用，每 30 秒自動重試。下面嘅來源目錄係另一套
+            Supabase 資料；如果 Supabase 亦未連接，目錄操作會保持停用並顯示錯誤。
             <span className="ml-1 font-mono text-[11px]">({error})</span>
           </p>
           <button
@@ -413,7 +453,7 @@ function PipelineHealthSection() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {loading && sortedSources.length === 0
+                  {loading && data === null
                     ? /* 首次載入骨架 — reserve 行高,避免 layout shift */
                       [0, 1, 2, 3, 4].map((i) => (
                         <tr key={i} className="animate-pulse">
@@ -435,7 +475,7 @@ function PipelineHealthSection() {
                           </td>
                         </tr>
                       ))
-                    : sortedSources.map((s) => (
+                    : sortedSources.length > 0 ? sortedSources.map((s) => (
                         <tr
                           key={s.id}
                           className="transition-colors hover:bg-card"
@@ -475,7 +515,13 @@ function PipelineHealthSection() {
                             {relativeFetchTime(s.last_fetch)}
                           </td>
                         </tr>
-                      ))}
+                      )) : (
+                        <tr>
+                          <td colSpan={5} className="px-5 py-8 text-center text-xs text-text-muted">
+                            Argro health API 已連線，但未返回逐來源健康資料。
+                          </td>
+                        </tr>
+                      )}
                 </tbody>
               </table>
             </div>
@@ -494,6 +540,7 @@ export default function AdminSources() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("全部");
   const [openId, setOpenId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<AdminSourceRow | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState({
@@ -524,7 +571,7 @@ export default function AdminSources() {
 
   const activeCount = list.filter((s) => s.status === "active").length;
 
-  /** 啟用 / 暫停 — 真 update */
+  /** 只切換 Supabase catalogue 狀態，不控制 Argro runtime */
   const toggleSource = async (s: AdminSourceRow) => {
     if (!supabase || busyId) return;
     const next = s.status === "active" ? "paused" : "active";
@@ -538,14 +585,13 @@ export default function AdminSources() {
       toast(`更新失敗:${updateError.message}`);
       return;
     }
-    toast(`「${s.name}」已${next === "active" ? "啟用" : "暫停"}`);
+    toast(`「${s.name}」目錄狀態已${next === "active" ? "啟用" : "暫停"}；Argro 抓取設定未變`);
     refetch();
   };
 
   /** 刪除來源 — 真 delete(只限未產出/確認操作) */
   const deleteSource = async (s: AdminSourceRow) => {
     if (!supabase || busyId) return;
-    if (!window.confirm(`確定刪除「${s.name}」?呢個操作唔可以還原。`)) return;
     setBusyId(s.id);
     const { error: deleteError } = await supabase
       .from("sources")
@@ -557,11 +603,12 @@ export default function AdminSources() {
       return;
     }
     toast(`已刪除「${s.name}」`);
+    setDeleteTarget(null);
     setOpenId(null);
     refetch();
   };
 
-  /** 新增來源 — 真 insert,status = pending(待管道接入) */
+  /** 新增來源到 Supabase catalogue；不代表 Argro runtime 已接入 */
   const createSource = async () => {
     if (!supabase || creating) return;
     if (!form.name.trim() || !form.endpoint.trim()) {
@@ -589,7 +636,7 @@ export default function AdminSources() {
       toast(`新增失敗:${insertError.message}`);
       return;
     }
-    toast(`已新增「${form.name.trim()}」— 狀態:待接入,管道下一輪 sync 會開始抓取`);
+    toast(`已新增「${form.name.trim()}」：${SOURCE_CREATE_RESULT}`);
     setCreateOpen(false);
     setForm({ name: "", type: "rss", endpoint: "", vertical: "AI", lang: "zh" });
     refetch();
@@ -606,7 +653,7 @@ export default function AdminSources() {
             來源與管道
           </h1>
           <p className="mt-1 text-sm text-text-muted">
-            情報來源、蒸餾管道狀態與 MCP 端點 — sources 表即時管理。
+            Supabase 來源目錄與接入狀態；Argro 抓取管道需要另行設定。
           </p>
         </div>
         <button
@@ -620,16 +667,23 @@ export default function AdminSources() {
       </div>
 
       {/* ============ 管線健康(live,argro-api /meta/health) ============ */}
-      <PipelineHealthSection />
+      <PipelineHealthSection catalogSources={list} />
 
       {/* ============ 來源管理(sources 表真數據) ============ */}
       <section className="mt-8">
+        <div className="mb-4 rounded-md border border-warning/40 bg-warning/10 px-4 py-3">
+          <p className="text-sm font-medium text-text-primary">來源目錄與抓取管道係兩套獨立設定</p>
+          <p className="mt-1 text-xs leading-relaxed text-text-secondary">
+            {SOURCE_CATALOGUE_NOTICE}
+            請以上方「管線健康」確認真正嘅抓取狀態。
+          </p>
+        </div>
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <h2 className="font-display text-[17px] font-medium text-text-primary">
             來源管理
           </h2>
           <span className="font-mono text-xs text-text-muted">
-            {activeCount} / {list.length} 啟用中
+            {activeCount} / {list.length} 目錄啟用
           </span>
           <div className="relative ml-auto">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
@@ -667,7 +721,7 @@ export default function AdminSources() {
             data && data.length === 0 ? (
               <div className="rounded-lg border border-dashed border-border-strong bg-surface px-6 py-14 text-center">
                 <p className="text-sm text-text-muted">
-                  sources 表暫時係空 — 用右上角「新增來源」接入第一個情報來源。
+                  sources 表暫時係空 — 用右上角「新增來源」登記第一個候選來源。
                 </p>
               </div>
             ) : null
@@ -714,9 +768,9 @@ export default function AdminSources() {
                       <td className="px-4 py-3">
                         <span className="inline-flex items-center gap-1.5 text-xs text-text-secondary">
                           <span
-                            className={cn("h-1.5 w-1.5 rounded-full", healthDot(s.health))}
+                            className={cn("h-1.5 w-1.5 rounded-full", healthDot(s))}
                           />
-                          {healthLabel(s.health)}
+                          {healthLabel(s)}
                         </span>
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-text-muted">
@@ -742,7 +796,7 @@ export default function AdminSources() {
                             type="button"
                             disabled={busyId === s.id}
                             onClick={() => void toggleSource(s)}
-                            aria-label={s.status === "active" ? "暫停來源" : "啟用來源"}
+                            aria-label={s.status === "active" ? "暫停目錄來源" : "啟用目錄來源"}
                             className="rounded-md border border-border p-1.5 text-text-muted transition-colors hover:border-lime hover:text-lime-text disabled:opacity-50"
                           >
                             {s.status === "active" ? (
@@ -754,9 +808,9 @@ export default function AdminSources() {
                           <button
                             type="button"
                             disabled={busyId === s.id}
-                            onClick={() => void deleteSource(s)}
+                            onClick={() => setDeleteTarget(s)}
                             aria-label="刪除來源"
-                            className="rounded-md border border-border p-1.5 text-text-muted transition-colors hover:border-[#A63A30] hover:text-[#A63A30] disabled:opacity-50"
+                            className="press rounded-md border border-border p-1.5 text-text-muted transition-colors hover:border-error hover:text-error disabled:opacity-50"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
@@ -843,20 +897,23 @@ export default function AdminSources() {
                 {active.status === "active" ? (
                   <>
                     <Pause className="h-4 w-4" />
-                    暫停來源
+                    暫停目錄
                   </>
                 ) : (
                   <>
                     <Play className="h-4 w-4" />
-                    啟用來源
+                    啟用目錄
                   </>
                 )}
               </button>
               <button
                 type="button"
                 disabled={busyId === active.id}
-                onClick={() => void deleteSource(active)}
-                className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border px-4 py-2 text-sm text-text-secondary transition-colors hover:border-[#A63A30] hover:text-[#A63A30] disabled:opacity-50"
+                onClick={() => {
+                  setOpenId(null);
+                  setDeleteTarget(active);
+                }}
+                className="press inline-flex items-center justify-center gap-1.5 rounded-md border border-border px-4 py-2 text-sm text-text-secondary transition-colors hover:border-error hover:text-error disabled:opacity-50"
               >
                 <Trash2 className="h-4 w-4" />
                 刪除
@@ -866,12 +923,34 @@ export default function AdminSources() {
         )}
       </AdminSlideOver>
 
+      <AlertDialog open={deleteTarget !== null} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-display font-medium text-text-primary">
+              刪除「{deleteTarget?.name}」？
+            </AlertDialogTitle>
+            <AlertDialogDescription className="leading-relaxed text-text-secondary">
+              此操作無法復原。既有情報會保留，但 source_id 會被解除；Argro runtime 入面嘅來源設定唔會自動刪除，需要另外同步。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="press">取消</AlertDialogCancel>
+            <AlertDialogAction
+              className="press bg-error text-destructive-foreground hover:bg-error/90"
+              onClick={() => deleteTarget && void deleteSource(deleteTarget)}
+            >
+              確認刪除
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* ============ 新增來源 drawer ============ */}
       <AdminSlideOver
         open={createOpen}
         onClose={() => setCreateOpen(false)}
         title="新增來源"
-        subtitle="寫入 sources 表,狀態「待接入」— argro 管道下一輪 sync 會開始抓取"
+        subtitle="只會加入 Supabase 來源目錄；不會自動啟動 Argro 抓取"
         width={480}
       >
         <div className="flex h-full flex-col">

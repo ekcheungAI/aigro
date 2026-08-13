@@ -41,7 +41,7 @@ export default function AdminSkills() {
                   s.status === "自家"
                     ? "bg-lime-soft text-lime-text"
                     : s.status === "優先名單"
-                      ? "bg-card text-[#A36A0F]"
+                      ? "bg-card text-warning"
                       : "bg-card text-text-secondary"
                 )}
               >

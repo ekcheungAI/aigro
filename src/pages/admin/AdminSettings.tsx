@@ -34,6 +34,16 @@ const TABLES = [
   { table: "leads", label: "線索 leads" },
 ] as const;
 
+function configuredSupabaseHost(): string {
+  const raw = import.meta.env.VITE_SUPABASE_URL;
+  if (!raw) return "未設定（env 缺失）";
+  try {
+    return new URL(raw).host;
+  } catch {
+    return "設定格式無效";
+  }
+}
+
 async function fetchTableCounts(): Promise<{ label: string; count: number }[]> {
   const counts = await Promise.all(
     TABLES.map(async (t) => ({
@@ -81,19 +91,24 @@ export default function AdminSettings() {
   }, []);
 
   const llmOk = argro.data?.llm.configured ?? false;
+  const argroSourceCount = argro.data?.sources.filter((source) => source.is_active).length;
+  const catalogSourceCount = counts?.find((row) => row.label === "來源 sources")?.count;
+  const sourcePlanesDiffer = argroSourceCount !== undefined
+    && catalogSourceCount !== undefined
+    && argroSourceCount !== catalogSourceCount;
 
   return (
     <div className="mx-auto max-w-4xl">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-lime-text">
-            Settings
+            System
           </p>
           <h1 className="mt-1 font-display text-[28px] font-medium text-text-primary">
-            系統設定
+            系統狀態
           </h1>
           <p className="mt-1 text-sm text-text-muted">
-            真實連線狀態同資料表概覽 — 冇任何示範 quota 數字。
+            連線、資料面與後端就緒度概覽；呢頁只讀，唔會修改 production 設定。
           </p>
         </div>
         <button
@@ -128,7 +143,7 @@ export default function AdminSettings() {
                     ? "animate-pulse bg-border-strong"
                     : ping?.ok
                       ? "bg-lime"
-                      : "bg-[#A63A30]"
+                      : "bg-error"
                 )}
               />
               Supabase
@@ -153,7 +168,7 @@ export default function AdminSettings() {
                     ? "animate-pulse bg-border-strong"
                     : argro.data
                       ? "bg-lime"
-                      : "bg-[#A63A30]"
+                      : "bg-error"
                 )}
               />
               argro 情報管道
@@ -167,7 +182,7 @@ export default function AdminSettings() {
             </p>
             <p className="mt-1.5 text-xs leading-relaxed text-text-muted">
               {argro.data
-                ? `LLM ${llmOk ? "已連接" : "未連接"} · 今日 articles ${argro.data.articles.today} · 來源 ${argro.data.sources.filter((s) => s.is_active).length} 個啟用`
+                ? `LLM ${llmOk ? "已連接" : "未連接"} · 今日 articles ${argro.data.articles.today} · runtime 來源 ${argroSourceCount} 個啟用`
                 : argro.error
                   ? `連唔到 argro-api.zeabur.app/meta/health — ${argro.error}`
                   : "檢查中…"}
@@ -175,19 +190,33 @@ export default function AdminSettings() {
           </div>
         </div>
 
+        {argroSourceCount !== undefined && catalogSourceCount !== undefined && (
+          <div className={cn(
+            "mt-3 rounded-md border px-4 py-3 text-xs leading-relaxed",
+            sourcePlanesDiffer
+              ? "border-warning/40 bg-card text-warning"
+              : "border-border bg-card text-text-secondary"
+          )}>
+            Argro runtime 有 {argroSourceCount} 個啟用來源；Supabase 管理 catalog 有 {catalogSourceCount} 筆來源。
+            {sourcePlanesDiffer
+              ? " 兩者係獨立 data plane，目前未自動同步，數字唔應該當成同一指標。"
+              : " 目前數量一致，但仍然係兩個獨立 data plane。"}
+          </div>
+        )}
+
         <dl className="mt-4 divide-y divide-border rounded-md border border-border bg-card/50">
           <div className="flex items-center justify-between px-4 py-2.5">
             <dt className="text-xs text-text-muted">Supabase URL</dt>
             <dd className="font-mono text-xs text-text-primary">
               {supabaseReady
-                ? "mxjgavuzzpcvazxdnuzg.supabase.co"
-                : "未設定(env 缺失)"}
+                ? configuredSupabaseHost()
+                : "未設定（env 缺失）"}
             </dd>
           </div>
           <div className="flex items-center justify-between px-4 py-2.5">
             <dt className="text-xs text-text-muted">資料庫 schema</dt>
             <dd className="font-mono text-xs text-text-primary">
-              supabase/schema.sql(v1.15+)
+              migrations-managed schema
             </dd>
           </div>
           <div className="flex items-center justify-between px-4 py-2.5">

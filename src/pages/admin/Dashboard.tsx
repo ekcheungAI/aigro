@@ -188,16 +188,16 @@ function PipelineKpiCard() {
         <span
           className={cn(
             "inline-flex items-center gap-1 font-mono text-[10px]",
-            offline ? "text-[#A63A30]" : "text-lime-text"
+            offline ? "text-error" : "text-lime-text"
           )}
         >
           <span
             className={cn(
               "h-1.5 w-1.5 rounded-full",
-              offline ? "bg-[#A63A30]" : "bg-lime"
+              offline ? "bg-error" : "bg-lime"
             )}
           />
-          Live
+          {offline ? "Offline" : loading && !data ? "Checking" : "Live"}
         </span>
       </p>
       <p className="mt-2 font-mono text-[30px] font-medium leading-none text-text-primary">
@@ -208,11 +208,11 @@ function PipelineKpiCard() {
           className={cn(
             "h-1.5 w-1.5 rounded-full",
             offline
-              ? "bg-[#A63A30]"
+              ? "bg-error"
               : data
                 ? llmOk
                   ? "bg-lime"
-                  : "bg-[#A63A30]"
+                  : "bg-error"
                 : "bg-border-strong"
           )}
         />
@@ -220,7 +220,7 @@ function PipelineKpiCard() {
           ? "連唔到 argro-api — 離線"
           : loading && !data
             ? "連線中…"
-            : `LLM ${llmOk ? "已連接" : "未連接"} · 今日新增 articles`}
+            : `LLM ${llmOk ? "已連接" : "未連接"} · Argro runtime 今日抓取`}
       </p>
     </Link>
   );
@@ -232,9 +232,9 @@ export default function Dashboard() {
   const kpis = data
     ? [
         {
-          label: "今日情報",
+          label: "Supabase 今日情報",
           value: String(data.todayItems),
-          note: `${data.pendingItems} 條待審核`,
+          note: `${data.pendingItems} 條待審核 · items 表`,
         },
         {
           label: "總會員",

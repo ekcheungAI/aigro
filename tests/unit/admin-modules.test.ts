@@ -13,25 +13,27 @@ describe("master admin module status", () => {
     expect(ADMIN_MODULES.every((module) => module.reviewedAt)).toBe(true);
   });
 
-  it("marks every partly connected module as beta with an honest reason", () => {
-    const betaModules = ADMIN_MODULES
-      .filter((module) => module.status === "beta")
-      .map((module) => module.en);
+  it("uses specific capability states instead of labelling every partial module beta", () => {
+    const statuses = Object.fromEntries(
+      ADMIN_MODULES.map((module) => [module.en, module.status])
+    );
 
-    expect(betaModules).toEqual([
-      "Experts",
-      "Studio",
-      "CRM",
-      "Sources",
-      "Skills",
-      "Engagement",
-      "Members",
-      "Emails",
-      "Settings",
-    ]);
+    expect(statuses).toMatchObject({
+      Dashboard: "live",
+      Experts: "beta",
+      Studio: "blocked",
+      CRM: "beta",
+      Content: "live",
+      Sources: "beta",
+      Skills: "readonly",
+      Engagement: "live",
+      Members: "beta",
+      Emails: "readonly",
+      System: "live",
+    });
     expect(
       ADMIN_MODULES
-        .filter((module) => module.status === "beta")
+        .filter((module) => module.status !== "live")
         .every((module) => module.betaReason.trim().length > 0)
     ).toBe(true);
   });

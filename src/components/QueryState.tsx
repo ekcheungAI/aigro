@@ -25,10 +25,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 /** loading 態 — token-based pulse rows(bg-accent animate-pulse,無 shimmer gradient) */
 function SkeletonRows({ rows }: { rows: number }) {
   return (
-    <div className="grid gap-3 p-6" aria-hidden="true">
-      {Array.from({ length: rows }, (_, i) => (
-        <Skeleton key={i} className="h-12 w-full" />
-      ))}
+    <div className="grid gap-3 p-6" role="status" aria-live="polite" aria-busy="true">
+      <span className="sr-only">正在載入資料…</span>
+      <div className="contents" aria-hidden="true">
+        {Array.from({ length: rows }, (_, i) => (
+          <Skeleton key={i} className="h-12 w-full" />
+        ))}
+      </div>
     </div>
   );
 }

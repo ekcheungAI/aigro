@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(18);
+select plan(19);
 
 set local role postgres;
 
@@ -27,12 +27,14 @@ where user_id = '61000000-0000-0000-0000-000000000001';
 update public.account_access set app_role = 'admin'
 where user_id = '62000000-0000-0000-0000-000000000002';
 
-insert into public.leads (id, user_id, owner_id, expert_id, persona, score)
+insert into public.leads (
+  id, user_id, owner_id, expert_id, persona, score, next_follow_up_at
+)
 select
   '64000000-0000-0000-0000-000000000004',
   '63000000-0000-0000-0000-000000000003',
   '63000000-0000-0000-0000-000000000003',
-  e.id, e.slug, 25
+  e.id, e.slug, 25, '2026-08-20 09:00:00+08'::timestamptz
 from public.experts e where e.slug = 'elvin-cheung';
 
 set local role authenticated;
@@ -49,6 +51,12 @@ select is(
   (select stage from public.leads where id = '64000000-0000-0000-0000-000000000004'),
   '跟進中',
   'CRM workflow persists the new lead stage'
+);
+select is(
+  (select next_follow_up_at from public.leads
+   where id = '64000000-0000-0000-0000-000000000004'),
+  '2026-08-20 09:00:00+08'::timestamptz,
+  'quick CRM stage move preserves the scheduled follow-up'
 );
 select ok(
   exists (

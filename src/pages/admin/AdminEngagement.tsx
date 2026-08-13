@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
-import { MessagesSquare } from "lucide-react";
+import { MessagesSquare, Search } from "lucide-react";
 import AdminSlideOver from "@/components/admin/AdminSlideOver";
 import QueryState from "@/components/QueryState";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import {
   daysAgoUtcStartIso,
+  countRows,
   formatDate,
   last7DayBuckets,
   personaLabel,
@@ -21,11 +22,14 @@ import type {
 interface EngagementData {
   conversations: AdminConversationRow[];
   messages: AdminMessageRow[];
+  totalConversations: number;
+  totalMessages: number;
+  todayConversations: number;
 }
 
 async function fetchEngagement(): Promise<EngagementData> {
   if (!supabase) throw new Error("Supabase 未連接 — 請檢查環境變數。");
-  const [convRes, msgRes] = await Promise.all([
+  const [convRes, msgRes, totalConversations, totalMessages, todayConversations] = await Promise.all([
     supabase
       .from("conversations")
       .select("id,user_id,anon_id,persona,title,created_at")
@@ -36,12 +40,18 @@ async function fetchEngagement(): Promise<EngagementData> {
       .select("id,conversation_id,role,content,source,answer_basis,coverage,created_at")
       .order("created_at", { ascending: true })
       .limit(2000),
+    countRows("conversations"),
+    countRows("messages"),
+    countRows("conversations", (query) => query.gte("created_at", daysAgoUtcStartIso(0))),
   ]);
   if (convRes.error) throw new Error(convRes.error.message);
   if (msgRes.error) throw new Error(msgRes.error.message);
   return {
     conversations: (convRes.data ?? []) as AdminConversationRow[],
     messages: (msgRes.data ?? []) as AdminMessageRow[],
+    totalConversations,
+    totalMessages,
+    todayConversations,
   };
 }
 
@@ -62,6 +72,7 @@ function coverageColor(value: AdminMessageRow["coverage"]): string {
 export default function AdminEngagement() {
   const { data, loading, error, refetch } = useAdminQuery(fetchEngagement);
   const [personaFilter, setPersonaFilter] = useState<string>("全部");
+  const [query, setQuery] = useState("");
   const [openId, setOpenId] = useState<string | null>(null);
 
   const conversations = useMemo(() => data?.conversations ?? [], [data]);
@@ -93,11 +104,17 @@ export default function AdminEngagement() {
   }, [conversations]);
 
   const filtered = useMemo(
-    () =>
-      personaFilter === "全部"
-        ? conversations
-        : conversations.filter((c) => (c.persona || "platform") === personaFilter),
-    [conversations, personaFilter]
+    () => {
+      const normalized = query.trim().toLowerCase();
+      return conversations.filter((conversation) => {
+        if (personaFilter !== "全部" && (conversation.persona || "platform") !== personaFilter) return false;
+        if (!normalized) return true;
+        return (conversation.title ?? "").toLowerCase().includes(normalized)
+          || (conversation.anon_id ?? "").toLowerCase().includes(normalized)
+          || (conversation.user_id ?? "").toLowerCase().includes(normalized);
+      });
+    },
+    [conversations, personaFilter, query]
   );
 
   /* persona 分佈 */
@@ -119,10 +136,6 @@ export default function AdminEngagement() {
   }, [messages]);
   const maxDay = Math.max(...weekly.map((d) => d.count), 1);
 
-  const todayConvos = conversations.filter(
-    (c) => c.created_at && c.created_at >= daysAgoUtcStartIso(0)
-  ).length;
-
   return (
     <div className="mx-auto max-w-6xl">
       <div className="mb-6">
@@ -142,7 +155,7 @@ export default function AdminEngagement() {
         error={error ? `載入失敗:${error}` : null}
         retry={refetch}
         empty={
-          data && data.conversations.length === 0 ? (
+          data && data.totalConversations === 0 ? (
             <div className="rounded-lg border border-dashed border-border-strong bg-surface px-6 py-16 text-center">
               <MessagesSquare className="mx-auto h-6 w-6 text-text-muted" />
               <p className="mt-3 text-sm font-medium text-text-primary">
@@ -155,26 +168,26 @@ export default function AdminEngagement() {
           ) : null
         }
       >
-        {data && data.conversations.length > 0 && (
+        {data && data.totalConversations > 0 && (
           <>
             {/* Top stats */}
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
               <div className="rounded-lg border border-border bg-surface p-4">
                 <p className="text-xs text-text-muted">總對話</p>
                 <p className="mt-1.5 font-mono text-2xl font-medium text-text-primary">
-                  {conversations.length}
+                  {data.totalConversations.toLocaleString("en-US")}
                 </p>
               </div>
               <div className="rounded-lg border border-border bg-surface p-4">
                 <p className="text-xs text-text-muted">總訊息</p>
                 <p className="mt-1.5 font-mono text-2xl font-medium text-text-primary">
-                  {messages.length}
+                  {data.totalMessages.toLocaleString("en-US")}
                 </p>
               </div>
               <div className="rounded-lg border border-border bg-surface p-4">
                 <p className="text-xs text-text-muted">今日對話</p>
                 <p className="mt-1.5 font-mono text-2xl font-medium text-lime-text">
-                  {todayConvos}
+                  {data.todayConversations}
                 </p>
               </div>
               <div className="rounded-lg border border-border bg-surface p-4">
@@ -235,8 +248,18 @@ export default function AdminEngagement() {
               </section>
             </div>
 
-            {/* Persona filter */}
-            <div className="mt-5 flex flex-wrap gap-1.5">
+            {/* Search + persona filter */}
+            <div className="mt-5 flex flex-wrap items-center gap-2">
+              <label className="relative min-w-[220px] flex-1 sm:max-w-xs">
+                <span className="sr-only">搜尋對話</span>
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" strokeWidth={1.5} />
+                <input
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="搜尋標題或訪客 ID…"
+                  className="h-10 w-full rounded-md border border-border-strong bg-surface pl-9 pr-3 text-sm text-text-primary outline-none placeholder:text-text-muted focus:border-lime focus:ring-1 focus:ring-lime"
+                />
+              </label>
               {["全部", ...personas].map((p) => (
                 <button
                   key={p}
@@ -273,8 +296,7 @@ export default function AdminEngagement() {
                     return (
                       <tr
                         key={c.id}
-                        onClick={() => setOpenId(c.id)}
-                        className="cursor-pointer transition-colors hover:bg-card/60"
+                        className="transition-colors hover:bg-card/60"
                       >
                         <td className="px-4 py-3 font-mono text-xs text-text-secondary">
                           {c.anon_id
@@ -284,8 +306,14 @@ export default function AdminEngagement() {
                         <td className="whitespace-nowrap px-4 py-3 text-xs text-text-primary">
                           {personaLabel(c.persona)}
                         </td>
-                        <td className="max-w-[280px] truncate px-4 py-3 text-text-secondary">
-                          {c.title?.trim() || "未命名對話"}
+                        <td className="max-w-[280px] px-4 py-3 text-text-secondary">
+                          <button
+                            type="button"
+                            onClick={() => setOpenId(c.id)}
+                            className="press block max-w-[280px] truncate text-left underline-offset-2 hover:text-lime-text hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime"
+                          >
+                            {c.title?.trim() || "未命名對話"}
+                          </button>
                         </td>
                         <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-text-muted">
                           {timeAgo(c.created_at)}
@@ -314,6 +342,9 @@ export default function AdminEngagement() {
                 </tbody>
               </table>
             </div>
+            <p className="mt-2 font-mono text-[11px] text-text-muted">
+              表格顯示最近 {conversations.length} 段；上方總數係資料庫精確 count。
+            </p>
           </>
         )}
       </QueryState>

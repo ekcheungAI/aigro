@@ -273,8 +273,8 @@ function MemberRoleEditor({
               ))}
             </select>
             <p className="mt-1.5 text-xs leading-relaxed text-text-muted">
-              最高管理員會以原子 owner-assignment workflow 連結帳戶；同一 workspace
-              只可以有一位 owner，轉移後舊 owner 會即時失去存取權。
+              連結時會使用原子 owner-assignment workflow；只有最高管理員可以執行。
+              同一 workspace 只可以有一位 owner，轉移後舊 owner 會即時失去存取權。
             </p>
           </div>
         )}
@@ -493,11 +493,54 @@ export default function AdminMembers() {
               </div>
               <span className="ml-auto font-mono text-xs text-text-muted">
                 {filtered.length} / {list.length} 位
+                {data && data.total > list.length ? `（最近 ${list.length} / 全部 ${data.total}）` : ""}
               </span>
             </div>
 
+            <div className="mt-4 space-y-2 sm:hidden">
+              {filtered.map((m) => (
+                <article key={m.id} className="rounded-lg border border-border bg-surface p-4">
+                  <button
+                    type="button"
+                    onClick={() => setOpenId(m.id)}
+                    className="w-full text-left"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate font-medium text-text-primary">
+                          {m.name?.trim() || m.email.split("@")[0]}
+                        </p>
+                        <p className="mt-0.5 truncate text-xs text-text-muted">{m.email}</p>
+                      </div>
+                      <span className={cn("shrink-0 rounded-sm px-2 py-0.5 text-xs font-medium", roleChip(m.role))}>
+                        {roleLabel(m.role)}
+                      </span>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between gap-3 text-xs text-text-secondary">
+                      <span>{tierLabel(m.tier)}</span>
+                      <span className="font-mono">{formatDate(m.created_at)}</span>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!canManageAdmins}
+                    onClick={() => setEditId(m.id)}
+                    className="mt-3 inline-flex w-full items-center justify-center gap-1 rounded-md border border-border px-3 py-2 text-xs font-medium text-text-secondary transition-colors hover:border-lime hover:text-lime-text disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                    編輯權限與方案
+                  </button>
+                </article>
+              ))}
+              {filtered.length === 0 && (
+                <p className="rounded-lg border border-dashed border-border-strong px-4 py-8 text-center text-sm text-text-muted">
+                  找不到符合嘅會員。
+                </p>
+              )}
+            </div>
+
             {/* Table */}
-            <div className="mt-4 overflow-x-auto rounded-lg border border-border bg-surface">
+            <div className="mt-4 hidden overflow-x-auto rounded-lg border border-border bg-surface sm:block">
               <table className="w-full min-w-[760px] text-left text-sm">
                 <thead>
                   <tr className="border-b border-border text-xs text-text-muted">

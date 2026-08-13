@@ -22,6 +22,7 @@ export interface AdminExpertRecord {
   invitation_status: string | null;
   invitation_email: string | null;
   invitation_expires_at: string | null;
+  archived_at: string | null;
 }
 
 export interface SaveAdminExpertInput {
@@ -85,7 +86,7 @@ export async function fetchAdminExperts(): Promise<AdminExpertRecord[]> {
   if (!supabase) throw new Error("Supabase 未連接");
   const { data, error } = await supabase
     .from("experts")
-    .select("id,slug,display_name,name_en,name_zh,title,bio,brand_color,specialties,quote,credential,verified,radar,traits,status,owner_user_id,public_profile_enabled")
+    .select("id,slug,display_name,name_en,name_zh,title,bio,brand_color,specialties,quote,credential,verified,radar,traits,status,owner_user_id,public_profile_enabled,archived_at")
     .neq("slug", "platform")
     .is("archived_at", null)
     .order("created_at");
@@ -115,6 +116,25 @@ export async function fetchAdminExperts(): Promise<AdminExpertRecord[]> {
         typeof invitation?.expires_at === "string" ? invitation.expires_at : null,
     };
   });
+}
+
+export async function fetchArchivedAdminExperts(): Promise<AdminExpertRecord[]> {
+  if (!supabase) throw new Error("Supabase 未連接");
+  const { data, error } = await supabase
+    .from("experts")
+    .select("id,slug,display_name,name_en,name_zh,title,bio,brand_color,specialties,quote,credential,verified,radar,traits,status,owner_user_id,public_profile_enabled,archived_at")
+    .neq("slug", "platform")
+    .not("archived_at", "is", null)
+    .order("archived_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as Array<Omit<AdminExpertRecord,
+    "invitation_status" | "invitation_email" | "invitation_expires_at">>)
+    .map((row) => ({
+      ...row,
+      invitation_status: null,
+      invitation_email: null,
+      invitation_expires_at: null,
+    }));
 }
 
 export async function saveAdminExpert(input: SaveAdminExpertInput): Promise<string> {
