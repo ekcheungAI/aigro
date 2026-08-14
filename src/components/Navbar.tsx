@@ -7,7 +7,6 @@ import {
   LogOut,
   Menu,
   Moon,
-  Search,
   Sun,
   UserRound,
   X,
@@ -164,28 +163,6 @@ export default function Navbar() {
               height={636}
               className="hidden h-8 w-auto dark:block"
             />
-            <span
-              className={cn(
-                "hidden whitespace-nowrap text-caption 2xl:inline",
-                overHero ? "text-band-text-secondary" : "text-text-muted"
-              )}
-            >
-              香港 AI・增長情報
-            </span>
-          </Link>
-
-          <Link
-            to="/insights"
-            aria-label="搜尋 AIGRO 情報"
-            className={cn(
-              "press hidden h-11 min-w-0 max-w-[240px] flex-1 items-center gap-2 rounded-md border px-3 text-caption 2xl:flex",
-              overHero
-                ? "border-band-border bg-band-surface text-band-text-muted hover:border-band-border-strong"
-                : "border-border bg-card text-text-muted hover:border-border-strong"
-            )}
-          >
-            <Search className="h-4 w-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />
-            <span className="truncate">搜尋情報、專家與主題</span>
           </Link>
 
           {/* Desktop nav — bilingual labels */}

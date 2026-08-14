@@ -45,7 +45,7 @@ const PortalBookings = lazy(() => import("@/pages/portal/PortalBookings"));
 function RouteMeta() {
   const { pathname, search } = useLocation();
   const map: [RegExp, string, string?][] = [
-    [/^\/$/, "香港 No.1 AI Builder Club", "每日精選全球 AI 情報，連接香港 builders、導師與 MCP，將情報變成實戰成果。"],
+    [/^\/$/, "香港 #1 AI Builder 社群", "每日精選全球 AI 情報，連接香港 builders、導師與 MCP，將情報變成實戰成果。"],
     [/^\/insights\/daily/, "每日精選日報", "編輯部每日精選 5 條必讀 AI・增長情報 — 3 分鐘掌握全球脈搏的香港意義。"],
     [/^\/insights\/[^/]+/, "情報詳情", "AI 摘要 + 香港視角長評 + 來源連結。"],
     [/^\/insights/, "資訊中心 Insights", "即時動態 feed、每日日報、主題地圖與數據合作 — 每日 AI・增長情報，附香港視角解讀。"],

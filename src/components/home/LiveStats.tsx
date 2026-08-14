@@ -2,13 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import { useInView, useReducedMotion } from "framer-motion";
 
 interface LiveStatsProps {
-  memberCount: number | null;
+  memberCount: number;
 }
 
 interface ScaleStat {
-  value: number | null;
+  value: number;
   label: string;
   note: string;
+  showPlus?: boolean;
 }
 
 /** 800ms ease-out count-up; reduced motion displays the final value immediately. */
@@ -47,7 +48,8 @@ export default function LiveStats({ memberCount }: LiveStatsProps) {
     {
       value: memberCount,
       label: "位會員",
-      note: memberCount === null ? "正式連線後顯示實時登記數" : "截至目前完成登記",
+      note: "110 位社群基數 + 實際登記會員",
+      showPlus: true,
     },
     { value: 2, label: "位領航專家已上線", note: "8 位蒸餾中" },
     { value: 1, label: "個 AI MCP 已就緒", note: "更多行業 MCP 籌備中" },
@@ -61,21 +63,15 @@ export default function LiveStats({ memberCount }: LiveStatsProps) {
           className="sm:border-l sm:border-band-border sm:px-6 sm:first:border-l-0 sm:first:pl-0"
         >
           <dt className="flex flex-wrap items-baseline gap-x-2">
-            <span className="sr-only">
-              {stat.value === null ? "會員總數連接中" : `${stat.value} ${stat.label}`}
-            </span>
+            <span className="sr-only">{`${stat.value}${stat.showPlus ? "+" : ""} ${stat.label}`}</span>
             <span aria-hidden="true" className="contents">
-              {stat.value === null ? (
-                <>
-                  <span className="font-display text-h2 text-band-text-muted">會員總數</span>
-                  <span className="font-sans text-label text-band-text">連接中</span>
-                </>
-              ) : (
-                <>
-                  <CountUp value={stat.value} delay={index * 0.08} />
-                  <span className="font-sans text-label text-band-text">{stat.label}</span>
-                </>
-              )}
+              <span className="inline-flex items-baseline">
+                <CountUp value={stat.value} delay={index * 0.08} />
+                {stat.showPlus && (
+                  <span className="font-display text-h2 leading-none text-band-ink">+</span>
+                )}
+              </span>
+              <span className="font-sans text-label text-band-text">{stat.label}</span>
             </span>
           </dt>
           <dd className="mt-1 font-mono text-caption text-band-text-muted">

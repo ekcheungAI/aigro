@@ -90,12 +90,30 @@ test("desktop navigation labels and account actions never wrap", async ({ page }
   await expect(banner.getByRole("link", { name: "加入 Club" })).toHaveCSS("white-space", "nowrap");
 });
 
+test("desktop navigation omits the tagline and search while keeping actions inside the viewport", async ({ page }) => {
+  for (const width of [1536, 1600, 1920]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/");
+
+    const join = page.getByRole("link", { name: "加入 Club" });
+    await expect(join).toBeVisible();
+    await expect(page.locator('a[aria-label="搜尋 AIGRO 情報"]')).toHaveCount(0);
+    await expect(
+      page.locator('a[aria-label="AIGRO 首頁"] span').filter({ hasText: "香港 AI・增長情報" })
+    ).toHaveCount(0);
+    const joinBox = await join.boundingBox();
+
+    expect(joinBox?.x ?? Number.POSITIVE_INFINITY).toBeGreaterThan(0);
+    expect((joinBox?.x ?? 0) + (joinBox?.width ?? 0)).toBeLessThanOrEqual(width);
+  }
+});
+
 test("homepage hero has no full-height decorative vertical rule", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");
 
   const hero = page
-    .getByRole("heading", { level: 1, name: /香港 AI 增長網絡/ })
+    .getByRole("heading", { level: 1, name: /香港 #1 AI Builder 社群/ })
     .locator("xpath=ancestor::section[1]");
   expect(
     await hero.evaluate((section) => {
@@ -185,12 +203,20 @@ test("homepage chat preview uses the AIGRO assistant name", async ({ page }) => 
 test("homepage hero presents the scale of the AIGRO network", async ({ page }) => {
   await page.goto("/");
 
-  await expect(
-    page.getByRole("heading", { level: 1, name: /香港 AI 增長網絡/ })
-  ).toBeVisible();
+  const heroHeading = page.getByRole("heading", {
+    level: 1,
+    name: /香港 #1 AI Builder 社群/,
+  });
+  await expect(heroHeading).toBeVisible();
+  await expect(heroHeading).not.toContainText("100 位會員");
   await expect(
     page.locator("dt").filter({ hasText: "2 位領航專家已上線" })
   ).toBeVisible();
+  await expect(
+    page.getByText("110 位社群基數 + 實際登記會員", { exact: true })
+  ).toBeVisible();
+  await expect(page.locator("dt").first()).toContainText(/\d+\+ 位會員/);
+  await expect(page.getByText("連接中", { exact: true })).toHaveCount(0);
   await expect(page.getByText("8 位蒸餾中", { exact: true })).toBeVisible();
   await expect(
     page.locator("dt").filter({ hasText: "1 個 AI MCP 已就緒" })

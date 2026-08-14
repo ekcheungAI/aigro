@@ -108,14 +108,8 @@ function Hero() {
               (40px + opacity, 120ms stagger, 750ms — GPU transform only) */}
           <h1 className="mt-6 font-display text-[36px] leading-[1.08] tracking-[-0.01em] text-band-text md:text-display-xl lg:text-[72px]">
             {[
-              <>
-                <span className="text-band-ink" aria-live="polite">
-                  {memberCount === null
-                    ? "已登記會員共建"
-                    : `${memberCount.toLocaleString("zh-HK")} 位會員共建`}
-                </span>
-              </>,
-              <>香港 AI 增長網絡</>,
+              <span className="text-band-ink">香港 #1 AI Builder 社群</span>,
+              <>最好嘅資源・一齊學習成長</>,
             ].map((line, i) => (
               <span key={i} className="block overflow-hidden pb-1">
                 <motion.span
@@ -141,8 +135,8 @@ function Hero() {
             transition={{ duration: 0.5, delay: 0.4, ease: REVEAL_EASE }}
           >
             <p className="mt-6 max-w-[660px] text-body-lg text-band-text-secondary">
-              每日精選全球 AI 情報，連接會員、領航專家同 MCP，
-              將情報變成香港團隊做得到嘅下一步。
+              每日精選全球 AI 情報，連接領航專家同 MCP，
+              幫你由學習走到實踐。
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-6">
               <Link

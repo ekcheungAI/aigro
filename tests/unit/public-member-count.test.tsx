@@ -14,21 +14,22 @@ describe("usePublicMemberCount", () => {
     rpc.mockReset();
   });
 
-  it("returns the aggregate member count from the public RPC", async () => {
-    rpc.mockResolvedValueOnce({ data: 247, error: null });
+  it("starts at the 110-member baseline and adds registered members", async () => {
+    rpc.mockResolvedValueOnce({ data: 47, error: null });
 
     const { result } = renderHook(() => usePublicMemberCount());
 
-    await waitFor(() => expect(result.current).toBe(247));
+    expect(result.current).toBe(110);
+    await waitFor(() => expect(result.current).toBe(157));
     expect(rpc).toHaveBeenCalledWith("public_member_count");
   });
 
-  it("does not present a fake zero when the aggregate is unavailable", async () => {
+  it("keeps the baseline when the aggregate is unavailable", async () => {
     rpc.mockResolvedValueOnce({ data: null, error: new Error("offline") });
 
     const { result } = renderHook(() => usePublicMemberCount());
 
     await waitFor(() => expect(rpc).toHaveBeenCalledOnce());
-    expect(result.current).toBeNull();
+    expect(result.current).toBe(110);
   });
 });
