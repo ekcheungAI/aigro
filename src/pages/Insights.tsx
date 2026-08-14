@@ -1244,6 +1244,8 @@ interface SectorDef {
   /** 芯片顯示名（如「AI 情報」「Beauty 美妝」） */
   name: string;
   icon: LucideIcon;
+  /** Editorial image when available; Lucide remains the fallback. */
+  iconSrc?: string;
   live: boolean;
 }
 
@@ -1256,42 +1258,49 @@ const SECTORS: SectorDef[] = [
     key: "ai",
     name: "AI 情報",
     icon: Radar,
+    iconSrc: "/editorial/icon-ai.png",
     live: true,
   },
   {
     key: "beauty",
     name: "Beauty 美妝",
     icon: Flower2,
+    iconSrc: "/editorial/icon-beauty.png",
     live: false,
   },
   {
     key: "tech",
     name: "Technology 科技",
     icon: Cpu,
+    iconSrc: "/editorial/icon-technology.png",
     live: false,
   },
   {
     key: "finance",
     name: "Finance 金融",
     icon: Landmark,
+    iconSrc: "/editorial/icon-finance.png",
     live: false,
   },
   {
     key: "property",
     name: "Property 地產",
     icon: Building2,
+    iconSrc: "/editorial/icon-property.png",
     live: false,
   },
   {
     key: "retail",
     name: "Retail 零售",
     icon: ShoppingBag,
+    iconSrc: "/editorial/icon-retail.png",
     live: false,
   },
   {
     key: "more",
     name: "更多行業",
     icon: Plus,
+    iconSrc: "/editorial/icon-more.png",
     live: false,
   },
 ];
@@ -1375,13 +1384,7 @@ export default function Insights() {
     sectorParam && SECTOR_KEYS.includes(sectorParam)
       ? (sectorParam as SectorKey)
       : "ai";
-  /** greyed 行業點擊後嘅靜態 waitlist 提示（唔導航） */
-  const [sectorNotice, setSectorNotice] = useState<SectorKey | null>(null);
-  const [mobileSectorsOpen, setMobileSectorsOpen] = useState(false);
-
   const selectTab = (key: TabKey) => {
-    // tab 切換都清走 transient 行業提示(唔俾 Beauty 提示殘留)
-    setSectorNotice(null);
     setSearchParams(key === "feed" ? {} : { tab: key });
   };
 
@@ -1407,25 +1410,7 @@ export default function Insights() {
 
   const selectSector = (key: SectorKey) => {
     const def = SECTORS.find((s) => s.key === key);
-    if (!def) return;
-    if (key === "more") {
-      setMobileSectorsOpen((open) => {
-        setSectorNotice(null);
-        return !open;
-      });
-      return;
-    }
-    if (key === sector) {
-      // 已喺呢個行業(例如撳返 AI)— 清除任何 transient 提示
-      setSectorNotice(null);
-      return;
-    }
-    if (!def.live) {
-      // 未開放行業 — 唔導航,靜靜哋顯示優先名單提示
-      setSectorNotice(sectorNotice === key ? null : key);
-      return;
-    }
-    setSectorNotice(null);
+    if (!def?.live || key === sector) return;
     setSearchParams({});
   };
 
@@ -1496,11 +1481,11 @@ export default function Insights() {
         </Reveal>
         <div
           id="sector-options"
-          className="scrollbar-none mt-0 flex snap-x snap-mandatory items-stretch gap-3 overflow-x-auto pb-2 md:mt-5 md:flex-wrap md:overflow-visible md:pb-0"
+          className="scrollbar-none mt-0 flex snap-x snap-mandatory items-stretch gap-3 overflow-x-auto pb-2 md:mt-5 md:flex-wrap md:gap-4 md:overflow-visible md:pb-0"
           role="group"
           aria-label="選擇行業"
         >
-          {SECTORS.map((s) => {
+          {SECTORS.filter((s) => s.live).map((s) => {
             const Icon = s.icon;
             const isActive = sector === s.key;
             if (s.live) {
@@ -1511,74 +1496,55 @@ export default function Insights() {
                   onClick={() => selectSector(s.key)}
                   aria-pressed={isActive}
                   className={cn(
-                    "press relative inline-flex h-[52px] shrink-0 snap-start items-center gap-3 overflow-hidden rounded-md border bg-surface px-3.5 text-label transition-colors duration-150",
+                    "press inline-flex min-h-20 min-w-[260px] shrink-0 snap-start items-center gap-3 rounded-md border px-5 py-4 text-left text-h4 transition-colors duration-150 md:min-h-24 md:min-w-[384px] md:px-6",
                     isActive
-                      ? "border-ink text-text-primary"
+                      ? "border-border border-t-4 border-t-ink-solid bg-surface text-text-primary"
                       : "border-border-strong bg-surface text-ink hover:border-ink"
                   )}
                 >
-                  {isActive && (
-                    <span className="absolute inset-y-0 left-0 w-1 bg-ink-solid" aria-hidden="true" />
+                  {s.iconSrc ? (
+                    <img
+                      src={s.iconSrc}
+                      alt={`${s.name}圖標`}
+                      loading="lazy"
+                      className="h-10 w-10 shrink-0 md:h-12 md:w-12"
+                    />
+                  ) : (
+                    <Icon
+                      className="h-4 w-4"
+                      strokeWidth={1.5}
+                      aria-hidden="true"
+                    />
                   )}
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm bg-ink-soft text-ink">
                     <Icon className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
                   </span>
                   <span className="whitespace-nowrap">{s.name}</span>
                   <span
-                    className="rounded-sm bg-ink-soft px-1.5 py-1 font-mono text-[10px] font-medium uppercase leading-none tracking-[0.08em] text-ink"
+                    className={cn(
+                      "ml-auto rounded-sm px-2 py-1 text-overline font-sans uppercase",
+                      isActive
+                        ? "bg-ink-solid text-on-accent"
+                        : "bg-ink-soft text-ink"
+                    )}
                   >
                     {isLive ? "Live" : isArchive ? "歷史快照" : "已開放"}
                   </span>
                 </button>
               );
             }
-            /* greyed 行業 — dashed border + 低透明度,唔導航,點擊出 waitlist 提示 */
-            return (
-              <button
-                key={s.key}
-                type="button"
-                onClick={() => selectSector(s.key)}
-                aria-pressed={isActive}
-                aria-expanded={s.key === "more" ? mobileSectorsOpen : undefined}
-                aria-controls={s.key === "more" ? "sector-options" : undefined}
-                className={cn(
-                  "press inline-flex h-[52px] shrink-0 snap-start items-center gap-3 rounded-md border border-dashed px-3.5 text-label transition-[color,opacity] duration-150",
-                  s.key !== "more" && !mobileSectorsOpen && "hidden",
-                  isActive
-                    ? "border-border-strong bg-surface text-text-secondary"
-                    : "border-border-strong bg-transparent text-text-muted opacity-70 hover:bg-surface hover:text-text-secondary hover:opacity-100"
-                )}
-              >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm border border-border text-text-muted">
-                  <Icon className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-                </span>
-                <span className="whitespace-nowrap">
-                  {s.key === "more"
-                    ? mobileSectorsOpen
-                      ? "收起行業路線圖"
-                      : "行業路線圖"
-                    : s.name}
-                </span>
-                <span className="rounded-sm border border-current px-1.5 py-1 font-mono text-[10px] font-medium leading-none tracking-[0.06em]">
-                  {s.key === "more" ? "規劃" : "情報即將推出"}
-                </span>
-              </button>
-            );
           })}
+          <div
+            className="inline-flex min-h-20 min-w-[280px] shrink-0 snap-start items-center gap-3 rounded-md border border-dashed border-border-strong bg-transparent px-5 py-4 text-left text-h4 text-text-muted md:min-h-24 md:min-w-[434px] md:px-6"
+            aria-label="其他行業 Coming Soon"
+          >
+            <Building2 className="h-10 w-10 shrink-0 opacity-50 md:h-12 md:w-12" strokeWidth={1.5} aria-hidden="true" />
+            <span>其他行業</span>
+            <span className="ml-auto rounded-sm bg-card px-2 py-1 font-mono text-[10px] font-medium uppercase leading-none tracking-[0.06em] text-text-muted">
+              Coming Soon
+            </span>
+          </div>
         </div>
-        {/* 靜態 waitlist 提示 — 點擊 greyed 行業後出現 */}
-        {sectorNotice && sectorNotice !== sector && (
-          <p className="mt-4 text-caption text-text-muted">
-            {SECTORS.find((s) => s.key === sectorNotice)?.name}情報整緊 —
-            想第一批收到？
-            <Link
-              to={`/developers?sector=${sectorNotice}`}
-              className="ml-1 text-ink underline decoration-border-strong underline-offset-4 transition-colors duration-150 hover:decoration-ink"
-            >
-              登記優先名單
-            </Link>
-          </p>
-        )}
       </section>
 
       {sector !== "ai" ? (

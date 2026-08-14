@@ -30,6 +30,54 @@ const NAV_LINKS = [
   { to: "/ask", en: "Ask", zh: "問答", comingSoon: true },
 ] as const;
 
+function ComingSoonTag({
+  overHero = false,
+  mobile = false,
+}: {
+  overHero?: boolean;
+  mobile?: boolean;
+}) {
+  if (!mobile) {
+    return (
+      <span
+        data-ui="coming-soon-tag"
+        data-layout="desktop-flag"
+        className={cn(
+          "ml-1 inline-flex h-[22px] shrink-0 items-stretch overflow-hidden whitespace-nowrap rounded-[3px] border font-mono text-[9px] font-semibold uppercase leading-none tracking-[0.14em]",
+          overHero
+            ? "border-band-ink/35 bg-band-surface text-band-ink"
+            : "border-ink/35 bg-surface text-ink"
+        )}
+      >
+        <span
+          data-ui="coming-soon-edge"
+          aria-hidden="true"
+          className="w-[3px] shrink-0 bg-lime"
+        />
+        <span className="flex items-center px-2">Coming Soon</span>
+      </span>
+    );
+  }
+
+  return (
+    <span
+      data-ui="coming-soon-tag"
+      data-layout="mobile-label"
+      className={cn(
+        "ml-1 inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-sm border px-2.5 py-1 font-mono text-[10px] font-semibold uppercase leading-none tracking-[0.12em]",
+        "border-ink/25 bg-ink-soft text-ink"
+      )}
+    >
+      <span
+        data-ui="coming-soon-hairline"
+        aria-hidden="true"
+        className="h-px w-2.5 bg-current opacity-70"
+      />
+      Coming Soon
+    </span>
+  );
+}
+
 /**
  * Navbar (design.md §6.1, elevated): sticky top-0 z-50, 64px.
  * Transparent over the Home cinematic hero at page top (band colors);
@@ -147,7 +195,7 @@ export default function Navbar() {
                 key={link.to}
                 to={link.to}
                 className={({ isActive }) => cn(
-                  "relative inline-flex h-full min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap px-2.5 font-sans text-label transition-colors duration-150 2xl:px-4",
+                  "relative inline-flex h-full min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap px-3 font-sans text-label transition-colors duration-150 xl:px-4",
                   overHero
                     ? "text-band-text-secondary hover:text-band-text"
                     : "text-text-secondary hover:text-text-primary",
@@ -157,23 +205,19 @@ export default function Navbar() {
                 {({ isActive }) => (
                   <>
                     <span>{link.en}</span>
-                    <span className={cn(
-                      "hidden text-caption 2xl:inline",
-                      isActive
-                        ? overHero ? "text-band-ink" : "text-ink"
-                        : overHero ? "text-band-text-muted" : "text-text-muted"
-                    )}>
+                    <span
+                      data-ui="nav-secondary-label"
+                      className={cn(
+                        "hidden text-caption xl:inline",
+                        isActive
+                          ? overHero ? "text-band-ink" : "text-ink"
+                          : overHero ? "text-band-text-muted" : "text-text-muted"
+                      )}
+                    >
                       {link.zh}
                     </span>
                     {"comingSoon" in link && link.comingSoon && (
-                      <span className={cn(
-                        "ml-1 inline-flex shrink-0 rounded-sm border px-1.5 py-[3px] font-mono text-[9px] font-medium uppercase leading-none tracking-[0.06em]",
-                        overHero
-                          ? "border-band-border bg-band-card text-band-text-muted"
-                          : "border-border bg-card text-text-muted"
-                      )}>
-                        Coming Soon
-                      </span>
+                      <ComingSoonTag overHero={overHero} />
                     )}
                     {isActive && (
                       <span
@@ -291,11 +335,11 @@ export default function Navbar() {
             )}
             {!member && (
               /* 未登入:登入 ghost + 加入 Club lime primary */
-              <div className="hidden items-center gap-2 sm:flex">
+              <div className="hidden shrink-0 items-center gap-2 whitespace-nowrap sm:flex">
                 <Link
                   to={authSearch("login")}
                   className={cn(
-                    "press inline-flex h-11 items-center rounded-md px-4 text-label",
+                    "press inline-flex h-11 shrink-0 items-center whitespace-nowrap rounded-md px-4 text-label",
                     overHero
                       ? "text-band-text-secondary hover:bg-band-ink-soft hover:text-band-text"
                       : "text-text-secondary hover:bg-ink-soft hover:text-ink"
@@ -305,7 +349,7 @@ export default function Navbar() {
                 </Link>
                 <Link
                   to={authSearch("join")}
-                  className="press inline-flex h-11 items-center rounded-md bg-lime px-4 text-label text-on-accent hover:bg-lime-hover"
+                  className="press inline-flex h-11 shrink-0 items-center whitespace-nowrap rounded-md bg-lime px-4 text-label text-on-accent hover:bg-lime-hover"
                 >
                   加入 Club
                 </Link>
@@ -383,15 +427,13 @@ export default function Navbar() {
                       to={link.to}
                       onClick={closeDrawer}
                       className={({ isActive }) => cn(
-                        "flex min-h-14 items-center gap-3 py-3 font-display text-[32px] leading-[1.25]",
+                        "flex min-h-14 items-center gap-3 py-3 font-display text-h2",
                         isActive ? "text-ink" : "text-text-primary"
                       )}
                     >
                       <span>{link.en} {link.zh}</span>
                       {"comingSoon" in link && link.comingSoon && (
-                        <span className="rounded-sm bg-card px-2 py-1 font-mono text-[10px] font-medium uppercase leading-none tracking-[0.06em] text-text-muted">
-                          Coming Soon
-                        </span>
+                        <ComingSoonTag mobile />
                       )}
                     </NavLink>
                   </motion.div>

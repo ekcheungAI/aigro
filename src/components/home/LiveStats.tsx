@@ -1,67 +1,18 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useInView, useReducedMotion } from "framer-motion";
-import {
-  aihotAllInsights,
-  aihotFetchedAt,
-  aihotInsights,
-} from "@/data/aihot";
-import { useLiveFetchedAt, useLiveItems } from "@/data/liveItems";
-import { verifiedExperts } from "@/data/experts";
-import { supabase } from "@/lib/supabase";
 
-/* 統計以數據時鐘(live fetchedAt,未成熟時用 snapshot 嘅 aihotFetchedAt)為基準 —
-   數字永遠同頁面展示嘅情報吻合,唔會因為數據日期同訪客「今日」有落差而顯示 0。 */
-const SNAPSHOT_FETCH_TIME = new Date(aihotFetchedAt).getTime();
-const MEMBER_BASE_COUNT = 100;
-
-function countWithinHours(
-  items: { publishedAt: string }[],
-  clock: number,
-  hours: number
-): number {
-  if (Number.isNaN(clock)) return 0;
-  return items.filter((i) => {
-    const t = new Date(i.publishedAt).getTime();
-    return !Number.isNaN(t) && t > clock - hours * 3_600_000;
-  }).length;
+interface LiveStatsProps {
+  memberCount: number | null;
 }
 
-function countSources(items: { source: string }[]): number {
-  return new Set(items.map((i) => i.source).filter(Boolean)).size;
+interface ScaleStat {
+  value: number | null;
+  label: string;
+  note: string;
 }
 
-interface Stat {
-  prefix: string;
-  value: number;
-  suffix: string;
-}
-
-/** snapshot fallback — live 未成熟時維持真實 snapshot 數字 */
-const SNAPSHOT_STATS: Stat[] = [
-  {
-    prefix: "今日",
-    value: countWithinHours(aihotInsights, SNAPSHOT_FETCH_TIME, 24),
-    suffix: "則情報",
-  },
-  {
-    prefix: "情報庫",
-    value: aihotAllInsights.length,
-    suffix: "則",
-  },
-  { prefix: "", value: countSources(aihotAllInsights), suffix: "個來源" },
-  { prefix: "", value: verifiedExperts.length, suffix: "位領航專家" },
-];
-
-/** 800ms ease-out count-up(整數)— design.md §5.1;reduced-motion → 即時顯示 */
-function CountUp({
-  value,
-  delay,
-  className = "font-mono text-label text-band-text",
-}: {
-  value: number;
-  delay: number;
-  className?: string;
-}) {
+/** 800ms ease-out count-up; reduced motion displays the final value immediately. */
+function CountUp({ value, delay }: { value: number; delay: number }) {
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true, amount: 0.6 });
   const reduced = useReducedMotion();
@@ -72,102 +23,66 @@ function CountUp({
     if (reduced) return;
     let raf = 0;
     let start = 0;
-    const tick = (t: number) => {
-      if (!start) start = t + delay * 1000;
-      const p = Math.min(1, Math.max(0, (t - start) / 800));
-      const eased = 1 - Math.pow(1 - p, 3); // ease-out
+    const tick = (time: number) => {
+      if (!start) start = time + delay * 1000;
+      const progress = Math.min(1, Math.max(0, (time - start) / 800));
+      const eased = 1 - Math.pow(1 - progress, 3);
       setDisplay(Math.round(value * eased));
-      if (p < 1) raf = requestAnimationFrame(tick);
+      if (progress < 1) raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [inView, value, delay, reduced]);
 
-  const visibleDisplay = reduced && inView ? value : display;
-
   return (
-    <span ref={ref} className={className}>
-      {visibleDisplay}
+    <span ref={ref} className="font-display text-display-lg text-band-ink md:text-display-xl">
+      {(reduced && inView ? value : display).toLocaleString("zh-HK")}
     </span>
   );
 }
 
-/**
- * Hero live stat strip — mono 數字 + caption 標籤,hairline 分隔。
- * v1.27:Supabase live items 成熟時用 live 數字(總數 / 今日 / 來源數),
- * 未成熟回落 snapshot 時鐘。Mobile:flex-wrap 自然換行,唔會撐爆版。
- */
-export default function LiveStats() {
-  const liveItems = useLiveItems();
-  const liveFetchedAt = useLiveFetchedAt();
-  const [databaseSignups, setDatabaseSignups] = useState(0);
-
-  useEffect(() => {
-    if (!supabase) return;
-    let active = true;
-    void supabase.rpc("get_public_member_count").then(({ data, error }) => {
-      const count = typeof data === "number" ? data : Number(data);
-      if (!active || error || !Number.isSafeInteger(count) || count < 0) return;
-      setDatabaseSignups(count);
-    });
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  const stats = useMemo<Stat[]>(() => {
-    if (!liveItems) return SNAPSHOT_STATS;
-    const clock = new Date(
-      liveFetchedAt ?? liveItems[0]?.publishedAt ?? ""
-    ).getTime();
-    return [
-      {
-        prefix: "今日",
-        value: countWithinHours(liveItems, clock, 24),
-        suffix: "則情報",
-      },
-      { prefix: "情報庫", value: liveItems.length, suffix: "則" },
-      { prefix: "", value: countSources(liveItems), suffix: "個來源" },
-      { prefix: "", value: verifiedExperts.length, suffix: "位領航專家" },
-    ];
-  }, [liveItems, liveFetchedAt]);
+/** Live platform proof, separated by hairlines instead of KPI cards. */
+export default function LiveStats({ memberCount }: LiveStatsProps) {
+  const stats: ScaleStat[] = [
+    {
+      value: memberCount,
+      label: "位會員",
+      note: memberCount === null ? "正式連線後顯示實時登記數" : "截至目前完成登記",
+    },
+    { value: 2, label: "位領航專家已上線", note: "8 位蒸餾中" },
+    { value: 1, label: "個 AI MCP 已就緒", note: "更多行業 MCP 籌備中" },
+  ];
 
   return (
-    <div>
-      <dl className="border-t border-band-border pt-5">
-        <div className="flex flex-wrap items-end gap-x-4 gap-y-1">
-          <dt className="pb-1 text-label text-band-text-muted">會員社群</dt>
-          <dd className="flex items-baseline gap-2">
-            <span className="flex items-baseline">
-              <CountUp
-                value={MEMBER_BASE_COUNT + databaseSignups}
-                delay={0}
-                className="font-display text-h2 leading-none text-band-text"
-              />
-              <span className="font-display text-h3 leading-none text-band-text">+</span>
+    <dl className="grid max-w-[980px] gap-y-6 border-y border-band-border py-6 sm:grid-cols-[1.15fr_1fr_1fr] sm:py-7">
+      {stats.map((stat, index) => (
+        <div
+          key={stat.label}
+          className="sm:border-l sm:border-band-border sm:px-6 sm:first:border-l-0 sm:first:pl-0"
+        >
+          <dt className="flex flex-wrap items-baseline gap-x-2">
+            <span className="sr-only">
+              {stat.value === null ? "會員總數連接中" : `${stat.value} ${stat.label}`}
             </span>
-            <span className="font-sans text-caption text-band-text-muted">位成員</span>
+            <span aria-hidden="true" className="contents">
+              {stat.value === null ? (
+                <>
+                  <span className="font-display text-h2 text-band-text-muted">會員總數</span>
+                  <span className="font-sans text-label text-band-text">連接中</span>
+                </>
+              ) : (
+                <>
+                  <CountUp value={stat.value} delay={index * 0.08} />
+                  <span className="font-sans text-label text-band-text">{stat.label}</span>
+                </>
+              )}
+            </span>
+          </dt>
+          <dd className="mt-1 font-mono text-caption text-band-text-muted">
+            {stat.note}
           </dd>
         </div>
-      </dl>
-      <dl className="mt-4 flex flex-wrap items-center gap-y-2">
-        {stats.map((stat, i) => (
-          <div
-            key={`${stat.prefix}${stat.suffix}`}
-            className="ml-4 flex items-baseline gap-1.5 border-l border-band-border pl-4 first:ml-0 first:border-l-0 first:pl-0"
-          >
-            {stat.prefix && (
-              <dt className="text-caption text-band-text-muted">{stat.prefix}</dt>
-            )}
-            <dd className="contents">
-              <CountUp value={stat.value} delay={i * 0.08} />
-              <span className="text-caption text-band-text-muted">
-                {stat.suffix}
-              </span>
-            </dd>
-          </div>
-        ))}
-      </dl>
-    </div>
+      ))}
+    </dl>
   );
 }

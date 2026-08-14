@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
@@ -29,6 +29,7 @@ import {
 import { hkDayKey, useLiveFetchedAt, useLiveInsights } from "@/data/liveItems";
 import { expertFullName, expertHasPhoto, experts } from "@/data/experts";
 import useDataFreshness from "@/hooks/useDataFreshness";
+import usePublicMemberCount from "@/hooks/usePublicMemberCount";
 
 /* ================= Section 1 — Cinematic Dark Hero ================= */
 
@@ -36,6 +37,7 @@ function Hero() {
   const [picksOpen, setPicksOpen] = useState(true);
   const reduceMotion = useReducedMotion();
   const show = reduceMotion ? false : undefined;
+  const memberCount = usePublicMemberCount();
 
   /* 今日精選速覽 — Supabase live 成熟時用全站評分最高 5 條,未成熟回落 snapshot */
   const liveInsights = useLiveInsights();
@@ -63,29 +65,32 @@ function Hero() {
 
   return (
     <section className="relative isolate -mt-16 overflow-hidden border-b border-band-border bg-band-bg pt-16">
-      {/* Brand texture — print-masthead system, not imagery (design.md §9:
-          不需要 hero 背景圖). Oversized Fraunces wordmark watermark at ~5%
-          band-text bleeding off the right edge + fine hairline rules.
-          Static, transform-only positioning, silent in both themes. */}
+      {/* Exact brand wordmark used as a quiet print watermark. */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 -z-10 select-none"
       >
-        <span className="absolute right-[0.04em] top-1/2 -translate-y-1/2 whitespace-nowrap font-display text-[clamp(20rem,32vw,36rem)] leading-none tracking-[-0.03em] text-band-text/[0.05]">
-          AIGRO
-          {/* Brand period — the wordmark is「AIGRO.」with a lime dot; the
-              watermark echoes it one step brighter than the letters */}
-          <span className="-ml-[0.14em] text-band-ink/[0.10]">.</span>
-        </span>
+        <img
+          src="/brand/aigro-wordmark-navy-transparent.png"
+          alt=""
+          aria-hidden="true"
+          decoding="async"
+          className="absolute right-[-10%] top-[48%] w-[30rem] max-w-none -translate-y-1/2 opacity-[0.045] sm:w-[42rem] md:right-[-4%] md:w-[clamp(56rem,88vw,82rem)] dark:hidden"
+        />
+        <img
+          src="/brand/aigro-wordmark-white-transparent.png"
+          alt=""
+          aria-hidden="true"
+          decoding="async"
+          className="absolute right-[-10%] top-[48%] hidden w-[30rem] max-w-none -translate-y-1/2 opacity-[0.035] sm:w-[42rem] md:right-[-4%] md:w-[clamp(56rem,88vw,82rem)] dark:block"
+        />
         {/* Masthead double rule, directly under the overlay nav */}
         <span className="absolute inset-x-0 top-16 h-px bg-band-border-strong/50" />
         <span className="absolute inset-x-0 top-[68px] h-px bg-band-border/60" />
-        {/* Broadsheet column rule — right margin only, clear of the measure */}
-        <span className="absolute inset-y-0 right-[18%] hidden w-px bg-band-border/40 lg:block" />
       </div>
 
-      <div className="mx-auto max-w-container px-6 pb-24 pt-24 max-md:pb-16 max-md:pt-16 md:pt-32 lg:pb-32">
-        <div className="max-w-[920px]">
+      <div className="mx-auto max-w-container px-6 pb-16 pt-12 md:pt-20 lg:pb-20">
+        <div className="max-w-[1180px]">
           {/* Overline — lime hairline rule + letterspaced eyebrow */}
           <motion.p
             className="flex items-center gap-3 text-overline font-sans uppercase tracking-[0.2em] text-band-text-muted"
@@ -101,12 +106,16 @@ function Hero() {
 
           {/* H1 — AIGRO's Hong Kong builder positioning
               (40px + opacity, 120ms stagger, 750ms — GPU transform only) */}
-          <h1 className="mt-8 font-display text-[44px] leading-[1.1] tracking-[-0.01em] text-band-text md:text-display-hero">
+          <h1 className="mt-6 font-display text-[36px] leading-[1.08] tracking-[-0.01em] text-band-text md:text-display-xl lg:text-[72px]">
             {[
               <>
-                <span className="text-band-ink">香港 No.1</span>
+                <span className="text-band-ink" aria-live="polite">
+                  {memberCount === null
+                    ? "已登記會員共建"
+                    : `${memberCount.toLocaleString("zh-HK")} 位會員共建`}
+                </span>
               </>,
-              <>AI Builder Club</>,
+              <>香港 AI 增長網絡</>,
             ].map((line, i) => (
               <span key={i} className="block overflow-hidden pb-1">
                 <motion.span
@@ -131,11 +140,11 @@ function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4, ease: REVEAL_EASE }}
           >
-            <p className="mt-8 max-w-[560px] text-body-lg text-band-text-secondary">
-              每日精選全球 AI 情報，連接香港 builders、導師與 MCP，
-              將情報變成實戰成果。
+            <p className="mt-6 max-w-[660px] text-body-lg text-band-text-secondary">
+              每日精選全球 AI 情報，連接會員、領航專家同 MCP，
+              將情報變成香港團隊做得到嘅下一步。
             </p>
-            <div className="mt-10 flex flex-wrap items-center gap-6">
+            <div className="mt-8 flex flex-wrap items-center gap-6">
               <Link
                 to="/insights"
                 className="inline-flex h-12 items-center rounded-md bg-band-ink-solid px-8 text-label text-on-accent press hover:bg-band-ink-hover"
@@ -146,7 +155,7 @@ function Hero() {
                 to="/ask"
                 className="group inline-flex items-center gap-1 text-label text-band-ink"
               >
-                試問 AI 編輯部
+                試問 AIGRO 助手
                 <ArrowRight
                   className="h-4 w-4 transition-transform duration-150 nudge-x"
                   strokeWidth={1.5}
@@ -158,20 +167,20 @@ function Hero() {
 
           {/* Live intelligence layer — 真實數據統計 + 熱門話題輪轉 (delay 500ms) */}
           <motion.div
-            className="mt-12"
+            className="mt-8"
             initial={show ?? { opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.5, ease: REVEAL_EASE }}
           >
-            <LiveStats />
-            <div className="mt-5 max-w-[640px] border-t border-band-border pt-4">
+            <LiveStats memberCount={memberCount} />
+            <div className="mt-4 max-w-[640px] border-t border-band-border pt-4">
               <HotTopicsTicker />
             </div>
           </motion.div>
 
           {/* 今日 AI 精選速覽 — dark-band surface card, slides in last (delay 600ms) */}
           <motion.div
-            className="mt-14 rounded-md border border-band-border bg-band-surface"
+            className="mt-8 rounded-md border border-band-border bg-band-surface"
             initial={show ?? { opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55, delay: 0.6, ease: REVEAL_EASE }}
@@ -264,15 +273,15 @@ function McpNetworkBand() {
             MCP Network
           </p>
           <h2 className="mt-4 font-display text-h2 text-band-text">
-            MCP 接入正在封裝
+            AI 情報 MCP 已就緒
           </h2>
           <p className="mt-4 max-w-[600px] text-body-sm text-band-text-secondary">
-            AIGRO 正將現有情報、日報同熱門主題整理成 MCP 介面。
-            公開 endpoint 尚未上線；你可以先登記接入通知。
+            核心封裝已完成，公開接入準備中。更多行業 MCP
+            會按會員需求逐步建立。
           </p>
           <div className="mt-6 flex flex-wrap gap-2">
             <span className="inline-flex items-center rounded-sm border border-band-border-strong px-3 py-1.5 text-overline font-sans uppercase text-band-text-secondary">
-              AI 情報 MCP — 封裝中
+              AI 情報 MCP · Ready
             </span>
           </div>
           <div className="mt-8 flex flex-wrap items-center gap-6">
@@ -304,7 +313,7 @@ function McpNetworkBand() {
 
 function InsightsWall() {
   const [category, setCategory] = useState<InsightCategory | "全部">("全部");
-  const wallRef = useRef<HTMLDivElement>(null);
+  const [page, setPage] = useState(0);
 
   /* Supabase live 成熟時用 live 情報,未成熟回落 build-time snapshot */
   const liveInsights = useLiveInsights();
@@ -313,10 +322,9 @@ function InsightsWall() {
     category === "全部"
       ? pool
       : pool.filter((i) => i.category === category);
-
-  const scrollWall = (dir: 1 | -1) => {
-    wallRef.current?.scrollBy({ left: dir * 360, behavior: "smooth" });
-  };
+  const pageCount = Math.max(1, Math.ceil(filtered.length / 3));
+  const currentPage = Math.min(page, pageCount - 1);
+  const visibleInsights = filtered.slice(currentPage * 3, currentPage * 3 + 3);
 
   return (
     <section className="mx-auto max-w-container px-6 py-24 max-md:py-16">
@@ -349,23 +357,23 @@ function InsightsWall() {
             <CategoryChip
               label={c}
               active={category === c}
-              onClick={() => setCategory(c)}
+              onClick={() => {
+                setCategory(c);
+                setPage(0);
+              }}
             />
           </Reveal>
         ))}
       </div>
 
-      {/* Horizontal scroll-snap card wall — 340px fixed cards */}
+      {/* Paginated card wall keeps wheel and trackpad scrolling on the page. */}
       <div className="relative mt-8">
-        <div
-          ref={wallRef}
-          className="flex gap-6 overflow-x-auto pb-2 [scroll-snap-type:x_mandatory] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        >
-          {filtered.map((insight, i) => (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {visibleInsights.map((insight, i) => (
             <Reveal
               key={insight.slug}
               delay={Math.min(i, 2) * 0.08}
-              className="w-[340px] shrink-0 [scroll-snap-align:start]"
+              className="min-w-0"
             >
               <InsightCard insight={insight} />
             </Reveal>
@@ -375,20 +383,27 @@ function InsightsWall() {
         <div className="mt-6 flex items-center gap-2">
           <button
             type="button"
-            onClick={() => scrollWall(-1)}
-            aria-label="向左捲動"
-            className="flex h-10 w-10 items-center justify-center rounded-md border bg-surface text-text-secondary press hover:bg-ink-soft hover:text-ink"
+            onClick={() => setPage((current) => Math.max(0, current - 1))}
+            disabled={currentPage === 0}
+            aria-label="上一頁情報"
+            className="flex h-10 w-10 items-center justify-center rounded-md border bg-surface text-text-secondary press hover:bg-ink-soft hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
           >
             <ChevronLeft className="h-5 w-5" strokeWidth={1.5} />
           </button>
           <button
             type="button"
-            onClick={() => scrollWall(1)}
-            aria-label="向右捲動"
-            className="flex h-10 w-10 items-center justify-center rounded-md border bg-surface text-text-secondary press hover:bg-ink-soft hover:text-ink"
+            onClick={() =>
+              setPage((current) => Math.min(pageCount - 1, current + 1))
+            }
+            disabled={currentPage === pageCount - 1}
+            aria-label="下一頁情報"
+            className="flex h-10 w-10 items-center justify-center rounded-md border bg-surface text-text-secondary press hover:bg-ink-soft hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
           >
             <ChevronRight className="h-5 w-5" strokeWidth={1.5} />
           </button>
+          <span className="text-caption text-text-muted" aria-live="polite">
+            {currentPage + 1} / {pageCount}
+          </span>
           <UpdatedChip className="ml-auto" />
         </div>
       </div>
