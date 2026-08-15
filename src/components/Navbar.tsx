@@ -21,13 +21,10 @@ import {
 } from "@/components/auth/member";
 import MemberAvatar from "@/components/auth/MemberAvatar";
 import useModalDialog from "@/hooks/useModalDialog";
-
-const NAV_LINKS = [
-  { to: "/insights", en: "Insights", zh: "情報" },
-  { to: "/skills", en: "Skills", zh: "技能" },
-  { to: "/experts", en: "Experts", zh: "專家", comingSoon: true },
-  { to: "/ask", en: "Ask", zh: "問答", comingSoon: true },
-] as const;
+import {
+  isPrimaryNavigationActive,
+  PRIMARY_NAVIGATION_LINKS,
+} from "@/data/navigation";
 
 function ComingSoonTag({
   overHero = false,
@@ -167,19 +164,21 @@ export default function Navbar() {
 
           {/* Desktop nav — bilingual labels */}
           <nav className="mx-auto hidden h-full min-w-0 items-center gap-1 lg:flex" aria-label="主導航">
-            {NAV_LINKS.map((link) => (
-              <NavLink
-                key={link.to}
-                to={link.to}
-                className={({ isActive }) => cn(
+            {PRIMARY_NAVIGATION_LINKS.map((link) => {
+              const isActive = isPrimaryNavigationActive(pathname, link);
+              return (
+                <NavLink
+                  key={link.to}
+                  to={link.to}
+                  aria-current={isActive ? "page" : undefined}
+                  className={() => cn(
                   "relative inline-flex h-full min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap px-3 font-sans text-label transition-colors duration-150 xl:px-4",
                   overHero
                     ? "text-band-text-secondary hover:text-band-text"
                     : "text-text-secondary hover:text-text-primary",
                   isActive && (overHero ? "text-band-text" : "text-text-primary")
-                )}
-              >
-                {({ isActive }) => (
+                  )}
+                >
                   <>
                     <span>{link.en}</span>
                     <span
@@ -206,9 +205,9 @@ export default function Navbar() {
                       />
                     )}
                   </>
-                )}
-              </NavLink>
-            ))}
+                </NavLink>
+              );
+            })}
           </nav>
 
           {/* Right: theme toggle + subscribe */}
@@ -393,7 +392,9 @@ export default function Navbar() {
               </button>
             </div>
             <nav className="flex flex-col gap-2 px-6 py-8" aria-label="手機導航">
-              {NAV_LINKS.map((link, i) => (
+              {PRIMARY_NAVIGATION_LINKS.map((link, i) => {
+                const isActive = isPrimaryNavigationActive(pathname, link);
+                return (
                   <motion.div
                     key={link.to}
                     initial={{ opacity: 0, transform: "translateX(-16px)" }}
@@ -403,7 +404,8 @@ export default function Navbar() {
                     <NavLink
                       to={link.to}
                       onClick={closeDrawer}
-                      className={({ isActive }) => cn(
+                      aria-current={isActive ? "page" : undefined}
+                      className={() => cn(
                         "flex min-h-14 items-center gap-3 py-3 font-display text-h2",
                         isActive ? "text-ink" : "text-text-primary"
                       )}
@@ -414,12 +416,12 @@ export default function Navbar() {
                       )}
                     </NavLink>
                   </motion.div>
-                )
-              )}
+                );
+              })}
               <motion.div
                 initial={{ opacity: 0, transform: "translateX(-16px)" }}
                 animate={{ opacity: 1, transform: "translateX(0px)" }}
-                transition={{ duration: 0.3, delay: NAV_LINKS.length * 0.08, ease: REVEAL_EASE }}
+                transition={{ duration: 0.3, delay: PRIMARY_NAVIGATION_LINKS.length * 0.08, ease: REVEAL_EASE }}
                 className="flex items-center gap-3 pt-4"
               >
                 {member ? (

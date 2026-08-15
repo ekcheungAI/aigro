@@ -3,6 +3,10 @@ import { Link, useLocation } from "react-router-dom";
 import { Check, Moon, Sun } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { captureWaitlist } from "@/lib/waitlist";
+import {
+  CLASS_REVIEW_NAV_LINK,
+  isPrimaryNavigationActive,
+} from "@/data/navigation";
 
 /**
  * Footer (elevated §6.2): cool-paper band in light mode and deep navy in dark
@@ -17,6 +21,7 @@ export default function Footer() {
   const [devSavedMode, setDevSavedMode] = useState<"server" | "local" | null>(null);
   const [devError, setDevError] = useState("");
   const isGrowthMarketerReview = pathname.replace(/\/$/, "") === "/guides/100x-ai-growth-marketer";
+  const isClassReview = isPrimaryNavigationActive(pathname, CLASS_REVIEW_NAV_LINK);
 
   return (
     <footer className="bg-band-bg [&_a]:inline-flex [&_a]:min-h-10 [&_a]:items-center max-sm:[&_a]:min-h-11">
@@ -87,13 +92,13 @@ export default function Footer() {
               <li><Link className="text-band-text-secondary transition-colors duration-150 hover:text-band-ink" to="/insights?tab=daily">Daily 日報</Link></li>
               <li>
                 <Link
-                  aria-current={isGrowthMarketerReview ? "page" : undefined}
-                  className={isGrowthMarketerReview
+                  aria-current={isClassReview ? "page" : undefined}
+                  className={isClassReview
                     ? "text-band-ink transition-colors duration-150 hover:text-band-text"
                     : "text-band-text-secondary transition-colors duration-150 hover:text-band-ink"}
-                  to="/guides/100x-ai-growth-marketer"
+                  to={CLASS_REVIEW_NAV_LINK.to}
                 >
-                  Class Review 課堂重溫
+                  {CLASS_REVIEW_NAV_LINK.en} {CLASS_REVIEW_NAV_LINK.zh}
                 </Link>
               </li>
               <li><Link className="text-band-text-secondary transition-colors duration-150 hover:text-band-ink" to="/branding">Branding 品牌</Link></li>
