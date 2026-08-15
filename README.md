@@ -72,6 +72,7 @@ No environment variables are required for the current frontend-only build; see
 | --- | --- |
 | [AGENTS.md](AGENTS.md) | Continuation manual: commands, architecture, hard brand rules, gotchas, roadmap |
 | [docs/design-system.md](docs/design-system.md) | Global design system — color tokens, typography, motion, components (constraint-level spec) |
+| [public/design.md](public/design.md) | Portable design contract served at `/design.md` and downloadable from `/branding` |
 | [docs/taste-rules.md](docs/taste-rules.md) | Adopted animation/interaction standards (easing, durations, hover gating, reduced motion) |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Route map, data flow, component inventory, where-things-live table |
 | [docs/ROADMAP.md](docs/ROADMAP.md) | 5-phase plan: what's done (frontend prototype), what's next (Supabase, MCP, cron) |

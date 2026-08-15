@@ -201,13 +201,38 @@
     font-size: 16px;
     line-height: 1.7;
     -webkit-font-smoothing: antialiased;
+    font-synthesis: none;
     text-rendering: optimizeLegibility;
   }
 
-  /* Headings: serif display + CJK proportional spacing (design.md §3.1) */
-  h1, h2, h3, .font-display {
+  /* Typography contract (design.md §3):
+     display for editorial hierarchy, sans for UI/body, mono for data. Keep
+     these roles explicit so native controls and unstyled route content do not
+     quietly fall back to a different system font. */
+  :where(h1, h2, h3, .font-display) {
     font-family: var(--font-display);
     font-feature-settings: "palt";
+    font-optical-sizing: auto;
+    font-synthesis: none;
+  }
+
+  :where(h4, h5, h6, .font-sans) {
+    font-family: var(--font-sans);
+    font-feature-settings: "palt";
+    font-synthesis: none;
+  }
+
+  :where(code, kbd, pre, samp, .font-mono) {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-synthesis: none;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
   }
 
   /* Theme switch: 200ms cross-fade, no full-page flash (design.md §5.3).

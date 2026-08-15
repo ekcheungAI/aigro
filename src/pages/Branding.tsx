@@ -5,6 +5,7 @@ import {
   Check,
   Clipboard,
   Copy,
+  Download,
   Eye,
   Image as ImageIcon,
   LayoutTemplate,
@@ -177,6 +178,17 @@ const THUMBNAIL_NEVER = [
   "每張圖使用不同濾鏡、不同色溫或多個搶眼 accent。",
 ] as const;
 
+const GUIDE_SECTIONS = [
+  { href: "#brand-foundation", label: "先定方向", detail: "品牌承諾與視覺性格" },
+  { href: "#logo-system", label: "使用 Logo", detail: "版本、淨空間與尺寸" },
+  { href: "#colour-balance", label: "分配色彩", detail: "產品 token 與 logo 顏色" },
+  { href: "#typography-layout", label: "建立層級", detail: "字體角色與版面規格" },
+  { href: "#image-system", label: "製作影像", detail: "縮圖比例與影像禁區" },
+  { href: "#voice", label: "寫好訊息", detail: "語氣、descriptor 與限制" },
+  { href: "#applications", label: "交付資產", detail: "社交、簡報與印刷" },
+  { href: "#release-check", label: "發佈前檢查", detail: "最後一輪 brand QA" },
+] as const;
+
 function CopyHex({ hex, name }: { hex: string; name: string }) {
   const [copied, setCopied] = useState(false);
 
@@ -236,20 +248,78 @@ function RuleList({
   );
 }
 
+function GuideMap() {
+  return (
+    <section
+      id="guide-map"
+      aria-labelledby="guide-map-title"
+      className="scroll-mt-20 border-b border-border bg-surface"
+    >
+      <div className="mx-auto grid max-w-container gap-8 px-6 py-14 md:grid-cols-[0.75fr_1.25fr] md:items-start md:gap-12 md:py-16">
+        <Reveal>
+          <p className="font-mono text-caption uppercase tracking-wider text-lime-text">Start here</p>
+          <h2 id="guide-map-title" className="mt-3 font-display text-h2 text-text-primary">
+            先由用途開始
+          </h2>
+          <p className="mt-4 max-w-prose text-body-sm text-text-secondary">
+            這頁是工作指南，不是只供瀏覽的 moodboard。先按你要交付的資產選章節，再用最後的 checklist 做一次檢查。
+          </p>
+        </Reveal>
+
+        <nav aria-label="品牌指南章節" className="grid gap-px border-y border-border bg-border sm:grid-cols-2">
+          {GUIDE_SECTIONS.map((section, index) => (
+            <Reveal key={section.href} delay={(index % 2) * 0.06}>
+              <a
+                href={section.href}
+                className="press group block h-full bg-card p-5 hover:bg-surface sm:p-6"
+              >
+                <span className="font-sans text-label font-medium text-text-primary group-hover:text-ink">
+                  {section.label}
+                </span>
+                <span className="mt-1 block text-caption text-text-secondary">{section.detail}</span>
+              </a>
+            </Reveal>
+          ))}
+        </nav>
+      </div>
+    </section>
+  );
+}
+
 export default function Branding() {
   return (
     <>
-      <section className="relative isolate overflow-hidden border-b border-band-border bg-band-bg">
+      <section
+        aria-labelledby="branding-title"
+        className="relative isolate overflow-hidden border-b border-band-border bg-band-bg"
+      >
         <div aria-hidden="true" className="stripe-block-dark pointer-events-none absolute inset-y-0 right-0 -z-10 w-[34%] opacity-70" />
         <div className="mx-auto grid max-w-container gap-10 px-6 pb-16 pt-20 md:grid-cols-[1.05fr_0.95fr] md:items-end md:pt-24">
           <Reveal>
             <p className="text-label font-medium text-band-ink">Brand identity</p>
-            <h1 className="mt-4 max-w-[700px] font-display text-display-xl text-band-text max-md:text-display">
+            <h1 id="branding-title" className="mt-4 max-w-[700px] font-display text-display-xl text-band-text max-md:text-display">
               AIGRO 品牌識別
             </h1>
             <p className="mt-6 max-w-[610px] text-body-lg text-band-text-secondary">
               一套讓每個 logo、頁面、合作物料都講同一個故事的準則：人、知識與可實現的成長機會。
             </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <a
+                href="#guide-map"
+                className="press inline-flex min-h-11 items-center gap-2 rounded-md bg-band-ink-solid px-5 text-label text-on-accent hover:bg-band-ink-hover"
+              >
+                瀏覽指南
+                <ArrowDownRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+              </a>
+              <a
+                href="/design.md"
+                download="aigro-design.md"
+                className="press inline-flex min-h-11 items-center gap-2 rounded-md border border-band-border-strong px-5 text-label text-band-text hover:border-band-ink hover:text-band-ink"
+              >
+                下載 design.md
+                <Download className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+              </a>
+            </div>
           </Reveal>
 
           <Reveal delay={0.08} className="md:pb-1">
@@ -276,13 +346,19 @@ export default function Branding() {
         </div>
       </section>
 
-      <section className="border-y border-border bg-surface">
+      <GuideMap />
+
+      <section
+        id="image-system"
+        aria-labelledby="image-system-title"
+        className="scroll-mt-20 border-y border-border bg-surface"
+      >
         <div className="mx-auto max-w-container px-6 py-20 max-md:py-14">
           <Reveal>
             <p className="font-mono text-caption uppercase tracking-wider text-lime-text">
               Image system
             </p>
-            <h2 className="mt-3 font-display text-h2 text-text-primary">
+            <h2 id="image-system-title" className="mt-3 font-display text-h2 text-text-primary">
               Editorial thumbnails
             </h2>
             <p className="mt-4 max-w-prose text-body text-text-secondary">
@@ -324,7 +400,11 @@ export default function Branding() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-container px-6 py-20 max-md:py-14">
+      <section
+        id="brand-foundation"
+        aria-labelledby="brand-foundation-title"
+        className="scroll-mt-20 mx-auto max-w-container px-6 py-20 max-md:py-14"
+      >
         <Reveal>
           <p className="max-w-prose text-body-lg text-text-secondary">
             AIGRO 是香港的 AI、增長與商業情報平台。視覺系統以清晰、可信和前進感為核心，不把技術包裝成距離感，而是讓人知道下一步可以做甚麼。
@@ -333,7 +413,7 @@ export default function Branding() {
 
         <div className="mt-12 grid border-y border-border md:grid-cols-[1.25fr_0.75fr]">
           <Reveal className="border-b border-border p-7 md:border-b-0 md:border-r md:p-10">
-            <h2 className="font-display text-h2 text-text-primary">品牌承諾</h2>
+            <h2 id="brand-foundation-title" className="font-display text-h2 text-text-primary">品牌承諾</h2>
             <p className="mt-4 max-w-[560px] text-body text-text-secondary">
               將可信賴的人、相關的 AI 知識和真正有用的資源連接起來，令機會由抽象概念變成可以採取的行動。
             </p>
@@ -346,10 +426,14 @@ export default function Branding() {
         </div>
       </section>
 
-      <section className="border-y border-border bg-surface">
+      <section
+        id="logo-system"
+        aria-labelledby="logo-system-title"
+        className="scroll-mt-20 border-y border-border bg-surface"
+      >
         <div className="mx-auto max-w-container px-6 py-20 max-md:py-14">
           <Reveal>
-            <h2 className="font-display text-h2 text-text-primary">Logo system</h2>
+            <h2 id="logo-system-title" className="font-display text-h2 text-text-primary">Logo system</h2>
             <p className="mt-4 max-w-prose text-body text-text-secondary">
               三點版本是公開物料的主版本。字標負責辨識，三個圓點則依序說明 AIGRO 的人本、知識與成長邏輯。
             </p>
@@ -429,11 +513,18 @@ export default function Branding() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-container px-6 py-20 max-md:py-14">
+      <section
+        id="colour-balance"
+        aria-labelledby="colour-balance-title"
+        className="scroll-mt-20 mx-auto max-w-container px-6 py-20 max-md:py-14"
+      >
         <Reveal>
-          <h2 className="font-display text-h2 text-text-primary">Colour balance</h2>
+          <h2 id="colour-balance-title" className="font-display text-h2 text-text-primary">Colour balance</h2>
           <p className="mt-4 max-w-prose text-body text-text-secondary">
             色彩比重是整體視覺的重量分配，不代表每個資產都要同時使用五種顏色。海軍藍和柔白承托閱讀，綠和藍各自保留明確意義。
+          </p>
+          <p className="mt-3 max-w-prose text-caption text-text-muted">
+            注意：logo 的藍綠色只屬品牌 artwork 與示意圖。產品介面、按鈕和 active 狀態統一使用 AIGRO brand green token。
           </p>
         </Reveal>
 
@@ -465,10 +556,14 @@ export default function Branding() {
         </div>
       </section>
 
-      <section className="border-y border-border bg-card">
+      <section
+        id="three-dots"
+        aria-labelledby="three-dots-title"
+        className="scroll-mt-20 border-y border-border bg-card"
+      >
         <div className="mx-auto max-w-container px-6 py-20 max-md:py-14">
           <Reveal>
-            <h2 className="font-display text-h2 text-text-primary">The three dots</h2>
+            <h2 id="three-dots-title" className="font-display text-h2 text-text-primary">The three dots</h2>
             <p className="mt-4 max-w-prose text-body text-text-secondary">每個圓點都有用途。三點並置時，正好講完 AIGRO 的完整價值鏈。</p>
           </Reveal>
 
@@ -492,9 +587,13 @@ export default function Branding() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-container px-6 py-20 max-md:py-14">
+      <section
+        id="typography-layout"
+        aria-labelledby="typography-layout-title"
+        className="scroll-mt-20 mx-auto max-w-container px-6 py-20 max-md:py-14"
+      >
         <Reveal>
-          <h2 className="font-display text-h2 text-text-primary">Typography & layout</h2>
+          <h2 id="typography-layout-title" className="font-display text-h2 text-text-primary">Typography & layout</h2>
           <p className="mt-4 max-w-prose text-body text-text-secondary">排版要讓資訊有份量而不顯得遙遠。襯線只用於有編輯價值的重點，日常閱讀和操作則以清晰的無襯線字體完成。</p>
         </Reveal>
 
@@ -546,10 +645,14 @@ export default function Branding() {
         </div>
       </section>
 
-      <section className="border-y border-border bg-surface">
+      <section
+        id="voice"
+        aria-labelledby="voice-title"
+        className="scroll-mt-20 border-y border-border bg-surface"
+      >
         <div className="mx-auto max-w-container px-6 py-20 max-md:py-14">
           <Reveal>
-            <h2 className="font-display text-h2 text-text-primary">Voice & messages</h2>
+            <h2 id="voice-title" className="font-display text-h2 text-text-primary">Voice & messages</h2>
             <p className="mt-4 max-w-prose text-body text-text-secondary">AIGRO 說話有根據、有下一步，也尊重香港讀者的語境。不是製造焦慮，而是令複雜選項更容易判斷。</p>
           </Reveal>
 
@@ -586,9 +689,13 @@ export default function Branding() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-container px-6 py-20 max-md:py-14">
+      <section
+        id="applications"
+        aria-labelledby="applications-title"
+        className="scroll-mt-20 mx-auto max-w-container px-6 py-20 max-md:py-14"
+      >
         <Reveal>
-          <h2 className="font-display text-h2 text-text-primary">Applications</h2>
+          <h2 id="applications-title" className="font-display text-h2 text-text-primary">Applications</h2>
           <p className="mt-4 max-w-prose text-body text-text-secondary">每一個對外 touchpoint 都應在一秒內讓人辨認出 AIGRO，然後用一個具體訊息或證據讓人繼續看下去。</p>
         </Reveal>
 
@@ -626,10 +733,14 @@ export default function Branding() {
         </Reveal>
       </section>
 
-      <section className="border-t border-border bg-band-bg">
+      <section
+        id="release-check"
+        aria-labelledby="release-check-title"
+        className="scroll-mt-20 border-t border-border bg-band-bg"
+      >
         <div className="mx-auto grid max-w-container gap-10 px-6 py-16 md:grid-cols-[0.85fr_1.15fr] md:items-start">
           <Reveal>
-            <h2 className="font-display text-h2 text-band-text">Brand release check</h2>
+            <h2 id="release-check-title" className="font-display text-h2 text-band-text">Brand release check</h2>
             <p className="mt-4 max-w-[420px] text-body text-band-text-secondary">公開之前，確認標誌、語氣、對比度和最小尺寸都在同一套標準內。</p>
           </Reveal>
           <Reveal delay={0.08}>
