@@ -88,154 +88,10 @@ const aigroReplayStyles = String.raw`
     outline-offset: 3px;
   }
 
-  .aigro-replay-content .hero {
-    background: var(--aigro-bg);
-    border-bottom: 1px solid var(--aigro-border);
-    color: var(--aigro-text-primary);
-    padding: 112px 0 80px;
-  }
-
-  .aigro-replay-content .hero::after {
-    display: none;
-  }
-
-  .aigro-replay-content .hero-inner {
-    width: min(1200px, calc(100% - 48px));
-    max-width: none;
-    margin: 0 auto;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
-    column-gap: 72px;
-    align-items: start;
-  }
-
-  .aigro-replay-content .hero .eyebrow {
-    grid-column: 1 / -1;
-    margin-bottom: 20px;
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    font-weight: 500;
-    letter-spacing: 0.12em;
-  }
-
-  .aigro-replay-content .hero h1 {
-    grid-column: 1;
-    color: var(--aigro-text-primary);
-    max-width: 800px;
-    margin: 0 0 24px;
-    font-size: clamp(3rem, 5.2vw, 4.8rem);
-    line-height: 1.03;
-    letter-spacing: -0.035em;
-  }
-
-  .aigro-replay-content .hero p {
-    color: var(--aigro-text-secondary);
-  }
-
-  .aigro-replay-content .hero-inner > p:not(.eyebrow):not(.hero-note) {
-    grid-column: 1;
-    max-width: 700px;
-    margin: 0;
-    font-size: clamp(1.05rem, 1.5vw, 1.2rem);
-    line-height: 1.75;
-  }
-
   .aigro-replay-content .eyebrow,
   .aigro-replay-content .course-sales__eyebrow,
   .aigro-replay-content .course-route-card__label {
     color: var(--aigro-lime-text);
-  }
-
-  .aigro-replay-content .hero .hero-note {
-    grid-column: 2;
-    grid-row: 2 / span 3;
-    align-self: stretch;
-    margin: 0;
-    padding: 20px 22px;
-    border-left: 2px solid var(--aigro-lime);
-    background: var(--aigro-card);
-    color: var(--aigro-text-primary);
-    font-size: 0.9rem;
-    font-weight: 500;
-    line-height: 1.7;
-  }
-
-  .aigro-replay-content .hero-note-label {
-    display: block;
-    margin-bottom: 12px;
-    color: var(--aigro-lime-text);
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    font-weight: 500;
-    letter-spacing: 0.12em;
-  }
-
-  .aigro-replay-content .hero-facts {
-    grid-column: 1;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0;
-    max-width: 700px;
-    margin: 28px 0 0;
-    padding: 16px 0 0;
-    border-top: 1px solid var(--aigro-border);
-    list-style: none;
-  }
-
-  .aigro-replay-content .hero-facts li {
-    display: grid;
-    gap: 2px;
-    min-width: 0;
-    padding: 0 20px;
-  }
-
-  .aigro-replay-content .hero-facts li:first-child {
-    padding-left: 0;
-  }
-
-  .aigro-replay-content .hero-facts li + li {
-    border-left: 1px solid var(--aigro-border);
-  }
-
-  .aigro-replay-content .hero-facts strong {
-    color: var(--aigro-text-primary);
-    font-family: var(--font-mono);
-    font-size: 0.95rem;
-    font-weight: 500;
-    line-height: 1.4;
-  }
-
-  .aigro-replay-content .hero-facts span {
-    color: var(--aigro-text-muted);
-    font-size: 0.75rem;
-    line-height: 1.45;
-  }
-
-  .aigro-replay-content .hero-actions {
-    grid-column: 1;
-    margin-top: 24px;
-  }
-
-  .aigro-replay-content .hero-replay-button {
-    min-height: 48px;
-    padding: 12px 18px;
-    border-color: var(--aigro-lime);
-    border-radius: 6px;
-    background: var(--aigro-lime);
-    color: var(--aigro-on-accent);
-    font-family: var(--font-sans);
-    font-size: 0.9rem;
-    font-weight: 600;
-    box-shadow: none;
-  }
-
-  .aigro-replay-content .hero-replay-button:hover {
-    background: hsl(var(--lime-hover));
-    color: var(--aigro-on-accent);
-  }
-
-  .aigro-replay-content .hero-replay-button span {
-    display: none;
   }
 
   .aigro-replay-content .course-sales {
@@ -251,13 +107,15 @@ const aigroReplayStyles = String.raw`
   }
 
   .aigro-replay-content .course-sales--start {
-    width: min(1200px, calc(100% - 48px));
+    width: 100%;
     display: grid;
     grid-template-columns: minmax(0, 0.85fr) minmax(440px, 1.15fr);
-    gap: 48px;
+    gap: 56px;
     align-items: center;
-    margin-top: 48px;
-    padding: 32px;
+    margin: 0;
+    padding: 80px max(24px, calc((100% - 1200px) / 2));
+    border-width: 0 0 1px;
+    border-radius: 0;
   }
 
   .aigro-replay-content .course-sales--start .course-sales__intro {
@@ -278,9 +136,52 @@ const aigroReplayStyles = String.raw`
 
   .aigro-replay-content .course-sales--start h2 {
     margin: 8px 0 0;
-    font-size: clamp(1.8rem, 3vw, 2.45rem);
-    line-height: 1.18;
-    letter-spacing: -0.02em;
+    font-size: clamp(2.4rem, 4vw, 4rem);
+    line-height: 1.08;
+    letter-spacing: -0.03em;
+  }
+
+  .aigro-replay-content .course-header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 28px;
+  }
+
+  .aigro-replay-content .course-header-action {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 14px;
+    border: 1px solid var(--aigro-border-strong);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--aigro-text-primary);
+    font-family: var(--font-sans);
+    font-size: 0.82rem;
+    font-weight: 600;
+    line-height: 1.3;
+    text-decoration: none;
+    transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+  }
+
+  .aigro-replay-content .course-header-action:hover {
+    border-color: var(--aigro-lime);
+    background: var(--aigro-lime-soft);
+    color: var(--aigro-lime-text);
+  }
+
+  .aigro-replay-content .course-header-action--primary {
+    border-color: var(--aigro-lime);
+    background: var(--aigro-lime);
+    color: var(--aigro-on-accent);
+  }
+
+  .aigro-replay-content .course-header-action--primary:hover {
+    border-color: hsl(var(--lime-hover));
+    background: hsl(var(--lime-hover));
+    color: var(--aigro-on-accent);
   }
 
   .aigro-replay-content .course-sales--start .course-series-hero {
@@ -724,11 +625,6 @@ const aigroReplayStyles = String.raw`
   }
 
   @media (max-width: 1000px) {
-    .aigro-replay-content .hero-inner {
-      grid-template-columns: minmax(0, 1fr) minmax(220px, 280px);
-      column-gap: 40px;
-    }
-
     .aigro-replay-content .course-sales--start {
       grid-template-columns: 1fr;
       gap: 28px;
@@ -740,76 +636,16 @@ const aigroReplayStyles = String.raw`
   }
 
   @media (max-width: 760px) {
-    .aigro-replay-content .hero {
-      padding: 64px 0 48px;
-    }
-
-    .aigro-replay-content .hero-inner {
-      width: calc(100% - 24px);
-      display: flex;
-      flex-direction: column;
-    }
-
-    .aigro-replay-content .hero .eyebrow {
-      order: 1;
-      margin-bottom: 14px;
-    }
-
-    .aigro-replay-content .hero h1 {
-      order: 2;
-      margin-bottom: 18px;
-      font-size: clamp(2.35rem, 11vw, 3.15rem);
-      line-height: 1.06;
-      letter-spacing: -0.025em;
-    }
-
-    .aigro-replay-content .hero-inner > p:not(.eyebrow):not(.hero-note) {
-      order: 3;
-    }
-
-    .aigro-replay-content .hero-facts {
-      order: 4;
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      width: 100%;
-      margin-top: 24px;
-    }
-
-    .aigro-replay-content .hero-facts li {
-      padding: 0 10px;
-    }
-
-    .aigro-replay-content .hero-facts strong {
-      font-size: 0.85rem;
-    }
-
-    .aigro-replay-content .hero-facts span {
-      font-size: 0.7rem;
-    }
-
-    .aigro-replay-content .hero .hero-note {
-      order: 6;
-      margin-top: 20px;
-      padding: 16px 18px;
-    }
-
-    .aigro-replay-content .hero-actions {
-      order: 5;
-      margin-top: 20px;
-    }
-
-    .aigro-replay-content .hero-replay-button {
-      width: 100%;
-    }
-
     .aigro-replay-content .course-sales--start {
-      width: calc(100% - 24px);
-      margin-top: 24px;
-      padding: 22px 16px 16px;
+      padding: 48px 12px 32px;
     }
 
     .aigro-replay-content .course-sales--start h2 {
-      font-size: 1.75rem;
+      font-size: clamp(2rem, 10vw, 2.7rem);
+    }
+
+    .aigro-replay-content .course-header-action {
+      flex: 1 1 100%;
     }
 
     .aigro-replay-content .course-sales--start .course-series-hero span {
@@ -867,39 +703,6 @@ function ReplayNotesContent() {
     const content = document.createElement("div");
     content.className = "aigro-replay-content";
     content.innerHTML = replayMarkup;
-
-    const heroNote = content.querySelector<HTMLElement>(".hero-note");
-    if (heroNote) {
-      const noteLabel = document.createElement("span");
-      noteLabel.className = "hero-note-label";
-      noteLabel.textContent = "閱讀路線";
-      heroNote.prepend(noteLabel);
-    }
-
-    const heroActions = content.querySelector<HTMLElement>(".hero-actions");
-    if (heroActions) {
-      const facts = document.createElement("ul");
-      facts.className = "hero-facts";
-      facts.setAttribute("aria-label", "攻略內容重點");
-
-      const factItems = [
-        ["18 章", "完整筆記"],
-        ["8 段", "Campaign 工作流"],
-        ["Level 1 → 2", "實作路線"],
-      ];
-
-      for (const [value, label] of factItems) {
-        const item = document.createElement("li");
-        const valueElement = document.createElement("strong");
-        const labelElement = document.createElement("span");
-        valueElement.textContent = value;
-        labelElement.textContent = label;
-        item.append(valueElement, labelElement);
-        facts.appendChild(item);
-      }
-
-      heroActions.before(facts);
-    }
 
     shadow.appendChild(content);
 
