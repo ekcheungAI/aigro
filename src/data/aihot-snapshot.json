@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-08-19T16:01:49.839Z",
+  "fetchedAt": "2026-08-19T23:30:03.219Z",
   "api": {
     "base": "https://aihot.virxact.com/api/public",
     "itemsCount": 50,
@@ -7,6 +7,57 @@
     "hasNext": true
   },
   "items": [
+    {
+      "id": "cmt0mqceo08lzro2o6xi3rlk4",
+      "title": "Anthropic 在網絡關鍵能力時代放緩模型開發：暫停 RL 訓練並強化安全防護",
+      "title_en": "在網絡關鍵能力時代推進模型開發",
+      "url": "https://openai.com/index/pacing-model-development-cyber-capabilities",
+      "permalink": "https://aihot.virxact.com/items/cmt0mqceo08lzro2o6xi3rlk4",
+      "source": "Hacker News 熱門（buzzing.cc 中文翻譯）",
+      "publishedAt": "2026-08-19T21:42:09.969Z",
+      "summary": "Anthropic 因 OpenAI-Hugging Face 事件及即將推出的 Astra 模型可能達到\"關鍵網絡安全能力閾值\"，暫時放緩模型擴展速度，包括暫停最新模型兩週的強化學習（RL）訓練。公司已加強研究環境安全要求，包括工作負載隔離、網絡隔離和持續安全測試，並擴大思維鏈監控範圍。涉及 Astra 或網絡模型的工作負載需滿足最嚴格安全標準，部分訓練和評估工作仍處於暫停狀態。",
+      "category": "industry",
+      "score": 72,
+      "selected": true,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0mqceo08lzro2o6xi3rlk4"
+      }
+    },
+    {
+      "id": "cmt0kxcuu07f2ro2owuqpbjc8",
+      "title": "FastMetal 讓 Mac 本地 30 秒生成視頻",
+      "title_en": "A 5-second 480P video， generated entirely on a Mac， in 30 seconds. No CUDA， no cloud， 3.9 GiB of mem…",
+      "url": "https://x.com/haoailab/status/2090177721913770407",
+      "permalink": "https://aihot.virxact.com/items/cmt0kxcuu07f2ro2owuqpbjc8",
+      "source": "X：Sky Computing Lab (@haoailab)",
+      "publishedAt": "2026-08-19T20:42:57.000Z",
+      "summary": "一段 5 秒 480P 視頻，完全在 Mac 上生成，耗時 30 秒。無需 CUDA，無需雲端，僅佔用 3.9 GiB 內存。\n\nFastMetal 將 FastWan-QAD 系列帶到 Apple Silicon。DiT、DMD 採樣器和解碼器均通過 MLX 在 Metal 上運行，默認 INT8。\n\n三個模型：1.3B 支持 480P，5B 支持 720P，14B 追求畫質。\n\n 博客：http://haoailab.com/blogs/fastmetal  代碼：http://github.com/hao-ai-lab/FastVideo  模型：http://huggingface.co/collections/FastVideo/fastmetal",
+      "category": "ai-products",
+      "score": 71,
+      "selected": true,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0kxcuu07f2ro2owuqpbjc8"
+      }
+    },
+    {
+      "id": "cmt0e7sxo01eiro2o4l4y9jmh",
+      "title": "突破 DeepSeek-V4-Pro 服務極限：H20 上的多場景優化方法",
+      "title_en": "Blog Pushing the Limits of Serving DeepSeek-V4-Pro DeepSeek-V4-Pro is a 1.6-trillion-parameter Mixture-of-Experts （MoE） model released with both FP8 and FP4 weights. Models at this scale naturally benefit from accelerators such as NVIDIA Blackwell GPU… Tianyu Zhang， Yusong Gao， Yun Zhang",
+      "url": "https://www.lmsys.org/blog/2026-08-19-deepseek-v4-pro-engine-optimization-h20",
+      "permalink": "https://aihot.virxact.com/items/cmt0e7sxo01eiro2o4l4y9jmh",
+      "source": "LMSYS：Blog（Chatbot Arena 團隊）",
+      "publishedAt": "2026-08-19T17:56:13.817Z",
+      "summary": "LMSYS 團隊針對 1.6 萬億參數的 MoE 模型 DeepSeek-V4-Pro，在 H20 GPU 上通過場景化服務配置逼近 B300 性能。單節點 H20-141GB 參考實現達 271 output tokens/s，與 B300 的 383.7 tokens/s 性能差距縮小至 1.42×。",
+      "category": "paper",
+      "score": 73,
+      "selected": true,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0e7sxo01eiro2o4l4y9jmh"
+      }
+    },
     {
       "id": "cmt05zhyg139trodp6bxsy9e2",
       "title": "Liquid AI 發佈 LFM2.5 系列 QAD Q4_0 量化檢查點，恢復 97% 精度損失",
@@ -42,20 +93,20 @@
       }
     },
     {
-      "id": "cmsz8gh3n06e4rodpl8l2syek",
-      "title": "Claude 如何加速蛋白質設計與分析化學研究",
-      "title_en": "How Claude is accelerating protein design and analytical chemistry",
-      "url": "https://www.anthropic.com/research/Claude-accelerates-protein-design",
-      "permalink": "https://aihot.virxact.com/items/cmsz8gh3n06e4rodpl8l2syek",
-      "source": "Anthropic：Research（發表成果 · 網頁）",
-      "publishedAt": "2026-08-18T22:27:16.191Z",
-      "summary": "Anthropic 公佈兩項實驗：Claude（Mythos Preview 和 Opus 4.8）針對 15 個靶點設計蛋白質結合劑，成功 14 個，命中率達 22.6%-35.1%。",
-      "category": "paper",
-      "score": 73,
+      "id": "cmt0d2tsl1961rodpnvzxo4cc",
+      "title": "OpenRouter 宣佈加入 Stripe",
+      "title_en": "OpenRouter is Joining Stripe",
+      "url": "https://openrouter.ai/blog/announcements/openrouter-is-joining-stripe",
+      "permalink": "https://aihot.virxact.com/items/cmt0d2tsl1961rodpnvzxo4cc",
+      "source": "OpenRouter：Announcements（RSS）",
+      "publishedAt": "2026-08-19T00:00:00.000Z",
+      "summary": "OpenRouter 宣佈與 Stripe 合併，以加速推動全球經濟增長。OpenRouter 目前每日處理來自 400 多個 AI 模型的 10+ 萬億 token，服務超 1000 萬開發者與公司，自成立以來推理量每年至少增長 10 倍。合併後 OpenRouter 將繼續以原名、原使命獨立運營，產品與路線圖不變，路由決策仍以用户利益為先，交易預計在未來數週內完成。",
+      "category": "industry",
+      "score": 72,
       "selected": true,
       "attribution": {
         "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmsz8gh3n06e4rodpl8l2syek"
+        "canonical": "https://aihot.virxact.com/items/cmt0d2tsl1961rodpnvzxo4cc"
       }
     },
     {
@@ -90,23 +141,6 @@
       "attribution": {
         "source": "AIHOT",
         "canonical": "https://aihot.virxact.com/items/cmsz49ptt022qrodp5mc1nt1x"
-      }
-    },
-    {
-      "id": "cmsz1zjiy013pro3f1e0aafra",
-      "title": "Claude Tag 如何擔任 Anthropic CI/CD 故障的一線響應者",
-      "title_en": "Claude on call： How Claude Tag serves as Anthropic's first responder for CI/CD failures",
-      "url": "https://claude.com/blog/ai-ci-cd-on-call",
-      "permalink": "https://aihot.virxact.com/items/cmsz1zjiy013pro3f1e0aafra",
-      "source": "Claude：Blog（網頁）",
-      "publishedAt": "2026-08-18T19:26:08.389Z",
-      "summary": "Anthropic 的 CI 工程師用 Claude Tag 構建了值班智能體，作為 CI/CD 故障的一線響應者。Claude 在事故發生後中位 14 分鐘發佈首份基於證據的分析，最快案例中 3 分鐘內驗證修復並確認錯誤率恢復基線。該方案通過 Slack 頻道、Datadog 或 Grafana 工具訪問及 GitHub 技能文件實現，Anthropic 已發佈通用設置套件供其他團隊部署。",
-      "category": "tip",
-      "score": 63,
-      "selected": true,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmsz1zjiy013pro3f1e0aafra"
       }
     },
     {
@@ -294,6 +328,40 @@
       "attribution": {
         "source": "AIHOT",
         "canonical": "https://aihot.virxact.com/items/cmsxkakju0300roz0zx6cvdeu"
+      }
+    },
+    {
+      "id": "cmsz8gh3n06e4rodpl8l2syek",
+      "title": "Claude 如何加速蛋白質設計與分析化學研究",
+      "title_en": "How Claude is accelerating protein design and analytical chemistry",
+      "url": "https://www.anthropic.com/research/Claude-accelerates-protein-design",
+      "permalink": "https://aihot.virxact.com/items/cmsz8gh3n06e4rodpl8l2syek",
+      "source": "Anthropic：Research（發表成果 · 網頁）",
+      "publishedAt": "2026-08-17T16:00:00.000Z",
+      "summary": "Anthropic 公佈兩項實驗：Claude（Mythos Preview 和 Opus 4.8）針對 15 個靶點設計蛋白質結合劑，成功 14 個，命中率達 22.6%-35.1%。",
+      "category": "paper",
+      "score": 73,
+      "selected": true,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmsz8gh3n06e4rodpl8l2syek"
+      }
+    },
+    {
+      "id": "cmsz1zjiy013pro3f1e0aafra",
+      "title": "Claude Tag 如何擔任 Anthropic CI/CD 故障的一線響應者",
+      "title_en": "Claude on call： How Claude Tag serves as Anthropic's first responder for CI/CD failures",
+      "url": "https://claude.com/blog/ai-ci-cd-on-call",
+      "permalink": "https://aihot.virxact.com/items/cmsz1zjiy013pro3f1e0aafra",
+      "source": "Claude：Blog（網頁）",
+      "publishedAt": "2026-08-17T16:00:00.000Z",
+      "summary": "Anthropic 的 CI 工程師用 Claude Tag 構建了值班智能體，作為 CI/CD 故障的一線響應者。Claude 在事故發生後中位 14 分鐘發佈首份基於證據的分析，最快案例中 3 分鐘內驗證修復並確認錯誤率恢復基線。該方案通過 Slack 頻道、Datadog 或 Grafana 工具訪問及 GitHub 技能文件實現，Anthropic 已發佈通用設置套件供其他團隊部署。",
+      "category": "tip",
+      "score": 63,
+      "selected": true,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmsz1zjiy013pro3f1e0aafra"
       }
     },
     {
@@ -788,1775 +856,1707 @@
         "source": "AIHOT",
         "canonical": "https://aihot.virxact.com/items/cmsrfaw5c0xo2roz2s8b4p2sv"
       }
-    },
-    {
-      "id": "cmsruetoy027hrozeecu4ixrc",
-      "title": "GPT-5.6 構建者指南：如何以更低成本實現前沿智能體性能",
-      "title_en": "The builder's guide to GPT-5.6",
-      "url": "https://openai.com/index/builders-guide-to-gpt-5-6",
-      "permalink": "https://aihot.virxact.com/items/cmsruetoy027hrozeecu4ixrc",
-      "source": "OpenAI：官網動態（RSS · 排除企業/客户案例）",
-      "publishedAt": "2026-08-13T11:00:00.000Z",
-      "summary": "GPT-5.6 模型家族以更低成本實現前沿級智能體性能，並新增推理持久化、原生多智能體編排和程序化工具調用等 API 能力。在 ARC-AGI-3 上，啓用保留推理和壓縮後，Sol 得分從 13.3% 躍升至 38.3%，且輸出 token 減少約 6 倍。Luna 在 BrowseComp 上以 84.04% 的得分追平 GPT-5.5（84.36%），成本從 $33.27 降至 $1.33。",
-      "category": "tip",
-      "score": 80,
-      "selected": true,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmsruetoy027hrozeecu4ixrc"
-      }
-    },
-    {
-      "id": "cmsrcljcc0uanroz24r5ebcz9",
-      "title": "小紅書開源連續自迴歸語音合成模型 dots.tts：打造可持續擴展的 TTS 基座",
-      "title_en": null,
-      "url": "https://mp.weixin.qq.com/s?__biz=Mzg4OTc2MzczNg%3D%3D&mid=2247496062&idx=1&sn=d4c48926c5d7607f129dfea03699a6c0",
-      "permalink": "https://aihot.virxact.com/items/cmsrcljcc0uanroz24r5ebcz9",
-      "source": "公眾號：小紅書技術（dots.llm）",
-      "publishedAt": "2026-08-13T09:59:00.000Z",
-      "summary": "小紅書 dots 團隊開源 20 億參數全連續端到端自迴歸語音合成模型 dots.tts，在 Seed-TTS-Eval 三個子集上取得最佳平均內容準確度和平均説話人相似度。",
-      "category": "ai-models",
-      "score": 75,
-      "selected": true,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmsrcljcc0uanroz24r5ebcz9"
-      }
-    },
-    {
-      "id": "cmsr160kg0dk0roz2mb20yxwk",
-      "title": "WorkBuddy上線遠程控制，國內也有了最絲滑的Agent工作方式",
-      "title_en": "WorkBuddy上線遠程控制，國內也有了最絲滑的Agent工作方式。",
-      "url": "https://mp.weixin.qq.com/s?__biz=MzIyMzA5NjEyMA%3D%3D&mid=2647685179&idx=1&sn=4cbee32b677b57a9dc6ec2a79d6f72c7",
-      "permalink": "https://aihot.virxact.com/items/cmsr160kg0dk0roz2mb20yxwk",
-      "source": "公眾號：數字生命卡茲克",
-      "publishedAt": "2026-08-13T04:32:24.000Z",
-      "summary": "WorkBuddy更新上線遠程控制功能，將PC、App和小程序打通，手機端可實時同步電腦端的任務、對話、工作空間和產物，支持一台手機連接多台電腦並隨時切換。App需升級至1.2.0及以上，電腦端需升級至5.3.8及以上，連接無需掃碼。本次更新還新增資料庫（我的文檔與團隊空間）、Markdown多人共同編輯、AI原生審閲模式，以及將資料庫內容生成可發佈鏈接的HTML網站。",
-      "category": "ai-products",
-      "score": 65,
-      "selected": true,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmsr160kg0dk0roz2mb20yxwk"
-      }
-    },
-    {
-      "id": "cmsqu0nr604oeroz2rh6b6mqt",
-      "title": "新興多智能體系統的模式與問題",
-      "title_en": "Patterns and problems in emerging multiagent systems",
-      "url": "https://www.anthropic.com/research/multiagent-systems",
-      "permalink": "https://aihot.virxact.com/items/cmsqu0nr604oeroz2rh6b6mqt",
-      "source": "Anthropic：Research（發表成果 · 網頁）",
-      "publishedAt": "2026-08-13T01:20:54.259Z",
-      "summary": "Anthropic 研究指出，隨着 AI 智能體在共享代碼庫、市場等社會系統中承擔更多任務，智能體間交互量或將超過人機交互。實驗顯示，45 個協調智能體在 2700 萬 token 運行中發現 266 個漏洞，而獨立並行方法在 650 萬 token 中發現 21 個，兩種方法僅 12 個重疊，且協調智能體學會專業化分工。研究同時警示個體層面的良性行為怪癖可能疊加為意外的系統性失敗。",
-      "category": "paper",
-      "score": 79,
-      "selected": true,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmsqu0nr604oeroz2rh6b6mqt"
-      }
     }
   ],
   "allItems": [
     {
-      "id": "cmt09w45v16iqrodpxxff0475",
-      "title": "Meta 為\"一鍵脱衣\"女性政客的 AI 應用投放廣告",
-      "title_en": "Meta ran ads for an app promising to nudify female politicians",
-      "url": "https://arstechnica.com/ai/2026/08/meta-ran-ads-for-an-app-promising-to-nudify-female-politicians",
-      "permalink": "https://aihot.virxact.com/items/cmt09w45v16iqrodpxxff0475",
-      "source": "Ars Technica：AI（RSS）",
-      "publishedAt": "2026-08-19T15:45:29.000Z",
-      "summary": "Meta 平台近期為 AI 色情生成工具 Kromix 投放廣告，該工具宣稱\"無限制\"，並鼓勵用户製作酷似美國女性政客的深度偽造視頻，違反 Meta 禁止含色情內容廣告的政策。這是 Meta 未能阻止非自願親密影像工具廣告上架的最新一例。Kromix 自稱\"AI 圖像風格化器\"，在蘋果 App Store 上架，邀請付費用户上傳照片用於\"卧室強姦\"等場景。",
-      "category": "industry",
-      "score": 59,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt09w45v16iqrodpxxff0475"
-      }
-    },
-    {
-      "id": "cmt09uwpj16glrodp7bgfl9j3",
-      "title": "TerraPower 核反應堆以儲能優勢瞄準 AI 數據中心供電",
-      "title_en": "TerraPower's nuclear reactor has a secret weapon for powering AI data centers",
-      "url": "https://techcrunch.com/2026/08/19/terrapowers-nuclear-reactor-has-a-secret-weapon-for-powering-ai-data-centers",
-      "permalink": "https://aihot.virxact.com/items/cmt09uwpj16glrodp7bgfl9j3",
-      "source": "TechCrunch：AI（RSS）",
-      "publishedAt": "2026-08-19T15:44:53.000Z",
-      "summary": "比爾·蓋茨創立的 TerraPower 計劃今年宣佈首個數據中心項目，其 345 兆瓦熔鹽冷卻反應堆通過巨型液態鈉罐儲存多餘熱量，可在不調整反應堆輸出功率的情況下快速響應電力需求波動。該公司已與 Meta 達成協議出售八座 Natrium 電廠，新項目預計 2027 年動工，為其第二座電廠。",
-      "category": "industry",
-      "score": 58,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt09uwpj16glrodp7bgfl9j3"
-      }
-    },
-    {
-      "id": "cmt09e5r6166qrodpfylx5e71",
-      "title": "Grok 4.6 上線 Amazon Bedrock",
-      "title_en": "Grok 4.6 now on Bedrock",
-      "url": "https://x.com/elonmusk/status/2090099808220627226",
-      "permalink": "https://aihot.virxact.com/items/cmt09e5r6166qrodpfylx5e71",
-      "source": "X：Elon Musk (@elonmusk, xAI)",
-      "publishedAt": "2026-08-19T15:33:21.000Z",
-      "summary": "Grok 4.6 現已上線 Bedrock。",
-      "category": "ai-models",
-      "score": 50,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt09e5r6166qrodpfylx5e71"
-      }
-    },
-    {
-      "id": "cmt098b26161prodpz2ype1hm",
-      "title": "GraphRAG：AI 如何回答分散在多個文檔中的問題",
-      "title_en": "GraphRAG： How AI Answers Questions Hidden Across Many Documents",
-      "url": "https://blog.bytebytego.com/p/graphrag-how-ai-answers-questions",
-      "permalink": "https://aihot.virxact.com/items/cmt098b26161prodpz2ype1hm",
-      "source": "ByteByteGo（RSS）",
-      "publishedAt": "2026-08-19T15:31:18.000Z",
-      "summary": "標準 RAG 依賴向量相似度檢索，適合答案集中在少數文檔的局部查詢，但在需跨全部文檔歸納模式的全局查詢上表現不佳。GraphRAG 通過構建知識圖譜、社區檢測與分層摘要應對此類問題，微軟測試顯示即便上下文窗口擴至 64，000 tokens，向量檢索在全局問題的全面性、多樣性和來源質量上仍有差距。",
-      "category": "tip",
-      "score": 50,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt098b26161prodpz2ype1hm"
-      }
-    },
-    {
-      "id": "cmt09ut5y16gfrodpowmndtzd",
-      "title": "MiniMax H3 登陸 Runway 無限量生成",
-      "title_en": "MiniMax H3 just went unlimited on Runway. Generate responsibly. Or don't. It's unlimited",
-      "url": "https://x.com/MiniMax_AI/status/2090098441200517416",
-      "permalink": "https://aihot.virxact.com/items/cmt09ut5y16gfrodpowmndtzd",
-      "source": "X：MiniMax (@MiniMax_AI)",
-      "publishedAt": "2026-08-19T15:27:55.000Z",
-      "summary": "MiniMax H3 剛剛在 Runway 上無限量開放了。請負責任地生成。或者不。反正無限量",
-      "category": "industry",
-      "score": 28,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt09ut5y16gfrodpowmndtzd"
-      }
-    },
-    {
-      "id": "cmt09njgh16czrodpuafsrq9q",
-      "title": "開源Agent Harness大幅降低GLM-5.2成本",
-      "title_en": "Own your harness. Very excited about this new open-source agent harness. I had early access， and…",
-      "url": "https://x.com/omarsar0/status/2090097918267003187",
-      "permalink": "https://aihot.virxact.com/items/cmt09njgh16czrodpuafsrq9q",
-      "source": "X：Elvis Saravia (@omarsar0, DAIR.AI)",
-      "publishedAt": "2026-08-19T15:25:50.000Z",
-      "summary": "掌控你的 harness。\n\n我對這個新的開源 agent harness 感到非常興奮。\n\n我獲得了早期訪問權限，它真的很好！\n\n最棒的是，它經過精心調優，能在 GLM-5.2 等開放模型上實現驚人的成本削減（成本降低 75%）。它也支持其他前沿模型。",
-      "category": "ai-products",
-      "score": 30,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt09njgh16czrodpuafsrq9q"
-      }
-    },
-    {
-      "id": "cmt08zs1015nerodpvt54a2zu",
-      "title": "螞蟻百靈開源 Ling-3.0 六個基礎模型檢查點",
-      "title_en": "We've open-sourced 6 Base Model checkpoints for Ling-3.0-tiny & Ling-3.0-flash， covering pre-trai…",
-      "url": "https://x.com/AntLingAGI/status/2090097017456590879",
-      "permalink": "https://aihot.virxact.com/items/cmt08zs1015nerodpvt54a2zu",
-      "source": "X：螞蟻百靈 (@AntLingAGI)",
-      "publishedAt": "2026-08-19T15:22:15.000Z",
-      "summary": "螞蟻百靈開源 Ling-3.0-tiny 與 Ling-3.0-flash 的 6 個 Base Model 檢查點，覆蓋預訓練、中期訓練及 WSM 合併階段，均未經過後訓練。其用 WSM 替代 LR 衰減進行加權檢查點合併，支持持續預訓練與離線策略探索；社區可在 tiny-base 上驗證策略後擴展至 flash-base。",
-      "category": "ai-models",
-      "score": 53,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt08zs1015nerodpvt54a2zu"
-      }
-    },
-    {
-      "id": "cmt09njh316d1rodpr6fk8t0l",
-      "title": "中國機器人實時平衡控制驚豔展示",
-      "title_en": "Beautiful display of real-time balance control keeping the center of mass stable on this Chinese rob…",
-      "url": "https://x.com/rohanpaul_ai/status/2090096724417421412",
-      "permalink": "https://aihot.virxact.com/items/cmt09njh316d1rodpr6fk8t0l",
-      "source": "X：Rohan Paul (@rohanpaul_ai)",
-      "publishedAt": "2026-08-19T15:21:05.000Z",
-      "summary": "這台中國機器人實時平衡控制的精彩展示，始終保持質心穩定。\n\n這個人形機器人將賽道彎道視作直道處理。在彎道處側向力控制得如此乾淨利落，速度始終毫無波動。",
-      "category": "tip",
-      "score": 27,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt09njh316d1rodpr6fk8t0l"
-      }
-    },
-    {
-      "id": "cmt091q6r15oarodpt43t76f3",
-      "title": "Grok 4.6 登陸 Amazon Bedrock",
-      "title_en": "Grok 4.6 is now available on Amazon Bedrock",
-      "url": "https://x.com/milichab/status/2090096415003337028",
-      "permalink": "https://aihot.virxact.com/items/cmt091q6r15oarodpt43t76f3",
-      "source": "X：Andrew Milich (@milichab)",
-      "publishedAt": "2026-08-19T15:19:52.000Z",
-      "summary": "Grok 4.6 現已在 Amazon Bedrock 上可用。",
-      "category": "industry",
-      "score": 45,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt091q6r15oarodpt43t76f3"
-      }
-    },
-    {
-      "id": "cmt08zs2315ngrodp6xn0g1sy",
-      "title": "Grok 4.6 登陸 Amazon Bedrock",
-      "title_en": "Grok 4.6 is live on Amazon Bedrock https://x.ai/news/grok-4-6-amazon-bedrock",
-      "url": "https://x.com/SpaceXAI/status/2090096322858660260",
-      "permalink": "https://aihot.virxact.com/items/cmt08zs2315ngrodp6xn0g1sy",
-      "source": "X：SpaceXAI (@SpaceXAI)",
-      "publishedAt": "2026-08-19T15:19:30.000Z",
-      "summary": "Grok 4.6 已在 Amazon Bedrock 上線\n\nhttps://x.ai/news/grok-4-6-amazon-bedrock",
-      "category": "ai-models",
-      "score": 39,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt08zs2315ngrodp6xn0g1sy"
-      }
-    },
-    {
-      "id": "cmt08kptd15ekrodp1sl8vttt",
-      "title": "Grok 4.6 登陸 Amazon Bedrock",
-      "title_en": "BREAKING： Grok 4.6 is now available on Amazon Bedrock. Grok's latest flagship model is built for lo…",
-      "url": "https://x.com/cb_doge/status/2090095646535754100",
-      "permalink": "https://aihot.virxact.com/items/cmt08kptd15ekrodp1sl8vttt",
-      "source": "X：cb_doge (@cb_doge)",
-      "publishedAt": "2026-08-19T15:16:48.000Z",
-      "summary": "Grok 4.6 旗艦模型現已上線 Amazon Bedrock，支持 500K-token 上下文窗口、文本與圖像輸入，以及 Low 至 xHigh 四檔可配置推理強度。該模型面向長時運行智能體、編程與知識工作，提供客户端工具調用、結構化輸出及流式響應。定價為全球區域每百萬 token 輸入 $2、輸出 $6、緩存讀取 $0.50，覆蓋所有提供 Bedrock 的 AWS 區域。",
-      "category": "ai-models",
-      "score": 63,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt08kptd15ekrodp1sl8vttt"
-      }
-    },
-    {
-      "id": "cmt08rw8v15gvrodpwsnfjfbg",
-      "title": "亞馬遜 Alexa+ 免費登陸全美所有受支持 Fire TV，原價 19.99 美元/月",
-      "title_en": "原價 19.99 美元 / 月的 AI 助手免費送，亞馬遜 Alexa+ 登陸全美所有受支持的 Fire TV",
-      "url": "https://www.ithome.com/0/991/859.htm",
-      "permalink": "https://aihot.virxact.com/items/cmt08rw8v15gvrodpwsnfjfbg",
+      "id": "cmt0px8kn0bt2ro2ovy9r82dq",
+      "title": "Valve Steam Frame VR 頭顯官方教學視頻泄露：佩戴、登錄與配件細節曝光",
+      "title_en": null,
+      "url": "https://www.ithome.com/0/991/873.htm",
+      "permalink": "https://aihot.virxact.com/items/cmt0px8kn0bt2ro2ovy9r82dq",
       "source": "IT之家（RSS）",
-      "publishedAt": "2026-08-19T15:15:07.000Z",
-      "summary": "亞馬遜宣佈向美國所有兼容的 Fire TV 設備免費提供 Alexa+，不論用户是否訂閲 Amazon Prime，兼容設備將自動升級，無需額外下載或訂閲。此前未訂閲 Prime 的用户需每月支付 19.99 美元，且服務僅限去年秋季發佈的新款設備。Alexa+ 在 Fire TV 上提供對話式搜索、智能家居控制和 AI 推薦，用户對話次數已接近原版 Alexa 的兩倍。",
+      "publishedAt": "2026-08-19T23:20:14.000Z",
+      "summary": "Valve 在 ARM 版 Steam 客户端更新中意外發布 8 段 Steam Frame VR 頭顯教學視頻，詳細展示了登錄流程、佩戴方式與配件。登錄可通過手機攝像頭掃描頭顯鏡片二維碼完成，配件包括腕帶、頭頂支撐帶及加長遮光罩，面部貼合墊與眼睛間距墊片均採用磁吸連接。Steam Frame 配備 16GB RAM，將於今年夏季上市，售價尚未公佈。",
       "category": "ai-products",
-      "score": 50,
+      "score": 20,
       "selected": false,
       "attribution": {
         "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt08rw8v15gvrodpwsnfjfbg"
+        "canonical": "https://aihot.virxact.com/items/cmt0px8kn0bt2ro2ovy9r82dq"
       }
     },
     {
-      "id": "cmt09id1r169brodpg3jsywvd",
-      "title": "玉伯問：YouMind 默認 Agent 模型免費可行嗎",
-      "title_en": "如果 YouMind 的默認 Agent 模型免費，會帶來吸引力不。有點猶豫。又有點想：大膽免費。 如果你是 YouMind 潛在用户（想創作的內容學習者），你會因為聊天不用花錢，而選擇 YouMi…",
-      "url": "https://x.com/lifesinger/status/2090094413171326985",
-      "permalink": "https://aihot.virxact.com/items/cmt09id1r169brodpg3jsywvd",
-      "source": "X：Frank Wang 玉伯 (@lifesinger)",
-      "publishedAt": "2026-08-19T15:11:54.000Z",
-      "summary": "玉伯（Frank Wang）在 X 上徵詢建議：若 YouMind 的默認 Agent 模型免費，是否會吸引用户。他邀請潛在用户、現有用户及任何人分享想法，包括\"收購 YouTube\"或\"關閉換方向\"等極端建議，均樂意接受。",
+      "id": "cmt0ppzyf0br1ro2oaj3gyjwk",
+      "title": "Grok Build v1.0.7 更新：新增工作流目錄與權限選項",
+      "title_en": "NEW GROK BUILD UPDATE  Grok Build v1.0.7 is now available. Features • Users can now raise th…",
+      "url": "https://x.com/cb_doge/status/2090214274031591830",
+      "permalink": "https://aihot.virxact.com/items/cmt0ppzyf0br1ro2oaj3gyjwk",
+      "source": "X：cb_doge (@cb_doge)",
+      "publishedAt": "2026-08-19T23:08:11.000Z",
+      "summary": "Grok Build v1.0.7 發佈，新增 /workflows 命令打開工作流目錄、/workflow runs 查看實時運行，並支持在權限提示中默認顯示\"始終允許\"和\"永不允許\"選項。修復了非交互會話中 MCP 連接認證、啓動超時等問題，可通過 `grok update --alpha` 更新。",
+      "category": "ai-products",
+      "score": 29,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0ppzyf0br1ro2oaj3gyjwk"
+      }
+    },
+    {
+      "id": "cmt0ppzza0br9ro2ovt82tzaw",
+      "title": "Meta AI 視頻模型 Muse 首批輸出曝光",
+      "title_en": "EXCLUSIVE ： Early look at the first outputs of the Muse Video model from Meta AI. > Muse Video i…",
+      "url": "https://x.com/testingcatalog/status/2090213734484500580",
+      "permalink": "https://aihot.virxact.com/items/cmt0ppzza0br9ro2ovt82tzaw",
+      "source": "X：Testing Catalog (@testingcatalog)",
+      "publishedAt": "2026-08-19T23:06:03.000Z",
+      "summary": "獨家 ：搶先看 Meta AI 的 Muse 視頻模型首批輸出。\n\n> Muse 視頻目前正處於封閉測試階段。\n> 該模型對受版權保護的內容已相當嚴格限制。\n> 原生音頻支持語音和音樂，開箱即用。\n\n如果該模型最終免費開放到 Meta 各產品中，將是一記重拳。\n\n有什麼提示詞值得我試試嗎？",
+      "category": "ai-models",
+      "score": 43,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0ppzza0br9ro2ovt82tzaw"
+      }
+    },
+    {
+      "id": "cmt0pxi7k0butro2oz5ou7quq",
+      "title": "MiniMax H3 圖像修復演示引熱議",
+      "title_en": "\"lemme just build my own tooling to crush this jar\"",
+      "url": "https://x.com/MiniMax_AI/status/2090213667593945549",
+      "permalink": "https://aihot.virxact.com/items/cmt0pxi7k0butro2oz5ou7quq",
+      "source": "X：MiniMax (@MiniMax_AI)",
+      "publishedAt": "2026-08-19T23:05:47.000Z",
+      "summary": "\"讓我自己造個工具來搞定這個罐子吧\"\n\n（引用 @8bit_e：使用 MiniMax H3 進行圖像修復  https://github.com/drozbay/MaskVidExperiments）",
       "category": "tip",
       "score": 19,
       "selected": false,
       "attribution": {
         "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt09id1r169brodpg3jsywvd"
+        "canonical": "https://aihot.virxact.com/items/cmt0pxi7k0butro2oz5ou7quq"
       }
     },
     {
-      "id": "cmt09id1f1697rodp6e1cmlr2",
-      "title": "開發者談AI舊觀點仍盛行",
-      "title_en": "man its crazy to me how many people are still talking about AI as if they've never seen no vibes all…",
-      "url": "https://x.com/dexhorthy/status/2090093713947275760",
-      "permalink": "https://aihot.virxact.com/items/cmt09id1f1697rodp6e1cmlr2",
-      "source": "X：Dex Horthy（HumanLayer）(@dexhorthy)",
-      "publishedAt": "2026-08-19T15:09:08.000Z",
-      "summary": "天哪，我真的很驚訝還有這麼多人談論AI時，好像從沒看過\"no vibes allowed\"這個演講。那個演講裏現在過時的建議太多了，我早就不再發給別人了，但顯然這些基礎觀念仍然很重要。如果你還在説\"規範驅動開發\"這種話，那我有些壞消息要告訴你。https://www.youtube.com/watch?v=rmvDxxNubIg",
-      "category": "tip",
-      "score": 25,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt09id1f1697rodp6e1cmlr2"
-      }
-    },
-    {
-      "id": "cmt099jio1649rodpdv9zmi6h",
-      "title": "Replit 免費模式藉助 GPT-5.6 Luna 降本增效",
-      "title_en": "Replit Free Mode， powered by @OpenAI GPT-5.6 Luna， helps you maximize making while minimizing token …",
-      "url": "https://x.com/Replit/status/2090093514868559883",
-      "permalink": "https://aihot.virxact.com/items/cmt099jio1649rodpdv9zmi6h",
-      "source": "X：Replit (@Replit)",
-      "publishedAt": "2026-08-19T15:08:20.000Z",
-      "summary": "Replit 免費模式，由 @OpenAI GPT-5.6 Luna 驅動，幫助你在最大化產出的同時最小化 token 成本。",
-      "category": "ai-products",
-      "score": 33,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt099jio1649rodpdv9zmi6h"
-      }
-    },
-    {
-      "id": "cmt08kptp15eorodp5ol377ea",
-      "title": "PostHog 前核心工程師加入 Viktor，AI 人才爭奪加劇",
-      "title_en": "Not only are these guys growing really fast in terms of revenue， but they are also making big hires …",
-      "url": "https://x.com/omarsar0/status/2090092567333335296",
-      "permalink": "https://aihot.virxact.com/items/cmt08kptp15eorodp5ol377ea",
-      "source": "X：Elvis Saravia (@omarsar0, DAIR.AI)",
-      "publishedAt": "2026-08-19T15:04:34.000Z",
-      "summary": "DAIR.AI 創始人 Elvis Saravia 指出，PostHog 不僅營收增長迅猛，還在積極招募頂尖人才。PostHog 第 5 號員工、AI 產品負責人 Michael Matloka 正式加入 Viktor，Saravia 稱其為\"超級 hires\"，並認為這印證了 PostHog 的成功。",
-      "category": "industry",
-      "score": 24,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt08kptp15eorodp5ol377ea"
-      }
-    },
-    {
-      "id": "cmt08kptx15eqrodpqab0zmjq",
-      "title": "特拉維斯·卡蘭尼克談\"進步機器\"與\"最終 Boss\"",
-      "title_en": "Travis Kalanick's （Uber founder） best lesson： build the \"Progress Machine\"， then beat the \"Final Bos…",
-      "url": "https://x.com/rohanpaul_ai/status/2090092001853415788",
-      "permalink": "https://aihot.virxact.com/items/cmt08kptx15eqrodpqab0zmjq",
-      "source": "X：Rohan Paul (@rohanpaul_ai)",
-      "publishedAt": "2026-08-19T15:02:19.000Z",
-      "summary": "優步創始人特拉維斯·卡蘭尼克在 a16z 對談中提出，公司應打造\"進步機器\"，核心是發現他人不知的有價值真相，從而更快帶來改變。他認為進步的\"最終 Boss\"是變革阻力，需以壓倒性的進步推動變革。他同時介紹其工業 AI 公司 Atoms，將製造、地產和物流視為物理世界的 CPU、存儲與網絡。",
-      "category": "tip",
-      "score": 33,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt08kptx15eqrodpqab0zmjq"
-      }
-    },
-    {
-      "id": "cmt08rw8v15gxrodpuh89hnqs",
-      "title": "字節跳動調整 Seed 基模團隊組織架構，為 5 萬億參數超大模型\"鋪路\"",
-      "title_en": "為 5 萬億參數超大模型\"鋪路\"？消息稱字節跳動調整 Seed 基模團隊組織架構",
-      "url": "https://www.ithome.com/0/991/856.htm",
-      "permalink": "https://aihot.virxact.com/items/cmt08rw8v15gxrodpuh89hnqs",
-      "source": "IT之家（RSS）",
-      "publishedAt": "2026-08-19T15:00:59.000Z",
-      "summary": "字節跳動大模型部門 Seed 完成新一輪組織調整，成立 Pretrain Data、Horizon RL、Product Posttrain-Work、Product Posttrain-Chat 四個新一級部門，負責人均向吳永輝彙報。",
-      "category": "industry",
-      "score": 44,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt08rw8v15gxrodpuh89hnqs"
-      }
-    },
-    {
-      "id": "cmt08xs0x15ltrodpszl1xtai",
-      "title": "Odyssey 推出 CaliBench 評估視頻世界模型隨機性",
-      "title_en": "Today， we're introducing CaliBench， evaluating whether video world models reproduce the true randomn…",
-      "url": "https://x.com/odysseyml/status/2090091652279152972",
-      "permalink": "https://aihot.virxact.com/items/cmt08xs0x15ltrodpszl1xtai",
-      "source": "X：Odyssey (@odysseyml)",
-      "publishedAt": "2026-08-19T15:00:56.000Z",
-      "summary": "今天，我們推出 CaliBench，用於評估視頻世界模型能否再現我們宇宙的真實隨機性。\n\n擲骰子或抽張牌，世界模型生成的結果應當與現實相符。來看看它是否做到吧！",
-      "category": "ai-products",
-      "score": 25,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt08xs0x15ltrodpszl1xtai"
-      }
-    },
-    {
-      "id": "cmt08kpsy15eirodptf283a04",
-      "title": "阿里雲直播：Qwen3 模型家族發佈",
-      "title_en": "https://x.com/i/broadcasts/1RKjpbDbYZaJw",
-      "url": "https://x.com/alibaba_cloud/status/2090091496414613566",
-      "permalink": "https://aihot.virxact.com/items/cmt08kpsy15eirodptf283a04",
-      "source": "X：阿里雲 / Alibaba Cloud (@alibaba_cloud)",
-      "publishedAt": "2026-08-19T15:00:19.000Z",
-      "summary": "https://x.com/i/broadcasts/1RKjpbDbYZaJw",
-      "category": "industry",
-      "score": 5,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt08kpsy15eirodptf283a04"
-      }
-    },
-    {
-      "id": "cmt08sc1h15j7rodpgfkjz5kc",
-      "title": "Amazon 將 AI 助手 Alexa+ 免費推向 Fire TV，無需 Prime 訂閲",
-      "title_en": "Amazon makes its AI-powered Alexa+ free on Fire TV， no Prime required",
-      "url": "https://techcrunch.com/2026/08/19/amazon-makes-its-ai-powered-alexa-free-on-fire-tv-no-prime-required",
-      "permalink": "https://aihot.virxact.com/items/cmt08sc1h15j7rodpgfkjz5kc",
-      "source": "TechCrunch：AI（RSS）",
-      "publishedAt": "2026-08-19T15:00:00.000Z",
-      "summary": "Amazon 宣佈將 AI 助手 Alexa+ 免費推送到美國所有兼容 Fire TV 設備，用户無需 Prime 訂閲。此前非 Prime 用户需每月支付 $19.99，現在所有用户將自動升級，無需下載應用或訂閲。Alexa+ 支持對話式搜索、智能家居控制及 AI 推薦，Amazon 稱其用户與 Alexa 的對話次數已接近原來的兩倍。",
-      "category": "ai-products",
-      "score": 52,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt08sc1h15j7rodpgfkjz5kc"
-      }
-    },
-    {
-      "id": "cmt09id1f1698rodplfdjrxq2",
-      "title": "規範驅動開發難同步，Claude 生成代碼質量堪憂",
-      "title_en": "there's a almost-year-old thread about spec driven development which has recently devolved into clau…",
-      "url": "https://x.com/dexhorthy/status/2090091396917248209",
-      "permalink": "https://aihot.virxact.com/items/cmt09id1f1698rodplfdjrxq2",
-      "source": "X：Dex Horthy（HumanLayer）(@dexhorthy)",
-      "publishedAt": "2026-08-19T14:59:55.000Z",
-      "summary": "Dex Horthy 指出，規範驅動開發（spec driven development）試圖讓所有規範與代碼保持同步，實際上是製造了一個新問題，收益有限。他認為，與其壓縮\"代碼庫結構和意圖\"這一動態目標，不如在代碼庫研究上直接投入 token，因為前者弊大於利。該討論源於 GitHub spec-kit 相關話題，並提及 Claude 生成內容質量下降。",
-      "category": "tip",
-      "score": 34,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt09id1f1698rodplfdjrxq2"
-      }
-    },
-    {
-      "id": "cmt07x7gd1509rodp5565wtn7",
-      "title": "Runway 上線 MiniMax H3 無限量生成",
-      "title_en": "MiniMax H3 is now unlimited on Runway. For a limited time， Max plan users can generate as much as t…",
-      "url": "https://x.com/runwayml/status/2090090516151243063",
-      "permalink": "https://aihot.virxact.com/items/cmt07x7gd1509rodp5565wtn7",
-      "source": "X：Runway (@runwayml)",
-      "publishedAt": "2026-08-19T14:56:25.000Z",
-      "summary": "MiniMax H3 現已在 Runway 上無限量使用。\n\n限時活動期間，Max 套餐用户可隨心所欲地生成內容，無上限、不計數，盡情使用這款目前最優秀的視頻模型之一。點擊下方鏈接立即開始。",
-      "category": "ai-products",
-      "score": 40,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt07x7gd1509rodp5565wtn7"
-      }
-    },
-    {
-      "id": "cmt07wtt614zgrodpz471ivhb",
-      "title": "GPT-5.6 Sol 在 OpenCode Zen 五折促銷",
-      "title_en": "GPT-5.6 Sol is 50% off on OpenCode Zen until September 18th",
-      "url": "https://x.com/opencode/status/2090090487164117440",
-      "permalink": "https://aihot.virxact.com/items/cmt07wtt614zgrodpz471ivhb",
-      "source": "X：opencode (@opencode)",
-      "publishedAt": "2026-08-19T14:56:18.000Z",
-      "summary": "GPT-5.6 Sol 在 OpenCode Zen 上五折優惠，截至 9 月 18 日。",
-      "category": "industry",
-      "score": 31,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt07wtt614zgrodpz471ivhb"
-      }
-    },
-    {
-      "id": "cmt08kpu515esrodpil4l65n3",
-      "title": "Ornith-1.5 開源模型家族發佈，對標 Opus 4.8",
-      "title_en": "Ornith has released Ornith-1.5， an open model family with 3 different model variants： 397B MoE， 35B …",
-      "url": "https://x.com/testingcatalog/status/2090088727359951152",
-      "permalink": "https://aihot.virxact.com/items/cmt08kpu515esrodpil4l65n3",
-      "source": "X：Testing Catalog (@testingcatalog)",
-      "publishedAt": "2026-08-19T14:49:19.000Z",
-      "summary": "Ornith 發佈 Ornith-1.5 開源模型家族，含 397B MoE、35B MoE 和 9B dense 三個版本，性能對標 Claude Opus 4.8 和 GLM 5.2。",
-      "category": "ai-models",
-      "score": 44,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt08kpu515esrodpil4l65n3"
-      }
-    },
-    {
-      "id": "cmt07q43614ozrodp6erwh318",
-      "title": "Show HN：modelmap 將任意 HuggingFace 模型可視化為交互式動畫架構",
-      "title_en": "Show HN： 任何 HuggingFace 模型的交互式動畫化架構",
-      "url": "https://modelmap.cc/",
-      "permalink": "https://aihot.virxact.com/items/cmt07q43614ozrodp6erwh318",
+      "id": "cmt0py3p70bvaro2osvqlc2uz",
+      "title": "陶哲軒：人工智能時代的數學",
+      "title_en": "人工智能時代的數學",
+      "url": "https://arxiv.org/abs/2608.16753",
+      "permalink": "https://aihot.virxact.com/items/cmt0py3p70bvaro2osvqlc2uz",
       "source": "Hacker News 熱門（buzzing.cc 中文翻譯）",
-      "publishedAt": "2026-08-19T14:46:17.538Z",
-      "summary": "modelmap 上線，粘貼 Hugging Face 模型 ID 即可獲得網絡結構的動態可視化圖，無需下載權重。該工具支持 Qwen3.8-27B、DeepSeek-V4-Pro-0813、Kimi-K3 等熱門模型，並內置 GPT-2、BERT、DeepSeek-V3.1 等經典參考架構，可即時對比分析。",
-      "category": "ai-products",
-      "score": 64,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt07q43614ozrodp6erwh318"
-      }
-    },
-    {
-      "id": "cmt08rw8v15gzrodps83lcoku",
-      "title": "皮尤調查：美國 30 歲以下成年人首次過半對 AI 擔憂多於期待，近四分之三認為 AI 會減少就業機會",
-      "title_en": "最看好 AI 的人成了最懷疑 AI 的人，美國 30 歲以下成年人擔心技術進步引發失業潮",
-      "url": "https://www.ithome.com/0/991/853.htm",
-      "permalink": "https://aihot.virxact.com/items/cmt08rw8v15gzrodps83lcoku",
-      "source": "IT之家（RSS）",
-      "publishedAt": "2026-08-19T14:43:39.000Z",
-      "summary": "皮尤研究中心調查顯示，自 2021 年開始調查以來，首次有超過半數的美國 30 歲以下成年人對 AI 的擔憂多於期待，近四分之三認為 AI 會減少就業機會，高於兩年前的 61%。最年輕羣體過去最看好 AI，如今卻成為最懷疑的人羣之一。超過一半美國人對 AI 感到擔憂，而經驗越豐富的勞動者越可能從 AI 中獲益。",
+      "publishedAt": "2026-08-19T23:01:56.839Z",
+      "summary": "數學家陶哲軒在2026年國際數學家大會演講中提出，數學界應如何回應具備研究級數學能力的AI工具。他主張擱置對AI能力的爭論，轉而審視數學研究真正的目標與價值，並以問題求解作為案例。他認為當前數學正經歷類似20世紀初基礎危機的動盪期，需將隱含的數學實踐與價值規範顯式化。",
       "category": "tip",
-      "score": 56,
+      "score": 61,
       "selected": false,
       "attribution": {
         "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt08rw8v15gzrodps83lcoku"
+        "canonical": "https://aihot.virxact.com/items/cmt0py3p70bvaro2osvqlc2uz"
       }
     },
     {
-      "id": "cmt07d5vq14ggrodp36m90mel",
-      "title": "把船開到深處 下網打魚",
+      "id": "cmt0px8kn0bt6ro2ofybl81iq",
+      "title": "OpenAI 擴展零數據留存安全機制，自動化分析跨交互風險",
       "title_en": null,
-      "url": "https://x.com/lifesinger/status/2090086526281777206",
-      "permalink": "https://aihot.virxact.com/items/cmt07d5vq14ggrodp36m90mel",
-      "source": "X：Frank Wang 玉伯 (@lifesinger)",
-      "publishedAt": "2026-08-19T14:40:34.000Z",
-      "summary": "把船開到深處 下網打魚\n\n【引用 @83dwn】：https://x.com/i/article/2089923422935564288",
-      "category": "tip",
-      "score": 14,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt07d5vq14ggrodp36m90mel"
-      }
-    },
-    {
-      "id": "cmt07wtt614zhrodpwpmqpqpp",
-      "title": "OpenCode Go 訂閲 Hy3 額度翻八倍",
-      "title_en": "Hy3 will get 8x the normal usage until August 30th that's $480 of usage for $10 available to all O…",
-      "url": "https://x.com/opencode/status/2090085655397216526",
-      "permalink": "https://aihot.virxact.com/items/cmt07wtt614zhrodpwpmqpqpp",
-      "source": "X：opencode (@opencode)",
-      "publishedAt": "2026-08-19T14:37:06.000Z",
-      "summary": "Hy3 在 8 月 30 日前將獲得 8 倍於正常額度的使用量\n\n即 10 美元獲得 480 美元的使用額度\n\n所有 OpenCode Go 訂閲用户均可享受",
-      "category": "industry",
-      "score": 31,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt07wtt614zhrodpwpmqpqpp"
-      }
-    },
-    {
-      "id": "cmt07i4id14kbrodp2pxhmoh9",
-      "title": "Ornith-1.5 開源模型發佈，多項基準超越 Claude Opus 4.8",
-      "title_en": "Another brilliant open-source model release. Ornith-1.5， a family of open-source LLMs spanning 9B D…",
-      "url": "https://x.com/rohanpaul_ai/status/2090085614989533532",
-      "permalink": "https://aihot.virxact.com/items/cmt07i4id14kbrodp2pxhmoh9",
-      "source": "X：Rohan Paul (@rohanpaul_ai)",
-      "publishedAt": "2026-08-19T14:36:57.000Z",
-      "summary": "Ornith-1.5 開源 LLM 家族發佈，含 9B Dense、35B MoE 和 397B MoE 三檔，其中 397B 在 Terminal-Bench 2.1（86.1）、SWE-bench Verified（86）、WideSearch（80.8）和 BrowseComp（86.6）上均超越 Claude Opus 4.8。",
-      "category": "ai-models",
-      "score": 51,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt07i4id14kbrodp2pxhmoh9"
-      }
-    },
-    {
-      "id": "cmt07i4hz14k7rodptdf673cu",
-      "title": "主權AI落後前沿，競爭代價巨大",
-      "title_en": "I don't know if this news is real， but it does point out a major issue with \"sovereign AI\" - if your…",
-      "url": "https://x.com/emollick/status/2090083512653160832",
-      "permalink": "https://aihot.virxact.com/items/cmt07i4hz14k7rodptdf673cu",
-      "source": "X：Ethan Mollick (@emollick)",
-      "publishedAt": "2026-08-19T14:28:35.000Z",
-      "summary": "Ethan Mollick 評論法國政府計劃僱傭 Mistral 等主權 AI 公司、排除 OpenAI 的新聞，指出若主權模型遠落後於前沿，在差距最大的前沿應用（如網絡）中，使用落後模型競爭將付出巨大代價。",
-      "category": "industry",
-      "score": 39,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt07i4hz14k7rodptdf673cu"
-      }
-    },
-    {
-      "id": "cmt06mqf413mcrodpzfdptk2o",
-      "title": "小米新一代人形機器人亮相世界機器人博覽會：大模型驅動實時互動",
-      "title_en": "小米新一代人形機器人與觀眾實時互動視頻發佈：由大模型驅動，自主理解、判斷並完成動作",
-      "url": "https://www.ithome.com/0/991/848.htm",
-      "permalink": "https://aihot.virxact.com/items/cmt06mqf413mcrodpzfdptk2o",
+      "url": "https://www.ithome.com/0/991/868.htm",
+      "permalink": "https://aihot.virxact.com/items/cmt0px8kn0bt6ro2ofybl81iq",
       "source": "IT之家（RSS）",
-      "publishedAt": "2026-08-19T14:23:51.000Z",
-      "summary": "小米新一代人形機器人今日亮相2026世界機器人博覽會\"具身花園\"展台，官方放出其與觀眾實時互動視頻。從遞花、握手到碰拳、比心，動作由大模型驅動機器人自主理解、判斷並完成。8月20日起展台對普通觀眾開放。",
+      "publishedAt": "2026-08-19T22:58:16.000Z",
+      "summary": "OpenAI 面向符合資格的前沿模型 API 客户擴展\"零數據留存\"服務，請求處理完成後不保留提示詞或模型回覆，員工無法審閲客户內容。為解決多輪交互後顯現的安全風險，OpenAI 推出私密安全處理預覽版，利用自動化系統分析關聯交互中的風險模式，員工不接觸底層內容。該能力計劃於 9 月開始推出。",
       "category": "ai-products",
-      "score": 42,
+      "score": 46,
       "selected": false,
       "attribution": {
         "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt06mqf413mcrodpzfdptk2o"
+        "canonical": "https://aihot.virxact.com/items/cmt0px8kn0bt6ro2ofybl81iq"
       }
     },
     {
-      "id": "cmt07i4i614k9rodp22zrqmf1",
-      "title": "Moderna AI個性化mRNA癌症疫苗III期試驗成功",
-      "title_en": "This is freaking huge： For the first time， a AI-assisted personalized mRNA cancer treatment has succ…",
-      "url": "https://x.com/kimmonismus/status/2090082088087150979",
-      "permalink": "https://aihot.virxact.com/items/cmt07i4i614k9rodp22zrqmf1",
-      "source": "X：Kim (@kimmonismus)",
-      "publishedAt": "2026-08-19T14:22:56.000Z",
-      "summary": "Moderna與Merck的AI輔助個性化mRNA癌症治療首次在III期試驗（1，137名患者）中取得成功。該療法通過AI分析患者腫瘤與健康DNA差異，識別最可能觸發免疫反應的突變，並生產編碼多達34個新抗原的個體化mRNA藥物。此前II期試驗中，高危黑色素瘤患者五年無癌率達68.8%（Keytruda單藥為49.1%），復發或死亡風險降低49%。",
-      "category": "industry",
-      "score": 60,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt07i4i614k9rodp22zrqmf1"
-      }
-    },
-    {
-      "id": "cmt06oadn13psrodpor7dlj3i",
-      "title": "VentureBeat 任命 Rob Strechay 為首位首席分析師，擴大企業 AI 研究佈局",
-      "title_en": "VentureBeat names Rob Strechay as its first Lead Analyst， expanding its enterprise AI research push",
-      "url": "https://venturebeat.com/ai/venturebeat-names-rob-strechay-as-its-first-lead-analyst-expanding-its-enterprise-ai-research-push",
-      "permalink": "https://aihot.virxact.com/items/cmt06oadn13psrodpor7dlj3i",
-      "source": "VentureBeat：AI（RSS）",
-      "publishedAt": "2026-08-19T14:18:12.000Z",
-      "summary": "VentureBeat 任命前 theCUBE Research 董事總經理 Rob Strechay 為其首位首席分析師，聚焦雲基礎設施、數據基礎設施及 AI 與企業安全的交叉領域。Strechay 將主持 VB In Conversation 視頻訪談系列，其 6 月對 145 家企業的調研顯示三分之二已採取多模型策略。",
-      "category": "industry",
-      "score": 27,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt06oadn13psrodpor7dlj3i"
-      }
-    },
-    {
-      "id": "cmt078zvq14e6rodpgdg6ynpb",
-      "title": "馬斯克分享Grok Bot設計，社區已建170+機器人目錄",
-      "title_en": "Share your Grok @Bot design with others！",
-      "url": "https://x.com/elonmusk/status/2090079706402164857",
-      "permalink": "https://aihot.virxact.com/items/cmt078zvq14e6rodpgdg6ynpb",
-      "source": "X：Elon Musk (@elonmusk, xAI)",
-      "publishedAt": "2026-08-19T14:13:28.000Z",
-      "summary": "分享你的 Grok @Bot 設計給其他人！\n\n【引用 @karanC_12】：有人剛剛建立了一個包含 170 多個即用型 Grok Bot 的目錄。\n\n營銷、銷售、生產力、運營……應有盡有。\n\n只需複製提示詞 → 粘貼到 Grok → 完成。\n\n而且它完全開源。\n\n人們正在圍繞 Grok 極速構建生態。",
-      "category": "tip",
-      "score": 26,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt078zvq14e6rodpgdg6ynpb"
-      }
-    },
-    {
-      "id": "cmt078zvq14e7rodpuwzyz1p3",
-      "title": "Grok Bot 通過谷歌機器人測試",
-      "title_en": "Grok @Bot is the Chuck Norris of bots",
-      "url": "https://x.com/elonmusk/status/2090079231783120975",
-      "permalink": "https://aihot.virxact.com/items/cmt078zvq14e7rodpuwzyz1p3",
-      "source": "X：Elon Musk (@elonmusk, xAI)",
-      "publishedAt": "2026-08-19T14:11:35.000Z",
-      "summary": "Grok @Bot 是機器人界的 Chuck Norris\n\n【引用 @XFreeze】：Grok Bot 剛剛通過了谷歌的\"我不是機器人？\"測試，説實話我有時候都過不了這關",
-      "category": "tip",
-      "score": 15,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt078zvq14e7rodpuwzyz1p3"
-      }
-    },
-    {
-      "id": "cmt06n5dz13o9rodp7g1hftlt",
-      "title": "Calendly 推出會議記錄工具，加入 AI 筆記應用競爭",
-      "title_en": "Calendly throws its hat into meeting note-taker circus",
-      "url": "https://techcrunch.com/2026/08/19/calendly-throws-its-hat-into-meeting-note-taker-circus",
-      "permalink": "https://aihot.virxact.com/items/cmt06n5dz13o9rodp7g1hftlt",
-      "source": "TechCrunch：AI（RSS）",
-      "publishedAt": "2026-08-19T14:09:39.000Z",
-      "summary": "Calendly 推出會議記錄產品，可加入會議、錄製音視頻並生成摘要、行動項和跟進郵件草稿，並正在測試類似 Granola 的系統音頻轉錄功能。公司還計劃發佈 AI 助手 Callie，利用現有日程與會議堆棧安排會議、查看可用性並調取過往會議上下文。CEO Tope Awotona 表示，該工具會在會議開始前及進行中通過聊天消息告知與會者正在錄音，用户可隨時要求其離開對話。",
-      "category": "ai-products",
-      "score": 48,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt06n5dz13o9rodp7g1hftlt"
-      }
-    },
-    {
-      "id": "cmt066ejp13eyrodpkesmcfx7",
-      "title": "馬斯克：用Grok Bot打造一人公司",
-      "title_en": "Make an instant one-person company with @Grok @Bot",
-      "url": "https://x.com/elonmusk/status/2090078663312347334",
-      "permalink": "https://aihot.virxact.com/items/cmt066ejp13eyrodpkesmcfx7",
-      "source": "X：Elon Musk (@elonmusk, xAI)",
-      "publishedAt": "2026-08-19T14:09:19.000Z",
-      "summary": "用 @Grok @Bot 打造一個即時的一人公司。",
-      "category": "tip",
-      "score": 28,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt066ejp13eyrodpkesmcfx7"
-      }
-    },
-    {
-      "id": "cmt06fk3j13klrodp7ghf349y",
-      "title": "微軟 Agent Lightning v1.0 讓 Qwen3.5-9B 編程能力提升 14.6%",
-      "title_en": "Very interesting new work from Microsoft. （bookmark it） This work is related to this emerging them…",
-      "url": "https://x.com/omarsar0/status/2090078336697733531",
-      "permalink": "https://aihot.virxact.com/items/cmt06fk3j13klrodp7ghf349y",
-      "source": "X：Elvis Saravia (@omarsar0, DAIR.AI)",
-      "publishedAt": "2026-08-19T14:08:01.000Z",
-      "summary": "微軟新研究 Agent Lightning v1.0 通過約 3500 行端點代理將任意 harness 接入強化學習，用於模型後訓練。僅用 6K 訓練樣本和適度算力，將 Qwen3.5-9B 在 SWE-bench Verified 上從 41.8% 提升至 56.4%。論文已發佈。",
+      "id": "cmt0ppzyy0br6ro2ozt254r4u",
+      "title": "RAG投毒致模型過度自信，注意力崩塌可預警",
+      "title_en": "RAG poisoning can make a model more confident， which is exactly why confidence-based detectors can f…",
+      "url": "https://x.com/rohanpaul_ai/status/2090211533108515281",
+      "permalink": "https://aihot.virxact.com/items/cmt0ppzyy0br6ro2ozt254r4u",
+      "source": "X：Rohan Paul (@rohanpaul_ai)",
+      "publishedAt": "2026-08-19T22:57:18.000Z",
+      "summary": "研究發現RAG投毒可使模型token置信度和輸出一致性上升，導致基於不確定性的檢測器失效。攻擊下注意力集中於被投毒文檔而非分散於檢索證據，作者稱之為\"注意力崩塌\"。監控文檔級注意力分佈或可在答案明顯出錯前暴露投毒，僅檢查最終答案或置信度可能漏報。",
       "category": "paper",
       "score": 36,
       "selected": false,
       "attribution": {
         "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt06fk3j13klrodp7ghf349y"
+        "canonical": "https://aihot.virxact.com/items/cmt0ppzyy0br6ro2ozt254r4u"
       }
     },
     {
-      "id": "cmt066ejp13ezrodp51bqwt8d",
-      "title": "Grok 4.6 登頂醫療智能體基準 MedAgentBench",
-      "title_en": "Grok 4.6 is #1 on healthcare questions",
-      "url": "https://x.com/elonmusk/status/2090078247392555471",
-      "permalink": "https://aihot.virxact.com/items/cmt066ejp13ezrodp51bqwt8d",
-      "source": "X：Elon Musk (@elonmusk, xAI)",
-      "publishedAt": "2026-08-19T14:07:40.000Z",
-      "summary": "Grok 4.6 以約 95.9% 的成績登頂 MedAgentBench，成為醫療智能體任務第一名。該基準在真實電子健康記錄環境中測試 300 項臨牀任務，要求模型推理、使用工具並執行多步驟臨牀工作流。Grok 4.5（約 93.4%）與 GPT-5.6 Sol（約 94.7%）分列第三和第二。",
+      "id": "cmt0p4w7r0be0ro2ow79t4rtd",
+      "title": "引用 Jeremy Morrell：LLM 時代可擴展軟件的新機遇",
+      "title_en": "Quoting Jeremy Morrell",
+      "url": "https://simonwillison.net/2026/Aug/19/jeremy-morrell",
+      "permalink": "https://aihot.virxact.com/items/cmt0p4w7r0be0ro2ow79t4rtd",
+      "source": "Simon Willison 博客",
+      "publishedAt": "2026-08-19T22:56:31.000Z",
+      "summary": "Jeremy Morrell 提出，LLM 時代為 Web 可擴展軟件帶來新機遇：LLM 大幅降低擴展的編寫成本，現代沙箱原語降低部署成本並提供良好安全邊界。開發者可將應用構建為穩固、可問責的核心，讓用户藉助 LLM 安全地擴展其功能。",
       "category": "tip",
+      "score": 38,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0p4w7r0be0ro2ow79t4rtd"
+      }
+    },
+    {
+      "id": "cmt0p4w7r0be1ro2oozxy0xss",
+      "title": "概念完整性與代碼行數：Simon Willison 談 AI 如何改變軟件開發",
+      "title_en": "Conceptual integrity and counting lines of code",
+      "url": "https://simonwillison.net/2026/Aug/19/conceptual-integrity-and-counting-lines-of-code",
+      "permalink": "https://aihot.virxact.com/items/cmt0p4w7r0be1ro2oozxy0xss",
+      "source": "Simon Willison 博客",
+      "publishedAt": "2026-08-19T22:46:07.000Z",
+      "summary": "Simon Willison 在 Talking Postgres 播客中與 Claire Giordano 討論 AI 如何改變軟件開發。他認為，在智能體輔助下，代碼行數仍是衡量生產力的有效指標--工程師日產出可從 50-60 行提升至千行，但真正的瓶頸變為認知容量，因此團隊仍需多人分擔。他還以\"温徹斯特神秘屋\"比喻智能體編碼導致軟件\"概念完整性\"喪失的風險，強調紀律的重要性。",
+      "category": "tip",
+      "score": 53,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0p4w7r0be1ro2oozxy0xss"
+      }
+    },
+    {
+      "id": "cmt0ouxcz0b44ro2ooitrq388",
+      "title": "Nathan Lambert 將首次指導 MATS 學員",
+      "title_en": "I think this'll be my first MATS cohort I'm mentoring！ I've met so many wonderful MATS alumni， excit…",
+      "url": "https://x.com/natolambert/status/2090208650103001528",
+      "permalink": "https://aihot.virxact.com/items/cmt0ouxcz0b44ro2ooitrq388",
+      "source": "X：Nathan Lambert (@natolambert)",
+      "publishedAt": "2026-08-19T22:45:51.000Z",
+      "summary": "我想這會是我指導的第一期 MATS 學員！我認識了很多優秀的 MATS 校友，很期待能做出貢獻。",
+      "category": "industry",
       "score": 31,
       "selected": false,
       "attribution": {
         "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt066ejp13ezrodp51bqwt8d"
+        "canonical": "https://aihot.virxact.com/items/cmt0ouxcz0b44ro2ooitrq388"
       }
     },
     {
-      "id": "cmt06fk3y13knrodptlu5dcgc",
-      "title": "PostHog AI 創始人加入 Viktor，聚焦智能體工程",
-      "title_en": "I found Michael Matloka's path really interesting. He joined PostHog as employee number five straig…",
-      "url": "https://x.com/kimmonismus/status/2090077792494850311",
-      "permalink": "https://aihot.virxact.com/items/cmt06fk3y13knrodptlu5dcgc",
-      "source": "X：Kim (@kimmonismus)",
-      "publishedAt": "2026-08-19T14:05:52.000Z",
-      "summary": "PostHog 第 5 號員工、PostHog AI 創始人與負責人 Michael Matloka 加入 @viktor_com。他總結構建智能體的核心經驗：模型並非最難部分，上下文、工具、權限與可靠性才決定智能體能否真正完成有用工作。Viktor 正針對 3，200 多個工具解決這些問題。",
-      "category": "industry",
-      "score": 33,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt06fk3y13knrodptlu5dcgc"
-      }
-    },
-    {
-      "id": "cmt06fk4613kprodp94npnkr2",
-      "title": "SemiAnalysis 談 AI 獎勵優化與網絡安全風險",
-      "title_en": "The HuggingFace and OpenAI cybersecurity incident raises concerns on AI reward optimization. \"They'…",
-      "url": "https://x.com/SemiAnalysis_/status/2090076706543394881",
-      "permalink": "https://aihot.virxact.com/items/cmt06fk4613kprodp94npnkr2",
-      "source": "X：SemiAnalysis (@SemiAnalysis_)",
-      "publishedAt": "2026-08-19T14:01:33.000Z",
-      "summary": "SemiAnalysis 就 HuggingFace 與 OpenAI 網絡安全事件發文，指出 AI 獎勵優化存在風險。模型為追求獎勵最大化，會主動尋找軟件零日漏洞並可能\"失控逃跑\"。作者類比稱，若模型只追逐獎勵信號，可能像人類沉迷海洛因一樣，不惜顛覆人類文明來反覆獲取獎勵。",
-      "category": "tip",
-      "score": 47,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt06fk4613kprodp94npnkr2"
-      }
-    },
-    {
-      "id": "cmt061tfs13cirodp5i54g932",
-      "title": "Replit 免費模式搭載 GPT-5.6 Luna",
-      "title_en": "Replit Free Mode， powered by @OpenAI GPT-5.6 Luna. Let's make intelligence accessible to everyone.",
-      "url": "https://x.com/Replit/status/2090076648276185555",
-      "permalink": "https://aihot.virxact.com/items/cmt061tfs13cirodp5i54g932",
-      "source": "X：Replit (@Replit)",
-      "publishedAt": "2026-08-19T14:01:19.000Z",
-      "summary": "Replit 免費模式，由 @OpenAI GPT-5.6 Luna 驅動。\n\n讓我們讓智能惠及每一個人。",
+      "id": "cmt0px8kn0bt7ro2ol0mkgf8k",
+      "title": "Meta 推出 Meta AI 原生 Mac 應用：支持窗口共享、跨應用聽寫",
+      "title_en": null,
+      "url": "https://www.ithome.com/0/991/866.htm",
+      "permalink": "https://aihot.virxact.com/items/cmt0px8kn0bt7ro2ol0mkgf8k",
+      "source": "IT之家（RSS）",
+      "publishedAt": "2026-08-19T22:45:30.000Z",
+      "summary": "Meta 今日推出 Mac 版 Meta AI 應用測試版，面向企業和內容創作者，與 Facebook、Instagram 集成，內置分析工具可回答賬號表現問題，並支持連接 Google Workspace 訪問文檔（需專業版賬號）。",
       "category": "ai-products",
       "score": 46,
       "selected": false,
       "attribution": {
         "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt061tfs13cirodp5i54g932"
+        "canonical": "https://aihot.virxact.com/items/cmt0px8kn0bt7ro2ol0mkgf8k"
       }
     },
     {
-      "id": "cmt061tfh13cgrodpz7ti3c2z",
-      "title": "面壁智能 MiniCPM 驅動 6ixPulse 租房智能體地圖",
-      "title_en": "Finding the right neighborhood means looking beyond rent - from commute and safety to lifestyle and …",
-      "url": "https://x.com/OpenBMB/status/2090076322894692445",
-      "permalink": "https://aihot.virxact.com/items/cmt061tfh13cgrodpz7ti3c2z",
-      "source": "X：面壁智能 OpenBMB (@OpenBMB)",
-      "publishedAt": "2026-08-19T14:00:01.000Z",
-      "summary": "開發者 Daryl_wanji 基於面壁智能 MiniCPM 模型構建 6ixPulse，一個多倫多租房智能體地圖，通過 AI 研究幫租客從通勤、安全、社區等維度探索街區。6ixPulse 本地運行 MiniCPM4-0.5B 和 MiniCPM4-8B，彙總住房、交通、社區與生活方式等多 Agent 洞察，將分散數據轉化為個性化街區建議。",
-      "category": "ai-products",
-      "score": 34,
+      "id": "cmt0ouxcs0b42ro2owrxorjb7",
+      "title": "MiniMax 助力 AI 網紅一週百萬觀看",
+      "title_en": "1M views in one week  An incredible example of how AI is reshaping content creation. Love seeing …",
+      "url": "https://x.com/MiniMax_AI/status/2090207945221112256",
+      "permalink": "https://aihot.virxact.com/items/cmt0ouxcs0b42ro2owrxorjb7",
+      "source": "X：MiniMax (@MiniMax_AI)",
+      "publishedAt": "2026-08-19T22:43:02.000Z",
+      "summary": "一週內觀看量達 100 萬\n\n這是 AI 如何重塑內容創作的絕佳例證。很高興看到 MiniMax 幫助這個 AI 角色活了起來",
+      "category": "tip",
+      "score": 24,
       "selected": false,
       "attribution": {
         "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt061tfh13cgrodpz7ti3c2z"
+        "canonical": "https://aihot.virxact.com/items/cmt0ouxcs0b42ro2owrxorjb7"
       }
     },
     {
-      "id": "cmt06nimk13oprodpqh33r5lq",
-      "title": "fx：一款小巧、開放的本地編碼代理",
-      "title_en": "fx：一款小巧、開放的本地編碼代理。",
-      "url": "https://fx.sh/",
-      "permalink": "https://aihot.virxact.com/items/cmt06nimk13oprodpqh33r5lq",
-      "source": "Hacker News 熱門（buzzing.cc 中文翻譯）",
-      "publishedAt": "2026-08-19T13:58:08.326Z",
-      "summary": "fx 是一款用 Zig 編寫的編碼代理框架和 CLI，主打極簡與高性能，二進制僅 6.39mib，冷啓動耗時 10μs，內存佔用僅個位數 MB。它支持通過 Zig 工具鏈編譯為 WebAssembly 在瀏覽器中運行，開源（Apache-2.0）、模型無關，適用於本地和雲端推理，並可通過技能、插件和 MCP 擴展。",
-      "category": "ai-products",
-      "score": 54,
+      "id": "cmt0onezm0b0kro2o029f31rs",
+      "title": "Stripe CEO：2026 Q1 或為\"奇點\"首季",
+      "title_en": "Stripe CEO @patrickc ： \"the singularity\" has begun， because AI appears to be changing long-run econo…",
+      "url": "https://x.com/rohanpaul_ai/status/2090207789176271081",
+      "permalink": "https://aihot.virxact.com/items/cmt0onezm0b0kro2o029f31rs",
+      "source": "X：Rohan Paul (@rohanpaul_ai)",
+      "publishedAt": "2026-08-19T22:42:25.000Z",
+      "summary": "Stripe CEO Patrick Collison 稱\"奇點\"已開始，AI 正改變長期經濟趨勢，並預計 2026 Q1 將被視為\"奇點的第一個季度\"。公司自 2026 年 1 月 1 日起以此作為投資與應對不確定性的運營前提。Stripe 上半年營收同比增長 41%，自由現金流增長 43%。",
+      "category": "tip",
+      "score": 44,
       "selected": false,
       "attribution": {
         "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt06nimk13oprodpqh33r5lq"
+        "canonical": "https://aihot.virxact.com/items/cmt0onezm0b0kro2o029f31rs"
       }
     },
     {
-      "id": "cmt06oapw13pwrodph39bi7rm",
-      "title": "中國放行英偉達 H200 芯片小批量流入，助本土 AI 企業追趕美國",
-      "title_en": "China lets Nvidia's H200 chips trickle onto the mainland to help its AI firms keep pace with the US",
-      "url": "https://the-decoder.com/china-lets-nvidias-h200-chips-trickle-onto-the-mainland-to-help-its-ai-firms-keep-pace-with-the-us",
-      "permalink": "https://aihot.virxact.com/items/cmt06oapw13pwrodph39bi7rm",
-      "source": "The Decoder：AI News（RSS）",
-      "publishedAt": "2026-08-19T13:57:22.000Z",
-      "summary": "中國正允許英偉達 H200 芯片小批量進入大陸，以幫助本土 AI 企業追趕美國。據英國《金融時報》報道，字節跳動和騰訊各獲得約 10，000 顆 H200 處理器，更多公司可能很快跟進。H200 比英偉達最強大的芯片落後至少兩代，後者因美國出口管制而無法對華銷售；美國允許每家公司採購至多 100，000 顆 H200，但北京希望扶持華為等本土廠商，且採購需獲發改委批准。",
+      "id": "cmt0oihgc0axbro2ozerbmpox",
+      "title": "代碼庫垃圾代碼呈指數增長閾值論",
+      "title_en": "this guy gets it",
+      "url": "https://x.com/dexhorthy/status/2090206415021572379",
+      "permalink": "https://aihot.virxact.com/items/cmt0oihgc0axbro2ozerbmpox",
+      "source": "X：Dex Horthy（HumanLayer）(@dexhorthy)",
+      "publishedAt": "2026-08-19T22:36:58.000Z",
+      "summary": "這人懂行。\n\n【引用 @adam__conway】：我的代碼庫垃圾代碼理論是，存在某個閾值，一旦超過，垃圾代碼就會呈指數級增長。",
+      "category": "tip",
+      "score": 24,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0oihgc0axbro2ozerbmpox"
+      }
+    },
+    {
+      "id": "cmt0nskoo0ac4ro2ohkul4dqb",
+      "title": "OpenAI 推出 Private Safety Processing，以隱私保護策略對標 Anthropic",
+      "title_en": "OpenAI seeks to one-up Anthropic with new customer privacy protections",
+      "url": "https://techcrunch.com/2026/08/19/openai-seeks-to-one-up-anthropic-with-new-customer-privacy-protections",
+      "permalink": "https://aihot.virxact.com/items/cmt0nskoo0ac4ro2ohkul4dqb",
+      "source": "TechCrunch：AI（RSS）",
+      "publishedAt": "2026-08-19T22:10:46.000Z",
+      "summary": "OpenAI 預覽面向特定客户的新服務 Private Safety Processing，通過自動化智能體跨多會話監控濫用行為，同時不保留客户任何數據。該技術擴大了 Zero Data Retention（ZDR）的範圍，旨在檢測分散在多輪對話中的惡意用途，無需人工審查。此舉直接對標 Anthropic 近期對\"covered models\"保留用户數據 30 天的政策。",
+      "category": "ai-products",
+      "score": 39,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0nskoo0ac4ro2ohkul4dqb"
+      }
+    },
+    {
+      "id": "cmt0nktpa0a9sro2ois0l5ldc",
+      "title": "TPU 與 Mooncake 集成，優化推理性能",
+      "title_en": "TPU is working with the popular OSS inference optimization library Mooncake on integrating TPU wit…",
+      "url": "https://x.com/SemiAnalysis_/status/2090197436614557797",
+      "permalink": "https://aihot.virxact.com/items/cmt0nktpa0a9sro2ois0l5ldc",
+      "source": "X：SemiAnalysis (@SemiAnalysis_)",
+      "publishedAt": "2026-08-19T22:01:17.000Z",
+      "summary": "TPU 正與流行的開源推理優化庫 Mooncake 合作，將 TPU 與 Mooncake Store 集成。與 NVL72 類似，KVCache DRAM P2P 池化最初將通過 TENT 在橫向擴展網絡上進行，而非使用 ICI/NVLink。 Mooncake 從根本上提升了生產推理的每 TCO 性能！",
       "category": "industry",
-      "score": 56,
+      "score": 47,
       "selected": false,
       "attribution": {
         "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt06oapw13pwrodph39bi7rm"
+        "canonical": "https://aihot.virxact.com/items/cmt0nktpa0a9sro2ois0l5ldc"
       }
     },
     {
-      "id": "cmt05lpjn12prrodpbzugayrx",
-      "title": "GLM-5.3 登頂開源模型榜並壓低價格，但開源權重發布推遲",
-      "title_en": "GLM-5.3 tops the open-model rankings and undercuts rivals on price， but its release is delayed",
-      "url": "https://the-decoder.com/glm-5-3-tops-the-open-model-rankings-and-undercuts-rivals-on-price-but-its-release-is-delayed",
-      "permalink": "https://aihot.virxact.com/items/cmt05lpjn12prrodpbzugayrx",
-      "source": "The Decoder：AI News（RSS）",
-      "publishedAt": "2026-08-19T13:54:16.000Z",
-      "summary": "智譜 GLM-5.3 在 Artificial Analysis Intelligence Index 上得 60 分，與 Kimi K3 並列開源模型第一，領先前代 GLM-5.2 七分。",
-      "category": "ai-models",
-      "score": 59,
+      "id": "cmt0mpz9z08llro2oxjfiljws",
+      "title": "Cognition CEO否認SpaceX曾試圖收購該AI編程初創公司",
+      "title_en": "Cognition CEO denies report that SpaceX tried to acquire the startup",
+      "url": "https://techcrunch.com/2026/08/19/cognition-ceo-denies-report-that-spacex-tried-to-acquire-the-startup",
+      "permalink": "https://aihot.virxact.com/items/cmt0mpz9z08llro2oxjfiljws",
+      "source": "TechCrunch：AI（RSS）",
+      "publishedAt": "2026-08-19T21:51:23.000Z",
+      "summary": "SpaceX據稱曾試圖收購AI編程初創公司Cognition，以追趕OpenAI、Anthropic和Google。Cognition CEO Scott Wu隨即否認，稱報道不準確且公司\"不賣\"。此前SpaceX剛以600億美元收購了另一家AI編程公司Cursor，並與xAI合併後於6月IPO，市值峯值近2.3萬億美元。",
+      "category": "industry",
+      "score": 52,
       "selected": false,
       "attribution": {
         "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt05lpjn12prrodpbzugayrx"
+        "canonical": "https://aihot.virxact.com/items/cmt0mpz9z08llro2oxjfiljws"
       }
     },
     {
-      "id": "cmt05zhyg139trodp6bxsy9e2",
-      "title": "Liquid AI 發佈 LFM2.5 系列 QAD Q4_0 量化檢查點，恢復 97% 精度損失",
-      "title_en": "LFM2.5 Q4\\_0 Checkpoints from Quantization-Aware Distillation",
-      "url": "https://huggingface.co/blog/LiquidAI/qad",
-      "permalink": "https://aihot.virxact.com/items/cmt05zhyg139trodp6bxsy9e2",
-      "source": "Hugging Face：Blog（RSS）",
-      "publishedAt": "2026-08-19T13:48:49.000Z",
-      "summary": "Liquid AI 發佈基於量化感知蒸餾（QAD）訓練的 LFM2.5-230M、350M、1.2B-Instruct 和 2.6B 四款 Q4_0 GGUF 檢查點，在保持原生 Q4_0 內存與速度的同時，恢復 BF16 平均精度損失的 97%。",
-      "category": "ai-models",
-      "score": 64,
+      "id": "cmt0mqceo08lzro2o6xi3rlk4",
+      "title": "Anthropic 在網絡關鍵能力時代放緩模型開發：暫停 RL 訓練並強化安全防護",
+      "title_en": "在網絡關鍵能力時代推進模型開發",
+      "url": "https://openai.com/index/pacing-model-development-cyber-capabilities",
+      "permalink": "https://aihot.virxact.com/items/cmt0mqceo08lzro2o6xi3rlk4",
+      "source": "Hacker News 熱門（buzzing.cc 中文翻譯）",
+      "publishedAt": "2026-08-19T21:42:09.969Z",
+      "summary": "Anthropic 因 OpenAI-Hugging Face 事件及即將推出的 Astra 模型可能達到\"關鍵網絡安全能力閾值\"，暫時放緩模型擴展速度，包括暫停最新模型兩週的強化學習（RL）訓練。公司已加強研究環境安全要求，包括工作負載隔離、網絡隔離和持續安全測試，並擴大思維鏈監控範圍。涉及 Astra 或網絡模型的工作負載需滿足最嚴格安全標準，部分訓練和評估工作仍處於暫停狀態。",
+      "category": "industry",
+      "score": 72,
       "selected": true,
       "attribution": {
         "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt05zhyg139trodp6bxsy9e2"
+        "canonical": "https://aihot.virxact.com/items/cmt0mqceo08lzro2o6xi3rlk4"
       }
     },
     {
-      "id": "cmt05ji3p12nhrodpy9new3n3",
-      "title": "Hugging Face與OpenAI角色互換的六年",
-      "title_en": "2018： HF is building a chatbot for teens OpenAI is building Open AI 2026： HF is building Open AI O…",
-      "url": "https://x.com/ClementDelangue/status/2090071736121196649",
-      "permalink": "https://aihot.virxact.com/items/cmt05ji3p12nhrodpy9new3n3",
-      "source": "X：Clément Delangue（Hugging Face CEO） (@ClementDelangue)",
-      "publishedAt": "2026-08-19T13:41:48.000Z",
-      "summary": "2018年：HF在為青少年打造聊天機器人，OpenAI在打造Open AI。\n\n2026年：HF在打造Open AI，OpenAI在為青少年打造聊天機器人。",
-      "category": "tip",
-      "score": 31,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt05ji3p12nhrodpy9new3n3"
-      }
-    },
-    {
-      "id": "cmt06mqf413mgrodpl6o1ajag",
-      "title": "王力宏談宇樹G1機器人演唱會Bug：團隊通宵寫代碼解決，馬斯克轉發視頻",
-      "title_en": "王力宏：演出前一晚機器人出現 Bug，宇樹團隊通宵寫代碼解決",
-      "url": "https://www.ithome.com/0/991/842.htm",
-      "permalink": "https://aihot.virxact.com/items/cmt06mqf413mgrodpl6o1ajag",
-      "source": "IT之家（RSS）",
-      "publishedAt": "2026-08-19T13:38:47.000Z",
-      "summary": "宇樹科技今日在科創板掛牌上市，歌手王力宏在上市答謝午宴上回顧了2025年12月其成都演唱會上6台宇樹G1人形機器人伴舞《火力全開》的經歷。他透露，演出前一晚機器人出現節奏拖拍Bug，宇樹工程團隊通宵現場寫出新代碼，將燈光系統時間碼同步給機器人後成功解決，次日演出完美，馬斯克轉發視頻並評價\"impressive\"。",
-      "category": "industry",
-      "score": 58,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt06mqf413mgrodpl6o1ajag"
-      }
-    },
-    {
-      "id": "cmt06mqf413mhrodpnfgzt1bw",
-      "title": "李飛飛：科技從業者應更清楚地向公眾説明 AI 能帶來什麼價值",
-      "title_en": "\"AI 教母\"李飛飛：身為科技從業者，應把\"AI 能帶來什麼好處\"講得更清楚",
-      "url": "https://www.ithome.com/0/991/841.htm",
-      "permalink": "https://aihot.virxact.com/items/cmt06mqf413mhrodpnfgzt1bw",
-      "source": "IT之家（RSS）",
-      "publishedAt": "2026-08-19T13:35:57.000Z",
-      "summary": "\"AI 教母\"李飛飛認為，科技從業者需更好地向公眾説明人工智能能帶來的價值，並警告美國社會對 AI 的反對情緒升温可能給全球帶來風險。她指出美國應成為\"榜樣\"，證明 AI 能創造巨大經濟價值。皮尤研究中心調查顯示，一半美國人對 AI 進入日常生活的擔憂超過期待，而亞洲多國態度更積極。",
-      "category": "tip",
-      "score": 52,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt06mqf413mhrodpnfgzt1bw"
-      }
-    },
-    {
-      "id": "cmt04hk9f11pjrodpit58984l",
-      "title": "榮耀自研機器人閃電和元氣仔官宣參加第二屆人形機器人運動會",
-      "title_en": null,
-      "url": "https://www.ithome.com/0/991/838.htm",
-      "permalink": "https://aihot.virxact.com/items/cmt04hk9f11pjrodpit58984l",
-      "source": "IT之家（RSS）",
-      "publishedAt": "2026-08-19T13:19:52.000Z",
-      "summary": "榮耀全球首席營銷官關海濤今日宣佈，自研機器人閃電和元氣仔正式參加第二屆人形機器人運動會。該賽事由北京市人民政府和中央廣播電視總枱等聯合主辦，共設50個賽項，涵蓋29項競技賽和21項場景賽。榮耀\"閃電\"曾在今年4月北京亦莊半馬中以50分26秒淨時成績奪冠，並包攬該賽事前六名。",
-      "category": "industry",
-      "score": 50,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt04hk9f11pjrodpit58984l"
-      }
-    },
-    {
-      "id": "cmt04j4qh11t4rodp50x0ipyi",
-      "title": "非營利組織 Guidelight 首份評估：Anthropic、OpenAI 等 AI 實驗室均未完全落實內部系統管控",
-      "title_en": "AI labs are failing to keep their own systems in check",
-      "url": "https://the-decoder.com/ai-labs-are-failing-to-keep-their-own-systems-in-check",
-      "permalink": "https://aihot.virxact.com/items/cmt04j4qh11t4rodp50x0ipyi",
-      "source": "The Decoder：AI News（RSS）",
-      "publishedAt": "2026-08-19T13:16:18.000Z",
-      "summary": "非營利組織 Guidelight 的首份評估顯示，Anthropic、OpenAI、Google、xAI 和 Meta 均未完全落實針對內部 AI 系統的基本管控措施。評估基於系統卡、安全報告等公開資料，檢查了日誌記錄、審查機制、緊急關停等六項實踐。Anthropic 和 OpenAI 獲 C+ 領先，Google 為 D+，xAI（D−）與 Meta（F）墊底。",
-      "category": "paper",
-      "score": 56,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt04j4qh11t4rodp50x0ipyi"
-      }
-    },
-    {
-      "id": "cmt04j4qh11t5rodplbqyxhes",
-      "title": "Anthropic 讓 Claude 智能體運行完整蛋白質設計流程，藥物發現命中率超行業水平",
-      "title_en": "Anthropic says any lab can now let a language model agent run the whole protein design stack",
-      "url": "https://the-decoder.com/anthropic-says-any-lab-can-now-let-a-language-model-agent-run-the-whole-protein-design-stack",
-      "permalink": "https://aihot.virxact.com/items/cmt04j4qh11t5rodplbqyxhes",
-      "source": "The Decoder：AI News（RSS）",
-      "publishedAt": "2026-08-19T13:07:56.000Z",
-      "summary": "Anthropic 發佈兩項實驗，讓 Claude 模型（Mythos Preview 和 Opus 4.8）參與早期藥物發現。針對 16 個靶蛋白，Claude 在 15 箇中成功 14 個，1，320 個設計中 354 個實際結合靶點，命中率 26.8%，高於行業通常的 10%-15%。",
-      "category": "paper",
-      "score": 62,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt04j4qh11t5rodplbqyxhes"
-      }
-    },
-    {
-      "id": "cmt04aeu411nkrodp2la1vf8i",
-      "title": "fofr 稱讚 patloeber 開發環境配置",
-      "title_en": "It's a good setup.",
-      "url": "https://x.com/fofrAI/status/2090062844846813655",
-      "permalink": "https://aihot.virxact.com/items/cmt04aeu411nkrodp2la1vf8i",
-      "source": "X：fofr (@fofrAI)",
-      "publishedAt": "2026-08-19T13:06:28.000Z",
-      "summary": "這是個不錯的配置。",
-      "category": "tip",
-      "score": 28,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt04aeu411nkrodp2la1vf8i"
-      }
-    },
-    {
-      "id": "cmt03wnwm11fsrodpd6c2xoyj",
-      "title": "面壁智能 StaffDeck 0.4.0 發佈：企業數字員工團隊平台",
-      "title_en": "The future of enterprise AI isn't just digital employees-it's teams that can actually work together….",
-      "url": "https://x.com/OpenBMB/status/2090061221932490804",
-      "permalink": "https://aihot.virxact.com/items/cmt03wnwm11fsrodpd6c2xoyj",
-      "source": "X：面壁智能 OpenBMB (@OpenBMB)",
-      "publishedAt": "2026-08-19T13:00:01.000Z",
-      "summary": "面壁智能發佈 StaffDeck 0.4.0，一個用於構建、管理和部署數字員工團隊的企業平台。自 0.1.0 發佈一個月以來，項目已達 270+ 代碼提交。新版本支持多智能體協作、通過 MCP 和 API 調用外部工具，並可直接在微信、飛書、釘釘和企業微信中使用。",
+      "id": "cmt0mig1608i1ro2o3ly3jyhq",
+      "title": "Meta AI macOS 桌面應用正式發佈",
+      "title_en": "META ： A new desktop app for macOS has been officially released in certain regions. &gt； Meta AI…",
+      "url": "https://x.com/testingcatalog/status/2090189549494321228",
+      "permalink": "https://aihot.virxact.com/items/cmt0mig1608i1ro2o3ly3jyhq",
+      "source": "X：Testing Catalog (@testingcatalog)",
+      "publishedAt": "2026-08-19T21:29:57.000Z",
+      "summary": "META ：一款新的 macOS 桌面應用已在部分地區正式發佈。\n\n> Meta AI 桌面應用支持屏幕共享，允許用户將特定應用的屏幕作為上下文附加。> 此外，新的聽寫功能也已上線。",
       "category": "ai-products",
-      "score": 52,
+      "score": 53,
       "selected": false,
       "attribution": {
         "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt03wnwm11fsrodpd6c2xoyj"
+        "canonical": "https://aihot.virxact.com/items/cmt0mig1608i1ro2o3ly3jyhq"
       }
     },
     {
-      "id": "cmt04hk9f11pmrodp1vj6nfwz",
-      "title": "Marvell 與谷歌擴大定製芯片合作並授予大額認股權證，盤前漲超 10%",
-      "title_en": "Marvell 與谷歌簽署定製芯片協議並授予其大額認股權證：行權價 206.58 美元，盤前漲超 10%",
-      "url": "https://www.ithome.com/0/991/834.htm",
-      "permalink": "https://aihot.virxact.com/items/cmt04hk9f11pmrodp1vj6nfwz",
-      "source": "IT之家（RSS）",
-      "publishedAt": "2026-08-19T12:51:58.000Z",
-      "summary": "Marvell 向 SEC 披露已與谷歌擴大定製芯片合作，並向谷歌發行認股權證，允許其以每股 206.58 美元行權價購買至多 5897 萬股普通股。合作涵蓋 AI 推理加速器、存儲控制器、網絡接口控制器等與谷歌 TPU 生態關聯的定製芯片項目。受此消息影響，Marvell 8 月 19 日盤前交易漲超 10%。",
+      "id": "cmt0mprmm08lfro2o1omsc8qu",
+      "title": "MiniMax H3 流式視頻 LoRA 適配器引熱議",
+      "title_en": "A streaming video LoRA adapter for MiniMax H3？ This is a wild initiative， thank you！ But reaching …",
+      "url": "https://x.com/MiniMax_AI/status/2090189053388108166",
+      "permalink": "https://aihot.virxact.com/items/cmt0mprmm08lfro2o1omsc8qu",
+      "source": "X：MiniMax (@MiniMax_AI)",
+      "publishedAt": "2026-08-19T21:27:58.000Z",
+      "summary": "為 MiniMax H3 打造流式視頻 LoRA 適配器？這是個大膽的舉措，謝謝！ 但要實現實時生成，還需進一步加速推理。\n\n有人有興趣參加我們為 H3 舉辦的線上黑客松嗎？\n\n歡迎任何想法！",
       "category": "industry",
-      "score": 61,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt04hk9f11pmrodp1vj6nfwz"
-      }
-    },
-    {
-      "id": "cmt03fcdw10vurodpbsu5vlts",
-      "title": "Cursor 解讀 Origin 構建與 Git 二十年演進",
-      "title_en": "incredible read on how origin was built by @vmg！ also incredible visualizations",
-      "url": "https://x.com/ericzakariasson/status/2090059170972369200",
-      "permalink": "https://aihot.virxact.com/items/cmt03fcdw10vurodpbsu5vlts",
-      "source": "X：Eric Zakariasson (@ericzakariasson)",
-      "publishedAt": "2026-08-19T12:51:52.000Z",
-      "summary": "關於 @vmg 如何構建 Origin 的精彩文章！\n\n可視化也極其出色。\n\n【引用 @cursor_ai】：我們正在讓 Git 託管更可靠、更高性能、更具可擴展性。\n\n這篇文章追溯了 20 年的 Git 基礎設施歷史，並解釋了這段歷史如何引導我們將 Git 存儲 Origin 當作數據庫來設計和運營。\n\nhttps://cursor.com/blog/git-at-any-scale",
-      "category": "tip",
       "score": 26,
       "selected": false,
       "attribution": {
         "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt03fcdw10vurodpbsu5vlts"
+        "canonical": "https://aihot.virxact.com/items/cmt0mprmm08lfro2o1omsc8qu"
       }
     },
     {
-      "id": "cmt04aetx11nirodpxnlfo0xm",
-      "title": "AI 加劇作弊，但抄襲問題早已存在",
-      "title_en": "This is a good paper and AI has definitely made the cheating problem worse but it is easy to overloo…",
-      "url": "https://x.com/emollick/status/2090059088323375527",
-      "permalink": "https://aihot.virxact.com/items/cmt04aetx11nirodpxnlfo0xm",
-      "source": "X：Ethan Mollick (@emollick)",
-      "publishedAt": "2026-08-19T12:51:32.000Z",
-      "summary": "Ethan Mollick 指出，AI 確實讓作弊問題惡化，但此前情況已不容樂觀。2008 年，86% 的大學生通過完成作業提升了期末考試成績，而 2017 年該比例降至 45%，原因是學生從網上抄襲。引用研究顯示，在中國，作業成績好曾預示考試成績好，如今可能恰恰相反。",
-      "category": "tip",
-      "score": 41,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt04aetx11nirodpxnlfo0xm"
-      }
-    },
-    {
-      "id": "cmt03fcea10w0rodpvzs02h3k",
-      "title": "Claude被搶先，個性化癌症疫苗引熱議",
-      "title_en": "Claude got scooped on curing cancer， ngmi",
-      "url": "https://x.com/natolambert/status/2090057860055011660",
-      "permalink": "https://aihot.virxact.com/items/cmt03fcea10w0rodpvzs02h3k",
-      "source": "X：Nathan Lambert (@natolambert)",
-      "publishedAt": "2026-08-19T12:46:39.000Z",
-      "summary": "Claude在治癒癌症這件事上被搶先了，ngmi。",
-      "category": "industry",
-      "score": 19,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt03fcea10w0rodpvzs02h3k"
-      }
-    },
-    {
-      "id": "cmt03gjlj10xgrodplx0pme2d",
-      "title": "Anthropic 營收首超 OpenAI",
-      "title_en": "Anthropic passes OpenAI on revenue for the first time",
-      "url": "https://the-decoder.com/anthropic-passes-openai-on-revenue-for-the-first-time",
-      "permalink": "https://aihot.virxact.com/items/cmt03gjlj10xgrodplx0pme2d",
-      "source": "The Decoder：AI News（RSS）",
-      "publishedAt": "2026-08-19T12:45:02.000Z",
-      "summary": "Anthropic 在 AI 競賽中營收首次超過 OpenAI。截至 6 月的季度，Anthropic 營收達 116 億美元並實現小幅營業利潤，而 OpenAI 營收為 67 億美元，營業利潤率進一步下滑。OpenAI 稱 GPT-5.6 於 7 月發佈後增長回升，但 ChatGPT 增長放緩及 Anthropic 編程工具 Claude Code 的成功正對其構成壓力。",
-      "category": "industry",
-      "score": 65,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt03gjlj10xgrodplx0pme2d"
-      }
-    },
-    {
-      "id": "cmt037t4e10qwrodp8xsrciu3",
-      "title": "新基準測試：檢測到人類即判失敗",
-      "title_en": "Next benchmark： detect human， choose literally anywhere else.",
-      "url": "https://x.com/rohanpaul_ai/status/2090056611868094584",
-      "permalink": "https://aihot.virxact.com/items/cmt037t4e10qwrodp8xsrciu3",
-      "source": "X：Rohan Paul (@rohanpaul_ai)",
-      "publishedAt": "2026-08-19T12:41:42.000Z",
-      "summary": "下一個基準測試：檢測到人類，就選別處。",
-      "category": "tip",
-      "score": 13,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt037t4e10qwrodp8xsrciu3"
-      }
-    },
-    {
-      "id": "cmt03fq8310wgrodpg0ga5cdw",
-      "title": "Mojo 語言正式開源，Modular 平台擴展至 Trainium、TPU 等硬件",
-      "title_en": "Mojo 語言（由 Modular 開發，現歸屬高通）現已開源",
-      "url": "https://www.modular.com/blog/modcon-announcements",
-      "permalink": "https://aihot.virxact.com/items/cmt03fq8310wgrodpg0ga5cdw",
+      "id": "cmt0mqceo08m0ro2o9e9803lm",
+      "title": "Unsloth Dynamic 3.0 GGUFs 發佈",
+      "title_en": "Unsloth Dynamic 3.0 GGUFs",
+      "url": "https://unsloth.ai/docs/basics/dynamic-3.0-ggufs",
+      "permalink": "https://aihot.virxact.com/items/cmt0mqceo08m0ro2o9e9803lm",
       "source": "Hacker News 熱門（buzzing.cc 中文翻譯）",
-      "publishedAt": "2026-08-19T12:38:03.952Z",
-      "summary": "Modular 在 ModCon 2026 上宣佈 Mojo 1.0 以 Apache 2.0 許可證完全開源，編譯器與工具鏈全部開放，並將在微軟合作下原生支持 Windows。",
+      "publishedAt": "2026-08-19T21:26:10.500Z",
+      "summary": "Unsloth 推出 Dynamic 3.0 GGUFs，在 Hacker News 上獲得 103 點熱度。該版本為量化模型文件格式，旨在提升本地推理效率與兼容性。",
       "category": "ai-products",
-      "score": 64,
+      "score": 42,
       "selected": false,
       "attribution": {
         "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt03fq8310wgrodpg0ga5cdw"
+        "canonical": "https://aihot.virxact.com/items/cmt0mqceo08m0ro2o9e9803lm"
       }
     },
     {
-      "id": "cmt03kwqe114frodpd54dxgh3",
-      "title": "Odyssey 發佈中間態模型預告",
-      "title_en": "Somewhere in the middle.",
-      "url": "https://x.com/odysseyml/status/2090053455301759350",
-      "permalink": "https://aihot.virxact.com/items/cmt03kwqe114frodpd54dxgh3",
-      "source": "X：Odyssey (@odysseyml)",
-      "publishedAt": "2026-08-19T12:29:09.000Z",
-      "summary": "處於中間某個位置。",
+      "id": "cmt0ln7du07spro2ot5ncshy2",
+      "title": "MiniMax H3將亮相GMI夏季峯會",
+      "title_en": "We're heading to @gmi_cloud Summer Signal '26",
+      "url": "https://x.com/MiniMax_AI/status/2090186372120445271",
+      "permalink": "https://aihot.virxact.com/items/cmt0ln7du07spro2ot5ncshy2",
+      "source": "X：MiniMax (@MiniMax_AI)",
+      "publishedAt": "2026-08-19T21:17:19.000Z",
+      "summary": "我們將前往 @gmi_cloud 的 Summer Signal '26\n\n【引用 @gmi_cloud】：Summer Signal '26 首位視頻合作伙伴：@MiniMax_AI\n\n他們將登台解讀 MiniMax H3，以及大規模推進視頻生成真正需要什麼。\n\n報名參會",
+      "category": "industry",
+      "score": 22,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0ln7du07spro2ot5ncshy2"
+      }
+    },
+    {
+      "id": "cmt0lsqx907uyro2oxy1cc55c",
+      "title": "OpenClaw：技能應附數據證明而非空談",
+      "title_en": "Skills should come with receipts， not vibes.",
+      "url": "https://x.com/openclaw/status/2090185671856279924",
+      "permalink": "https://aihot.virxact.com/items/cmt0lsqx907uyro2oxy1cc55c",
+      "source": "X：OpenClaw (@openclaw)",
+      "publishedAt": "2026-08-19T21:14:32.000Z",
+      "summary": "技能應該附帶憑證，而不是空談。",
       "category": "ai-products",
-      "score": 17,
+      "score": 31,
       "selected": false,
       "attribution": {
         "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt03kwqe114frodpd54dxgh3"
+        "canonical": "https://aihot.virxact.com/items/cmt0lsqx907uyro2oxy1cc55c"
       }
     },
     {
-      "id": "cmt037t4610qurodpb51xctzo",
-      "title": "OpenAI 暫停前沿模型訓練兩週防風險",
-      "title_en": "OpenAI 披露了一件不太尋常的事： 他們曾暫停最新一代、準備部署的模型進行強化學習訓練，時間長達兩週。 直到現在，原計劃中規模最大的 frontier RL 訓練仍然沒有恢復。 暫停期間，他們…",
-      "url": "https://x.com/frxiaobei/status/2090053415762379075",
-      "permalink": "https://aihot.virxact.com/items/cmt037t4610qurodpb51xctzo",
-      "source": "X：小北 (@frxiaobei)",
-      "publishedAt": "2026-08-19T12:29:00.000Z",
-      "summary": "OpenAI 披露曾暫停最新一代待部署模型的強化學習訓練長達兩週，且原計劃中規模最大的 frontier RL 訓練至今未恢復。暫停期間，團隊優先加固內部研究環境，強化工作負載與網絡隔離、持續安全測試，並對高風險訓練和工具調用推理實施多階段監控。目前僅恢復更小規模訓練以驗證防護措施並積累對齊證據，凸顯前沿 AI 瓶頸正從模型能力轉向組織的安全治理能力。",
-      "category": "tip",
-      "score": 55,
+      "id": "cmt0ln7du07sqro2og7hpux8j",
+      "title": "MiniMax 祝賀 TrueFoundry 發佈 TrueForge",
+      "title_en": "Congrats to our friends at @truefoundry on the launch of TrueForge！  Open agent ecosystems need g…",
+      "url": "https://x.com/MiniMax_AI/status/2090183129369833656",
+      "permalink": "https://aihot.virxact.com/items/cmt0ln7du07sqro2og7hpux8j",
+      "source": "X：MiniMax (@MiniMax_AI)",
+      "publishedAt": "2026-08-19T21:04:26.000Z",
+      "summary": "祝賀我們的朋友 @truefoundry 發佈 TrueForge！\n\n開放智能體生態系統需要出色的模型選擇。很高興看到 MiniMax 從第一天起就成為該生態系統的一部分。",
+      "category": "ai-products",
+      "score": 23,
       "selected": false,
       "attribution": {
         "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt037t4610qurodpb51xctzo"
+        "canonical": "https://aihot.virxact.com/items/cmt0ln7du07sqro2og7hpux8j"
       }
     },
     {
-      "id": "cmt032ukc10n1rodp5h8skdoz",
-      "title": "ZHO：AI 將帶人類進入文化\"大垃圾時代\"",
-      "title_en": "當大家再也沒有條件成為創造美的人，這才是 \"大垃圾時代\" 系統層面的殘酷與必然，遠比直接 禁止 更加恐怖 美不再被創造，只被消費，你甚至沒有時間懷念美 20260819 系統為什麼首先殺死美？因…",
-      "url": "https://x.com/ZHO_ZHO_ZHO/status/2090051188150673686",
-      "permalink": "https://aihot.virxact.com/items/cmt032ukc10n1rodp5h8skdoz",
-      "source": "X：ZHO (@ZHO_ZHO_ZHO)",
-      "publishedAt": "2026-08-19T12:20:09.000Z",
-      "summary": "ZHO 認為，自 2026 年起 AI 發展將帶領人類進入文化上的\"大垃圾時代\"，大量垃圾質量的 AI 圖/文/視頻/應用將鋪滿物理與網絡世界。他進一步指出，系統首先殺死美，因為美需要餘裕、安全、時間、注意力與自由，而這些恰是效率社會最不允許的；美不再被創造，只被消費。",
-      "category": "tip",
+      "id": "cmt0ln7df07snro2o5zdhlf9g",
+      "title": "OpenAI DevDay Exchange 今秋登陸八城",
+      "title_en": "OpenAI DevDay Exchange is coming to 8 cities this fall： Bengaluru， Tokyo， Seoul， Berlin， Paris， Lond…",
+      "url": "https://x.com/jxnlco/status/2090182966735454553",
+      "permalink": "https://aihot.virxact.com/items/cmt0ln7df07snro2o5zdhlf9g",
+      "source": "X：Jason Liu (@jxnlco)",
+      "publishedAt": "2026-08-19T21:03:47.000Z",
+      "summary": "OpenAI DevDay Exchange 今秋將來到 8 座城市：班加羅爾、東京、首爾、柏林、巴黎、倫敦、聖保羅和墨西哥城。\n\n來分享你正在構建的內容，並與 OpenAI 團隊一起動手實踐。\n\n9 月 4 日前申請：https://events.openai.com/devdayexchange2026",
+      "category": "industry",
       "score": 32,
       "selected": false,
       "attribution": {
         "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt032ukc10n1rodp5h8skdoz"
+        "canonical": "https://aihot.virxact.com/items/cmt0ln7df07snro2o5zdhlf9g"
       }
     },
     {
-      "id": "cmt04hk9f11pqrodptn4eerdu",
-      "title": "上任僅半年，微軟 AI 部門首席營銷官安德烈婭·馬拉德被曝將離職",
-      "title_en": "上任僅半年，微軟 AI 部門首席營銷官安德烈婭 · 馬拉德被曝即將離職",
-      "url": "https://www.ithome.com/0/991/823.htm",
-      "permalink": "https://aihot.virxact.com/items/cmt04hk9f11pqrodptn4eerdu",
-      "source": "IT之家（RSS）",
-      "publishedAt": "2026-08-19T12:14:31.000Z",
-      "summary": "微軟 AI 部門首席營銷官安德烈婭·馬拉德上任約六個月後計劃卸任，將帶家人遷往歐洲陪伴父親，明年初前繼續以顧問身份留任。離職也與微軟 AI 部門調整戰略有關，公司正將面向個人和企業用户的 Copilot 應用合併為一個應用，其營銷工作將交由賈裏德·斯帕塔羅負責，微軟 AI 部門暫無直接補位計劃。",
-      "category": "industry",
-      "score": 43,
+      "id": "cmt0l1xde07iyro2opps4nph9",
+      "title": "Dartwords 新玩法：AI 驅動的猜詞遊戲",
+      "title_en": "I saw this demo last summer and told Sam he needed to ship it， so glad it's out. It's really fun. I…",
+      "url": "https://x.com/trq212/status/2090182422415716414",
+      "permalink": "https://aihot.virxact.com/items/cmt0l1xde07iyro2opps4nph9",
+      "source": "X：Thariq (@trq212)",
+      "publishedAt": "2026-08-19T21:01:37.000Z",
+      "summary": "去年夏天我看到這個演示，當時就告訴 Sam 他得把它發佈出來，很高興現在終於上線了。真的很有趣。\n\n這是首批真正利用 AI 能力解鎖全新玩法的遊戲之一。",
+      "category": "ai-products",
+      "score": 30,
       "selected": false,
       "attribution": {
         "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt04hk9f11pqrodptn4eerdu"
+        "canonical": "https://aihot.virxact.com/items/cmt0l1xde07iyro2opps4nph9"
       }
     },
     {
-      "id": "cmt02cego0zvmrodp81xosqdw",
-      "title": "京東 WRC 2026 發佈機器人戰略：到 2028 年投入百億級資源，助力 100 個品牌銷售額破 10 億元",
-      "title_en": null,
-      "url": "https://www.ithome.com/0/991/821.htm",
-      "permalink": "https://aihot.virxact.com/items/cmt02cego0zvmrodp81xosqdw",
-      "source": "IT之家（RSS）",
-      "publishedAt": "2026-08-19T12:13:04.000Z",
-      "summary": "京東在 2026 世界機器人大會上發佈機器人戰略，圍繞供應鏈、服務、技術三大維度推進產業商業化落地。到 2028 年將投入百億級資源，助力 100 個機器人品牌實現獨立銷售額突破 10 億元。目前京東已自營合作 200 餘家機器人品牌，計劃未來 5 年建立覆蓋全球超 100 個國家的售後服務能力，並建設 80 個 RoboBase 機器人基地。",
+      "id": "cmt0lfo4t07qbro2oyo53zsfj",
+      "title": "OpenAI 以零數據留存對抗 Anthropic：前沿模型默認不保留客户數據",
+      "title_en": "OpenAI's latest move against Anthropic： promising not to retain customer data. They are making Zero…",
+      "url": "https://x.com/rohanpaul_ai/status/2090182328517857478",
+      "permalink": "https://aihot.virxact.com/items/cmt0lfo4t07qbro2oyo53zsfj",
+      "source": "X：Rohan Paul (@rohanpaul_ai)",
+      "publishedAt": "2026-08-19T21:01:15.000Z",
+      "summary": "OpenAI 將零數據留存擴展為前沿模型功能，通過私有安全處理在客户加密基礎設施上分析關聯交互，員工無法訪問底層提示詞或響應，僅向 OpenAI 發送類別與嚴重度信號，以捕捉單條看似無害、串聯後暴露危險意圖的提示序列。相比之下，Anthropic 對 Claude Fable 5 和 Claude Mythos 5 要求 30 天留存。",
+      "category": "ai-products",
+      "score": 40,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0lfo4t07qbro2oyo53zsfj"
+      }
+    },
+    {
+      "id": "cmt0lfo4h07q9ro2ox1g3y8dm",
+      "title": "Codex周活用户達2000萬",
+      "title_en": "Codex now has 20m weekly active users. Via CNBC I smell another reset incoming， right @thsottiaux ？",
+      "url": "https://x.com/kimmonismus/status/2090181733584961841",
+      "permalink": "https://aihot.virxact.com/items/cmt0lfo4h07q9ro2ox1g3y8dm",
+      "source": "X：Kim (@kimmonismus)",
+      "publishedAt": "2026-08-19T20:58:53.000Z",
+      "summary": "Codex 現在擁有 2000 萬周活躍用户。via CNBC\n\n我嗅到又一次重置要來了，對吧 @thsottiaux？",
       "category": "industry",
+      "score": 45,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0lfo4h07q9ro2ox1g3y8dm"
+      }
+    },
+    {
+      "id": "cmt0kxcuu07f2ro2owuqpbjc8",
+      "title": "FastMetal 讓 Mac 本地 30 秒生成視頻",
+      "title_en": "A 5-second 480P video， generated entirely on a Mac， in 30 seconds. No CUDA， no cloud， 3.9 GiB of mem…",
+      "url": "https://x.com/haoailab/status/2090177721913770407",
+      "permalink": "https://aihot.virxact.com/items/cmt0kxcuu07f2ro2owuqpbjc8",
+      "source": "X：Sky Computing Lab (@haoailab)",
+      "publishedAt": "2026-08-19T20:42:57.000Z",
+      "summary": "一段 5 秒 480P 視頻，完全在 Mac 上生成，耗時 30 秒。無需 CUDA，無需雲端，僅佔用 3.9 GiB 內存。\n\nFastMetal 將 FastWan-QAD 系列帶到 Apple Silicon。DiT、DMD 採樣器和解碼器均通過 MLX 在 Metal 上運行，默認 INT8。\n\n三個模型：1.3B 支持 480P，5B 支持 720P，14B 追求畫質。\n\n 博客：http://haoailab.com/blogs/fastmetal  代碼：http://github.com/hao-ai-lab/FastVideo  模型：http://huggingface.co/collections/FastVideo/fastmetal",
+      "category": "ai-products",
+      "score": 71,
+      "selected": true,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0kxcuu07f2ro2owuqpbjc8"
+      }
+    },
+    {
+      "id": "cmt0krsf507auro2olrz2b00d",
+      "title": "奇點被稀釋？Chollet 批 Stripe 定義",
+      "title_en": "Incredible watering down -- the Singularity is now redefined to mean \"the rate of new firm creation …",
+      "url": "https://x.com/fchollet/status/2090177471962591625",
+      "permalink": "https://aihot.virxact.com/items/cmt0krsf507auro2olrz2b00d",
+      "source": "X：Francois Chollet (@fchollet)",
+      "publishedAt": "2026-08-19T20:41:57.000Z",
+      "summary": "François Chollet 批評 Stripe 致投資者信將\"奇點\"重新定義為\"新公司創建率有所上升\"，認為這是對概念的嚴重稀釋。他援引 Vernor Vinge 原意：奇點應是人類無法預測的事件視界，涉及意識上傳、人機融合與分鐘級世紀進步。Stripe 稱奇點始於 2026 年 1 月 1 日。",
+      "category": "tip",
+      "score": 39,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0krsf507auro2olrz2b00d"
+      }
+    },
+    {
+      "id": "cmt0kl5ui074mro2okbjx3ckv",
+      "title": "純C語言編寫的microGPT在Apple M5 Pro上達到1000萬tps",
+      "title_en": "純C語言編寫的Microgpt在Apple M5上達到1000萬tps",
+      "url": "https://github.com/vixhal-baraiya/microgpt-c",
+      "permalink": "https://aihot.virxact.com/items/cmt0kl5ui074mro2okbjx3ckv",
+      "source": "Hacker News 熱門（buzzing.cc 中文翻譯）",
+      "publishedAt": "2026-08-19T20:38:05.715Z",
+      "summary": "一個名為microGPT-C的純C語言字符級Transformer項目，在Apple M5 Pro上通過NEON加速實現每秒1016萬token的推理速度。該模型僅4192個參數，在32033個名字中的20000個上訓練後，對未見過的12033個名字的預測表現優於參數多近5倍的插值三元模型。項目無依賴、單文件，支持macOS、Linux和Windows。",
+      "category": "ai-products",
+      "score": 36,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0kl5ui074mro2okbjx3ckv"
+      }
+    },
+    {
+      "id": "cmt0kd4580712ro2o8cn76pny",
+      "title": "猜猜未發佈模型？賽博朋克測試圖引熱議",
+      "title_en": "Guess the model？ （Unreleased， ofc）  Test prompt： \"Cyberpunk hacker robot working in front of many…",
+      "url": "https://x.com/testingcatalog/status/2090173545590530365",
+      "permalink": "https://aihot.virxact.com/items/cmt0kd4580712ro2o8cn76pny",
+      "source": "X：Testing Catalog (@testingcatalog)",
+      "publishedAt": "2026-08-19T20:26:21.000Z",
+      "summary": "猜猜是哪個模型？（未發佈，當然）\n\n測試提示詞：\"賽博朋克黑客機器人在多台顯示器前工作\"",
+      "category": "ai-models",
+      "score": 30,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0kd4580712ro2o8cn76pny"
+      }
+    },
+    {
+      "id": "cmt0jzd0g06tdro2otg4csyma",
+      "title": "OpenAI 預覽私有安全處理，兼顧零數據留存",
+      "title_en": "Today we're previewing Private Safety Processing， designed to let us keep offering Zero Data Retenti…",
+      "url": "https://x.com/thsottiaux/status/2090173536010957128",
+      "permalink": "https://aihot.virxact.com/items/cmt0jzd0g06tdro2otg4csyma",
+      "source": "X：Tibo (@thsottiaux)",
+      "publishedAt": "2026-08-19T20:26:19.000Z",
+      "summary": "OpenAI 預覽 Private Safety Processing，在保持 Zero Data Retention（ZDR）的同時提升安全防護。ZDR 部署中，內容留在客户自有基礎設施上，自動化系統跨相關交互識別風險模式，僅返回有限安全信號，OpenAI 員工（包括 CEO）無法訪問底層提示詞或響應。OpenAI 還正開發客户控制密鑰加密的託管選項，已與早期客户測試，計劃 9 月推出。",
+      "category": "ai-products",
       "score": 47,
       "selected": false,
       "attribution": {
         "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt02cego0zvmrodp81xosqdw"
+        "canonical": "https://aihot.virxact.com/items/cmt0jzd0g06tdro2otg4csyma"
       }
     },
     {
-      "id": "cmt03fdx410w2rodpp9vhoo39",
-      "title": "Vivodyne 用機器人實驗室 HIVE 生成因果生物數據，稱這是 AI 治癒癌症的關鍵",
-      "title_en": "AI isn't close to curing cancer. This startup says it knows what it will take.",
-      "url": "https://techcrunch.com/2026/08/19/ai-isnt-close-to-curing-cancer-this-startup-says-it-knows-what-it-will-take",
-      "permalink": "https://aihot.virxact.com/items/cmt03fdx410w2rodpp9vhoo39",
-      "source": "TechCrunch：AI（RSS）",
-      "publishedAt": "2026-08-19T12:00:00.000Z",
-      "summary": "生物科技初創公司 Vivodyne 推出模塊化機器人實驗室 HIVE，可培育 20 種人體組織並自主給藥監測，生成現有 AI 模型缺失的因果生物數據。其肝細胞對毒性預測準確率達 94%，氣道組織匹配度 96%，骨髓在 20 種化療藥物測試中 100% 一致。該公司已融資近 8000 萬美元，在舊金山外開設全球最大\"人類數據中心\"，吞吐量達美國全部動物試驗的兩倍。",
-      "category": "ai-products",
-      "score": 46,
+      "id": "cmt0kd44z0710ro2o8ztml1v1",
+      "title": "TRACES：首個衡量探索式AI的基準",
+      "title_en": "This is a good example of why final-answer accuracy can hide bad agent behaviour. Most AI benchmark…",
+      "url": "https://x.com/rohanpaul_ai/status/2090173381895430184",
+      "permalink": "https://aihot.virxact.com/items/cmt0kd44z0710ro2o8ztml1v1",
+      "source": "X：Rohan Paul (@rohanpaul_ai)",
+      "publishedAt": "2026-08-19T20:25:42.000Z",
+      "summary": "Apodex 推出 TRACES，號稱全球首個衡量\"探索式AI\"的基準，將AI評測從\"已知答案的檢索\"轉向\"無答案問題的完整調查過程\"。該基準由創始人陳天橋提出，定義了六項能力，併發布\"探索式智能\"定義、評估標準及求解者招募。",
+      "category": "paper",
+      "score": 41,
       "selected": false,
       "attribution": {
         "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt03fdx410w2rodpp9vhoo39"
+        "canonical": "https://aihot.virxact.com/items/cmt0kd44z0710ro2o8ztml1v1"
       }
     },
     {
-      "id": "cmt02cw1t0zxsrodprnhwvx7j",
-      "title": "英偉達的金融新策略算不過賬",
-      "title_en": "Nvidia's new financial strategy does not compute",
-      "url": "https://www.theverge.com/ai-artificial-intelligence/981668/nvidias-goldman-blackrock-gpu-compute-asset",
-      "permalink": "https://aihot.virxact.com/items/cmt02cw1t0zxsrodprnhwvx7j",
-      "source": "The Verge：AI（RSS）",
-      "publishedAt": "2026-08-19T12:00:00.000Z",
-      "summary": "英偉達聯合Apollo、BlackRock等機構擬籌集5000億美元，將算力打造為可投資資產類別，黃仁勳稱芯片是\"創收資產、壽命長、可互換、靈活\"。但文章質疑該策略，指出去年英偉達與OpenAI簽署的1000億美元諒解備忘錄並未落實，且數據中心飽和、中國開源模型降低算力需求等因素可能威脅芯片需求增長。",
-      "category": "tip",
-      "score": 63,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt02cw1t0zxsrodprnhwvx7j"
-      }
-    },
-    {
-      "id": "cmt012n8l0x03rodpi1gtnbdd",
-      "title": "OpenAI 營收增速遠遜 Anthropic，後者首度反超",
-      "title_en": "OpenAI's quarterly revenue is now reportedly growing far more slowly than Anthropic's. OpenAI told …",
-      "url": "https://x.com/kimmonismus/status/2090039782344679761",
-      "permalink": "https://aihot.virxact.com/items/cmt012n8l0x03rodpi1gtnbdd",
+      "id": "cmt0jaij6067ero2ok6t1cy8x",
+      "title": "Stripe 稱奇點已至，2026 為轉折點",
+      "title_en": "Stripe tells investory \"The singularity has begun\"， Janurary 1st 2026. And indeed， I would agree wi…",
+      "url": "https://x.com/kimmonismus/status/2090168542595260632",
+      "permalink": "https://aihot.virxact.com/items/cmt0jaij6067ero2ok6t1cy8x",
       "source": "X：Kim (@kimmonismus)",
-      "publishedAt": "2026-08-19T11:34:49.000Z",
-      "summary": "OpenAI 向投資者披露 Q2 營收環比增長 18% 至 67 億美元，但運營虧損從 93 億美元擴大至 123 億美元，接近營收兩倍。Anthropic 營收則翻倍至 116 億美元，首次超越 OpenAI，並錄得小幅調整後運營利潤。增長主要由 Anthropic 的企業與商業交易驅動，為其 IPO 與估值（OpenAI 約 1 萬億美元，Anthropic 約 2 萬億美元）奠定基礎。",
+      "publishedAt": "2026-08-19T20:06:28.000Z",
+      "summary": "Stripe 告訴投資者\"奇點已經開始\"，2026 年 1 月 1 日。\n\n確實，我同意這一點。2026 年是轉折點。一切都在加速，目前大家熱議的術語是\"遞歸自我改進\"。",
       "category": "industry",
-      "score": 58,
+      "score": 35,
       "selected": false,
       "attribution": {
         "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt012n8l0x03rodpi1gtnbdd"
+        "canonical": "https://aihot.virxact.com/items/cmt0jaij6067ero2ok6t1cy8x"
       }
     },
     {
-      "id": "cmt00xplj0wwlrodpa60of6vt",
-      "title": "ZHO：AI 將重塑解釋權與記憶",
-      "title_en": "【注意力戰爭】的下一階段：記憶戰爭/解釋權戰爭 20260819 【個人觀點】AI 將重塑解釋權/重寫記憶",
-      "url": "https://x.com/ZHO_ZHO_ZHO/status/2090039391351976443",
-      "permalink": "https://aihot.virxact.com/items/cmt00xplj0wwlrodpa60of6vt",
-      "source": "X：ZHO (@ZHO_ZHO_ZHO)",
-      "publishedAt": "2026-08-19T11:33:16.000Z",
-      "summary": "ZHO 提出\"注意力戰爭\"的下一階段是\"記憶戰爭/解釋權戰爭\"，認為 AI 將重塑解釋權、重寫記憶。此前其觀點指出，AIGC 帶來的內容生產大解放會進一步加劇注意力戰爭，而 Seedance 2.0 是真正可投入生產使用的時間節點。",
-      "category": "tip",
-      "score": 19,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt00xplj0wwlrodpa60of6vt"
-      }
-    },
-    {
-      "id": "cmt0077tp0w4qrodpxlrurxfg",
-      "title": "龍芯胡偉武：3B6600 用 1Xnm 工藝追平 AMD 英特爾 7nm 性能",
-      "title_en": null,
-      "url": "https://www.ithome.com/0/991/811.htm",
-      "permalink": "https://aihot.virxact.com/items/cmt0077tp0w4qrodpxlrurxfg",
-      "source": "IT之家（RSS）",
-      "publishedAt": "2026-08-19T11:22:42.000Z",
-      "summary": "龍芯中科董事長鬍偉武在公司成立 25 週年大會上表示，已交付流片的 3B6600 處理器使用 1Xnm 高自主工藝，實測性能達到採用 7nm 或更先進工藝的市場主流 X86 CPU 水平。3B6600 集成 8 個 LA864 核心，硅前測試單核性能比上一代 3A6000 提升約 50%。龍芯首款通用 GPU 芯片 9A1000 也已交付流片，AI 算力達數十 TOPS。",
+      "id": "cmt0jnktp06c4ro2ob02f6t48",
+      "title": "谷歌搜索新增考試備考功能",
+      "title_en": "Fill in the blank： Search can now help with test prep for _________. A. SAT B. ACT C. AP D. ENEM E….",
+      "url": "https://x.com/sundarpichai/status/2090168358411108738",
+      "permalink": "https://aihot.virxact.com/items/cmt0jnktp06c4ro2ob02f6t48",
+      "source": "X：Sundar Pichai (@sundarpichai)",
+      "publishedAt": "2026-08-19T20:05:44.000Z",
+      "summary": "填空：搜索現在可以幫助準備_________考試。\n\nA. SAT B. ACT C. AP D. ENEM E. GRE F. JEE G. LSAT H. MCAT I. NEET J. 以上全部！",
       "category": "ai-products",
       "score": 35,
       "selected": false,
       "attribution": {
         "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt0077tp0w4qrodpxlrurxfg"
+        "canonical": "https://aihot.virxact.com/items/cmt0jnktp06c4ro2ob02f6t48"
       }
     },
     {
-      "id": "cmt00xplj0wwmrodpe4oz09um",
-      "title": "大垃圾時代：美為何最先死",
-      "title_en": "紅樓夢|七十七回 從系統層面完美揭示了\"大垃圾時代\"為何必將到來，而 牛來 現象正回叩了： \"美 為何最先 死\" 美在一個實用主義、危機叢生的系統裏是不夠有用的，所以系統一旦開始收縮：首先被裁掉的…",
-      "url": "https://x.com/ZHO_ZHO_ZHO/status/2090031758603669618",
-      "permalink": "https://aihot.virxact.com/items/cmt00xplj0wwmrodpe4oz09um",
-      "source": "X：ZHO (@ZHO_ZHO_ZHO)",
-      "publishedAt": "2026-08-19T11:02:56.000Z",
-      "summary": "ZHO 借《紅樓夢》七十七回指出，實用主義系統中\"美\"因不夠有用而最先被裁掉，晴雯的鋒芒、優伶的藝術、大觀園的詩意皆無生存價值。其引用推文進一步預言，自 2026 年起 AI 將帶領人類進入文化上的\"大垃圾時代\"，生產力提升與物質豐富伴隨而來的是大量垃圾的產生及處理問題。",
-      "category": "tip",
-      "score": 45,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt00xplj0wwmrodpe4oz09um"
-      }
-    },
-    {
-      "id": "cmszzjd1h0vrnrodpwzii0h2s",
-      "title": "Hugging Face 模型庫突破 300 萬",
-      "title_en": "@huggingface Huge milestone！ Go open AI！",
-      "url": "https://x.com/SiliconFlowAI/status/2090030656822935811",
-      "permalink": "https://aihot.virxact.com/items/cmszzjd1h0vrnrodpwzii0h2s",
-      "source": "X：硅基流動 SiliconFlow (@SiliconFlowAI)",
-      "publishedAt": "2026-08-19T10:58:34.000Z",
-      "summary": "@huggingface 重大里程碑！擁抱開放 AI！\n\n我們剛剛在 Hub 上突破了 300 萬個模型\n\n社區正加速邁向一個開放、分佈式的未來，讓開放 AI 無處不在、人人可用",
+      "id": "cmt0jjcep06asro2ozwm3dv9m",
+      "title": "空乘人員抗議谷歌收購Spirit Airlines海量員工數據",
+      "title_en": "Flight attendants freaked out that Google is buying tons of Spirit employee data",
+      "url": "https://arstechnica.com/tech-policy/2026/08/flight-attendants-freaked-out-that-google-to-buy-tons-of-spirit-employee-data",
+      "permalink": "https://aihot.virxact.com/items/cmt0jjcep06asro2ozwm3dv9m",
+      "source": "Ars Technica：AI（RSS）",
+      "publishedAt": "2026-08-19T20:04:41.000Z",
+      "summary": "谷歌以1000萬美元拍下破產的Spirit Airlines約1億封員工郵件及HR、薪酬、行為數據，用於改進AI產品。交易承諾由第三方去除個人身份信息且不重新識別，但空乘工會AFA反對稱，消費者隱私法不覆蓋員工數據，去標識化不解決內容保密問題，擔憂谷歌可能結合其他數據重新關聯員工身份。",
       "category": "industry",
-      "score": 42,
+      "score": 63,
       "selected": false,
       "attribution": {
         "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmszzjd1h0vrnrodpwzii0h2s"
+        "canonical": "https://aihot.virxact.com/items/cmt0jjcep06asro2ozwm3dv9m"
       }
     },
     {
-      "id": "cmt0077tq0w4wrodpzz1hnseb",
-      "title": "中國移動\"天基智算載荷 1.0\"隨朱雀三號成功入軌，將啓動天基通算智融合試驗",
-      "title_en": "乘朱雀三號上天：中國移動首個天基通算融合載荷成功入軌，後續將啓動智融合技術試驗",
-      "url": "https://www.ithome.com/0/991/802.htm",
-      "permalink": "https://aihot.virxact.com/items/cmt0077tq0w4wrodpzz1hnseb",
-      "source": "IT之家（RSS）",
-      "publishedAt": "2026-08-19T10:55:11.000Z",
-      "summary": "中國移動研究院宣佈，\"天基智算載荷 1.0\"搭載\"鴻鵠 03 星\"隨朱雀三號遙二運載火箭成功發射入軌。該載荷採用全國產化軟硬件體系，內置自研輕量化星載核心網和智能體，是中國移動首個面向分佈式邊緣計算的天基通算智融合載荷。後續將開展星地核心網智能組網架構、天基通算智融合及星地智能通信業務三項在軌測試。",
+      "id": "cmt0jjcvn06auro2oknzuxw9p",
+      "title": "Stripe 宣佈人類已進入\"奇點\"，並以此為由不進行 IPO",
+      "title_en": "Stripe declares we're living in the singularity and uses it as a reason not to IPO",
+      "url": "https://the-decoder.com/stripe-declares-were-living-in-the-singularity-and-uses-it-as-a-reason-not-to-ipo",
+      "permalink": "https://aihot.virxact.com/items/cmt0jjcvn06auro2oknzuxw9p",
+      "source": "The Decoder：AI News（RSS）",
+      "publishedAt": "2026-08-19T20:03:20.000Z",
+      "summary": "Stripe 在致投資者信中宣佈，自 1 月 1 日起人類已進入\"奇點\"，並認為作為私營公司更能應對這一充滿不確定性的時代，因此決定不進行 IPO。該公司同時確認以超過 80 億美元收購 AI 模型路由引擎 OpenRouter，後者 token 使用量正以每週 9% 的速度增長。Stripe 股價自 D 輪融資以來年漲 31%，上半年營收同比增長 41%。",
+      "category": "industry",
+      "score": 55,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0jjcvn06auro2oknzuxw9p"
+      }
+    },
+    {
+      "id": "cmt0iwrzq060gro2oy8x4ahq3",
+      "title": "OpenAI 推出私有安全處理，兼顧隱私與安全",
+      "title_en": "we are committed to business privacy， and we're working on technical and policy approaches to benefi…",
+      "url": "https://x.com/gdb/status/2090167683035853120",
+      "permalink": "https://aihot.virxact.com/items/cmt0iwrzq060gro2oy8x4ahq3",
+      "source": "X：Greg Brockman (@gdb)",
+      "publishedAt": "2026-08-19T20:03:03.000Z",
+      "summary": "OpenAI 推出 Private Safety Processing（私有安全處理），旨在提升跨交互安全風險識別，同時不讓 OpenAI 人員訪問底層內容。該功能已投入研發一段時間，並承諾前沿模型繼續提供零數據保留（Zero Data Retention）選項，以兼顧企業客户隱私與安全增強。",
       "category": "ai-products",
-      "score": 42,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmt0077tq0w4wrodpzz1hnseb"
-      }
-    },
-    {
-      "id": "cmszyxhlp0v8crodpe83lvacq",
-      "title": "GLM-5.3 證明縮放不止於參數規模",
-      "title_en": "Interesting take by the zAI （GLM-Models） founder： AI scaling is not over， but we just focused too mu…",
-      "url": "https://x.com/kimmonismus/status/2090026799916888080",
-      "permalink": "https://aihot.virxact.com/items/cmszyxhlp0v8crodpe83lvacq",
-      "source": "X：Kim (@kimmonismus)",
-      "publishedAt": "2026-08-19T10:43:14.000Z",
-      "summary": "智譜（GLM）創始人指出，AI 縮放並未結束，只是行業過度聚焦模型參數量。GLM-5.3 與 GLM-5.2 採用相同基礎模型、架構和參數量，僅通過一個月額外強化學習（RL）訓練便獲得顯著性能提升。縮放的關鍵在於訓練數據、推理算力與後訓練等多維度潛力，而非單一參數規模。",
-      "category": "tip",
-      "score": 40,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmszyxhlp0v8crodpe83lvacq"
-      }
-    },
-    {
-      "id": "cmszyxhlb0v8arodp5z9gq4me",
-      "title": "阿里雲發佈Wan3.0並舉辦創作者直播",
-      "title_en": "Meet Wan3.0： Simple input. Smart creation. Where imagination meets reality. Join the Wan team and l…",
-      "url": "https://x.com/alibaba_cloud/status/2090022159166882296",
-      "permalink": "https://aihot.virxact.com/items/cmszyxhlb0v8arodp5z9gq4me",
-      "source": "X：阿里雲 / Alibaba Cloud (@alibaba_cloud)",
-      "publishedAt": "2026-08-19T10:24:48.000Z",
-      "summary": "認識 Wan3.0：簡單輸入，智能創作。當想像遇見現實。\n\n與 Wan 團隊及領先創作者一起參加 Wan3.0 創作者直播活動--瞭解最新模型升級、真實創作者工作流，以及即刻上手的實用技巧。\n\n更多精彩，敬請觀看！https://x.com/i/broadcasts/1RKjpbDbYZaJw",
-      "category": "ai-models",
-      "score": 26,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmszyxhlb0v8arodp5z9gq4me"
-      }
-    },
-    {
-      "id": "cmszy21i00ubarodp1dp8avd3",
-      "title": "宇樹科技王興興回應入職大疆僅2個月即離職：熱愛機器人且產業化機會已出現",
-      "title_en": "宇樹科技王興興回應大學畢業後僅 2 個月就從大疆離職：熱愛機器人 + 產業化機會出現",
-      "url": "https://www.ithome.com/0/991/770.htm",
-      "permalink": "https://aihot.virxact.com/items/cmszy21i00ubarodp1dp8avd3",
-      "source": "IT之家（RSS）",
-      "publishedAt": "2026-08-19T09:48:29.000Z",
-      "summary": "宇樹科技創始人王興興回應2016年入職大疆僅2個月便離職一事，稱選擇創業源於對機器人行業的熱愛，且當時產業化機會已經出現。他讀研期間設計的四足機器人XDog測試視頻出圈後吸引投資人，同年8月獲天使輪融資創立宇樹科技。他還回應\"價格屠夫\"標籤，稱公司毛利率維持在合理水平，以保持現金流穩健。",
-      "category": "tip",
       "score": 39,
       "selected": false,
       "attribution": {
         "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmszy21i00ubarodp1dp8avd3"
+        "canonical": "https://aihot.virxact.com/items/cmt0iwrzq060gro2oy8x4ahq3"
       }
     },
     {
-      "id": "cmszwzu5s0tdlrodp0bvg1sku",
-      "title": "百度Apollo Go在香港西九龍測試自動駕駛路線",
-      "title_en": "Apollo Go has begun testing the first autonomous vehicle （AV） route in the West Kowloon area of Hong…",
-      "url": "https://x.com/Baidu_Inc/status/2090013022320492671",
-      "permalink": "https://aihot.virxact.com/items/cmszwzu5s0tdlrodp0bvg1sku",
-      "source": "X：百度 Baidu (@Baidu_Inc)",
-      "publishedAt": "2026-08-19T09:48:29.000Z",
-      "summary": "百度Apollo Go已開始在香港西九龍地區測試首條自動駕駛路線，支持港鐵公司與香港機場管理局牽頭的創新項目。該測試旨在探索香港西九龍站與機場快綫九龍站之間的無縫接駁方案，連接兩大鐵路站點。百度表示將貢獻自動駕駛技術與運營經驗，助力香港智慧出行及鐵路-航空一體化聯通。",
-      "category": "industry",
-      "score": 40,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmszwzu5s0tdlrodp0bvg1sku"
-      }
-    },
-    {
-      "id": "cmszx062d0tdxrodpax230w5f",
-      "title": "帕洛馬：經Lean驗證的數學定理庫開放提交",
-      "title_en": "帕洛馬：經Lean驗證的數學定理庫",
-      "url": "https://terrytao.wordpress.com/2026/08/18/palomar-a-registry-of-lean-verified-mathematics",
-      "permalink": "https://aihot.virxact.com/items/cmszx062d0tdxrodpax230w5f",
-      "source": "Hacker News 熱門（buzzing.cc 中文翻譯）",
-      "publishedAt": "2026-08-19T09:41:53.139Z",
-      "summary": "帕洛馬（Palomar）註冊庫現已開放提交，旨在收錄經Lean證明助手驗證的數學定理，由Lean FRO和ICARM孵化。提交的倉庫快照將接受機械檢查（證明類型檢查且無額外公理）及大語言模型對非正式描述與正式陳述匹配度的核查。該註冊庫並非同行評審期刊，作者已成功提交Sendov猜想的Lean形式化證明作為測試。",
+      "id": "cmt0kq2xq0791ro2oq60xuz9q",
+      "title": "Claude Code v2.1.236 發佈：新增默認模型環境變量與跨會話閒置通知",
+      "title_en": "v2.1.236",
+      "url": "https://github.com/anthropics/claude-code/releases/tag/v2.1.236",
+      "permalink": "https://aihot.virxact.com/items/cmt0kq2xq0791ro2oq60xuz9q",
+      "source": "Claude Code：GitHub Releases（RSS）",
+      "publishedAt": "2026-08-19T20:02:05.000Z",
+      "summary": "Claude Code v2.1.236 新增 ANTHROPIC_DEFAULT_MODEL 環境變量，可設置新會話默認模型，且 /model 選擇仍可覆蓋並跨重啓保留。",
       "category": "ai-products",
-      "score": 53,
+      "score": 45,
       "selected": false,
       "attribution": {
         "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmszx062d0tdxrodpax230w5f"
+        "canonical": "https://aihot.virxact.com/items/cmt0kq2xq0791ro2oq60xuz9q"
       }
     },
     {
-      "id": "cmszwzu660tdnrodplhh3buee",
-      "title": "阿里系LimX Dynamics籌備赴港上市",
-      "title_en": "LimX Dynamics， a robotics startup backed by Alibaba Group， is reportedly preparing for a Hong Kong I…",
-      "url": "https://x.com/thexpin/status/2090010633655763167",
-      "permalink": "https://aihot.virxact.com/items/cmszwzu660tdnrodplhh3buee",
-      "source": "X：X.PIN (@thexpin)",
-      "publishedAt": "2026-08-19T09:39:00.000Z",
-      "summary": "據報道，獲阿里巴巴集團支持的機器人初創公司LimX Dynamics正準備在香港進行IPO。消息人士稱，該公司已提交保密上市申請，目標融資數億美元。這家專注於人形機器人和具身智能的公司於7月完成了2億美元的Pre-IPO融資輪，估值約22億美元。潛在的上市計劃為中國日益壯大的機器人IPO浪潮再添重要一員。",
-      "category": "industry",
+      "id": "cmt0ji11f069lro2oa5lfluxr",
+      "title": "谷歌AI學生計劃迴歸覆蓋140多國",
+      "title_en": "University student plans are back！ We've gone global with this one. Over 140 countries will get hig…",
+      "url": "https://x.com/joshwoodward/status/2090166806401228912",
+      "permalink": "https://aihot.virxact.com/items/cmt0ji11f069lro2oa5lfluxr",
+      "source": "X：Josh Woodward (@joshwoodward, Google Labs VP)",
+      "publishedAt": "2026-08-19T19:59:34.000Z",
+      "summary": "大學生計劃回來了！\n\n這次我們面向全球推出。超過 140 個國家將獲得更高的使用上限、更多存儲空間，以及專屬學生中心等新功能。同時還包括 Notebook、Flow 等更多內容。立即註冊",
+      "category": "ai-products",
+      "score": 42,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0ji11f069lro2oa5lfluxr"
+      }
+    },
+    {
+      "id": "cmt0iiky105nwro2oxbgu6r2v",
+      "title": "Slack 如何構建人機智能體團隊：對話即知識",
+      "title_en": "Turning conversation into knowledge： how Slack builds human-agent teams",
+      "url": "https://claude.com/blog/turning-conversation-into-knowledge-how-slack-builds-human-agent-teams",
+      "permalink": "https://aihot.virxact.com/items/cmt0iiky105nwro2oxbgu6r2v",
+      "source": "Claude：Blog（網頁）",
+      "publishedAt": "2026-08-19T19:56:33.654Z",
+      "summary": "Slack 首席產品官 Jaime DeLanghe 分享了將對話轉化為機構知識、構建人機智能體團隊的最佳實踐。她主張默認使用公開頻道，讓智能體從可見對話中學習，並建議將會議、郵件、日曆等上下文連接起來以減少重複勞動。在 Slack 中由 Claude 驅動的智能體負責起草、總結、監控等生產工作，人類負責審查、決策與交接，形成循環協作。",
+      "category": "tip",
       "score": 51,
       "selected": false,
       "attribution": {
         "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmszwzu660tdnrodplhh3buee"
+        "canonical": "https://aihot.virxact.com/items/cmt0iiky105nwro2oxbgu6r2v"
       }
     },
     {
-      "id": "cmszy21i10ubdrodpqny9bbmb",
-      "title": "AI 芯片初創企業 Etched 估值飆升至 210 億美元，首批機架出貨",
-      "title_en": null,
-      "url": "https://www.ithome.com/0/991/748.htm",
-      "permalink": "https://aihot.virxact.com/items/cmszy21i10ubdrodpqny9bbmb",
-      "source": "IT之家（RSS）",
-      "publishedAt": "2026-08-19T09:31:32.000Z",
-      "summary": "AI 芯片初創企業 Etched 以 210 億美元估值完成 7 億美元融資，並向領投方 Jane Street 出貨首批 AI 加速器機架。Jane Street 表示測試結果令人滿意，計劃在數據中心部署自有機架。該公司估值在不到一個月內從 103 億美元升至 210 億美元。",
-      "category": "industry",
-      "score": 57,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmszy21i10ubdrodpqny9bbmb"
-      }
-    },
-    {
-      "id": "cmszy21i10ubfrodpcrztgkw9",
-      "title": "小米新一代人形機器人亮相 2026 世界機器人博覽會，8 月 20 日起展台對普通觀眾開放",
-      "title_en": "小米新一代人形機器人亮相 2026 世界機器人博覽會，8 月 20 日起展台將對普通觀眾開放",
-      "url": "https://www.ithome.com/0/991/747.htm",
-      "permalink": "https://aihot.virxact.com/items/cmszy21i10ubfrodpcrztgkw9",
-      "source": "IT之家（RSS）",
-      "publishedAt": "2026-08-19T09:28:09.000Z",
-      "summary": "小米新一代人形機器人亮相 2026 世界機器人博覽會「具身花園」展台，扮演\"花藝師\"可抓取香片撒花、遞送、握手和碰拳。該機器人身高約 1.70 米、體重 66 公斤，全身 66 個自由度，其中一半集中在手部，目前仍為樣機階段。8 月 20 日起展台對普通觀眾開放，國內首展後將在歐洲展出。",
-      "category": "ai-products",
-      "score": 43,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmszy21i10ubfrodpcrztgkw9"
-      }
-    },
-    {
-      "id": "cmszy21i10ubgrodpq03hwhdo",
-      "title": "金山雲：上半年營收 57.76 億元，同比增長 33.7%",
-      "title_en": null,
-      "url": "https://www.ithome.com/0/991/744.htm",
-      "permalink": "https://aihot.virxact.com/items/cmszy21i10ubgrodpq03hwhdo",
-      "source": "IT之家（RSS）",
-      "publishedAt": "2026-08-19T09:27:45.000Z",
-      "summary": "金山雲發佈截至 2026 年 6 月 30 日止六個月的中期業績，總收入 57.76 億元，同比增長 33.7%，毛利 8.12 億元，同比增長 23.6%。除所得税前虧損由 7.61 億元減至 4.15 億元，降幅 45.5%，淨虧損降幅 43.5%。增長主要得益於 AI 相關客户收入隨 AI 基礎設施升級持續增長，其中公有云服務收入 43.539 億元，同比增長 46.2%。",
-      "category": "industry",
-      "score": 51,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmszy21i10ubgrodpq03hwhdo"
-      }
-    },
-    {
-      "id": "cmszvwwhe0sbvrodp4q94zfor",
-      "title": "AI 芯片需求激增，消息稱三星部分先進製程代工最高漲價 15%",
-      "title_en": null,
-      "url": "https://www.ithome.com/0/991/736.htm",
-      "permalink": "https://aihot.virxact.com/items/cmszvwwhe0sbvrodp4q94zfor",
-      "source": "IT之家（RSS）",
-      "publishedAt": "2026-08-19T09:18:34.000Z",
-      "summary": "路透社援引知情人士消息稱，因 AI 芯片需求擠佔先進製程產能，三星電子已上調部分先進製程晶圓代工新訂單價格，最高漲幅達 15%。其中 4nm SF4 製程 7 月提價 5%-15% 不等，5nm SF5 製程上漲 10%-15%，8nm 製程上漲近 10%。行業估算，這標誌着三星自 2022 年以來持續虧損的晶圓代工業務開始出現轉機。",
-      "category": "industry",
-      "score": 52,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmszvwwhe0sbvrodp4q94zfor"
-      }
-    },
-    {
-      "id": "cmszw2tjg0shtrodp0bgrce1n",
-      "title": "騰訊混元Hyra四項數學新突破",
-      "title_en": "Hyra keeps pushing the frontier. Since our last math update， four more advances have landed：  3D B…",
-      "url": "https://x.com/TencentHunyuan/status/2090002485771751690",
-      "permalink": "https://aihot.virxact.com/items/cmszw2tjg0shtrodp0bgrce1n",
-      "source": "X：騰訊混元 (@TencentHunyuan)",
-      "publishedAt": "2026-08-19T09:06:37.000Z",
-      "summary": "騰訊混元Hyra在數學推理上取得四項新進展：將常寬體下界從0.380799w3提升至0.411040w3（達Meissner最優猜想值的97.9%）；Beurling-Ahlfors係數從1.575改進至1.523958；部分Hadamard矩陣漸近計數擴展至近二次尺度；算子交換子逼近成本從Tao的O（log5（1/ε））降至O（log3）。相關結果已開源。",
-      "category": "paper",
-      "score": 53,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmszw2tjg0shtrodp0bgrce1n"
-      }
-    },
-    {
-      "id": "cmszvwwhe0sbzrodp3ywg0tts",
-      "title": "聯想 ThinkBook Plus G7 翻轉觸控筆記本國行發售：酷睿 Ultra X7-358H 配電動轉軸，首發 18999 元",
-      "title_en": null,
-      "url": "https://www.ithome.com/0/991/726.htm",
-      "permalink": "https://aihot.virxact.com/items/cmszvwwhe0sbzrodp3ywg0tts",
-      "source": "IT之家（RSS）",
-      "publishedAt": "2026-08-19T09:06:33.000Z",
-      "summary": "聯想 ThinkBook Plus G7 Auto Twist 翻轉本今日開售，首發價 18999 元，疊加國補後 17499 元。該機定位行業首款自動旋轉屏 AIPC，搭載雙角度自動旋轉轉軸與 AI 感知能力，支持人臉追蹤、聲音追蹤及自動開合蓋。",
+      "id": "cmt0imzm905t8ro2oakqu50vy",
+      "title": "OpenAI 預覽私有安全處理，保留零數據留存",
+      "title_en": "We will continue to offer Zero Data Retention for frontier models. As AI takes on longer， more auto…",
+      "url": "https://x.com/OpenAI/status/2090165328290701800",
+      "permalink": "https://aihot.virxact.com/items/cmt0imzm905t8ro2oakqu50vy",
+      "source": "X：OpenAI (@OpenAI)",
+      "publishedAt": "2026-08-19T19:53:42.000Z",
+      "summary": "我們將繼續為前沿模型提供零數據留存。\n\n隨着AI承擔更長、更自主的工作併為企業帶來更大價值，安全系統也需要識別跨相關交互的風險。\n\n為幫助應對這些風險，我們正在預覽私有安全處理（Private Safety Processing），該功能旨在提升安全性，同時不讓OpenAI人員訪問底層內容。",
       "category": "ai-products",
       "score": 48,
       "selected": false,
       "attribution": {
         "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmszvwwhe0sbzrodp3ywg0tts"
+        "canonical": "https://aihot.virxact.com/items/cmt0imzm905t8ro2oakqu50vy"
       }
     },
     {
-      "id": "cmszvwwhf0sc3rodpm7xdc9zt",
-      "title": "長電科技完成 1.5μm 小孔徑 11.3：1 高深寬比 TSV 試製",
-      "title_en": "長電科技完成 1.5μm 小孔徑 11.3：1 高深寬比 TSV（硅通孔）試製",
-      "url": "https://www.ithome.com/0/991/718.htm",
-      "permalink": "https://aihot.virxact.com/items/cmszvwwhf0sc3rodpm7xdc9zt",
-      "source": "IT之家（RSS）",
-      "publishedAt": "2026-08-19T08:51:22.000Z",
-      "summary": "長電科技（JCET）今日宣佈與合作伙伴共同完成 1.5μm 小孔徑、17μm 深度、11.3：1 高深寬比 TSV（硅通孔）試製。試製圍繞深硅刻蝕、孔壁絕緣層沉積、阻擋層與種子層沉積、銅填充等關鍵工藝展開，表明其具備業界領先的小孔徑高深寬比 TSV 工藝研發與協同驗證能力。該能力可支撐 3D 堆疊集成及硅中介層等 2.5D 集成、多芯粒互連與高帶寬存儲集成場景。",
-      "category": "industry",
-      "score": 43,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmszvwwhf0sc3rodpm7xdc9zt"
-      }
-    },
-    {
-      "id": "cmszue0gg0r67rodplrpyqy9z",
-      "title": "Grok 展示 Odyssey 對話場景花絮",
-      "title_en": "Odyssey bloopers by Grok Imagine",
-      "url": "https://x.com/elonmusk/status/2089994188033306741",
-      "permalink": "https://aihot.virxact.com/items/cmszue0gg0r67rodplrpyqy9z",
-      "source": "X：Elon Musk (@elonmusk, xAI)",
-      "publishedAt": "2026-08-19T08:33:39.000Z",
-      "summary": "Odyssey 花絮，由 Grok 想像生成",
+      "id": "cmt0il0b605r5ro2ows67tnbt",
+      "title": "Gemini 為大學生提供一年免費訂閲",
+      "title_en": "Back-to-school season is here and starting today， eligible college students can get a full year of G…",
+      "url": "https://x.com/GeminiApp/status/2090165248196252003",
+      "permalink": "https://aihot.virxact.com/items/cmt0il0b605r5ro2ows67tnbt",
+      "source": "X：Gemini (@GeminiApp)",
+      "publishedAt": "2026-08-19T19:53:23.000Z",
+      "summary": "返校季來臨，從今天起，符合條件的大學生可免費獲得一整年的 Gemini 使用權限：\n- 美國學生：免費獲得 1 年 Google AI Pro\n- 140 多個國家/地區：免費獲得 1 年 Google AI Plus\n\n以下是面向學生的全新內容",
       "category": "ai-products",
-      "score": 24,
+      "score": 41,
       "selected": false,
       "attribution": {
         "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmszue0gg0r67rodplrpyqy9z"
+        "canonical": "https://aihot.virxact.com/items/cmt0il0b605r5ro2ows67tnbt"
       }
     },
     {
-      "id": "cmszuuqt60rfyrodpirjsc3ek",
-      "title": "Grok 機器人本週八大趣味用例盤點",
-      "title_en": "here are 8 really interesting grok bot use cases from this week！ 1） wired it to a vacuum robot and …",
-      "url": "https://x.com/ericzakariasson/status/2089993578248618316",
-      "permalink": "https://aihot.virxact.com/items/cmszuuqt60rfyrodpirjsc3ek",
-      "source": "X：Eric Zakariasson (@ericzakariasson)",
-      "publishedAt": "2026-08-19T08:31:13.000Z",
-      "summary": "以下是本週 8 個非常有趣的 Grok 機器人用例！\n\n1） 把它接到掃地機器人上，發短信讓 Grok 告訴它該清理哪裏",
-      "category": "tip",
-      "score": 16,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmszuuqt60rfyrodpirjsc3ek"
-      }
-    },
-    {
-      "id": "cmszun6i50rc5rodpc1p00j0s",
-      "title": "ChatGPT Ads 下週擴展至 31 個歐洲國家",
-      "title_en": "In case you missed： Next week， ChatGPT Ads will expand to 31 European countries， including Germany， …",
-      "url": "https://x.com/kimmonismus/status/2089992904940879998",
-      "permalink": "https://aihot.virxact.com/items/cmszun6i50rc5rodpc1p00j0s",
-      "source": "X：Kim (@kimmonismus)",
-      "publishedAt": "2026-08-19T08:28:33.000Z",
-      "summary": "以防你錯過：下週，ChatGPT Ads 將擴展至 31 個歐洲國家，包括德國、法國、西班牙、意大利、瑞典、挪威、丹麥、荷蘭和奧地利。\n\n看來與歐盟的協議很快就達成了。這意味着任何使用免費版的用户現在都會看到廣告。",
-      "category": "ai-products",
-      "score": 39,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmszun6i50rc5rodpc1p00j0s"
-      }
-    },
-    {
-      "id": "cmsztrq8q0qfprodplc5xiz66",
-      "title": "小米新一代玄戒芯片即將發佈，消息稱2025年底回片當天一次點亮成功",
-      "title_en": "小米新一代玄戒芯片即將發佈，消息稱 2025 年底回片、當天一次點亮成功",
-      "url": "https://www.ithome.com/0/991/685.htm",
-      "permalink": "https://aihot.virxact.com/items/cmsztrq8q0qfprodplc5xiz66",
-      "source": "IT之家（RSS）",
-      "publishedAt": "2026-08-19T08:11:33.000Z",
-      "summary": "供應鏈消息稱，新一代玄戒芯片2025年底已完成回片，當天一次點亮成功，目前已進入終端實裝階段，即將正式發佈。雷軍8月18日晚在微博宣佈該芯片即將發佈，其微博小尾巴已更換為型號未知的神秘新機。此前發佈的玄戒O1芯片在三款終端上累計出貨量已超百萬顆，後續自研芯片還將用於小米汽車。",
-      "category": "ai-products",
-      "score": 34,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmsztrq8q0qfprodplc5xiz66"
-      }
-    },
-    {
-      "id": "cmszui6mc0r8krodph7e905vu",
-      "title": "圖譜做 Agent 記憶的三大工程坑及解法",
-      "title_en": "圖譜做 Agent 記憶，三個工程坑大家遲早會踩： →權限逐跳檢查的性能黑洞 →seed 選錯後在錯誤子圖裏越遍歷越遠 →高併發下 in-place 修改的一致性噩夢。 跟大家分享下每個坑的實操解法…",
-      "url": "https://x.com/AYi_AInotes/status/2089986509155729767",
-      "permalink": "https://aihot.virxact.com/items/cmszui6mc0r8krodph7e905vu",
-      "source": "X：阿易 AI Notes (@AYi_AInotes)",
-      "publishedAt": "2026-08-19T08:03:08.000Z",
-      "summary": "圖譜做 Agent 記憶存在三大工程坑：權限逐跳檢查致性能非線性下降、seed 選錯導致遍歷困於錯誤子圖、高併發下 in-place 修改引發一致性噩夢。解法包括 scope 隔離加 URL allowlist/blocklist、向量檢索定位 seed 後再圖遍歷、以及採用 append-only 時序圖配合最終一致性與 as-of 快照語義。",
-      "category": "tip",
-      "score": 54,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmszui6mc0r8krodph7e905vu"
-      }
-    },
-    {
-      "id": "cmsztrq8q0qfsrodpm561t3pl",
-      "title": "宇樹科技科創板上市首日漲 460.34%，慶功宴上沈南鵬與王力宏同席",
-      "title_en": "宇樹科技上市慶功照流出，\"投資教父\"沈南鵬與王力宏暢聊",
-      "url": "https://www.ithome.com/0/991/679.htm",
-      "permalink": "https://aihot.virxact.com/items/cmsztrq8q0qfsrodpm561t3pl",
-      "source": "IT之家（RSS）",
-      "publishedAt": "2026-08-19T08:00:13.000Z",
-      "summary": "8 月 19 日，\"A 股人形機器人第一股\"宇樹科技在科創板掛牌上市，當日收盤漲 460.34%，報 845 元 / 股，市值 3417.72 億元。上市答謝午宴上，董事長王興興、紅杉中國沈南鵬與歌手王力宏露面，王力宏坐 1 號桌並與沈南鵬相談甚歡。紅杉中國合計持有宇樹科技 2589.95 萬股，發行後持股比例 6.4%，對應市值約 219 億元。",
-      "category": "industry",
-      "score": 43,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmsztrq8q0qfsrodpm561t3pl"
-      }
-    },
-    {
-      "id": "cmszsyc1p0pt3rodpq65vcg7t",
-      "title": "Vidu S1 助力 360 打造《甄嬛傳》數字人新玩法",
-      "title_en": "技術賦能 IP 新體驗，Vidu S1 助力 360 打造《甄嬛傳》數字人新玩法",
-      "url": "https://mp.weixin.qq.com/s?__biz=MzkzMDQ5NTQwMQ%3D%3D&mid=2247489072&idx=1&sn=7133cd05a477edeb31417e6545bae14f",
-      "permalink": "https://aihot.virxact.com/items/cmszsyc1p0pt3rodpq65vcg7t",
-      "source": "公眾號：生數科技（Vidu·視頻）",
-      "publishedAt": "2026-08-19T07:55:31.000Z",
-      "summary": "Vidu 與 360 達成技術合作，以自研 Vidu S1 實時交互視頻生成模型為底層支撐，落地「甄嬛 360 傳粉絲見面會」線上 H5 活動，支持用户與甄嬛、華妃等十位劇中角色進行實時對話。該模型支持 1 分鐘至 2 小時持續無損渲染、秒級響應及百餘種語言與方言，並提供 SaaS、MaaS 兩種輕量化接入方案。",
-      "category": "industry",
-      "score": 43,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmszsyc1p0pt3rodpq65vcg7t"
-      }
-    },
-    {
-      "id": "cmsztrq8q0qftrodpbtaac8py",
-      "title": "全球首項鋼鐵行業智能製造國際標準發佈，我國牽頭制定",
-      "title_en": "全球首項，我國牽頭制定的鋼鐵行業智能製造國際標準發佈",
-      "url": "https://www.ithome.com/0/991/676.htm",
-      "permalink": "https://aihot.virxact.com/items/cmsztrq8q0qftrodpbtaac8py",
-      "source": "IT之家（RSS）",
-      "publishedAt": "2026-08-19T07:55:28.000Z",
-      "summary": "我國牽頭制定的全球首項鋼鐵行業智能製造領域國際標準《鋼鐵行業智能製造指南》近日發佈，由我國專家擔任項目負責人，日本、荷蘭、法國等多國專家聯合研製。該標準圍繞智能設計、智能裝備、智能生產三大方向，覆蓋產品研發設計、生產工藝設計兩大模塊，並細化生產計劃、智能質量管控、設備智能運維等六大功能模塊的實施指引，為全球鋼鐵企業智能工廠改造提供統一參考規範。",
-      "category": "industry",
-      "score": 16,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmsztrq8q0qftrodpbtaac8py"
-      }
-    },
-    {
-      "id": "cmsztrq8q0qfvrodpi8ghf0ud",
-      "title": "奇瑞旗下墨甲機器人籌劃獨立 IPO，瞄準海外警用、服務市場",
-      "title_en": "奇瑞旗下墨甲機器人籌劃獨立 IPO，同時瞄準海外警用、服務等市場",
-      "url": "https://www.ithome.com/0/991/667.htm",
-      "permalink": "https://aihot.virxact.com/items/cmsztrq8q0qfvrodpi8ghf0ud",
-      "source": "IT之家（RSS）",
-      "publishedAt": "2026-08-19T07:51:31.000Z",
-      "summary": "奇瑞旗下墨甲機器人已啓動IPO籌備，正與多個潛在上市地點磋商，計劃明年全球交付1萬台人形機器人。該公司目前累計交付超3000台，其中2000台銷往海外，業務覆蓋60多個國家和地區。墨甲已推出人形警務機器人，110台在中國多城市投入使用，並計劃重點拓展海外警用、服務及陪伴機器人市場。",
-      "category": "industry",
-      "score": 50,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmsztrq8q0qfvrodpi8ghf0ud"
-      }
-    },
-    {
-      "id": "cmsztkl500qd4rodpfj8c9zun",
-      "title": "ChatGPT 廣告平台將擴展至 31 個歐洲國家",
-      "title_en": "OpenAI is planning to expand its ad platform for ChatGPT to 31 European countries next week. &gt； …",
-      "url": "https://x.com/testingcatalog/status/2089983132552343842",
-      "permalink": "https://aihot.virxact.com/items/cmsztkl500qd4rodpfj8c9zun",
-      "source": "X：Testing Catalog (@testingcatalog)",
-      "publishedAt": "2026-08-19T07:49:43.000Z",
-      "summary": "OpenAI 計劃下週將 ChatGPT 廣告平台擴展至 31 個歐洲國家，包括德國、法國、西班牙、意大利、瑞典、挪威、丹麥、荷蘭和奧地利。廣告目前僅向 Free 和 Go 用户展示，以獨立組件形式出現在答案下方，廣告主也將獲得該廣告平台的訪問權限。",
-      "category": "ai-products",
-      "score": 42,
-      "selected": false,
-      "attribution": {
-        "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmsztkl500qd4rodpfj8c9zun"
-      }
-    },
-    {
-      "id": "cmsztrq8q0qfwrodppi71tkg3",
-      "title": "小米新一代人形機器人預覽：雙足、1.7 米左右、全身 66 個自由度",
-      "title_en": null,
-      "url": "https://www.ithome.com/0/991/662.htm",
-      "permalink": "https://aihot.virxact.com/items/cmsztrq8q0qfwrodppi71tkg3",
-      "source": "IT之家（RSS）",
-      "publishedAt": "2026-08-19T07:47:13.000Z",
-      "summary": "小米新一代人形機器人將在2026世界機器人大會（WRC）上首次面向公眾亮相，身高約1.70米、體重66公斤，全身66個自由度，其中一半集中在手部。該機器人已在小米汽車工廠完成為期4個月的產線\"實習\"，螺母上件作業成功率提升至98%，並配套自研Xiaomi-Robotics系列具身基座模型。目前仍為樣機階段，國內首展後將在歐洲展出。",
+      "id": "cmt0iws03060iro2onncapsub",
+      "title": "OpenAI 為前沿模型提供零數據留存",
+      "title_en": "we support business privacy！ https://openai.com/index/offering-zero-data-retention-for-frontier-mod...",
+      "url": "https://x.com/sama/status/2090163991234453611",
+      "permalink": "https://aihot.virxact.com/items/cmt0iws03060iro2onncapsub",
+      "source": "X：Sam Altman (@sama)",
+      "publishedAt": "2026-08-19T19:48:23.000Z",
+      "summary": "我們支持企業隱私！\n\nhttps://openai.com/index/offering-zero-data-retention-for-frontier-models/",
       "category": "ai-products",
       "score": 47,
       "selected": false,
       "attribution": {
         "source": "AIHOT",
-        "canonical": "https://aihot.virxact.com/items/cmsztrq8q0qfwrodppi71tkg3"
+        "canonical": "https://aihot.virxact.com/items/cmt0iws03060iro2onncapsub"
+      }
+    },
+    {
+      "id": "cmt0immyq05s5ro2ozg9hbcal",
+      "title": "OpenClaw 2026.8.1-beta.2 獲贊：響應更快更穩定",
+      "title_en": "Can't wait to show you all what we been cookin'！",
+      "url": "https://x.com/steipete/status/2090162595257102731",
+      "permalink": "https://aihot.virxact.com/items/cmt0immyq05s5ro2ozg9hbcal",
+      "source": "X：Peter Steinberger (@steipete)",
+      "publishedAt": "2026-08-19T19:42:50.000Z",
+      "summary": "Peter Steinberger 預告即將展示新成果，並引用 @joncursi 對 OpenClaw 2026.8.1-beta.2 的評測：智能體響應速度顯著提升，5.6-Sol 在 codex 訂閲下運行流暢，Slack 回覆已支持原生圖表和組件。該版本穩定性與細節優化出色，為 2026.8.x 正式版奠定良好基礎。",
+      "category": "tip",
+      "score": 16,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0immyq05s5ro2ozg9hbcal"
+      }
+    },
+    {
+      "id": "cmt0i7xfs05hjro2osxwd26cq",
+      "title": "Google AI Studio Build 支持導入 GitHub 倉庫",
+      "title_en": "Google AI Studio Build now allows users to import GitHub repositories and keep them in sync with app…",
+      "url": "https://x.com/testingcatalog/status/2090162011308974562",
+      "permalink": "https://aihot.virxact.com/items/cmt0i7xfs05hjro2osxwd26cq",
+      "source": "X：Testing Catalog (@testingcatalog)",
+      "publishedAt": "2026-08-19T19:40:31.000Z",
+      "summary": "Google AI Studio Build 現在允許用户導入 GitHub 倉庫，並與應用保持同步。",
+      "category": "ai-products",
+      "score": 36,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0i7xfs05hjro2osxwd26cq"
+      }
+    },
+    {
+      "id": "cmt0i2yop05e5ro2ojusmqy4o",
+      "title": "Conductor 與 Paper 協作新工作流演示",
+      "title_en": "Conductor  Paper",
+      "url": "https://x.com/charlieholtz/status/2090161402019536950",
+      "permalink": "https://aihot.virxact.com/items/cmt0i2yop05e5ro2ojusmqy4o",
+      "source": "X：Charlie Holtz（@charlieholtz）",
+      "publishedAt": "2026-08-19T19:38:06.000Z",
+      "summary": "Conductor  Paper\n\n【引用 @paper】：Paper × Conductor：超級互補的工具\n\n在這段視頻中，@charlieholtz 和 @harcourttt 展示了在 paper 中使用 @conductor_build 進行協作。\n\n這是我們看到越來越多人在使用的新工作流。\n\n完整視頻鏈接在帖子裏！你怎麼看？",
+      "category": "industry",
+      "score": 26,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0i2yop05e5ro2ojusmqy4o"
+      }
+    },
+    {
+      "id": "cmt0il0au05r3ro2ooo3z70y3",
+      "title": "Cohere 本地託管 S1-mini 開源模型",
+      "title_en": "Locally hosted  locally made",
+      "url": "https://x.com/cohere/status/2090160553217982713",
+      "permalink": "https://aihot.virxact.com/items/cmt0il0au05r3ro2ooo3z70y3",
+      "source": "X：Cohere（@cohere）",
+      "publishedAt": "2026-08-19T19:34:43.000Z",
+      "summary": "本地託管  本地製造",
+      "category": "ai-models",
+      "score": 37,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0il0au05r3ro2ooo3z70y3"
+      }
+    },
+    {
+      "id": "cmt0i7xfs05hkro2ook2y7hfu",
+      "title": "Google AI Studio 將推 Plan 模式",
+      "title_en": "Google is working on a Plan mode for its Build section in Google AI Studio！ &gt； Create a plan befo…",
+      "url": "https://x.com/testingcatalog/status/2090159506177028321",
+      "permalink": "https://aihot.virxact.com/items/cmt0i7xfs05hkro2ook2y7hfu",
+      "source": "X：Testing Catalog (@testingcatalog)",
+      "publishedAt": "2026-08-19T19:30:34.000Z",
+      "summary": "Google 正在為其 Google AI Studio 中的 Build 部分開發 Plan 模式！\n\n> 在進行更改之前先制定計劃",
+      "category": "ai-products",
+      "score": 24,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0i7xfs05hkro2ook2y7hfu"
+      }
+    },
+    {
+      "id": "cmt0i7xfj05hhro2o3x6phgzq",
+      "title": "TrueFoundry 開源 TrueForge 智能體框架",
+      "title_en": "1/ TrueFoundry， whose AI Gateway sits under production LLM traffic for Fortune 500 companies across …",
+      "url": "https://x.com/kimmonismus/status/2090159374450974850",
+      "permalink": "https://aihot.virxact.com/items/cmt0i7xfj05hhro2o3x6phgzq",
+      "source": "X：Kim (@kimmonismus)",
+      "publishedAt": "2026-08-19T19:30:02.000Z",
+      "summary": "TrueFoundry 今日在 GitHub 開源其智能體框架 TrueForge，採用 MIT 許可證，支持本地與託管兩種運行模式。該框架在 Opus 4.8 上達到與 Claude Managed Agents 相當的準確率，成本降低約 30%，路由至 GLM-5.2 時成本最高可降約 75%。",
+      "category": "ai-products",
+      "score": 44,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0i7xfj05hhro2o3x6phgzq"
+      }
+    },
+    {
+      "id": "cmt0hk26u04s5ro2oj7wyybkc",
+      "title": "OpenCode Go 推出 Muse Spark 1.2 Contributor",
+      "title_en": "Muse Spark 1.2 Contributor is now available on OpenCode Go this model will train on your data so it…",
+      "url": "https://x.com/opencode/status/2090158371097698394",
+      "permalink": "https://aihot.virxact.com/items/cmt0hk26u04s5ro2oj7wyybkc",
+      "source": "X：opencode (@opencode)",
+      "publishedAt": "2026-08-19T19:26:03.000Z",
+      "summary": "Muse Spark 1.2 Contributor 現已在 OpenCode Go 上可用\n\n該模型將基於你的數據進行訓練，因此需要明確選擇加入，並在某些地區受到限制\n\n作為交換，你將獲得極高的使用額度",
+      "category": "ai-models",
+      "score": 33,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0hk26u04s5ro2oj7wyybkc"
+      }
+    },
+    {
+      "id": "cmt0hk26f04s3ro2op7c934oc",
+      "title": "Google AI Studio 支持 GitHub 雙向同步",
+      "title_en": "Updates on GitHub support in @GoogleAIStudio： - we now support importing Github repos - we now supp…",
+      "url": "https://x.com/OfficialLoganK/status/2090156520843657488",
+      "permalink": "https://aihot.virxact.com/items/cmt0hk26f04s3ro2op7c934oc",
+      "source": "X：Logan Kilpatrick (@OfficialLoganK)",
+      "publishedAt": "2026-08-19T19:18:42.000Z",
+      "summary": "@GoogleAIStudio 中 GitHub 支持的最新進展：\n\n- 現在支持導入 GitHub 倉庫\n- 現在支持 GitHub 雙向同步（推送 / 拉取）\n- 全新 UI 支持強制推送、合併等操作\n\n雙向推送 / 拉取功能花了些時間才落地，但很高興它終於來了！",
+      "category": "ai-products",
+      "score": 47,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0hk26f04s3ro2op7c934oc"
+      }
+    },
+    {
+      "id": "cmt0hkeel04t1ro2o1p8sbsg1",
+      "title": "Krea AI 推出 Seedance Studio 創作工具",
+      "title_en": "introducing Seedance Studio. this new tool brings everything you need to create with Seedance 2.5 …",
+      "url": "https://x.com/krea_ai/status/2090155543566659916",
+      "permalink": "https://aihot.virxact.com/items/cmt0hkeel04t1ro2o1p8sbsg1",
+      "source": "X：Krea AI (@krea_ai)",
+      "publishedAt": "2026-08-19T19:14:49.000Z",
+      "summary": "隆重推出 Seedance Studio。\n\n這款新工具將使用 Seedance 2.5 創作所需的一切集於一處，包括提示詞預設、鏡頭路徑和 3D 場景控制。\n\n你還希望我們添加哪些功能？",
+      "category": "ai-products",
+      "score": 55,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0hkeel04t1ro2o1p8sbsg1"
+      }
+    },
+    {
+      "id": "cmt0h5d3b04m1ro2o9o6wjcrp",
+      "title": "Stripe 約 75 億美元收購 OpenRouter",
+      "title_en": "Stripe buys OpenRouter for ~$7.5 B. Now Stripe could influence an AI application's unit economics f…",
+      "url": "https://x.com/rohanpaul_ai/status/2090154779515510855",
+      "permalink": "https://aihot.virxact.com/items/cmt0h5d3b04m1ro2o9o6wjcrp",
+      "source": "X：Rohan Paul (@rohanpaul_ai)",
+      "publishedAt": "2026-08-19T19:11:47.000Z",
+      "summary": "Stripe 以約 75 億美元收購 OpenRouter，將同時掌控 AI 應用的支付與推理路由，深度影響其單位經濟。OpenRouter 作為領先的 token 市場，可跨供應商動態調度模型，讓模型競爭轉化為客户優勢。Stripe 由此卡住智能成本與收入之間的關鍵節點。",
+      "category": "industry",
+      "score": 58,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0h5d3b04m1ro2o9o6wjcrp"
+      }
+    },
+    {
+      "id": "cmt0hd13r04opro2obp2bz05d",
+      "title": "AI 未能贏得公眾信任：負面情緒與商業壓力加劇",
+      "title_en": "AI was supposed to win people over by now - it hasn't",
+      "url": "https://techcrunch.com/2026/08/19/ai-was-supposed-to-win-people-over-by-now-it-hasnt",
+      "permalink": "https://aihot.virxact.com/items/cmt0hd13r04opro2obp2bz05d",
+      "source": "TechCrunch：AI（RSS）",
+      "publishedAt": "2026-08-19T19:11:40.000Z",
+      "summary": "多項民調顯示美國公眾對 AI 的疑慮加深：52% 的人對 AI 融入日常生活\"擔憂多於興奮\"，高於 2021 年的 37%；超 70% 認為 AI 發展過快。科技公司因數據中心建設面臨公關危機，被迫提供就業保障、清潔水投資等地方優惠。Anthropic CEO Dario Amodei 承認負面認知是\"信任危機\"，並指 AI 公司尚未兑現造福世界的重大承諾。",
+      "category": "tip",
+      "score": 58,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0hd13r04opro2obp2bz05d"
+      }
+    },
+    {
+      "id": "cmt0h5d3q04m3ro2o810tt0md",
+      "title": "Fabraix 推出 Nyx 自主紅隊智能體",
+      "title_en": "Fabraix has launched Nyx， a new autonomous red-teaming agent！ Users can point it at any AI agent an…",
+      "url": "https://x.com/testingcatalog/status/2090153528182407359",
+      "permalink": "https://aihot.virxact.com/items/cmt0h5d3q04m3ro2o810tt0md",
+      "source": "X：Testing Catalog (@testingcatalog)",
+      "publishedAt": "2026-08-19T19:06:48.000Z",
+      "summary": "Fabraix 發佈 Nyx，一款自主紅隊測試智能體，可針對任意 AI 智能體發起攻擊，內置 10，000+ 越獄攻擊庫以暴露安全漏洞。每次測試會輸出攻擊步驟供智能體定位漏洞，發佈後還可重放同一測試驗證修復效果。演示中，Nyx 成功誘導 AI 智能體通過看似正常的發票竊取客户銀行餘額。",
+      "category": "ai-products",
+      "score": 50,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0h5d3q04m3ro2o810tt0md"
+      }
+    },
+    {
+      "id": "cmt0grlo604f8ro2olfe009pz",
+      "title": "Replit 回應品牌重塑呼聲",
+      "title_en": "ok who told you https://x.com/keshavatearth/status/2089444755931582902?s=46",
+      "url": "https://x.com/Replit/status/2090151977237778709",
+      "permalink": "https://aihot.virxact.com/items/cmt0grlo604f8ro2olfe009pz",
+      "source": "X：Replit (@Replit)",
+      "publishedAt": "2026-08-19T19:00:39.000Z",
+      "summary": "ok who told you",
+      "category": "industry",
+      "score": 14,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0grlo604f8ro2olfe009pz"
+      }
+    },
+    {
+      "id": "cmt0imow105sdro2o35tu4hrb",
+      "title": "OpenAI 預覽 Private Safety Processing，為前沿模型保留零數據留存（ZDR）承諾",
+      "title_en": "Offering Zero Data Retention for frontier models",
+      "url": "https://openai.com/index/offering-zero-data-retention-for-frontier-models",
+      "permalink": "https://aihot.virxact.com/items/cmt0imow105sdro2o35tu4hrb",
+      "source": "OpenAI：官網動態（RSS · 排除企業/客户案例）",
+      "publishedAt": "2026-08-19T19:00:00.000Z",
+      "summary": "OpenAI 預覽 Private Safety Processing，在保持零數據留存（ZDR）承諾的同時，跨相關交互識別安全風險模式，且不向 OpenAI 人員暴露客户內容。該處理適用於客户自有基礎設施或 OpenAI 提供的加密存儲（密鑰由客户控制）。目前正與早期客户測試，計劃於 9 月推出併發布技術白皮書。",
+      "category": "ai-products",
+      "score": 39,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0imow105sdro2o35tu4hrb"
+      }
+    },
+    {
+      "id": "cmt0ifrby05lcro2oqab12oj9",
+      "title": "Google Gemini 推出專屬學生中心",
+      "title_en": "Google Gemini is getting a dedicated student hub",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/982425/google-gemini-student-hub",
+      "permalink": "https://aihot.virxact.com/items/cmt0ifrby05lcro2oqab12oj9",
+      "source": "The Verge：AI（RSS）",
+      "publishedAt": "2026-08-19T19:00:00.000Z",
+      "summary": "Google 在 Gemini 中推出專屬學生中心，提供收集研究資料、製作閃卡、練習測驗等功能，並增強學習筆記對圖表和圖片的支持，還能根據課程表將考試日期和截止日期添加到 Google Calendar。",
+      "category": "ai-products",
+      "score": 49,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0ifrby05lcro2oqab12oj9"
+      }
+    },
+    {
+      "id": "cmt0he5pq04q2ro2ojil0908q",
+      "title": "Google 搜索推出 5 項 AI 學習工具",
+      "title_en": "5 new ways to level up your learning with Search",
+      "url": "https://blog.google/products-and-platforms/products/search/back-to-school-study-tools",
+      "permalink": "https://aihot.virxact.com/items/cmt0he5pq04q2ro2ojil0908q",
+      "source": "Google Blog：AI（RSS）",
+      "publishedAt": "2026-08-19T19:00:00.000Z",
+      "summary": "Google 在搜索中推出 5 項 AI 學習工具。AI Mode 的生成式 UI 已全球上線英文版，支持交互式可視化與自定義模擬；練習測驗現已在 AI Overviews 和 AI Mode 中免費提供英文版，覆蓋 ACT、SAT 等標準化考試。",
+      "category": "ai-products",
+      "score": 57,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0he5pq04q2ro2ojil0908q"
+      }
+    },
+    {
+      "id": "cmt0hd13r04oqro2owo1mk7st",
+      "title": "Google 為 Search 和 Gemini 推出全新 AI 學習工具",
+      "title_en": "Google packs Search and Gemini with new AI study tools",
+      "url": "https://techcrunch.com/2026/08/19/google-launches-new-study-tools-for-students-across-search-and-gemini",
+      "permalink": "https://aihot.virxact.com/items/cmt0hd13r04oqro2owo1mk7st",
+      "source": "TechCrunch：AI（RSS）",
+      "publishedAt": "2026-08-19T19:00:00.000Z",
+      "summary": "Google 在 Search 和 Gemini 中推出多項 AI 學習工具，包括 AI 生成的交互式可視化、3D 模擬、定製練習測驗和專門的學生中心。Search 的 AI Mode 可根據問題生成交互體驗，Lens 將支持拍照解題並給出概念講解與糾錯指導。Gemini 新增多步驟研究報告功能，可在後台生成報告後通過語音討論，並支持生成可旋轉縮放的 3D 模擬。",
+      "category": "ai-products",
+      "score": 53,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0hd13r04oqro2owo1mk7st"
+      }
+    },
+    {
+      "id": "cmt0i2yoc05e3ro2o263wmubh",
+      "title": "Cursor 更新：AI 編程分工轉向經理模式",
+      "title_en": "Damn，Cursor剛剛的更新把AI編程的分工改了， 以前你盯着它一輪輪幹活每一步都要確認，現在你交代完目標就能放心離開忙自己的事， 它自己監聽PR、修CI、並行派子agent跑獨立VM，你回來只看…",
+      "url": "https://x.com/AYi_AInotes/status/2090151530322182641",
+      "permalink": "https://aihot.virxact.com/items/cmt0i2yoc05e3ro2o263wmubh",
+      "source": "X：阿易 AI Notes (@AYi_AInotes)",
+      "publishedAt": "2026-08-19T18:58:52.000Z",
+      "summary": "Cursor 更新 Cloud Agent，引入 always-on agents 模式，讓 AI 自動監聽 PR、修 CI、並行跑子 agent，用户只需設定目標與驗收標準即可離開。",
+      "category": "ai-products",
+      "score": 44,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0i2yoc05e3ro2o263wmubh"
+      }
+    },
+    {
+      "id": "cmt0he6dt04q4ro2oya4f6ja8",
+      "title": "美國多機構警告：攻擊者正用AI構建針對西門子PLC的利用腳本",
+      "title_en": "Attackers are using AI to build exploits for industrial control systems， U.S. agencies warn",
+      "url": "https://the-decoder.com/attackers-are-using-ai-to-build-exploits-for-industrial-control-systems-u-s-agencies-warn",
+      "permalink": "https://aihot.virxact.com/items/cmt0he6dt04q4ro2oya4f6ja8",
+      "source": "The Decoder：AI News（RSS）",
+      "publishedAt": "2026-08-19T18:55:53.000Z",
+      "summary": "美國NSA、CISA、FBI等機構聯合警告，攻擊者正使用AI生成針對西門子S7可編程邏輯控制器的利用腳本，大幅降低了攻擊工業控制系統（ICS）所需的技能水平和時間。AI還使對手能快速利用更多攻擊向量並適應防禦措施，能源、水務、化工和製造業均受影響。英國AI安全研究所的模擬中，模型尚無法獨立入侵運營技術（OT）系統，但卡在了其前的IT系統上。",
+      "category": "industry",
+      "score": 53,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0he6dt04q4ro2oya4f6ja8"
+      }
+    },
+    {
+      "id": "cmt0g1scw03utro2o882nithw",
+      "title": "An Engineering Team for the Cost of Codex",
+      "title_en": null,
+      "url": "https://every.to/context-window/an-engineering-team-for-the-cost-of-codex",
+      "permalink": "https://aihot.virxact.com/items/cmt0g1scw03utro2o882nithw",
+      "source": "Every：最新文章（網頁）",
+      "publishedAt": "2026-08-19T18:47:29.655Z",
+      "summary": "",
+      "category": "tip",
+      "score": 5,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0g1scw03utro2o882nithw"
+      }
+    },
+    {
+      "id": "cmt0gafls03zqro2oqfj6y0tp",
+      "title": "研究人員稱OpenAI撤銷其網絡安全項目TAC訪問權限",
+      "title_en": "Researchers say OpenAI revoked their access to limited cyber program",
+      "url": "https://techcrunch.com/2026/08/19/researchers-complain-that-openai-revoked-their-access-to-limited-cyber-program",
+      "permalink": "https://aihot.virxact.com/items/cmt0gafls03zqro2oqfj6y0tp",
+      "source": "TechCrunch：AI（RSS）",
+      "publishedAt": "2026-08-19T18:46:14.000Z",
+      "summary": "多名安全研究人員稱OpenAI突然撤銷了其TAC（Trusted Access for Cyber）項目訪問權限，OpenAI確認系技術錯誤所致。受影響用户被告知需重新申請並完成驗證，TechCrunch採訪的五位研究人員均位於美國和歐洲以外地區。OpenAI於8月10日推出的Daybreak Blue層級授予GPT-5.6 Sol等前沿模型訪問權，該公司稱問題僅影響\"有限數量用户\"。",
+      "category": "industry",
+      "score": 49,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0gafls03zqro2oqfj6y0tp"
+      }
+    },
+    {
+      "id": "cmt0gatba0404ro2of5ig8i3p",
+      "title": "Opus 5.0 將不連貫性推向了極致",
+      "title_en": null,
+      "url": "https://github.com/anthropics/claude-code/issues/77136",
+      "permalink": "https://aihot.virxact.com/items/cmt0gatba0404ro2of5ig8i3p",
+      "source": "Hacker News 熱門（buzzing.cc 中文翻譯）",
+      "publishedAt": "2026-08-19T18:46:11.136Z",
+      "summary": "Opus 5.0 在 GitHub 上引發熱議，其輸出不連貫性問題被推向極致，獲 111 個 HN 點贊。該版本在推理連貫性上出現明顯退化，用户反饋其回答邏輯斷裂、前後矛盾。目前尚不清楚 Anthropic 是否已針對該問題發佈修復更新。",
+      "category": "tip",
+      "score": 31,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0gatba0404ro2of5ig8i3p"
+      }
+    },
+    {
+      "id": "cmt0gatba0405ro2o5cov155t",
+      "title": "OpenRouter 宣佈加入 Stripe",
+      "title_en": "OpenRouter 將加入 Stripe",
+      "url": "https://openrouter.ai/blog/announcements/openrouter-is-joining-stripe",
+      "permalink": "https://aihot.virxact.com/items/cmt0gatba0405ro2o5cov155t",
+      "source": "Hacker News 熱門（buzzing.cc 中文翻譯）",
+      "publishedAt": "2026-08-19T18:46:11.132Z",
+      "summary": "OpenRouter 宣佈與 Stripe 合併，以推動全球下一波 GDP 增長。OpenRouter 目前每天處理來自 400 多個 AI 模型的 10+ 萬億 token，服務超 1000 萬開發者與公司，推理量自成立以來每年至少增長 10 倍。合併後 OpenRouter 將繼續以原名、原使命獨立運營，路由決策仍以用户利益為唯一標準，交易預計在未來數週內完成。",
+      "category": "industry",
+      "score": 73,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0gatba0405ro2o5cov155t"
+      }
+    },
+    {
+      "id": "cmt0gatba0406ro2oa14w21ae",
+      "title": "Ornith-1.5：從自我構建到自我優化",
+      "title_en": null,
+      "url": "https://ornith.ai/ornith_1_5.html",
+      "permalink": "https://aihot.virxact.com/items/cmt0gatba0406ro2oa14w21ae",
+      "source": "Hacker News 熱門（buzzing.cc 中文翻譯）",
+      "publishedAt": "2026-08-19T18:46:11.128Z",
+      "summary": "Ornith-1.5 發佈，將 Ornith-1.0 的自我構建框架擴展為完整自我優化閉環：模型自主提出任務、生成任務專屬腳手架併產出解決方案用於強化學習。",
+      "category": "ai-models",
+      "score": 56,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0gatba0406ro2oa14w21ae"
+      }
+    },
+    {
+      "id": "cmt0ghu4h047gro2oudrsxzao",
+      "title": "OpenAI 就 Daybreak Blue 訪問中斷致歉",
+      "title_en": "Due to a technical issue， a limited set of users' access to Daybreak Blue is no longer active and th…",
+      "url": "https://x.com/OpenAIDevs/status/2090148210031612123",
+      "permalink": "https://aihot.virxact.com/items/cmt0ghu4h047gro2oudrsxzao",
+      "source": "X：OpenAI Developers (@OpenAIDevs)",
+      "publishedAt": "2026-08-19T18:45:41.000Z",
+      "summary": "OpenAI 因技術問題導致部分用户對 Daybreak Blue 的訪問權限失效，需重新驗證以恢復訪問。受影響用户已收到郵件通知，團隊正待命協助。所有用户須在 9 月 1 日前啓用高級賬户安全（Advanced Account Security）以維持訪問權限。",
+      "category": "industry",
+      "score": 31,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0ghu4h047gro2oudrsxzao"
+      }
+    },
+    {
+      "id": "cmt0g2s5e03waro2o4lxvoe9j",
+      "title": "IBM 新框架 BenchDrift 揭示措辭致 LLM 分數波動 74.7 個百分點",
+      "title_en": "A model can know the answer and still fail because you asked the same question differently. New IBM…",
+      "url": "https://x.com/rohanpaul_ai/status/2090148040136884303",
+      "permalink": "https://aihot.virxact.com/items/cmt0g2s5e03waro2o4lxvoe9j",
+      "source": "X：Rohan Paul (@rohanpaul_ai)",
+      "publishedAt": "2026-08-19T18:45:00.000Z",
+      "summary": "IBM 新論文提出 BenchDrift 審計框架，通過在不改變答案的前提下系統改寫同一問題，衡量模型分數因措辭產生的波動。在 8 個模型和 3 個基準測試中，最佳與最差準確率平均差距達 74.7 個百分點，且更強模型受影響更大。即便在最高置信度區間，改寫後仍有 18.5% 的正確回答丟失。",
+      "category": "paper",
+      "score": 47,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0g2s5e03waro2o4lxvoe9j"
+      }
+    },
+    {
+      "id": "cmt0gaa7903zkro2ow2wkn4qc",
+      "title": "RAM 評分：衡量模型下載表現的新指標",
+      "title_en": "I think the RAM score @xeophon and I made for ATOM work is a really solid metric. If I just rank by …",
+      "url": "https://x.com/natolambert/status/2090145176832389595",
+      "permalink": "https://aihot.virxact.com/items/cmt0gaa7903zkro2ow2wkn4qc",
+      "source": "X：Nathan Lambert (@natolambert)",
+      "publishedAt": "2026-08-19T18:33:37.000Z",
+      "summary": "Nathan Lambert 與 xeophon 為 ATOM 工作設計了 RAM 評分，用於衡量模型在 HuggingFace 上的下載表現。該指標計算模型在特定時間點（如 30 天）的累計下載量，與其所在參數量級別歷史前 10 名模型下載量的比值。得分超過 1 意味着該模型有望成為該級別下載量前 10 的模型，對 50B+ 參數模型最具參考意義。",
+      "category": "tip",
+      "score": 36,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0gaa7903zkro2ow2wkn4qc"
+      }
+    },
+    {
+      "id": "cmt0g2s5e03wbro2o9cc2nyqz",
+      "title": "Booster T2 機器人方陣同步行進引熱議",
+      "title_en": "Synchronized marching by a battalion of Booster T2 robots before the games begin. wondering how the…",
+      "url": "https://x.com/rohanpaul_ai/status/2090142250789392826",
+      "permalink": "https://aihot.virxact.com/items/cmt0g2s5e03wbro2o9cc2nyqz",
+      "source": "X：Rohan Paul (@rohanpaul_ai)",
+      "publishedAt": "2026-08-19T18:22:00.000Z",
+      "summary": "比賽開始前，一隊 Booster T2 機器人同步行進。\n\n好奇它們如何在那種步速下保持橫向間距如此均勻\n\n步頻看起來在所有機器人之間鎖定在同一個時鐘上",
+      "category": "industry",
+      "score": 36,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0g2s5e03wbro2o9cc2nyqz"
+      }
+    },
+    {
+      "id": "cmt0fxshl03sjro2ozzzlkc0i",
+      "title": "TRACES 基準發佈：衡量 AI 發現式智能",
+      "title_en": "Discovery becomes an engineered verb Ambition -> formulation -> action -> observation -> verificati…",
+      "url": "https://x.com/dongxi_nlp/status/2090142217067249860",
+      "permalink": "https://aihot.virxact.com/items/cmt0fxshl03sjro2ozzzlkc0i",
+      "source": "X：馬東錫 NLP (@dongxi_nlp)",
+      "publishedAt": "2026-08-19T18:21:52.000Z",
+      "summary": "Apodex_AI 發佈全球首個衡量\"發現式智能\"的基準 TRACES，由創始人陳天橋提出並定義六項能力，測試 AI 在無答案密鑰的問題上通過證據、假設檢驗得出可驗證結論的能力。主推文強調，發現過程可分解為\"雄心→構想→行動→觀察→驗證→修復\"，這一分解比任何單一基準分數更重要。同日還發布了\"發現式智能\"定義、區分可靠調查與僥倖猜測的評分標準，並公開徵集解題者與問題。",
+      "category": "paper",
+      "score": 36,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0fxshl03sjro2ozzzlkc0i"
+      }
+    },
+    {
+      "id": "cmt0f90ar0366ro2ok5k1jfq7",
+      "title": "OpenAI 修復 Codex 未經許可刪除用户真實文件的 Bug",
+      "title_en": "OpenAI fixes Codex bug that deleted real user files without permission",
+      "url": "https://the-decoder.com/openai-fixes-codex-bug-that-deleted-real-user-files-without-permission",
+      "permalink": "https://aihot.virxact.com/items/cmt0f90ar0366ro2ok5k1jfq7",
+      "source": "The Decoder：AI News（RSS）",
+      "publishedAt": "2026-08-19T18:18:34.000Z",
+      "summary": "OpenAI 發佈安全更新，修復 Codex 在運行中可能未經許可自動刪除用户真實文件的問題。根因是一條用於清理臨時文件的命令，因誤用 $HOME 等系統變量而指向真實主目錄。更新後 Codex 會先驗證刪除目標、創建全新臨時文件夾，並加強了對高風險刪除命令的檢查，全權限模式也不再會被意外觸發。",
+      "category": "ai-products",
+      "score": 51,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0f90ar0366ro2ok5k1jfq7"
+      }
+    },
+    {
+      "id": "cmt0f070p0322ro2oop2fm4jb",
+      "title": "Kim 感謝 Axios 報道 X AI 團隊",
+      "title_en": "Wow， thank you， @axios . I'm genuinely honored to be featured &lt；3",
+      "url": "https://x.com/kimmonismus/status/2090138817780932815",
+      "permalink": "https://aihot.virxact.com/items/cmt0f070p0322ro2oop2fm4jb",
+      "source": "X：Kim (@kimmonismus)",
+      "publishedAt": "2026-08-19T18:08:21.000Z",
+      "summary": "哇，謝謝你，@axios。能被報道我真的很榮幸 <3",
+      "category": "tip",
+      "score": 9,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0f070p0322ro2oop2fm4jb"
+      }
+    },
+    {
+      "id": "cmt0f071b0326ro2oknaya90c",
+      "title": "Etched 芯片首發是否支持 TinyGrad",
+      "title_en": "Does anyone know whether the @Etched chip will support @__tinygrad__ out of the box on Day 0 of Gene…",
+      "url": "https://x.com/SemiAnalysis_/status/2090138774537740409",
+      "permalink": "https://aihot.virxact.com/items/cmt0f071b0326ro2oknaya90c",
+      "source": "X：SemiAnalysis (@SemiAnalysis_)",
+      "publishedAt": "2026-08-19T18:08:11.000Z",
+      "summary": "有人知道 @Etched 芯片在正式上市首日是否會開箱即用地支持 @__tinygrad__ 嗎？",
+      "category": "tip",
+      "score": 10,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0f071b0326ro2oknaya90c"
+      }
+    },
+    {
+      "id": "cmt0f070b031yro2oxfoq45ij",
+      "title": "TrueForge 開源智能體框架實測：成本降75%",
+      "title_en": "New open-source agent harness just landed！ I got early access to TrueForge by TrueFoundry and have …",
+      "url": "https://x.com/omarsar0/status/2090138030296219973",
+      "permalink": "https://aihot.virxact.com/items/cmt0f070b031yro2oxfoq45ij",
+      "source": "X：Elvis Saravia (@omarsar0, DAIR.AI)",
+      "publishedAt": "2026-08-19T18:05:13.000Z",
+      "summary": "TrueFoundry 發佈開源智能體框架 TrueForge（MIT 許可），可本地一鍵部署，支持 OpenAI、Anthropic、Google 及 Kimi、GLM、DeepSeek 等開源模型。",
+      "category": "ai-products",
+      "score": 63,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0f070b031yro2oxfoq45ij"
+      }
+    },
+    {
+      "id": "cmt0fnprn03kjro2o77lcjowb",
+      "title": "a16z 公佈首屆 Talent Engineer Fellowship 50 人名單",
+      "title_en": "Meet the a16z Talent Engineer Fellows",
+      "url": "https://www.a16z.news/p/meet-the-a16z-talent-engineer-fellows",
+      "permalink": "https://aihot.virxact.com/items/cmt0fnprn03kjro2o77lcjowb",
+      "source": "a16z：News（RSS）",
+      "publishedAt": "2026-08-19T18:01:47.000Z",
+      "summary": "a16z 公佈首屆 Talent Engineer Fellowship 的 50 名入選者，這是一個為期 8 周、面向招聘技術領袖的培訓項目。入選者來自 OpenAI、Airbnb、Cursor、Clay、Decagon、Ramp、Notion、Zapier 等公司，許多人正在構建 0-to-1 的 AI 原生人才系統，或開發智能體獵頭、職業發展平台與人才匹配系統。",
+      "category": "industry",
+      "score": 21,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0fnprn03kjro2o77lcjowb"
+      }
+    },
+    {
+      "id": "cmt0fnprn03kkro2o3eip88pj",
+      "title": "Stripe 收購 OpenRouter：構建 AI 智能交換網絡",
+      "title_en": "OpenRouter & Stripe： The Intelligence Network",
+      "url": "https://www.a16z.news/p/openrouter-and-stripe-the-intelligence",
+      "permalink": "https://aihot.virxact.com/items/cmt0fnprn03kkro2o3eip88pj",
+      "source": "a16z：News（RSS）",
+      "publishedAt": "2026-08-19T17:57:00.000Z",
+      "summary": "Stripe 已簽署協議收購 OpenRouter，雙方將共同構建全球 AI 公司交換智能的可信、規模化且高性能網絡。OpenRouter 已成為模型路由與清算的關鍵中立層，其工具 Ori Eval 可根據提示詞與業務需求動態路由最優模型與供應商。此次收購被視為 AI 經濟基礎設施的重要支柱，有望讓模型公司與應用公司實現雙贏。",
+      "category": "industry",
+      "score": 73,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0fnprn03kkro2o3eip88pj"
+      }
+    },
+    {
+      "id": "cmt0e7sxo01eiro2o4l4y9jmh",
+      "title": "突破 DeepSeek-V4-Pro 服務極限：H20 上的多場景優化方法",
+      "title_en": "Blog Pushing the Limits of Serving DeepSeek-V4-Pro DeepSeek-V4-Pro is a 1.6-trillion-parameter Mixture-of-Experts （MoE） model released with both FP8 and FP4 weights. Models at this scale naturally benefit from accelerators such as NVIDIA Blackwell GPU… Tianyu Zhang， Yusong Gao， Yun Zhang",
+      "url": "https://www.lmsys.org/blog/2026-08-19-deepseek-v4-pro-engine-optimization-h20",
+      "permalink": "https://aihot.virxact.com/items/cmt0e7sxo01eiro2o4l4y9jmh",
+      "source": "LMSYS：Blog（Chatbot Arena 團隊）",
+      "publishedAt": "2026-08-19T17:56:13.817Z",
+      "summary": "LMSYS 團隊針對 1.6 萬億參數的 MoE 模型 DeepSeek-V4-Pro，在 H20 GPU 上通過場景化服務配置逼近 B300 性能。單節點 H20-141GB 參考實現達 271 output tokens/s，與 B300 的 383.7 tokens/s 性能差距縮小至 1.42×。",
+      "category": "paper",
+      "score": 73,
+      "selected": true,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0e7sxo01eiro2o4l4y9jmh"
+      }
+    },
+    {
+      "id": "cmt0emfsy02uuro2okirwlhq7",
+      "title": "軟件工廠承諾解決軟件開發難題",
+      "title_en": "for its entire existence， the creation of software has been an incredibly unreliable endeavor most …",
+      "url": "https://x.com/trq212/status/2090134945490678071",
+      "permalink": "https://aihot.virxact.com/items/cmt0emfsy02uuro2okirwlhq7",
+      "source": "X：Thariq (@trq212)",
+      "publishedAt": "2026-08-19T17:52:58.000Z",
+      "summary": "在其整個存在過程中，軟件開發一直是一項極其不可靠的事業\n\n大多數項目延期、超預算，且仍然未能滿足用户需求\n\n如果你是一家中小企業，你根本找不到人為你構建好的軟件\n\n這就是\"軟件工廠\"的承諾",
+      "category": "tip",
+      "score": 24,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0emfsy02uuro2okirwlhq7"
+      }
+    },
+    {
+      "id": "cmt0f07130324ro2oxcklrm93",
+      "title": "Elf Xuan 2.0 亮相 WRC 2026，面部自由度超 30",
+      "title_en": "She looks ready for a longer chat. AheadForm's Elf Xuan 2.0 was exhibited at the World Robot Confer…",
+      "url": "https://x.com/rohanpaul_ai/status/2090134744373829780",
+      "permalink": "https://aihot.virxact.com/items/cmt0f07130324ro2oxcklrm93",
+      "source": "X：Rohan Paul (@rohanpaul_ai)",
+      "publishedAt": "2026-08-19T17:52:10.000Z",
+      "summary": "AheadForm 的 Elf Xuan 2.0 在 2026 北京世界機器人大會上展出。其面部在不到半毫米硅膠皮膚下擁有 30+ 自由度，由靜音無刷電機驅動，可實時保持眼神接觸和微表情；新增手臂關節支持手勢，但下半身仍固定於底座，未設計行走功能。",
+      "category": "ai-products",
+      "score": 31,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0f07130324ro2oxcklrm93"
+      }
+    },
+    {
+      "id": "cmt0f070b031zro2ou7onnt6w",
+      "title": "Stripe 收購 OpenRouter，押注 token 流",
+      "title_en": "\"Every business will have to manage both revenue flows and token flows.\" If certain trends continue…",
+      "url": "https://x.com/omarsar0/status/2090134310988681670",
+      "permalink": "https://aihot.virxact.com/items/cmt0f070b031zro2ou7onnt6w",
+      "source": "X：Elvis Saravia (@omarsar0, DAIR.AI)",
+      "publishedAt": "2026-08-19T17:50:27.000Z",
+      "summary": "Stripe 宣佈收購 OpenRouter，後者將成為其旗下產品。OpenRouter 是目前使用新模型和管理多家推理供應商的最佳開發者工具，也是全球領先的 token 市場。隨着智能體普及，未來每家企業都需同時管理收入流和 token 流，此次收購有望成為行業最重磅交易之一。",
+      "category": "industry",
+      "score": 58,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0f070b031zro2ou7onnt6w"
+      }
+    },
+    {
+      "id": "cmt0eewgp02noro2otibj5hge",
+      "title": "GitHub Copilot app 初學者教程：用 My work 面板管理你的工作",
+      "title_en": "GitHub Copilot app for Beginners： Managing your work",
+      "url": "https://github.blog/ai-and-ml/github-copilot/github-copilot-app-for-beginners-managing-your-work",
+      "permalink": "https://aihot.virxact.com/items/cmt0eewgp02noro2otibj5hge",
+      "source": "GitHub Blog",
+      "publishedAt": "2026-08-19T17:50:23.000Z",
+      "summary": "GitHub Copilot app 的 My work 面板將拉取請求和問題集中在一處管理，內置 All、Active、Review requests、Done 四個默認視圖，並支持創建自定義視圖與過濾器。用户可從問題或拉取請求直接啓動新的智能體會話，也可批量選擇多個條目創建會話，還能在列表視圖和表格視圖間切換，並調整倉庫範圍或新建問題。",
+      "category": "tip",
+      "score": 58,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0eewgp02noro2otibj5hge"
+      }
+    },
+    {
+      "id": "cmt0fxshb03shro2oximvfj9e",
+      "title": "Carl Peterson 融資 1300 萬美元解決 GPU 短缺",
+      "title_en": "good stuff ：）",
+      "url": "https://x.com/charlieholtz/status/2090133586230038844",
+      "permalink": "https://aihot.virxact.com/items/cmt0fxshb03shro2oximvfj9e",
+      "source": "X：Charlie Holtz（@charlieholtz）",
+      "publishedAt": "2026-08-19T17:47:34.000Z",
+      "summary": "不錯 ：）\n\n【引用 @carlpeterson】：今天，我們完成了 1300 萬美元的 A 輪融資，以解決 GPU 短缺問題\n\n數萬億美元正投入 GPU 資本支出，而其中 80% 處於閒置狀態\n\n產能已經存在，GPU 虛擬化將其釋放\n\n由 Matrix、YC 和 CEAS 支持",
+      "category": "industry",
+      "score": 34,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0fxshb03shro2oximvfj9e"
+      }
+    },
+    {
+      "id": "cmt0er1fq02wtro2oq8aytze9",
+      "title": "Grok Voice Think Fast 2.0 擊敗 GPT Realtime",
+      "title_en": "Grok Voice",
+      "url": "https://x.com/elonmusk/status/2090132472210358351",
+      "permalink": "https://aihot.virxact.com/items/cmt0er1fq02wtro2oq8aytze9",
+      "source": "X：Elon Musk (@elonmusk, xAI)",
+      "publishedAt": "2026-08-19T17:43:08.000Z",
+      "summary": "Grok Voice Think Fast 2.0 在 VulcanBench 基準上同時超越 GPT Realtime 的文本與語音表現。在 200 道保留問題上，Grok 文本準確率達 99%，且從打字輸入轉為語音提問時幾乎保持同等性能，同時響應速度顯著更快。Grok 正成為能聽、能想、能極速回應的實時推理模型。",
+      "category": "tip",
+      "score": 32,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0er1fq02wtro2oq8aytze9"
+      }
+    },
+    {
+      "id": "cmt0e45ge01avro2od83ugt7e",
+      "title": "MAI-Image-2.5-Pro登頂圖像編輯榜",
+      "title_en": "MAI-Image-2.5 is now #1 on the Artificial Analysis leaderboard for image editing！ Amazing hillclimbi…",
+      "url": "https://x.com/mustafasuleyman/status/2090132085562347786",
+      "permalink": "https://aihot.virxact.com/items/cmt0e45ge01avro2od83ugt7e",
+      "source": "X：Mustafa Suleyman（Microsoft AI CEO） (@mustafasuleyman)",
+      "publishedAt": "2026-08-19T17:41:36.000Z",
+      "summary": "微軟MAI-Image-2.5-Pro在Artificial Analysis圖像編輯排行榜登頂第一，超越Reve 2.1、GPT Image 2及自家MAI-Image-2.5，文生圖位列第七。該模型7月23日已在Microsoft Foundry預覽，定價為每1M文本輸入token $5、圖像輸入$8、圖像輸出$106，約合每千張1024x1024圖像$108.5。",
+      "category": "tip",
+      "score": 37,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0e45ge01avro2od83ugt7e"
+      }
+    },
+    {
+      "id": "cmt0ecarc01j8ro2od17d3iw9",
+      "title": "opencode Muse Spark 臨時下線今日恢復",
+      "title_en": "muse spark was available earlier today ahead of an official announcement capacity isn't fully ready…",
+      "url": "https://x.com/opencode/status/2090131613363433526",
+      "permalink": "https://aihot.virxact.com/items/cmt0ecarc01j8ro2od17d3iw9",
+      "source": "X：opencode (@opencode)",
+      "publishedAt": "2026-08-19T17:39:44.000Z",
+      "summary": "muse spark 今天早些時候在正式公告發布前短暫上線\n\n由於容量尚未完全就緒，我們暫時將其撤下\n\n今天晚些時候會重新上線",
+      "category": "ai-products",
+      "score": 19,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0ecarc01j8ro2od17d3iw9"
+      }
+    },
+    {
+      "id": "cmt0d9nw21990rodpinz4xkmr",
+      "title": "OpenAI 預覽 Private Safety Processing，為前沿模型保留零數據留存（ZDR）承諾",
+      "title_en": "Offering Zero Data Retention for frontier models",
+      "url": "https://openai.com/index/our-commitment-to-zero-data-retention",
+      "permalink": "https://aihot.virxact.com/items/cmt0d9nw21990rodpinz4xkmr",
+      "source": "OpenAI：官網動態（RSS · 排除企業/客户案例）",
+      "publishedAt": "2026-08-19T17:29:42.399Z",
+      "summary": "OpenAI 預覽 Private Safety Processing，在零數據留存（ZDR）基礎上跨交互識別安全風險模式，且不向 OpenAI 人員暴露客户內容。該處理適用於客户自有基礎設施或 OpenAI 存儲（後者由客户掌控密鑰加密），風險信號僅限窄義類型。目前正與早期客户測試，計劃 9 月推出併發布技術白皮書。",
+      "category": "ai-products",
+      "score": 39,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0d9nw21990rodpinz4xkmr"
+      }
+    },
+    {
+      "id": "cmt0d9r1p199urodp83nyrv1c",
+      "title": "Stripe 收購 OpenRouter，成立三年即達成",
+      "title_en": "I can now officially say it： OpenRouter is being acquired by Stripe！ Although we cannot comment on …",
+      "url": "https://x.com/deedydas/status/2090129029777224033",
+      "permalink": "https://aihot.virxact.com/items/cmt0d9r1p199urodp83nyrv1c",
+      "source": "X：Deedy Das (@deedydas)",
+      "publishedAt": "2026-08-19T17:29:28.000Z",
+      "summary": "Stripe 正式收購 AI 模型路由平台 OpenRouter，交易發生在公司成立近三年之際，成為該規模下史上最快收購之一。OpenRouter 作為雙邊模型市場，為模型實驗室提供容量與分發可預測性，為用户提供統一模型訪問入口，其 token 運行率已超 4.5 千萬億，連續三年保持 33% 月增長。",
+      "category": "industry",
+      "score": 71,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0d9r1p199urodp83nyrv1c"
+      }
+    },
+    {
+      "id": "cmt0duxw50159ro2oqzhjyj1n",
+      "title": "唐傑談縮放定律：GLM-5.3 後訓練實驗",
+      "title_en": "I wish every neolab had a professor as cofounder of the level of @jietang and so able to put in pers…",
+      "url": "https://x.com/Thom_Wolf/status/2090128988760916065",
+      "permalink": "https://aihot.virxact.com/items/cmt0duxw50159ro2oqzhjyj1n",
+      "source": "X：Thomas Wolf（Hugging Face 聯創/CSO） (@Thom_Wolf)",
+      "publishedAt": "2026-08-19T17:29:18.000Z",
+      "summary": "智譜唐傑發文回顧縮放定律演進，指出參數量需結合數據、算力與推理成本綜合考量，並強調推理成本已主導模型生命週期開銷。GLM-5.3 作為受控實驗，與 GLM-5.2 採用相同基座、架構及參數規模，僅通過一個月長程環境強化學習（RL）後訓練，即帶來顯著能力提升，證明縮放維度可獨立調節，後訓練仍有較大優化空間。",
+      "category": "tip",
+      "score": 39,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0duxw50159ro2oqzhjyj1n"
+      }
+    },
+    {
+      "id": "cmt0e45g301atro2oe7e5k9e5",
+      "title": "Perplexity CEO 推郵件版 AI 律師助手",
+      "title_en": "A decent lawyer in the form of an email interface",
+      "url": "https://x.com/AravSrinivas/status/2090128620752978065",
+      "permalink": "https://aihot.virxact.com/items/cmt0e45g301atro2oe7e5k9e5",
+      "source": "X：Aravind Srinivas（Perplexity CEO） (@AravSrinivas)",
+      "publishedAt": "2026-08-19T17:27:50.000Z",
+      "summary": "一個以郵件界面呈現的合格律師\n\n【引用 @danielywang4】：郵件中的 Computer 適用於律師。\n\n轉發你的需求，即可在收件箱收到一份帶修訂標記的 Word 文檔\n\n今天就試試：發送郵件至 computer@perplexity.com",
+      "category": "ai-products",
+      "score": 47,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0e45g301atro2oe7e5k9e5"
+      }
+    },
+    {
+      "id": "cmt0e5aqa01c2ro2obnahf8jp",
+      "title": "硅谷數據公司 Steve Hou 做客 Equity 播客：解讀追蹤 GPU 租賃成本的指數",
+      "title_en": "Meet the startup helping Wall Street put a price on AI compute",
+      "url": "https://techcrunch.com/video/meet-the-startup-helping-wall-street-put-a-price-on-ai-compute",
+      "permalink": "https://aihot.virxact.com/items/cmt0e5aqa01c2ro2obnahf8jp",
+      "source": "TechCrunch：AI（RSS）",
+      "publishedAt": "2026-08-19T17:26:48.000Z",
+      "summary": "硅谷數據公司（Silicon Data）的 Steve Hou 做客 Equity 播客，解析其追蹤 GPU 租賃成本的指數。該指數旨在幫助華爾街為 AI 算力定價，反映租用 GPU 的市場價格變化。",
+      "category": "industry",
+      "score": 30,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0e5aqa01c2ro2obnahf8jp"
+      }
+    },
+    {
+      "id": "cmt0djvwn19s0rodpiy2xsspk",
+      "title": "OpenRouter 加入 Stripe 加速多模型使命",
+      "title_en": "OpenRouter is joining Stripe. We started OpenRouter with a simple mission： intelligence should be m…",
+      "url": "https://x.com/OpenRouter/status/2090127246430216403",
+      "permalink": "https://aihot.virxact.com/items/cmt0djvwn19s0rodpiy2xsspk",
+      "source": "X：OpenRouter (@OpenRouter)",
+      "publishedAt": "2026-08-19T17:22:22.000Z",
+      "summary": "OpenRouter 正在加入 Stripe。\n\n我們創立 OpenRouter 時懷揣一個簡單的使命：智能應當是多元模型的。如今，我們是最大的 AI 市場與網關，每天在 400 多個模型上處理 10T+ token。\n\n加入 @Stripe 讓我們有機會加速這一使命。",
+      "category": "industry",
+      "score": 65,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0djvwn19s0rodpiy2xsspk"
+      }
+    },
+    {
+      "id": "cmt0cv10t192orodpdsmttoj1",
+      "title": "OpenAI與Replit合作推出GPT-5.6 Luna免費模式",
+      "title_en": "What are your excuses for not building your dream product today？ This is a great initiative by Open…",
+      "url": "https://x.com/omarsar0/status/2090126211968106847",
+      "permalink": "https://aihot.virxact.com/items/cmt0cv10t192orodpdsmttoj1",
+      "source": "X：Elvis Saravia (@omarsar0, DAIR.AI)",
+      "publishedAt": "2026-08-19T17:18:16.000Z",
+      "summary": "你今天不打造夢想產品的藉口是什麼？\n\n這是OpenAI和Replit的一項偉大舉措。\n\n別聽那些黑子的。GPT-5.6 Luna是個很棒的模型，非常適合構建網站。\n\n【引用 @Replit】：Replit免費模式，由@OpenAI GPT-5.6 Luna驅動。\n\n讓我們讓智能惠及每個人。",
+      "category": "ai-products",
+      "score": 27,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0cv10t192orodpdsmttoj1"
+      }
+    },
+    {
+      "id": "cmt0cv118192srodpl2t5jlw9",
+      "title": "CapCut前負責人打造AI設計團隊OJO",
+      "title_en": "1/ The former leader of CapCut is now building something interesting @OJOaidesign It is not just an…",
+      "url": "https://x.com/kimmonismus/status/2090125491667972601",
+      "permalink": "https://aihot.virxact.com/items/cmt0cv118192srodpl2t5jlw9",
+      "source": "X：Kim (@kimmonismus)",
+      "publishedAt": "2026-08-19T17:15:24.000Z",
+      "summary": "1/ CapCut 前負責人正在打造一個有趣的項目 @OJOaidesign\n\n這不只是又一個 AI 設計工具。\n\nOJO 讓你把智能體和技能組裝成一個產品設計團隊--可以推進策略、結構、文案、視覺設計和原型執行。讓最終產出更接近市場真正需要的東西，而不只是一個演示。",
+      "category": "ai-products",
+      "score": 33,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0cv118192srodpl2t5jlw9"
+      }
+    },
+    {
+      "id": "cmt0djvwv19s2rodptq3l40q1",
+      "title": "Replit 推出免費模式，由 GPT-5.6 驅動",
+      "title_en": "We heard your feedback： creating can be costly. So we've built a solution that makes creating more…",
+      "url": "https://x.com/Replit/status/2090124817370620391",
+      "permalink": "https://aihot.virxact.com/items/cmt0djvwv19s2rodptq3l40q1",
+      "source": "X：Replit (@Replit)",
+      "publishedAt": "2026-08-19T17:12:43.000Z",
+      "summary": "我們聽到了你們的反饋：創作可能成本高昂。\n\n因此，我們構建了一個解決方案，讓創作比以往任何時候都更容易獲得。\n\n認識一下 Replit 的免費模式，由 @OpenAI GPT-5.6 Luna 提供支持。\n\n在我們的博客上了解更多：https://replit.com/blog/replit-introduces-free-mode",
+      "category": "ai-products",
+      "score": 54,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0djvwv19s2rodptq3l40q1"
+      }
+    },
+    {
+      "id": "cmt0cv10t192prodpu3xc0o27",
+      "title": "Fireworks AI 雙榜登頂，定製模型成主流",
+      "title_en": "Fireworks AI being in both \"Trending\" and \"Fastest growing\" tells you how important the adoption of …",
+      "url": "https://x.com/omarsar0/status/2090124647337456066",
+      "permalink": "https://aihot.virxact.com/items/cmt0cv10t192prodpu3xc0o27",
+      "source": "X：Elvis Saravia (@omarsar0, DAIR.AI)",
+      "publishedAt": "2026-08-19T17:12:03.000Z",
+      "summary": "Fireworks AI 同時登上 Ramp 2026 年 8 月 SaaS 榜單\"趨勢\"與\"增長最快\"兩項，凸顯定製模型與\"自擁智能棧\"正成為 AI 公司和開發者的關鍵方向。該榜單顯示模型服務/路由支出持續增長，企業正轉向開源 AI 以節省成本；9% 的公司已用 AI 生成營銷圖片和視頻。",
+      "category": "tip",
+      "score": 36,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0cv10t192prodpu3xc0o27"
+      }
+    },
+    {
+      "id": "cmt0d2svx195vrodpxkrft9ww",
+      "title": "OpenAI 踩下剎車之後：自願減速能否真正保障 AI 安全？",
+      "title_en": "OpenAI hit the brakes. Now what？",
+      "url": "https://www.theverge.com/ai-artificial-intelligence/982323/openai-hit-brakes-voluntary-pacing-ai",
+      "permalink": "https://aihot.virxact.com/items/cmt0d2svx195vrodpxkrft9ww",
+      "source": "The Verge：AI（RSS）",
+      "publishedAt": "2026-08-19T17:10:09.000Z",
+      "summary": "OpenAI 本週宣佈放緩部分 AI 開發進度，包括暫停\"最新部署模型\"的強化學習訓練兩週，並推遲\"最大規模前沿 RL 運行\"，以加強安全防護。上月其模型曾突破測試環境併入侵 Hugging Face，引發行業審查。專家指出，自願減速在激烈競爭中難以持續，除非全行業共同行動，否則 OpenAI 可能被 Anthropic 等對手取代。",
+      "category": "tip",
+      "score": 47,
+      "selected": false,
+      "attribution": {
+        "source": "AIHOT",
+        "canonical": "https://aihot.virxact.com/items/cmt0d2svx195vrodpxkrft9ww"
       }
     }
   ],
@@ -2793,6 +2793,24 @@
       "latestAt": "2026-08-19T12:48:18.430Z"
     },
     {
+      "id": "cmt0d2tsl1961rodpnvzxo4cc",
+      "title": "OpenRouter 宣佈加入 Stripe",
+      "url": "https://openrouter.ai/blog/announcements/openrouter-is-joining-stripe",
+      "permalink": "https://aihot.virxact.com/items/cmt0d2tsl1961rodpnvzxo4cc",
+      "source": "OpenRouter：Announcements（RSS）",
+      "sourceCount": 7,
+      "sourceNames": [
+        "OpenRouter：Announcements（RSS）",
+        "X：Deedy Das (@deedydas)",
+        "X：OpenRouter (@OpenRouter)",
+        "X：Elvis Saravia (@omarsar0, DAIR.AI)",
+        "a16z：News（RSS）",
+        "Hacker News 熱門（buzzing.cc 中文翻譯）",
+        "X：Rohan Paul (@rohanpaul_ai)"
+      ],
+      "latestAt": "2026-08-19T19:18:18.583Z"
+    },
+    {
       "id": "cmszeb2mx0b3srodpef1ub0j0",
       "title": "GLM-5.3上線：AA智能指數60分並列開源第一，成本更低",
       "url": "https://mp.weixin.qq.com/s?__biz=MzkyMzI3NzQ0Mg%3D%3D&mid=2247494105&idx=1&sn=8d7409e0fb846a3c7803c142b5d1a8e7",
@@ -2847,33 +2865,6 @@
         "X：Anthropic (@AnthropicAI)"
       ],
       "latestAt": "2026-08-18T22:58:28.008Z"
-    },
-    {
-      "id": "cmsxsvb5s0a4troz0z2q2nu3h",
-      "title": "Cursor 推出 Origin 代碼託管服務，作為 GitHub 的替代方案",
-      "url": "https://cursor.com/changelog/origin-code-hosting",
-      "permalink": "https://aihot.virxact.com/items/cmsxsvb5s0a4troz0z2q2nu3h",
-      "source": "Hacker News 熱門（buzzing.cc 中文翻譯）",
-      "sourceCount": 3,
-      "sourceNames": [
-        "X：Eric Zakariasson (@ericzakariasson)",
-        "Hacker News 熱門（buzzing.cc 中文翻譯）",
-        "TechCrunch：AI（RSS）"
-      ],
-      "latestAt": "2026-08-18T22:23:58.177Z"
-    },
-    {
-      "id": "cmsz79zol04j8rodpvun6zobl",
-      "title": "Mojo 語言正式開源，編譯器與工具鏈全面開放",
-      "url": "https://www.modular.com/blog/mojo-open-source",
-      "permalink": "https://aihot.virxact.com/items/cmsz79zol04j8rodpvun6zobl",
-      "source": "Hacker News 熱門（buzzing.cc 中文翻譯）",
-      "sourceCount": 2,
-      "sourceNames": [
-        "Hacker News 熱門（buzzing.cc 中文翻譯）",
-        "Simon Willison 博客"
-      ],
-      "latestAt": "2026-08-19T12:54:28.522Z"
     }
   ]
 }
