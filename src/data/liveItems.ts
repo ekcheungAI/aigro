@@ -127,13 +127,13 @@ export function startLiveItems(): void {
  */
 export function useLiveItems(): AihotRawItem[] | null {
   startLiveItems();
-  return useSyncExternalStore(subscribe, getSnapshot).items;
+  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot).items;
 }
 
 /** live 數據時間(未成熟 → null,consumer 回落 aihotFetchedAt) */
 export function useLiveFetchedAt(): string | null {
   startLiveItems();
-  return useSyncExternalStore(subscribe, getSnapshot).fetchedAt;
+  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot).fetchedAt;
 }
 
 /* ============ 衍生 selector(v1.27 公開頁面 live hydration) ============ */
