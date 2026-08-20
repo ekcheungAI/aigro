@@ -525,7 +525,7 @@ export default function AdminSources() {
 
   const activeCount = list.filter((s) => s.status === "active").length;
 
-  /** 啟用 / 暫停 — 同步 Argro registry，再更新 public status */
+  /** 啟用 / 暫停 — proxy 會同步 Argro registry + public status */
   const toggleSource = async (s: AdminSourceRow) => {
     if (!supabase || busyId) return;
     const next = s.status === "active" ? "paused" : "active";

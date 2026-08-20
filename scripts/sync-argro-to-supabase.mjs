@@ -160,6 +160,8 @@ for (const it of streamItems) if (dailyIds.has(it.id)) upsertRow(it, "daily");
 for (const it of hotItems) if (dailyIds.has(it.id)) upsertRow(it, "daily");
 
 const payload = [...rows.values()];
+const fetchedAt = new Date().toISOString();
+for (const row of payload) row.fetched_at = fetchedAt;
 console.log(
   `argro: ${hotItems.length} hot + ${streamItems.length} stream (${stream.pages} page(s)) → ${payload.length} unique items ` +
     `(${payload.filter((r) => r.placement === "daily").length} daily, ` +
@@ -218,10 +220,12 @@ for (const row of payload) {
     continue;
   }
   // Sync refreshes upstream fields but never republishes/replaces an editor's
-  // status, placement, or attribution decision.
+  // status, placement, summary, category, or attribution decision.
   delete row.status;
   delete row.placement;
   if (!row.source_id) delete row.source_id;
+  delete row.summary;
+  delete row.category;
 }
 
 // upsert(on_conflict=fingerprint)— 分批 100
