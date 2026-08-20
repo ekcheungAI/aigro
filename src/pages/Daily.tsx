@@ -5,12 +5,12 @@ import {
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Calendar, ExternalLink } from "lucide-react";
 import Reveal, { REVEAL_EASE } from "@/components/Reveal";
 import UpdatedChip from "@/components/UpdatedChip";
-import { dailyInfoForDate, todayInfo, recentIssues } from "@/lib/daily";
+import { dailyInfoForDate, recentIssues } from "@/lib/daily";
 import { aihotDaily, type AihotDailyEntry } from "@/data/aihot";
 import {
   hkDayKey,
@@ -28,7 +28,7 @@ const LIST_COUNT = 8;
  * Daily 日報 (daily.md): 報紙刊頭版式 — Masthead（期號行下接 slim 日期導航列,
  * popover 近 7 日）→ 雙髮絲線 → 頭條 Lead → 分類小標編號列表 → Ask CTA 細帶。
  * v1.6: 作為「資訊中心」的每日日報 tab 內容嵌入（embedded 縮減頂距）；
- * 獨立路由 /insights/daily 由下方 default export 重定向至 /insights?tab=daily。
+ * 獨立路由 /insights/daily 由 default export 直接渲染同一份內容，保留可分享 deep link。
  * news-10x: 往期日報由 live 情報按香港日期真實合成(synthesizeDailyForDate),
  * 冇數據嘅日期喺 picker disable — 唔再係假「整理中」toast。
  */
@@ -43,7 +43,7 @@ export function DailyContent({ embedded = false }: { embedded?: boolean }) {
      (邏輯同 fetch-argro.mjs 一致),未成熟回落 build-time snapshot。 */
   const liveDaily = useLiveDaily();
   const liveInsights = useLiveInsights();
-  const { isLive, isArchive } = useDataFreshness();
+  const { isLive, isArchive, todayDate } = useDataFreshness();
   const currentDaily = liveDaily ?? aihotDaily;
   const issueAnchor = useMemo(() => {
     const raw = liveInsights?.[0]?.publishedAt ??
@@ -92,14 +92,14 @@ export function DailyContent({ embedded = false }: { embedded?: boolean }) {
       ? { date: info.date, weekday: info.weekday, number: info.number }
       : !isLive && daily.date
         ? dailyInfoForDate(daily.date)
-        : todayInfo();
+        : dailyInfoForDate(todayDate);
     const listCount = Math.min(daily.items.length, LIST_COUNT);
     return {
       ...base,
       sources: daily.itemCount,
       picks: (daily.lead ? 1 : 0) + listCount,
     };
-  }, [daily, viewingDate, isLive, recentIssueRows]);
+  }, [daily, viewingDate, isLive, recentIssueRows, todayDate]);
   const lead = daily.lead;
 
   /* 編號列表按 section 分組(數據一早已計好) + 全刊連續編號(頭條 = 01)。
@@ -374,7 +374,7 @@ export function DailyContent({ embedded = false }: { embedded?: boolean }) {
               ? "香港繁體整理 · 歷史資料快照"
               : "香港繁體整理 · 資料快照"}
           {/* 誠實日期:數據日唔係今日就並列「內容截至」 */}
-          {daily.date && daily.date !== todayInfo().date && (
+          {daily.date && daily.date !== todayDate && (
             <> · 內容截至 {daily.date}</>
           )}
         </motion.p>
@@ -612,10 +612,7 @@ function DailyListCard({
   );
 }
 
-/**
- * 獨立路由 /insights/daily（v1.6 起）— 日報已併入資訊中心 tab，
- * 直接重定向，保留舊連結不失效。
- */
+/** 獨立路由 /insights/daily — 與 Insights 日報 tab 共用內容。 */
 export default function Daily() {
-  return <Navigate to="/insights?tab=daily" replace />;
+  return <DailyContent />;
 }
