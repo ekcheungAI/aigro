@@ -123,7 +123,7 @@ Deno.test("provider timeout defaults to 15 seconds and accepts a positive overri
 
 Deno.test("provider deadline aborts the upstream signal after the timeout", async () => {
   const deadline = createProviderDeadline(5);
-  let guardId: number | undefined;
+  let guardId: ReturnType<typeof setTimeout> | undefined;
   try {
     await Promise.race([
       new Promise<void>((resolve) => {

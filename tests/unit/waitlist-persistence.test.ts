@@ -45,7 +45,7 @@ describe("waitlist persistence", () => {
 
   it("returns null when both persistence paths fail", async () => {
     insert.mockResolvedValueOnce({ error: new Error("offline") });
-    vi.spyOn(window.localStorage, "setItem").mockImplementationOnce(() => {
+    vi.spyOn(window.localStorage, "setItem").mockImplementation(() => {
       throw new Error("storage unavailable");
     });
 

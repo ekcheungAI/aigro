@@ -1352,7 +1352,7 @@ Deno.test("authorized worker handler returns 202 before background work complete
     },
   };
   const handler = createSocialSyncHandler(handlerOptions);
-  let timeout: number | undefined;
+  let timeout: ReturnType<typeof setTimeout> | undefined;
   const response = await Promise.race([
     handler(
       new Request("https://example.test", {
