@@ -8,7 +8,8 @@ import { initAuth } from '@/components/auth/member'
 initAuth()
 
 const root = document.getElementById('root')!
-const normalizePath = (path: string) => path.length > 1 ? path.replace(/\/+$/, '') : path
+const normalizePath = (path: string) =>
+  path.length > 1 ? path.replace(/\/+$/, '') : path
 const currentUrl = `${normalizePath(window.location.pathname)}${window.location.search}`
 const prerenderUrl = root.dataset.prerenderUrl
 const app = (

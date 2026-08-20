@@ -254,7 +254,6 @@ export interface AdminSourceRow {
   name: string;
   type: "rss" | "api" | "scraper";
   domain: string | null;
-  endpoint: string | null;
   vertical: string | null;
   lang: string | null;
   weight: number | null;

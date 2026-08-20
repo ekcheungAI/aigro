@@ -532,11 +532,6 @@ export default function AdminSources() {
     setBusyId(s.id);
     try {
       await mutateArgroSource({ action: "set_active", sourceId: s.id, isActive: next === "active" });
-      const { error: updateError } = await supabase
-        .from("sources")
-        .update({ status: next })
-        .eq("id", s.id);
-      if (updateError) throw new Error(updateError.message);
     } catch (error) {
       setBusyId(null);
       toast(`更新失敗:${error instanceof Error ? error.message : String(error)}`);
@@ -554,11 +549,6 @@ export default function AdminSources() {
     setBusyId(s.id);
     try {
       await mutateArgroSource({ action: "archive", sourceId: s.id });
-      const { error: updateError } = await supabase
-        .from("sources")
-        .update({ status: "paused" })
-        .eq("id", s.id);
-      if (updateError) throw new Error(updateError.message);
     } catch (error) {
       setBusyId(null);
       toast(`封存失敗:${error instanceof Error ? error.message : String(error)}`);
@@ -702,7 +692,7 @@ export default function AdminSources() {
                       <td className="px-4 py-3">
                         <p className="font-medium text-text-primary">{s.name}</p>
                         <p className="mt-0.5 max-w-[220px] truncate font-mono text-[11px] text-text-muted">
-                          {s.domain ?? s.endpoint ?? "—"}
+                          {s.domain ?? "—"}
                         </p>
                       </td>
                       <td className="px-4 py-3">

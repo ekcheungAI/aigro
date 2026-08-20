@@ -12,6 +12,19 @@ create table if not exists public.source_connectors (
 
 alter table public.source_connectors enable row level security;
 
+-- Move existing feed URLs before revoking public.sources access. This is an
+-- idempotent, one-way migration: connector secrets remain server-only and the
+-- legacy column is cleared so a future grant cannot accidentally expose them.
+insert into public.source_connectors (source_id, endpoint)
+select id, endpoint
+from public.sources
+where endpoint is not null and btrim(endpoint) <> ''
+on conflict (source_id) do nothing;
+
+update public.sources
+set endpoint = null
+where endpoint is not null;
+
 revoke all on public.source_connectors from anon, authenticated;
 grant all on public.source_connectors to service_role;
 

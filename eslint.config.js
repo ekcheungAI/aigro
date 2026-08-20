@@ -41,4 +41,11 @@ export default defineConfig([
       'react-refresh/only-export-components': 'off',
     },
   },
+  {
+    files: ['src/prerender/entry-server.tsx'],
+    rules: {
+      // This is a Vite SSR entrypoint, not a hot-reloaded component module.
+      'react-refresh/only-export-components': 'off',
+    },
+  },
 ])

@@ -21,5 +21,12 @@
       ]
     }
   ],
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [
+    { "source": "/insights", "destination": "/insights/index.html" },
+    { "source": "/insights/daily", "destination": "/insights/daily/index.html" },
+    { "source": "/cases", "destination": "/cases/index.html" },
+    { "source": "/experts", "destination": "/experts/index.html" },
+    { "source": "/guides", "destination": "/guides/index.html" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }

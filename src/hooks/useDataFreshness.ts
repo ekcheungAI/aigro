@@ -14,7 +14,13 @@ export default function useDataFreshness() {
   // Keep the first SSR/client render deterministic; refresh the wall clock
   // only after hydration so prerendered pages cannot disagree on age/status.
   const [now, setNow] = useState<number | null>(null);
-  useEffect(() => setNow(Date.now()), []);
+  useEffect(() => {
+    // Schedule the read after the effect turn. Besides avoiding a cascading
+    // effect render, this keeps the server snapshot and first client pass
+    // identical for React hydration.
+    const timer = window.setTimeout(() => setNow(Date.now()), 0);
+    return () => window.clearTimeout(timer);
+  }, []);
   const fetchedAt = liveFetchedAt ?? aihotFetchedAt;
   const snapshotIsArchive =
     Number.isNaN(SNAPSHOT_FETCHED_AT_MS) ||
@@ -30,6 +36,12 @@ export default function useDataFreshness() {
     isArchive: status === "archive",
     status,
     fetchedAt,
-    ago: timeAgo(fetchedAt, liveFetchedAt ? now ?? Date.now() : now ?? SNAPSHOT_FETCHED_AT_MS),
+    // Never read the wall clock during render.  The first SSR/client pass must
+    // use a stable anchor; the effect above refreshes it immediately after
+    // hydration when live data is available.
+    ago: timeAgo(
+      fetchedAt,
+      now ?? (liveFetchedAt ? new Date(fetchedAt).getTime() : SNAPSHOT_FETCHED_AT_MS),
+    ),
   };
 }

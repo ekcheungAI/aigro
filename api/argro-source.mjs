@@ -115,12 +115,26 @@ async function upstreamSource({ base, apiKey, source }) {
 }
 
 async function upsertLocalSource(supabaseUrl, key, source) {
-  const response = await fetch(`${supabaseUrl}/rest/v1/sources?on_conflict=name`, {
-    method: "POST",
+  const commonHeaders = {
+    ...supabaseHeaders(key),
+    "Content-Type": "application/json",
+  };
+  const lookup = await fetch(
+    `${supabaseUrl}/rest/v1/sources?select=id&name=eq.${encodeURIComponent(source.name)}&limit=1`,
+    { headers: supabaseHeaders(key) },
+  );
+  if (!lookup.ok) return { error: "local_source_lookup_failed", status: 502 };
+  const existingRows = await lookup.json();
+  const existingId = existingRows[0]?.id;
+  const response = await fetch(
+    existingId
+      ? `${supabaseUrl}/rest/v1/sources?id=eq.${encodeURIComponent(existingId)}`
+      : `${supabaseUrl}/rest/v1/sources`,
+    {
+    method: existingId ? "PATCH" : "POST",
     headers: {
-      ...supabaseHeaders(key),
-      "Content-Type": "application/json",
-      Prefer: "resolution=merge-duplicates,return=representation",
+      ...commonHeaders,
+      Prefer: "return=representation",
     },
     body: JSON.stringify({
       name: source.name,
@@ -132,7 +146,8 @@ async function upsertLocalSource(supabaseUrl, key, source) {
       weight: source.weight,
       status: source.isActive ? "active" : "pending",
     }),
-  });
+    },
+  );
   if (!response.ok) return { error: "local_source_update_failed", status: response.status };
   const rows = await response.json();
   const row = Array.isArray(rows) ? rows[0] : rows;

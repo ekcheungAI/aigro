@@ -1,11 +1,14 @@
 import { useEffect } from "react";
+import {
+  DEFAULT_DESC,
+  DEFAULT_TITLE,
+  formatPageTitle,
+  SITE_NAME,
+  SITE_URL,
+} from "@/lib/routeMeta";
 
-const SITE_NAME = "AIGRO";
-const SITE_URL = "https://aigro.io";
 const DEFAULT_OG_IMAGE = "/og-image.png";
 const DEFAULT_OG_IMAGE_ALT = "AIGRO 香港 AI Builder 社群";
-const DEFAULT_DESC =
-  "香港最值得信賴的 AI・增長・商業情報平台 — 每日精選情報、實戰案例、認證導師 AI 分身，香港視角。";
 
 function setMeta(attr: "name" | "property", key: string, content: string) {
   let el = document.head.querySelector<HTMLMetaElement>(
@@ -57,8 +60,8 @@ export default function usePageMeta(
 
   useEffect(() => {
     const fullTitle = title
-      ? `${title} — ${SITE_NAME} 香港 AI × Growth 情報平台`
-      : `${SITE_NAME} — 香港 AI × Growth 情報平台`;
+      ? formatPageTitle(title)
+      : DEFAULT_TITLE;
     const shareTitle = ogTitle ?? fullTitle;
     const shareImage = absolutize(ogImage);
     const desc = description ?? DEFAULT_DESC;
@@ -95,7 +98,7 @@ export default function usePageMeta(
     }
 
     return () => {
-      document.title = `${SITE_NAME} — 香港 AI × Growth 情報平台`;
+      document.title = DEFAULT_TITLE;
       canonicalEl?.remove();
     };
   }, [title, description, canonical, ogType, ogTitle, ogImage, ogImageAlt]);

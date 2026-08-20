@@ -245,4 +245,6 @@ for (let i = 0; i < payload.length; i += 100) {
   written += batch.length;
 }
 
-console.log(`supabase: upserted ${written} items (status=published). Done.`);
+console.log(
+  `supabase: upserted ${written} items (${AUTO_PUBLISH ? "new rows published" : "new rows pending review"}). Done.`,
+);
