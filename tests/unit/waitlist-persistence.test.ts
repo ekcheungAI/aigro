@@ -22,6 +22,7 @@ describe("waitlist persistence", () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   it("reports a confirmed server insert", async () => {
@@ -45,8 +46,13 @@ describe("waitlist persistence", () => {
 
   it("returns null when both persistence paths fail", async () => {
     insert.mockResolvedValueOnce({ error: new Error("offline") });
-    vi.spyOn(window.localStorage, "setItem").mockImplementation(() => {
-      throw new Error("storage unavailable");
+    vi.stubGlobal("window", {
+      localStorage: {
+        getItem: () => null,
+        setItem: () => {
+          throw new Error("storage unavailable");
+        },
+      },
     });
 
     await expect(
