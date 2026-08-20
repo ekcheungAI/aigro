@@ -41,22 +41,22 @@ Deno.test("revocation after synthesis prevents probes and completion", async () 
   let probeCalls = 0;
   let evaluatorCalls = 0;
   let completionCalls = 0;
-  const loadCoverage = async () => authorized;
+  const loadCoverage = () => Promise.resolve(authorized);
 
-  await callWithCurrentPersonaAuthorization(expected, loadCoverage, async () => {
+  await callWithCurrentPersonaAuthorization(expected, loadCoverage, () => {
     synthesisCalls += 1;
-    return {};
+    return Promise.resolve({});
   });
   authorized = ["r1"];
 
   await rejectsWithRightsCode(async () => {
-    await callWithCurrentPersonaAuthorization(expected, loadCoverage, async () => {
+    await callWithCurrentPersonaAuthorization(expected, loadCoverage, () => {
       probeCalls += 1;
-      return [];
+      return Promise.resolve([]);
     });
-    await callWithCurrentPersonaAuthorization(expected, loadCoverage, async () => {
+    await callWithCurrentPersonaAuthorization(expected, loadCoverage, () => {
       evaluatorCalls += 1;
-      return {};
+      return Promise.resolve({});
     });
     completionCalls += 1;
   });
@@ -72,16 +72,16 @@ Deno.test("revocation after probes prevents evaluator and completion", async () 
   let authorized = [...expected];
   let evaluatorCalls = 0;
   let completionCalls = 0;
-  const loadCoverage = async () => authorized;
+  const loadCoverage = () => Promise.resolve(authorized);
 
-  await callWithCurrentPersonaAuthorization(expected, loadCoverage, async () => "blueprint");
-  await callWithCurrentPersonaAuthorization(expected, loadCoverage, async () => ["probe"]);
+  await callWithCurrentPersonaAuthorization(expected, loadCoverage, () => Promise.resolve("blueprint"));
+  await callWithCurrentPersonaAuthorization(expected, loadCoverage, () => Promise.resolve(["probe"]));
   authorized = ["r2"];
 
   await rejectsWithRightsCode(async () => {
-    await callWithCurrentPersonaAuthorization(expected, loadCoverage, async () => {
+    await callWithCurrentPersonaAuthorization(expected, loadCoverage, () => {
       evaluatorCalls += 1;
-      return "score";
+      return Promise.resolve("score");
     });
     completionCalls += 1;
   });
