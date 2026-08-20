@@ -1,3 +1,5 @@
+import { isIP } from "node:net";
+
 const json = (response, status, body) => {
   response.statusCode = status;
   response.setHeader("Content-Type", "application/json; charset=utf-8");
@@ -8,6 +10,36 @@ const json = (response, status, body) => {
 const SOURCE_TYPES = new Set(["rss", "api", "scraper"]);
 const MAX_NAME_LENGTH = 160;
 const MAX_ENDPOINT_LENGTH = 2_000;
+
+function isPrivateOrLocalHostname(hostname) {
+  const host = hostname.toLowerCase().replace(/^\[|\]$/g, "").replace(/\.$/, "");
+  if (
+    host === "localhost" ||
+    host === "localhost.localdomain" ||
+    host === "metadata.google.internal" ||
+    host.endsWith(".local") ||
+    host.endsWith(".internal")
+  ) {
+    return true;
+  }
+  const family = isIP(host);
+  if (family === 4) {
+    const octets = host.split(".").map(Number);
+    const [first, second] = octets;
+    return (
+      first === 0 ||
+      first === 10 ||
+      first === 127 ||
+      (first === 169 && second === 254) ||
+      (first === 172 && second >= 16 && second <= 31) ||
+      (first === 192 && second === 168)
+    );
+  }
+  if (family === 6) {
+    return host === "::1" || host.startsWith("fc") || host.startsWith("fd") || host.startsWith("fe80:");
+  }
+  return false;
+}
 
 function requestBody(request) {
   if (!request.body) return {};
@@ -71,6 +103,7 @@ function validateSource(body) {
   }
   if (parsed.protocol !== "https:") return { error: "endpoint_requires_https" };
   if (parsed.username || parsed.password) return { error: "endpoint_must_not_contain_credentials" };
+  if (isPrivateOrLocalHostname(parsed.hostname)) return { error: "endpoint_must_be_public" };
 
   const lang = typeof body.lang === "string" && body.lang.trim() ? body.lang.trim().slice(0, 12) : "en";
   const vertical = typeof body.vertical === "string" && body.vertical.trim()
