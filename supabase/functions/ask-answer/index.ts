@@ -704,7 +704,7 @@ Deno.serve(async (request) => {
     providerTimeoutMs(Deno.env.get("MINIMAX_TIMEOUT_MS")),
   );
   let clientCancelled = false;
-  let progressTimer: number | undefined;
+  let progressTimer: ReturnType<typeof setInterval> | undefined;
   const stopProgress = () => {
     if (progressTimer !== undefined) clearInterval(progressTimer);
     progressTimer = undefined;
