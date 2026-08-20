@@ -162,7 +162,13 @@ create policy "msg_owner_all" on public.messages for all
 
 -- items/sources: 公開讀 published;寫入只限 service role
 create policy "items_public_read" on public.items for select using (status = 'published');
-create policy "sources_public_read" on public.sources for select using (status = 'active');
+create policy "sources_public_read" on public.sources for select using (
+  status = 'active'
+  or exists (
+    select 1 from public.items
+    where items.source_id = sources.id and items.status = 'published'
+  )
+);
 
 revoke all on public.sources from anon, authenticated;
 grant select (

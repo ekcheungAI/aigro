@@ -46,6 +46,22 @@ grant select (
   created_at
 ) on public.sources to anon, authenticated;
 
+-- Pausing ingestion must not erase attribution for already-published items.
+-- Keep the non-sensitive source row readable while it is referenced by public
+-- content; only a source with no published history disappears from the wall.
+drop policy if exists sources_public_read on public.sources;
+create policy sources_public_read on public.sources
+for select to anon, authenticated
+using (
+  status = 'active'
+  or exists (
+    select 1
+    from public.items
+    where items.source_id = sources.id
+      and items.status = 'published'
+  )
+);
+
 alter table public.sources drop constraint if exists sources_type_check;
 alter table public.sources add constraint sources_type_check
   check (type in ('rss', 'api', 'scraper', 'mcp'));
