@@ -110,6 +110,7 @@ export default function Footer() {
             <p className="text-overline font-sans uppercase text-band-text-muted">平台</p>
             <ul className="mt-3 space-y-0.5 text-label">
               <li><Link className="text-band-text-secondary transition-colors duration-150 hover:text-band-ink" to="/skills">Skills 技能</Link></li>
+              <li><Link className="text-band-text-secondary transition-colors duration-150 hover:text-band-ink" to="/skills?tab=apis">Public APIs 公開 API</Link></li>
               <li><Link className="text-band-text-secondary transition-colors duration-150 hover:text-band-ink" to="/experts">Experts 專家</Link></li>
               <li><Link className="text-band-text-secondary transition-colors duration-150 hover:text-band-ink" to="/ask">Ask 問答</Link></li>
               <li><Link className="text-band-text-secondary transition-colors duration-150 hover:text-band-ink" to="/experts">領航專家邀請制</Link></li>

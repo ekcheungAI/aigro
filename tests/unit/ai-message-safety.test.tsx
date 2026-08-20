@@ -2,6 +2,8 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it } from "vitest";
 import AiMessage, { type AiReply } from "@/components/ask/AiMessage";
+import ContextPanel from "@/components/ask/ContextPanel";
+import { getPersona } from "@/data/personas";
 
 afterEach(cleanup);
 
@@ -23,6 +25,11 @@ describe("AiMessage safety states", () => {
         { marker: "S3", title: "HTTP", href: "http://example.com/source" },
         { marker: "S4", title: "Script", href: "javascript:alert(1)" },
         { marker: "S5", title: "Protocol relative", href: "//example.com/source" },
+        {
+          marker: "S6",
+          title: "Signed URL",
+          href: "https://storage.example.com/private.pdf?X-Amz-Signature=secret#token",
+        },
       ],
       confidence: 1,
       source: "kb",
@@ -47,6 +54,10 @@ describe("AiMessage safety states", () => {
     expect(
       screen.queryByRole("link", { name: /Protocol relative/ })
     ).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Signed URL/ })).toHaveAttribute(
+      "href",
+      "https://storage.example.com/private.pdf"
+    );
   });
 
   it("uses the server-provided monthly quota scope in the chip and trust line", () => {
@@ -63,5 +74,26 @@ describe("AiMessage safety states", () => {
     expect(screen.getAllByText("本月對話額度已用完").length).toBeGreaterThan(0);
     expect(screen.getByText(/香港時間每月重設/, { selector: "p" })).toBeInTheDocument();
     expect(screen.queryByText(/香港時間每日重設/, { selector: "p" })).not.toBeInTheDocument();
+  });
+
+  it("renders private reference-panel sources as labelled non-links with locators", () => {
+    render(
+      <MemoryRouter>
+        <ContextPanel
+          persona={getPersona("elvin-cheung")}
+          citations={[
+            { marker: "S1", revision_id: "revision-1", title: "私人筆記 A", href: "", page: 3 },
+            { marker: "S2", revision_id: "revision-2", title: "私人筆記 B", href: "", start_seconds: 65 },
+          ]}
+          onSuggestion={() => undefined}
+          suggestionsDisabled={false}
+        />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText(/私人筆記 A · p\.3/)).toBeInTheDocument();
+    expect(screen.getByText(/私人筆記 B · 1:05/)).toBeInTheDocument();
+    expect(screen.getAllByText("私人來源")).toHaveLength(2);
+    expect(screen.queryByRole("link", { name: /私人筆記/ })).not.toBeInTheDocument();
   });
 });

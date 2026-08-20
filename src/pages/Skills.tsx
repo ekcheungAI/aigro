@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   ArrowRight,
   Check,
@@ -12,6 +12,7 @@ import {
   Swords,
 } from "lucide-react";
 import Reveal from "@/components/Reveal";
+import PublicApiDirectory from "@/components/directory/PublicApiDirectory";
 import { cn } from "@/lib/utils";
 import { SKILL_TAGS, skills } from "@/data/skills";
 import type { SkillEntry, SkillStatus, SkillTag } from "@/data/skills";
@@ -154,6 +155,8 @@ function SkillCard({ s }: { s: SkillEntry }) {
 /* ================= Page ================= */
 
 export default function Skills() {
+  const [searchParams] = useSearchParams();
+  const activeTab = searchParams.get("tab") === "apis" ? "apis" : "skills";
   const [query, setQuery] = useState("");
   const [tag, setTag] = useState<TagFilter>("全部");
 
@@ -196,15 +199,58 @@ export default function Skills() {
               AIGRO Directory
             </p>
             <h1 className="mt-3 max-w-[760px] font-display text-display text-band-text">
-              Skills 技能庫
+              {activeTab === "apis" ? "Public APIs 公開 API 目錄" : "Skills 技能庫"}
             </h1>
             <p className="mt-6 max-w-[680px] text-body-lg text-band-text-secondary">
-              俾你嘅 AI agent 裝上專業能力 — 由 AIGRO 策劃嘅開源技能目錄。
+              {activeTab === "apis"
+                ? "為香港 builder 精選公開 API — 睇清認證、CORS、使用場景同官方文件，再決定點樣接入。"
+                : "俾你嘅 AI agent 裝上專業能力 — 由 AIGRO 策劃嘅開源技能目錄。"}
             </p>
           </Reveal>
         </div>
       </section>
 
+      <nav className="mx-auto max-w-container px-6" aria-label="AIGRO Directory 分類">
+        <div className="flex gap-1 border-b pt-5" role="tablist" aria-label="目錄類型">
+          <Link
+            id="directory-skills-tab"
+            to="/skills"
+            role="tab"
+            aria-selected={activeTab === "skills"}
+            aria-controls="directory-skills-panel"
+            className={cn(
+              "press inline-flex min-h-11 items-center border-b-2 px-4 text-label",
+              activeTab === "skills"
+                ? "border-ink text-ink"
+                : "border-transparent text-text-secondary hover:text-ink"
+            )}
+          >
+            Skills 技能
+          </Link>
+          <Link
+            id="directory-apis-tab"
+            to="/skills?tab=apis"
+            role="tab"
+            aria-selected={activeTab === "apis"}
+            aria-controls="directory-apis-panel"
+            className={cn(
+              "press inline-flex min-h-11 items-center border-b-2 px-4 text-label",
+              activeTab === "apis"
+                ? "border-ink text-ink"
+                : "border-transparent text-text-secondary hover:text-ink"
+            )}
+          >
+            Public APIs 公開 API
+          </Link>
+        </div>
+      </nav>
+
+      {activeTab === "skills" ? (
+      <div
+        id="directory-skills-panel"
+        role="tabpanel"
+        aria-labelledby="directory-skills-tab"
+      >
       {/* Directory toolbar — search + tag chips + count */}
       <section className="mx-auto max-w-container px-6 pb-8">
         <Reveal>
@@ -323,6 +369,16 @@ export default function Skills() {
           </p>
         </Reveal>
       </section>
+      </div>
+      ) : (
+        <div
+          id="directory-apis-panel"
+          role="tabpanel"
+          aria-labelledby="directory-apis-tab"
+        >
+          <PublicApiDirectory />
+        </div>
+      )}
     </>
   );
 }

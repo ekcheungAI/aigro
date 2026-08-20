@@ -98,16 +98,6 @@ function parseFeaturedIds(raw: unknown): string[] {
 
 /* ---------------- 查詢 ---------------- */
 
-async function hasAuthenticatedSession(): Promise<boolean> {
-  if (!supabase) return false;
-  try {
-    const { data } = await supabase.auth.getSession();
-    return Boolean(data.session);
-  } catch {
-    return false;
-  }
-}
-
 /**
  * 讀 expert_profiles 單行。失敗 / 無行 → null(consumer 回落 experts.ts)。
  */
@@ -170,7 +160,6 @@ export async function fetchExpertTopInsights(
   featuredIds: string[]
 ): Promise<ExpertInsight[]> {
   if (!supabase) return [];
-  if (!(await hasAuthenticatedSession())) return [];
   try {
     const { data, error } = await supabase
       .from("items")

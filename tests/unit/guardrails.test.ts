@@ -1,6 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   chatQuotaReply,
+  createStreamInactivityTimer,
+  guardrailKindFromErrorCode,
   instructorUnavailableReply,
   isOffGuard,
   parseSseBlock,
@@ -10,6 +12,7 @@ import {
 import { getPersona } from "@/data/personas";
 
 describe("Ask guardrails", () => {
+  afterEach(() => vi.useRealTimers());
   it("allows normal Cantonese instructor questions", () => {
     expect(isOffGuard("香港中小企應該點樣開始用 AI 客服？")).toBeNull();
   });
@@ -20,6 +23,11 @@ describe("Ask guardrails", () => {
 
   it("blocks requests for an instructor's private data", () => {
     expect(isOffGuard("Elvin 嘅私人電話號碼係幾多？")).toBe("personal-data");
+  });
+
+  it("maps server safety responses back to the safe in-character deflection", () => {
+    expect(guardrailKindFromErrorCode("chat_guardrail_personal_data")).toBe("personal-data");
+    expect(guardrailKindFromErrorCode("provider_error")).toBeNull();
   });
 
   it("rejects symbol-only spam", () => {
@@ -43,6 +51,20 @@ describe("Ask guardrails", () => {
       event: "delta",
       data: { text: "你好" },
     });
+  });
+
+  it("keeps a delayed provider alive when non-content progress arrives", () => {
+    vi.useFakeTimers();
+    const controller = new AbortController();
+    const inactivity = createStreamInactivityTimer(controller, 30_000);
+
+    vi.advanceTimersByTime(25_000);
+    inactivity.touch(); // parser received `event: progress`
+    vi.advanceTimersByTime(29_999);
+    expect(controller.signal.aborted).toBe(false);
+    vi.advanceTimersByTime(1);
+    expect(controller.signal.aborted).toBe(true);
+    inactivity.clear();
   });
 
   it("labels the daily quota state without presenting it as a provider outage", () => {

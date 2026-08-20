@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { Check } from "lucide-react";
 import Reveal from "@/components/Reveal";
-import { captureWaitlist } from "@/lib/waitlist";
+import {
+  captureWaitlistWithFallback,
+  type WaitlistSaveMode,
+} from "@/lib/waitlist";
 
 /**
  * Newsletter Block (design.md §6.9): surface full-width band + border top/bottom.
@@ -10,7 +13,9 @@ import { captureWaitlist } from "@/lib/waitlist";
  */
 export default function Newsletter() {
   const [email, setEmail] = useState("");
-  const [subscribed, setSubscribed] = useState(false);
+  const [savedMode, setSavedMode] = useState<WaitlistSaveMode | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   return (
     <section className="relative overflow-hidden border-y bg-surface">
@@ -33,24 +38,33 @@ export default function Newsletter() {
         </Reveal>
 
         <Reveal delay={0.1} className="w-full max-w-md">
-          {subscribed ? (
+          {savedMode ? (
             <p className="flex h-12 items-center gap-2 text-label text-success">
               <Check className="h-5 w-5" strokeWidth={1.5} aria-hidden="true" />
-              已訂閱成功
+              {savedMode === "server"
+                ? "已訂閱成功"
+                : "已儲存在此裝置 — 連線後請再登記"}
             </p>
           ) : (
             <form
               className="flex gap-3"
-              onSubmit={(e) => {
+              onSubmit={async (e) => {
                 e.preventDefault();
-                if (!email.trim()) return;
-                // 真實收集:寫入 Supabase waitlist(無 env / 離線 → 靜默)
-                void captureWaitlist({
-                  email: email.trim(),
-                  kind: "newsletter",
-                  source: "newsletter-band",
-                });
-                setSubscribed(true);
+                const value = email.trim();
+                if (!value || submitting) return;
+                setSubmitting(true);
+                setError("");
+                const mode = await captureWaitlistWithFallback(
+                  {
+                    email: value,
+                    kind: "newsletter",
+                    source: "newsletter-band",
+                  },
+                  "aigro-newsletter-interest"
+                );
+                setSubmitting(false);
+                if (mode) setSavedMode(mode);
+                else setError("暫時未能記錄，請稍後再試。");
               }}
             >
               <label htmlFor="newsletter-email" className="sr-only">
@@ -67,11 +81,17 @@ export default function Newsletter() {
               />
               <button
                 type="submit"
+                disabled={submitting}
                 className="h-12 shrink-0 rounded-md bg-ink-solid px-6 text-label text-on-accent press hover:bg-ink-hover"
               >
-                訂閱
+                {submitting ? "記錄中" : "訂閱"}
               </button>
             </form>
+          )}
+          {error && (
+            <p role="alert" className="mt-2 text-caption text-error">
+              {error}
+            </p>
           )}
           <p className="mt-2 text-caption text-text-muted">
             每週一封，隨時退訂

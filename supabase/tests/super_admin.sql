@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(18);
+select plan(19);
 
 set local role postgres;
 
@@ -39,11 +39,22 @@ set local role authenticated;
 select set_config('request.jwt.claims',
   '{"sub":"62000000-0000-0000-0000-000000000002","role":"authenticated"}', true);
 
+set local role postgres;
+update public.leads
+set next_follow_up_at = '2026-08-25 09:30:00+00'::timestamptz
+where id = '64000000-0000-0000-0000-000000000004';
+set local role authenticated;
+
 select lives_ok(
   $$select public.update_lead_stage(
     '64000000-0000-0000-0000-000000000004', '跟進中'
   )$$,
   'admin can move a CRM lead through the audited workflow'
+);
+select is(
+  (select next_follow_up_at from public.leads where id = '64000000-0000-0000-0000-000000000004'),
+  '2026-08-25 09:30:00+00'::timestamptz,
+  'stage-only CRM updates preserve an existing follow-up date'
 );
 select is(
   (select stage from public.leads where id = '64000000-0000-0000-0000-000000000004'),

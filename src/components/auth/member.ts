@@ -259,15 +259,18 @@ export function loadMember(): AigroMember | null {
   }
 }
 
-export function saveMember(member: AigroMember): void {
+export function saveMember(
+  member: AigroMember,
+  options: { syncProfile?: boolean } = {},
+): void {
   try {
     window.localStorage.setItem(MEMBER_KEY, JSON.stringify(member));
   } catch {
     /* private mode — 示範模式靜默失敗 */
   }
   notifyMember();
-  // 已登入(非 demo)時同步去 profiles 表;fire-and-forget,離線靜默
-  void syncProfileToSupabase(member);
+  // 已登入(非 demo)時同步去 profiles 表;quick device-only capture explicitly opts out.
+  if (options.syncProfile !== false) void syncProfileToSupabase(member);
 }
 
 export function clearMember(): void {

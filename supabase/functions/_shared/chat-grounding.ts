@@ -25,6 +25,8 @@ export function safeHttpsCitationHref(value: unknown): string {
   try {
     const url = new URL(href);
     if (url.protocol !== "https:" || url.username || url.password) return "";
+    url.search = "";
+    url.hash = "";
     return url.toString();
   } catch {
     return "";
@@ -38,7 +40,21 @@ export function sanitizeCitationHrefs(
   return value.flatMap((entry) => {
     if (!entry || typeof entry !== "object" || Array.isArray(entry)) return [];
     const citation = entry as Record<string, unknown>;
-    return [{ ...citation, href: safeHttpsCitationHref(citation.href) }];
+    const sanitized: Record<string, unknown> = {};
+    if (Object.hasOwn(citation, "marker")) sanitized.marker = citation.marker;
+    sanitized.href = safeHttpsCitationHref(citation.href);
+    for (const key of [
+      "title",
+      "excerpt",
+      "revision_id",
+      "section",
+      "page",
+      "start_seconds",
+      "end_seconds",
+    ]) {
+      if (Object.hasOwn(citation, key)) sanitized[key] = citation[key];
+    }
+    return [sanitized];
   });
 }
 

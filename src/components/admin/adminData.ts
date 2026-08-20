@@ -138,7 +138,7 @@ export interface AdminInvitationRow {
   tier: "free" | "pro" | "vip";
   personal_message: string | null;
   status: "pending" | "sent" | "delivered" | "accepted" | "expired" | "revoked" | "failed";
-  delivery_status: "queued" | "sent" | "delivered" | "delayed" | "opened" | "clicked" | "bounced" | "complained" | "failed";
+  delivery_status: "queued" | "sent" | "delivered" | "delayed" | "opened" | "clicked" | "bounced" | "complained" | "failed" | "suppressed";
   send_count: number;
   sent_at: string | null;
   delivered_at: string | null;
@@ -165,6 +165,39 @@ export interface AdminMessageRow {
   answer_basis: "knowledge" | "general" | null;
   coverage: "high" | "medium" | "none" | null;
   created_at: string | null;
+}
+
+export interface RightsSafeEngagementData {
+  conversations: AdminConversationRow[];
+  messages: AdminMessageRow[];
+}
+
+/**
+ * Message table SELECT is intentionally closed. This RPC returns only paired
+ * rounds whose exact persona and evidence lineage still pass current rights.
+ */
+export async function fetchRightsSafeEngagement(
+  expertId: string | null
+): Promise<RightsSafeEngagementData> {
+  if (!supabase) throw new Error("Supabase 未連接 — 請檢查環境變數。");
+  const { data, error } = await supabase.rpc("get_rights_safe_engagement", {
+    p_expert_id: expertId,
+  });
+  if (error) throw new Error(error.message);
+  if (!data || typeof data !== "object" || Array.isArray(data)) {
+    throw new Error("安全對話資料格式不正確");
+  }
+  const payload = data as {
+    conversations?: unknown;
+    messages?: unknown;
+  };
+  if (!Array.isArray(payload.conversations) || !Array.isArray(payload.messages)) {
+    throw new Error("安全對話資料格式不完整");
+  }
+  return {
+    conversations: payload.conversations as AdminConversationRow[],
+    messages: payload.messages as AdminMessageRow[],
+  };
 }
 
 export type LeadStage = "新線索" | "已接觸" | "跟進中" | "已轉化";
@@ -211,6 +244,7 @@ export interface AdminLeadRow {
   timeline: LeadTimelineEntry[] | null;
   next_follow_up_at?: string | null;
   contact_consented_at?: string | null;
+  contact_email?: string | null;
   last_activity_at: string | null;
   created_at: string | null;
 }

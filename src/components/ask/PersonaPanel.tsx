@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
-import { MessageSquarePlus } from "lucide-react";
+import { MessageSquarePlus, Trash2 } from "lucide-react";
 import MonogramAvatar, { PhotoAvatar } from "@/components/MonogramAvatar";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import QuotaMeter from "@/components/ask/QuotaMeter";
@@ -19,7 +19,8 @@ interface PersonaPanelProps {
   activeSessionId: string | null;
   onSelectSession: (id: string) => void;
   onNewSession: () => void;
-  /** 訪客(無 member record)— panel 底部顯示「登入以同步紀錄」ghost link */
+  onDeleteSession: (id: string) => void;
+  /** 訪客(無 member record)— panel 底部顯示登入入口；跨裝置同步仍未開放。 */
   anonymous?: boolean;
 }
 
@@ -41,6 +42,7 @@ interface SessionsListProps {
   activePersona: Persona;
   onSelectSession: (id: string) => void;
   onNewSession: () => void;
+  onDeleteSession: (id: string) => void;
 }
 
 /**
@@ -52,6 +54,7 @@ export function SessionsList({
   activePersona,
   onSelectSession,
   onNewSession,
+  onDeleteSession,
 }: SessionsListProps) {
   const reduced = useReducedMotion();
   return (
@@ -84,13 +87,13 @@ export function SessionsList({
             {sessions.map((s) => {
               const active = s.id === activeSessionId;
               return (
-                <li key={s.id}>
+                <li key={s.id} className="flex items-stretch gap-1">
                   <button
                     type="button"
                     onClick={() => onSelectSession(s.id)}
                     aria-current={active}
                     className={cn(
-                      "press flex w-full flex-col gap-0.5 rounded-md border px-2.5 py-2 text-left transition-colors duration-150",
+                      "press flex min-w-0 flex-1 flex-col gap-0.5 rounded-md border px-2.5 py-2 text-left transition-colors duration-150",
                       active
                         ? "border-border-strong bg-card"
                         : "border-transparent hover:bg-card"
@@ -109,6 +112,15 @@ export function SessionsList({
                     <span className="text-caption text-text-muted">
                       {formatTimestamp(s.updatedAt)}・{s.messages.filter((m) => m.role === "user").length} 條問題
                     </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onDeleteSession(s.id)}
+                    aria-label={`刪除對話：${s.title}`}
+                    title="刪除對話"
+                    className="press flex w-8 shrink-0 items-center justify-center rounded-md border border-transparent text-text-muted transition-colors duration-150 hover:border-border-strong hover:bg-card hover:text-error"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} aria-hidden="true" />
                   </button>
                 </li>
               );
@@ -133,6 +145,7 @@ export default function PersonaPanel({
   activeSessionId,
   onSelectSession,
   onNewSession,
+  onDeleteSession,
   anonymous = false,
 }: PersonaPanelProps) {
   return (
@@ -216,6 +229,7 @@ export default function PersonaPanel({
           activePersona={activePersona}
           onSelectSession={onSelectSession}
           onNewSession={onNewSession}
+          onDeleteSession={onDeleteSession}
         />
       </div>
 
@@ -224,14 +238,14 @@ export default function PersonaPanel({
         <QuotaMeter variant="panel" />
       </div>
 
-      {/* 訪客:登入以同步紀錄(ghost link) */}
+      {/* 訪客:登入入口（目前只保留此裝置紀錄） */}
       {anonymous && (
         <div className="shrink-0 border-t border-border px-4 py-2.5">
           <Link
             to="/login"
             className="press text-caption text-text-muted underline decoration-text-muted/60 underline-offset-4 transition-colors duration-150 hover:text-ink"
           >
-            登入以同步紀錄
+            登入會員（跨裝置同步準備中）
           </Link>
         </div>
       )}

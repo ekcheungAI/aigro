@@ -12,7 +12,7 @@
  * RLS:anon 只能讀 status='published'(items_public_read),呢個 fetch 天然安全。
  */
 
-import { useMemo, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { supabase, supabaseReady } from "@/lib/supabase";
 import {
   toAihotInsight,
@@ -22,6 +22,7 @@ import {
   type AihotInsight,
   type AihotRawItem,
 } from "./aihot";
+import type { InsightCategory } from "./insights";
 
 /** 少過呢個數就當 live 數據未成熟(sync 未行過/管道異常),繼續用 snapshot */
 const MIN_LIVE_ITEMS = 5;
@@ -56,6 +57,16 @@ function toRawItem(row: ItemRow): AihotRawItem {
     attribution: null,
     tags: row.tags ?? [],
   };
+}
+
+function isPublishableRow(row: ItemRow): boolean {
+  return Boolean(
+    row.title.trim() &&
+      row.summary?.trim() &&
+      row.original_url?.trim() &&
+      row.sources?.name?.trim() &&
+      row.published_at
+  );
 }
 
 export interface LiveItemsState {
@@ -104,14 +115,15 @@ export function startLiveItems(): void {
 
       if (error) throw new Error(error.message);
       const rows = (data ?? []) as unknown as ItemRow[];
-      if (rows.length < MIN_LIVE_ITEMS) {
+      const validRows = rows.filter(isPublishableRow);
+      if (validRows.length < MIN_LIVE_ITEMS) {
         state = { items: null, fetchedAt: null, error: null }; // 未成熟,保持 snapshot
         return;
       }
-      const items = rows.map(toRawItem);
+      const items = validRows.map(toRawItem);
       state = {
         items,
-        fetchedAt: rows[0]?.published_at ?? null,
+        fetchedAt: validRows[0]?.published_at ?? null,
         error: null,
       };
       emit();
@@ -126,14 +138,18 @@ export function startLiveItems(): void {
  * consumer 用法:`const live = useLiveItems(); const insights = live ?? aihotInsights;`
  */
 export function useLiveItems(): AihotRawItem[] | null {
-  startLiveItems();
-  return useSyncExternalStore(subscribe, getSnapshot).items;
+  useEffect(() => {
+    startLiveItems();
+  }, []);
+  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot).items;
 }
 
 /** live 數據時間(未成熟 → null,consumer 回落 aihotFetchedAt) */
 export function useLiveFetchedAt(): string | null {
-  startLiveItems();
-  return useSyncExternalStore(subscribe, getSnapshot).fetchedAt;
+  useEffect(() => {
+    startLiveItems();
+  }, []);
+  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot).fetchedAt;
 }
 
 /* ============ 衍生 selector(v1.27 公開頁面 live hydration) ============ */
@@ -145,6 +161,114 @@ export function useLiveFetchedAt(): string | null {
 export function useLiveInsights(): AihotInsight[] | null {
   const raw = useLiveItems();
   return useMemo(() => (raw ? raw.map(toAihotInsight) : null), [raw]);
+}
+
+export interface LiveFeedFilter {
+  mode: "selected" | "all";
+  category?: InsightCategory | null;
+  query?: string;
+  enabled?: boolean;
+}
+
+export interface LiveFeedState {
+  items: AihotInsight[] | null;
+  loading: boolean;
+  error: string | null;
+}
+
+const LIVE_PAGE_SIZE = 500;
+const LIVE_MAX_PAGES = 20;
+
+function escapePostgrestLike(value: string): string {
+  return value.replace(/[\\%_(),]/g, (character) => `\\${character}`);
+}
+
+/**
+ * Filtered feed loader. The default site chrome still uses the cheap latest
+ * 200-item snapshot, while search/category/all-feed requests are paginated at
+ * Supabase so historical rows are not silently excluded from the UI.
+ */
+export function useLiveFilteredInsights(filter: LiveFeedFilter): LiveFeedState {
+  const enabled = filter.enabled !== false;
+  const queryText = filter.query?.trim() ?? "";
+  const key = JSON.stringify({
+    enabled,
+    mode: filter.mode,
+    category: filter.category ?? null,
+    query: queryText.toLowerCase(),
+  });
+  const [state, setState] = useState<LiveFeedState>({
+    items: null,
+    loading: enabled,
+    error: null,
+  });
+
+  useEffect(() => {
+    if (!enabled) {
+      setState({ items: null, loading: false, error: null });
+      return;
+    }
+    if (!supabaseReady || !supabase) {
+      setState({ items: null, loading: false, error: "Supabase 未連接" });
+      return;
+    }
+
+    let cancelled = false;
+    setState({ items: null, loading: true, error: null });
+
+    void (async () => {
+      try {
+        const rows: ItemRow[] = [];
+        for (let page = 0; page < LIVE_MAX_PAGES; page += 1) {
+          let request = supabase
+            .from("items")
+            .select(
+              "id,title,summary,original_url,category,tags,score,lang,placement,published_at,sources(name)",
+              { count: "exact" }
+            )
+            .eq("status", "published")
+            .order("published_at", { ascending: false });
+          if (filter.mode === "selected") {
+            request = request.in("placement", ["featured", "daily"]);
+          }
+          if (filter.category) request = request.eq("category", filter.category);
+          if (queryText) {
+            const escaped = escapePostgrestLike(queryText.toLowerCase());
+            request = request.or(`title.ilike.%${escaped}%,summary.ilike.%${escaped}%`);
+          }
+          const start = page * LIVE_PAGE_SIZE;
+          const { data, error, count } = await request.range(
+            start,
+            start + LIVE_PAGE_SIZE - 1
+          );
+          if (error) throw new Error(error.message);
+          const pageRows = (data ?? []) as unknown as ItemRow[];
+          rows.push(...pageRows.filter(isPublishableRow));
+          if (
+            pageRows.length < LIVE_PAGE_SIZE ||
+            (typeof count === "number" && rows.length >= count)
+          ) {
+            break;
+          }
+        }
+        if (cancelled) return;
+        setState({ items: rows.map(toRawItem).map(toAihotInsight), loading: false, error: null });
+      } catch (error) {
+        if (cancelled) return;
+        setState({
+          items: null,
+          loading: false,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [enabled, filter.category, filter.mode, key, queryText]);
+
+  return state;
 }
 
 /**
@@ -217,19 +341,22 @@ export function aggregateHotTopicsFromInsights(
         insights.filter((i) => re.test(`${i.title} ${i.summary}`)),
       ] as const
   )
-    .filter(([, arr]) => arr.length >= 2)
+    .filter(([, arr]) => new Set(arr.map((i) => i.source).filter(Boolean)).size >= 2)
     .sort((a, b) => b[1].length - a[1].length)
     .slice(0, 5)
-    .map(([name, arr]) => ({
-      id: name,
-      title: name,
-      permalink: arr[0]?.originalUrl ?? arr[0]?.permalink ?? "",
-      source: arr[0]?.source ?? "",
-      sourceCount: arr.length,
-      sourceNames: [...new Set(arr.map((i) => i.source))].slice(0, 4),
-      latestAt: arr[0]?.publishedAt ?? null,
-      related: arr.slice(0, 3),
-    }));
+    .map(([name, arr]) => {
+      const sourceNames = [...new Set(arr.map((i) => i.source).filter(Boolean))];
+      return {
+        id: name,
+        title: name,
+        permalink: arr[0]?.originalUrl ?? arr[0]?.permalink ?? "",
+        source: arr[0]?.source ?? "",
+        sourceCount: sourceNames.length,
+        sourceNames: sourceNames.slice(0, 4),
+        latestAt: arr[0]?.publishedAt ?? null,
+        related: arr.slice(0, 3),
+      };
+    });
 }
 
 /** live 日報(未成熟 → null,consumer 回落 aihotDaily) */

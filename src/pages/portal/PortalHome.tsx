@@ -5,9 +5,9 @@ import { HairlineBars, WEEKLY_INSIGHT_QUOTA } from "@/components/portal/portal-u
 import { greeting } from "@/components/auth/member";
 import QueryState from "@/components/QueryState";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/lib/supabase";
 import {
   daysAgoUtcStartIso,
+  fetchRightsSafeEngagement,
   last7DayBuckets,
   timeAgo,
   useAdminQuery,
@@ -25,28 +25,8 @@ interface PortalHomeData {
 
 /** 專家自己嘅真數據：immutable expert_id scoped conversations + messages。 */
 async function fetchPortalHome(expertId: string): Promise<PortalHomeData> {
-  if (!supabase) throw new Error("Supabase 未連接");
-  const convRes = await supabase
-    .from("conversations")
-    .select("id,user_id,anon_id,persona,expert_id,title,created_at")
-    .eq("expert_id", expertId)
-    .order("created_at", { ascending: false })
-    .limit(500);
-  if (convRes.error) throw new Error(convRes.error.message);
-  const convos = (convRes.data ?? []) as AdminConversationRow[];
-
-  let msgs: AdminMessageRow[] = [];
-  const ids = convos.map((c) => c.id);
-  if (ids.length > 0) {
-    const msgRes = await supabase
-      .from("messages")
-      .select("id,conversation_id,role,content,source,answer_basis,coverage,created_at")
-      .in("conversation_id", ids)
-      .limit(2000);
-    if (msgRes.error) throw new Error(msgRes.error.message);
-    msgs = (msgRes.data ?? []) as AdminMessageRow[];
-  }
-  return { convos, msgs };
+  const safe = await fetchRightsSafeEngagement(expertId);
+  return { convos: safe.conversations, msgs: safe.messages };
 }
 
 /**

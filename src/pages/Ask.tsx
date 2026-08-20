@@ -17,8 +17,9 @@ import MonogramAvatar, { PhotoAvatar } from "@/components/MonogramAvatar";
 import {
   appendRound,
   collectCitations,
+  conversationIdForSession,
+  deleteSession,
   ensureConversationId,
-  lastUserQuestion,
   loadSessionStore,
   prepareSession,
   saveSessionStore,
@@ -40,6 +41,7 @@ import { useLiveItems } from "@/data/liveItems";
 import {
   chatQuotaReply,
   guardrailReply,
+  guardrailKindFromErrorCode,
   InstructorChatError,
   instructorUnavailableReply,
   isOffGuard,
@@ -56,12 +58,12 @@ import {
 } from "@/components/auth/member";
 import type { AigroMember } from "@/components/auth/member";
 import { EASE_OUT_STRONG } from "@/components/Reveal";
-import { captureWaitlist } from "@/lib/waitlist";
 import { cn } from "@/lib/utils";
 import { getTurnstileToken } from "@/lib/turnstile";
 import useModalDialog from "@/hooks/useModalDialog";
 import { useAdminQuery } from "@/components/admin/adminData";
 import { fetchPublicInstructors } from "@/lib/publicInstructors";
+import { supabase } from "@/lib/supabase";
 
 /** 訪客第 3 條訊息後嘅註冊捕捉卡 — dismiss 改 snooze(7 日後可再出一次) */
 const CAPTURE_DISMISS_KEY = "aigro-ask-capture-dismissed";
@@ -69,7 +71,7 @@ const CAPTURE_DISMISS_KEY = "aigro-ask-capture-dismissed";
 const USER_MSG_COUNT_KEY = "aigro-ask-user-msg-count";
 const CAPTURE_SNOOZE_MS = 7 * 24 * 60 * 60 * 1000;
 
-const CAPTURE_BENEFITS = ["每日更多對話", "保留帳戶身份", "日後解鎖會員功能"] as const;
+const CAPTURE_BENEFITS = ["此裝置保留對話", "保留本機會員身份", "日後可升級完整帳戶"] as const;
 
 function loadCaptureDismissed(): boolean {
   try {
@@ -217,7 +219,9 @@ export default function Ask() {
   const [member, setMember] = useState<AigroMember | null>(loadMember);
   const [captureDismissed, setCaptureDismissed] = useState(loadCaptureDismissed);
   const [captureEmail, setCaptureEmail] = useState("");
+  const [captureContactConsent, setCaptureContactConsent] = useState(false);
   const [captureError, setCaptureError] = useState<string | null>(null);
+  const [captureSubmitting, setCaptureSubmitting] = useState(false);
   // G13:跨 session 全局訊息計數(捕捉卡時機用)
   const [globalUserCount, setGlobalUserCount] = useState(loadGlobalUserCount);
   // G5:Club 優先預約 — 低信心 CTA 開 inline email capture(唔再係空 toast)
@@ -281,6 +285,14 @@ export default function Ask() {
     toastTimer.current = window.setTimeout(() => setToast(null), 6000);
   }, []);
 
+  const withdrawContactConsent = useCallback(async () => {
+    if (!supabase || persona.kind !== "expert") return;
+    const { error: withdrawError } = await supabase.rpc("withdraw_lead_contact_consent_for_expert", {
+      p_expert_slug: persona.key,
+    });
+    showToast(withdrawError ? "暫時未能撤回，請稍後再試" : "已撤回導師聯絡意願");
+  }, [persona.key, persona.kind, showToast]);
+
   const scrollToBottom = useCallback(() => {
     const el = scrollRef.current;
     if (el) {
@@ -302,12 +314,15 @@ export default function Ask() {
   }, []);
 
   /** 「免費加入」— 即場開 free 會員(record 經 member.ts,同 Join 同源) */
-  const captureSignup = useCallback(() => {
+  const captureSignup = useCallback(async () => {
     const email = captureEmail.trim();
     if (!validEmail(email)) {
       setCaptureError("請輸入有效嘅 Email 地址");
       return;
     }
+    if (captureSubmitting) return;
+    setCaptureError(null);
+    setCaptureSubmitting(true);
     const next: AigroMember = {
       name: email.split("@")[0] || "會員",
       email,
@@ -318,21 +333,48 @@ export default function Ask() {
       joinedAt: Date.now(),
       notifications: { ...DEFAULT_NOTIFICATIONS },
     };
-    saveMember(next);
-    // 真實收集:寫入 Supabase waitlist(無 env / 離線 → 靜默)
-    // G6:vertical = 分身 key,note = 最後一條用戶問題節錄(50字)— 專家跟進有上下文
-    const question = lastUserQuestion(persona.key);
-    void captureWaitlist({
-      email,
-      kind: "newsletter",
-      source: "ask-capture",
-      vertical: persona.key,
-      note: question ? `對話 capture — 最近問題:「${question}」` : "對話 capture",
-    });
-    setMember(next);
-    setCaptureError(null);
-    showToast("已免費加入 — 對話紀錄會同步到你嘅帳號");
-  }, [captureEmail, showToast, persona.key]);
+    try {
+      if (persona.kind === "expert" && captureContactConsent) {
+        if (!activeSession) {
+          setCaptureError("未能連結今次對話；你尚未加入，請再試一次");
+          return;
+        }
+        const conversationId = conversationIdForSession(activeSession.id)
+          ?? activeSession.conversationId
+          ?? await ensureConversationId(activeSession.id, persona.key, activeSession.title);
+        if (!conversationId || !supabase) {
+          setCaptureError("未能安全記錄聯絡意願；你尚未加入，請稍後再試或取消勾選");
+          return;
+        }
+        const { error: consentError } = await supabase.rpc("consent_lead_contact", {
+          p_conversation_id: conversationId,
+          p_email: email,
+        });
+        if (consentError) {
+          setCaptureError("未能安全記錄聯絡意願；你尚未加入，請稍後再試或取消勾選");
+          return;
+        }
+      }
+
+      saveMember(next, { syncProfile: false });
+      setMember(next);
+      showToast(captureContactConsent
+        ? "已免費加入 — 已安全記錄聯絡意願"
+        : "已免費加入 — 對話先保留喺此裝置");
+    } catch {
+      setCaptureError("未能安全記錄聯絡意願；你尚未加入，請稍後再試或取消勾選");
+    } finally {
+      setCaptureSubmitting(false);
+    }
+  }, [
+    activeSession,
+    captureContactConsent,
+    captureEmail,
+    captureSubmitting,
+    persona.key,
+    persona.kind,
+    showToast,
+  ]);
 
   // 還原歷史(頁面載入 / 揀返舊 session / 切換分身)→ 即刻跳去最新訊息;
   // 同一 session 內新訊息 → smooth。新鮮回答打字途中由 onTyped 逐字跟住捲。
@@ -374,6 +416,24 @@ export default function Ask() {
     setStore((prev) => setActiveSession(prev, persona.key, null));
   }, [persona.key]);
 
+  const removeSession = useCallback(
+    (sessionId: string) => {
+      const target = (storeRef.current.sessions[persona.key] ?? [])
+        .find((session) => session.id === sessionId);
+      if (!target || !window.confirm(`刪除「${target.title}」？相關對話紀錄會被移除。`)) return;
+      void deleteSession(storeRef.current, persona.key, sessionId).then((result) => {
+        if (result.status === "retry-required") {
+          showToast("伺服器暫時未能刪除，對話已保留；請稍後再試");
+          return;
+        }
+        storeRef.current = result.store;
+        setStore(result.store);
+        showToast(result.status === "deleted" ? "對話已從伺服器及此裝置刪除" : "此裝置嘅對話已刪除");
+      });
+    },
+    [persona.key, showToast]
+  );
+
   const send = useCallback(
     (raw: string) => {
       const question = raw.trim();
@@ -388,7 +448,8 @@ export default function Ask() {
       const commit = (
         reply: Parameters<typeof appendRound>[3],
         topicId: string | null,
-        skipRemoteLog = false
+        skipRemoteLog = false,
+        targetSessionId?: string,
       ) => {
         const { store: next, aiMessageId } = appendRound(
           storeRef.current,
@@ -396,7 +457,8 @@ export default function Ask() {
           question,
           reply,
           topicId,
-          skipRemoteLog
+          skipRemoteLog,
+          targetSessionId,
         );
         storeRef.current = next;
         setStore(next);
@@ -455,6 +517,10 @@ export default function Ask() {
           return finalReply;
         })
         .catch((error: unknown) => {
+          if (error instanceof InstructorChatError) {
+            const serverGuard = guardrailKindFromErrorCode(error.code);
+            if (serverGuard) return guardrailReply(persona, serverGuard);
+          }
           if (error instanceof InstructorChatError && error.code.startsWith("quota_exceeded_")) {
             const scope = error.code === "quota_exceeded_monthly" ? "monthly" : "daily";
             setExhaustedScope(scope);
@@ -471,7 +537,7 @@ export default function Ask() {
               ? null
               : current
           );
-          commit(finalReply, null, true);
+          commit(finalReply, null, true, prepared.session.id);
         });
     },
     [exhausted, persona, activeSession, pendingLlm, chatBlocked, scrollToBottom]
@@ -517,6 +583,7 @@ export default function Ask() {
           activeSessionId={activeSessionId}
           onSelectSession={selectSession}
           onNewSession={newSession}
+          onDeleteSession={removeSession}
           anonymous={!member}
         />
       </motion.div>
@@ -881,7 +948,7 @@ export default function Ask() {
                         ))}
                       </ul>
                       <p className="mt-2 text-caption text-text-muted">
-                        免費註冊即享 — 對話會自動同步返你嘅帳號。
+                        快速加入嘅會員身份只會保留喺此裝置；如勾選導師聯絡同意，Email 同同意記錄會安全儲存並可隨時撤回。
                       </p>
                       <div className="mt-4 flex flex-col gap-2 sm:flex-row">
                         <label htmlFor="capture-email" className="sr-only">
@@ -893,6 +960,7 @@ export default function Ask() {
                           autoComplete="email"
                           placeholder="you@example.com"
                           value={captureEmail}
+                          disabled={captureSubmitting}
                           aria-invalid={captureError ? true : undefined}
                           onChange={(e) => {
                             setCaptureEmail(e.target.value);
@@ -901,7 +969,7 @@ export default function Ask() {
                           onKeyDown={(e) => {
                             if (e.key === "Enter" && !e.nativeEvent.isComposing) {
                               e.preventDefault();
-                              captureSignup();
+                              void captureSignup();
                             }
                           }}
                           className={cn(
@@ -913,12 +981,26 @@ export default function Ask() {
                         />
                         <button
                           type="button"
-                          onClick={captureSignup}
-                          className="press inline-flex h-11 shrink-0 items-center justify-center rounded-md bg-lime px-5 text-label text-on-accent hover:bg-lime-hover"
+                          onClick={() => void captureSignup()}
+                          disabled={captureSubmitting}
+                          aria-busy={captureSubmitting}
+                          className="press inline-flex h-11 shrink-0 items-center justify-center rounded-md bg-lime px-5 text-label text-on-accent hover:bg-lime-hover disabled:pointer-events-none disabled:opacity-60"
                         >
-                          免費加入
+                          {captureSubmitting ? "處理中…" : "免費加入"}
                         </button>
                       </div>
+                      {persona.kind === "expert" && (
+                        <label className="mt-3 flex items-start gap-2 text-caption text-text-muted">
+                          <input
+                            type="checkbox"
+                            checked={captureContactConsent}
+                            disabled={captureSubmitting}
+                            onChange={(event) => setCaptureContactConsent(event.target.checked)}
+                            className="mt-0.5 accent-lime"
+                          />
+                          <span>我同意所選導師／AIGRO 因今次對話聯絡我；我可以隨時撤回同意。</span>
+                        </label>
+                      )}
                       {captureError && (
                         <p role="alert" className="mt-2 text-caption text-error">
                           {captureError}
@@ -1031,7 +1113,19 @@ export default function Ask() {
                     {persona.kind === "expert" && (
                       <>
                         <br />
-                        對話內容只供你、所選導師及獲授權 AIGRO 管理員查看，並可用作導師 CRM 跟進；匿名對話保留 30 日。
+                        對話內容只供你、所選導師及獲授權 AIGRO 管理員查看，並可用作導師 CRM 跟進；匿名對話保留 30 日。刪除同一導師最後一段對話會一併撤回聯絡意願。
+                        {member && (
+                          <>
+                            <br />
+                            <button
+                              type="button"
+                              onClick={() => void withdrawContactConsent()}
+                              className="mt-1 text-caption text-text-muted underline decoration-text-muted/60 underline-offset-4 hover:text-ink"
+                            >
+                              撤回導師聯絡意願
+                            </button>
+                          </>
+                        )}
                       </>
                     )}
                   </p>
@@ -1114,6 +1208,10 @@ export default function Ask() {
                   }}
                   onNewSession={() => {
                     newSession();
+                    closeSessionsDrawer();
+                  }}
+                  onDeleteSession={(id) => {
+                    removeSession(id);
                     closeSessionsDrawer();
                   }}
                 />

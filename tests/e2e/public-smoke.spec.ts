@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+const liveChatReview = process.env.AIGRO_E2E_CHAT === "true";
+
 test("public routes load without console errors", async ({ page }) => {
   const errors: string[] = [];
   page.on("console", (message) => {
@@ -9,7 +11,12 @@ test("public routes load without console errors", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await page.goto("/ask?expert=elvin-cheung");
-  await expect(page.getByRole("heading", { name: "AI 問答功能準備中" })).toBeVisible();
+  if (liveChatReview) {
+    await expect(page.getByRole("heading", { name: "Ask 問答" })).toBeVisible();
+    await expect(page.locator("#ask-input")).toBeVisible();
+  } else {
+    await expect(page.getByRole("heading", { name: "AI 問答功能準備中" })).toBeVisible();
+  }
   expect(errors).toEqual([]);
 });
 
@@ -21,6 +28,7 @@ test("protected CMS routes keep their authentication gates", async ({ page }) =>
 });
 
 test("Ask and Experts are publicly blocked while Pricing stays hidden", async ({ page }) => {
+  test.skip(liveChatReview, "beta LIVE CHAT review mounts Ask and Experts");
   await page.goto("/");
   await expect(page.getByRole("navigation", { name: "主導航" }).getByRole("link", { name: /Experts 專家 Coming Soon/i })).toBeVisible();
   await expect(page.getByRole("navigation", { name: "主導航" }).getByRole("link", { name: /Ask 問答 Coming Soon/i })).toBeVisible();
@@ -45,6 +53,7 @@ test("Ask and Experts are publicly blocked while Pricing stays hidden", async ({
 test("Coming Soon labels use the branded status treatment in every navigation", async ({
   page,
 }) => {
+  test.skip(liveChatReview, "beta LIVE CHAT review removes these Coming Soon labels");
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");
 
@@ -66,12 +75,13 @@ test("Coming Soon labels use the branded status treatment in every navigation", 
 });
 
 test("compact desktop navigation keeps Coming Soon flags on one line", async ({ page }) => {
+  test.skip(liveChatReview, "beta LIVE CHAT review removes these Coming Soon flags");
   await page.setViewportSize({ width: 1024, height: 768 });
   await page.goto("/");
 
   const desktopNav = page.getByRole("navigation", { name: "主導航" });
   const secondaryLabels = desktopNav.locator('[data-ui="nav-secondary-label"]');
-  await expect(secondaryLabels).toHaveCount(4);
+  await expect(secondaryLabels).toHaveCount(5);
   await expect(secondaryLabels.first()).toBeHidden();
   await expect(desktopNav.locator('[data-layout="desktop-flag"]')).toHaveCount(2);
 });
@@ -82,7 +92,7 @@ test("desktop navigation labels and account actions never wrap", async ({ page }
 
   const banner = page.getByRole("banner");
   const desktopLinks = banner.getByRole("navigation", { name: "主導航" }).getByRole("link");
-  await expect(desktopLinks).toHaveCount(4);
+  await expect(desktopLinks).toHaveCount(5);
   for (let index = 0; index < await desktopLinks.count(); index += 1) {
     await expect(desktopLinks.nth(index)).toHaveCSS("white-space", "nowrap");
   }
@@ -131,6 +141,7 @@ test("homepage hero has no full-height decorative vertical rule", async ({ page 
 });
 
 test("Coming Soon pages use a membership conversion prompt", async ({ page }) => {
+  test.skip(liveChatReview, "beta LIVE CHAT review mounts the Ask workspace");
   await page.goto("/ask");
 
   const panel = page.locator('[data-ui="feature-access-panel"]');
@@ -219,9 +230,29 @@ test("homepage hero presents the scale of the AIGRO network", async ({ page }) =
   await expect(page.getByText("連接中", { exact: true })).toHaveCount(0);
   await expect(page.getByText("8 位蒸餾中", { exact: true })).toBeVisible();
   await expect(
-    page.locator("dt").filter({ hasText: "1 個 AI MCP 已就緒" })
+    page.locator("dt").filter({ hasText: "1 個 AI MCP 開發中" })
   ).toBeVisible();
-  await expect(page.getByText("更多行業 MCP 籌備中", { exact: true })).toBeVisible();
+  await expect(page.getByText("公開 endpoint 尚未開放", { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "AI 情報 MCP 接入準備中" })).toBeVisible();
+  await expect(page.getByText("AI 情報 MCP · In development", { exact: true })).toBeVisible();
+});
+
+test("homepage credits dotAI and ekcheungAI with their official marks", async ({ page }) => {
+  await page.goto("/");
+
+  const founders = page.locator('[data-ui="founder-signature"]');
+  await expect(founders).toBeVisible();
+  await expect(founders.getByText("Founded by", { exact: true })).toBeVisible();
+  await expect(founders.getByRole("img", { name: "dotAI" })).toHaveAttribute(
+    "src",
+    "/brand/dotai-mark.png"
+  );
+  await expect(founders.getByRole("link", { name: "ekcheungAI 官方網站" })).toContainText(
+    "ekcheungAI"
+  );
+  await expect(
+    founders.getByRole("link", { name: "ekcheungAI 官方網站" }).locator("img")
+  ).toHaveAttribute("src", "/brand/ekcheungai-tile.svg");
 });
 
 test("homepage hero watermark uses the exact AIGRO wordmark asset", async ({ page }) => {
@@ -248,7 +279,7 @@ test("homepage hero keeps the intelligence preview inside the first desktop view
 test("Class Review blocks signed-out visitors and preserves the return path", async ({ page }) => {
   await page.goto("/guides/100x-ai-growth-marketer");
 
-  await expect(page.getByRole("heading", { name: "登入會員，解鎖直播重溫" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "登入會員，解鎖 8.13 直播重溫攻略" })).toBeVisible();
   await expect(page.getByRole("link", { name: "免費註冊睇重溫" })).toHaveAttribute(
     "href",
     "/guides/100x-ai-growth-marketer?auth=join&next=%2Fguides%2F100x-ai-growth-marketer"
@@ -292,24 +323,26 @@ test("Class Review unlocks the responsive course shell for members", async ({ pa
   await page.setViewportSize({ width: 824, height: 691 });
   await page.goto("/guides/100x-ai-growth-marketer");
 
-  await expect(page.getByText("AIGRO CLASS REVIEW · 課堂重溫")).toBeVisible();
   await expect(
-    page.getByText("DotAI × EK (ekcheungAI) · 聯合策劃及教學")
+    page.getByRole("region", { name: "100X AI Growth Marketer 重溫與學習路線" })
   ).toBeVisible();
-  await expect(page.getByRole("heading", {
-    level: 1,
-    name: "100x AI Growth Marketer 養成課｜Level 1 + Level 2 導讀",
-  })).toBeVisible();
-  await expect(page.getByRole("navigation", { name: "導讀目錄" })).toBeVisible();
+  const collaboration = page
+    .getByRole("contentinfo")
+    .getByRole("region", { name: "DotAI × EK (ekcheungAI)" });
+  await expect(collaboration).toBeVisible();
+  await expect(collaboration).toContainText("聯合策劃及教學");
   await expect(
-    page.getByRole("button", { name: "YouTube 直播重溫影片 Coming Soon" })
-  ).toBeDisabled();
-  await expect(
-    page.getByRole("button", { name: "直播重溫筆記 Coming Soon" })
-  ).toBeDisabled();
-  await expect(page.getByRole("region", {
-    name: "100x AI Growth Marketer 四階段學習時間線",
-  })).toHaveAttribute("tabindex", "0");
+    page.getByRole("heading", {
+      level: 2,
+      name: "由一篇內容，走到一套可追蹤的 AI Marketing Workflow",
+    })
+  ).toBeVisible();
+  await expect(page.getByRole("complementary", { name: "章節目錄" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "觀看直播重溫" })).toHaveAttribute(
+    "href",
+    "https://youtube.com/live/HDjS56JfKt8"
+  );
+  await expect(page.getByRole("heading", { name: "今次你會學到甚麼" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Class Review 課堂重溫" })).toBeAttached();
   await expect(page.locator("html")).toHaveCSS("scroll-behavior", "auto");
 

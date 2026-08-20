@@ -58,10 +58,10 @@ export default function InsightCard({ insight, className }: InsightCardProps) {
         </span>
       </div>
 
-      {/* Title — h4 卡片標題用無襯線 (design.md §3.2) */}
-      <h4 className="mt-4 line-clamp-2 font-sans text-h4 text-text-primary transition-colors duration-150 group-hover:text-ink">
+      {/* Semantic h3 keeps the page outline intact; text-h4 preserves card styling. */}
+      <h3 className="mt-4 line-clamp-2 font-sans text-h4 text-text-primary transition-colors duration-150 group-hover:text-ink">
         {insight.title}
-      </h4>
+      </h3>
 
       {/* AI summary */}
       <p className="mt-2 line-clamp-3 text-body-sm text-text-secondary">

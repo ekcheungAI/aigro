@@ -27,13 +27,20 @@ Deno.test("normalises a safe founding-member invitation", () => {
   if (invitation.value.email !== "new.member@example.com") {
     throw new Error("email was not normalised");
   }
-  if (invitation.value.name !== "新會員") throw new Error("name was not trimmed");
-  if (invitation.value.memberClass !== "founding") throw new Error("wrong default member class");
+  if (invitation.value.name !== "新會員") {
+    throw new Error("name was not trimmed");
+  }
+  if (invitation.value.memberClass !== "founding") {
+    throw new Error("wrong default member class");
+  }
   if (invitation.value.tier !== "free") throw new Error("wrong default tier");
 });
 
 Deno.test("rejects invalid or overlong invitation fields", () => {
-  const invalidEmail = parseInvitationInput({ email: "not-an-email", name: "AIGRO Member" });
+  const invalidEmail = parseInvitationInput({
+    email: "not-an-email",
+    name: "AIGRO Member",
+  });
   if (invalidEmail.ok || invalidEmail.code !== "invalid_email") {
     throw new Error("invalid email was accepted");
   }
@@ -65,16 +72,31 @@ Deno.test("renders a branded invitation without trusting user HTML", () => {
     personalMessage: '<img src=x onerror="alert(1)">',
   });
 
-  if (email.subject !== "你獲邀加入 AIGRO") throw new Error("unexpected subject");
+  if (email.subject !== "AIGRO 專屬邀請｜加入會員專區") {
+    throw new Error("unexpected subject");
+  }
   if (email.html.includes("<script>") || email.html.includes("<img src=x")) {
     throw new Error("user HTML was not escaped");
   }
-  if (!email.html.includes("Elvin &lt;Admin&gt;")) throw new Error("inviter was not escaped");
-  if (!email.html.includes("https://aigro.io/reset-password?type=invite&amp;token=abc")) {
+  if (!email.html.includes("Elvin &lt;Admin&gt;")) {
+    throw new Error("inviter was not escaped");
+  }
+  if (
+    !email.html.includes(
+      "https://aigro.io/reset-password?type=invite&amp;token=abc",
+    )
+  ) {
     throw new Error("action URL was not escaped");
   }
-  if (!email.text.includes("https://aigro.io/reset-password?type=invite&token=abc")) {
+  if (
+    !email.text.includes(
+      "https://aigro.io/reset-password?type=invite&token=abc",
+    )
+  ) {
     throw new Error("plain-text fallback is missing the action URL");
+  }
+  if (!email.text.includes("創始會員 · Free")) {
+    throw new Error("invited membership is missing");
   }
 });
 
@@ -85,6 +107,8 @@ Deno.test("maps Resend webhook events to delivery states", () => {
     "email.delivery_delayed": "delayed",
     "email.bounced": "bounced",
     "email.complained": "complained",
+    "email.failed": "failed",
+    "email.suppressed": "suppressed",
     "email.opened": "opened",
     "email.clicked": "clicked",
     "domain.updated": null,

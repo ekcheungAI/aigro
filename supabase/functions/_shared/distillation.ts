@@ -7,6 +7,70 @@ export interface TextChunk {
   citationMeta: { start_paragraph: number; end_paragraph: number };
 }
 
+export interface ValidatedDistillation {
+  summary: string;
+  claims: Array<{ claim: string; evidence: string; locator?: string }>;
+  methods: string[];
+  boundaries: string[];
+  suggested_questions: string[];
+}
+
+function normalizedStringArray(
+  value: unknown,
+  field: string,
+  minimumLength: number,
+  maximumItems = 30,
+): string[] {
+  if (!Array.isArray(value) || value.length < 1 || value.length > maximumItems) {
+    throw new Error(`invalid_distillation_${field}`);
+  }
+  const normalized = value.map((item) => typeof item === "string" ? item.trim() : "");
+  if (normalized.some((item) => item.length < minimumLength)) {
+    throw new Error(`invalid_distillation_${field}`);
+  }
+  return normalized;
+}
+
+export function validateDistillationPayload(value: unknown): ValidatedDistillation {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error("invalid_distillation_payload");
+  }
+  const payload = value as Record<string, unknown>;
+  const summary = typeof payload.summary === "string" ? payload.summary.trim() : "";
+  if (summary.length < 20) throw new Error("invalid_distillation_summary");
+
+  if (!Array.isArray(payload.claims) || payload.claims.length < 1 || payload.claims.length > 50) {
+    throw new Error("invalid_distillation_claims");
+  }
+  const claims = payload.claims.map((item) => {
+    if (!item || typeof item !== "object" || Array.isArray(item)) {
+      throw new Error("invalid_distillation_claims");
+    }
+    const claimRecord = item as Record<string, unknown>;
+    const claim = typeof claimRecord.claim === "string" ? claimRecord.claim.trim() : "";
+    const evidence = typeof claimRecord.evidence === "string" ? claimRecord.evidence.trim() : "";
+    const locator = typeof claimRecord.locator === "string"
+      ? claimRecord.locator.trim()
+      : undefined;
+    if (claim.length < 5 || evidence.length < 5) {
+      throw new Error("invalid_distillation_claims");
+    }
+    return { claim, evidence, ...(locator ? { locator } : {}) };
+  });
+
+  return {
+    summary,
+    claims,
+    methods: normalizedStringArray(payload.methods, "methods", 2),
+    boundaries: normalizedStringArray(payload.boundaries, "boundaries", 2),
+    suggested_questions: normalizedStringArray(
+      payload.suggested_questions,
+      "suggested_questions",
+      5,
+    ),
+  };
+}
+
 export function mergeCitationProvenance(
   locator: Record<string, unknown>,
   sourceMeta: Record<string, unknown> | null | undefined,

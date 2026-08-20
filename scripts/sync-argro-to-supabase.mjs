@@ -9,16 +9,17 @@
  *   SUPABASE_SECRET_KEY=sb_secret_... node scripts/sync-argro-to-supabase.mjs
  *
  * 需要 env:
- *   SUPABASE_URL         (預設 https://mxjgavuzzpcvazxdnuzg.supabase.co)
+ *   SUPABASE_URL         (預設 https://zpdwalqnhkbxhmaagkfc.supabase.co)
  *   SUPABASE_SECRET_KEY  (service/secret key — server-side only,絕唔可以入 client)
  *   ARGRO_API_BASE       (預設 https://argro-api.zeabur.app)
  *   ARGRO_API_KEY        (required; server-side only)
  *
  * 行為:
- *   1. 拉 argro /news/hot + /news/stream + /insights/daily
+ *   1. 拉 argro /news/hot + 分頁 /news/stream + /insights/daily
  *   2. 關鍵詞分類 + OpenCC cn→hk(同 fetch-argro.mjs 一致)
  *   3. fingerprint = sha256(url || title) 去重;placement: daily > featured > normal
- *   4. upsert 入 public.items(status=published)— fingerprint 衝突時 merge
+ *   4. 新條目預設 pending；只在明確 ARGRO_AUTO_PUBLISH=true 時公開，
+ *      fingerprint 衝突時只 merge upstream fields，保留人工 status/placement/source
  * 冇 secret key → 即時 exit 1(fail loud,唔會靜默 skip)。
  */
 
@@ -37,8 +38,11 @@ const tc = (s) =>
 const ARGRO_BASE = process.env.ARGRO_API_BASE ?? "https://argro-api.zeabur.app";
 const ARGRO_KEY = process.env.ARGRO_API_KEY;
 const SUPA_URL =
-  process.env.SUPABASE_URL ?? "https://mxjgavuzzpcvazxdnuzg.supabase.co";
+  process.env.SUPABASE_URL ?? "https://zpdwalqnhkbxhmaagkfc.supabase.co";
 const SUPA_KEY = process.env.SUPABASE_SECRET_KEY;
+const STREAM_PAGE_LIMIT = Math.max(1, Math.min(100, Number(process.env.ARGRO_STREAM_PAGE_LIMIT ?? 100)));
+const STREAM_MAX_PAGES = Math.max(1, Math.min(50, Number(process.env.ARGRO_STREAM_MAX_PAGES ?? 20)));
+const AUTO_PUBLISH = process.env.ARGRO_AUTO_PUBLISH === "true";
 
 if (!SUPA_KEY || !ARGRO_KEY) {
   console.error("SUPABASE_SECRET_KEY and ARGRO_API_KEY are required server-side.");
@@ -53,6 +57,21 @@ async function aget(path) {
   });
   if (!res.ok) throw new Error(`argro ${path} → HTTP ${res.status}`);
   return res.json();
+}
+
+async function fetchStreamPages() {
+  const items = [];
+  let cursor = null;
+  let pages = 0;
+  for (; pages < STREAM_MAX_PAGES; pages += 1) {
+    const cursorParam = cursor ? `&cursor=${encodeURIComponent(cursor)}` : "";
+    const page = await aget(`/news/stream?limit=${STREAM_PAGE_LIMIT}${cursorParam}`);
+    items.push(...(page.items ?? []));
+    const next = page.next_cursor ?? page.nextCursor ?? null;
+    if (!next || next === cursor || (page.items ?? []).length < STREAM_PAGE_LIMIT) break;
+    cursor = next;
+  }
+  return { items, pages };
 }
 
 /* ---------------- 分類(同 fetch-argro.mjs 一致) ---------------- */
@@ -89,14 +108,14 @@ const fingerprint = (it) =>
 
 /* ---------------- main ---------------- */
 
-const [hot, stream, daily] = await Promise.all([
+const [hot, daily] = await Promise.all([
   aget("/news/hot?limit=50"),
-  aget("/news/stream?limit=100"),
   aget("/insights/daily").catch(() => null),
 ]);
+const stream = await fetchStreamPages();
 
 const hotItems = hot.items ?? [];
-const streamItems = stream.items ?? [];
+const streamItems = stream.items;
 
 // daily 文章 id 集合(argro daily 嘅 articles 係 id 陣列)
 const dailyIds = new Set();
@@ -129,7 +148,6 @@ const upsertRow = (it, placement) => {
         ? Math.min(99, Math.round(it.hot_score * 100))
         : 0,
     lang: hasCJK(it.title) ? "zh" : "en",
-    status: "published",
     placement,
     fingerprint: fp,
     published_at: it.published_at ?? null,
@@ -143,9 +161,10 @@ for (const it of hotItems) if (dailyIds.has(it.id)) upsertRow(it, "daily");
 
 const payload = [...rows.values()];
 console.log(
-  `argro: ${hotItems.length} hot + ${streamItems.length} stream → ${payload.length} unique items ` +
+  `argro: ${hotItems.length} hot + ${streamItems.length} stream (${stream.pages} page(s)) → ${payload.length} unique items ` +
     `(${payload.filter((r) => r.placement === "daily").length} daily, ` +
-    `${payload.filter((r) => r.placement === "featured").length} featured)`
+    `${payload.filter((r) => r.placement === "featured").length} featured, ` +
+    `${AUTO_PUBLISH ? "auto-publish" : "pending review"})`
 );
 
 if (payload.length === 0) {
@@ -171,7 +190,38 @@ for (const row of payload) {
   const argroItem = [...streamItems, ...hotItems].find(
     (it) => fingerprint(it) === row.fingerprint
   );
-  row.source_id = matchSource(argroItem?.source?.name);
+  const sourceId = matchSource(argroItem?.source?.name);
+  if (sourceId) row.source_id = sourceId;
+}
+
+async function fetchExistingByFingerprint(fingerprints) {
+  if (fingerprints.length === 0) return new Map();
+  const filter = fingerprints.join(",");
+  const res = await fetch(
+    `${SUPA_URL}/rest/v1/items?select=fingerprint,status,placement,source_id&fingerprint=in.(${filter})`,
+    { headers: { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}` } }
+  );
+  if (!res.ok) throw new Error(`supabase existing items → HTTP ${res.status}`);
+  const rows = await res.json();
+  return new Map(rows.map((row) => [row.fingerprint, row]));
+}
+
+const existingByFingerprint = new Map();
+for (let i = 0; i < payload.length; i += 500) {
+  const chunk = await fetchExistingByFingerprint(payload.slice(i, i + 500).map((row) => row.fingerprint));
+  for (const [fingerprint, row] of chunk) existingByFingerprint.set(fingerprint, row);
+}
+for (const row of payload) {
+  const existing = existingByFingerprint.get(row.fingerprint);
+  if (!existing) {
+    row.status = AUTO_PUBLISH ? "published" : "pending";
+    continue;
+  }
+  // Sync refreshes upstream fields but never republishes/replaces an editor's
+  // status, placement, or attribution decision.
+  delete row.status;
+  delete row.placement;
+  if (!row.source_id) delete row.source_id;
 }
 
 // upsert(on_conflict=fingerprint)— 分批 100

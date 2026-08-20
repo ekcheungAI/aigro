@@ -1,5 +1,8 @@
 User-agent: *
 Allow: /
 Disallow: /admin
+Disallow: /portal
+Disallow: /account
+Disallow: /ux-preview
 
-Sitemap: https://aigro-blue.vercel.app/sitemap.xml
+Sitemap: https://aigro.io/sitemap.xml

@@ -2,7 +2,10 @@ import { useEffect, useState, type FormEvent } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, Check } from "lucide-react";
 import Reveal, { REVEAL_EASE } from "@/components/Reveal";
-import { captureWaitlist } from "@/lib/waitlist";
+import {
+  captureWaitlistWithFallback,
+  type WaitlistSaveMode,
+} from "@/lib/waitlist";
 
 /* ================= Section 1 — Page Header ================= */
 
@@ -68,17 +71,28 @@ function PageHeader() {
  */
 function HonestState() {
   const [email, setEmail] = useState("");
-  const [done, setDone] = useState(false);
+  const [savedMode, setSavedMode] = useState<WaitlistSaveMode | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
-  const submit = (e: FormEvent) => {
+  const submit = async (e: FormEvent) => {
     e.preventDefault();
-    void captureWaitlist({
-      email: email.trim(),
-      kind: "newsletter",
-      note: "案例上架通知",
-      source: "cases-notify",
-    });
-    setDone(true);
+    const value = email.trim();
+    if (!value || submitting) return;
+    setSubmitting(true);
+    setError("");
+    const mode = await captureWaitlistWithFallback(
+      {
+        email: value,
+        kind: "newsletter",
+        note: "案例上架通知",
+        source: "cases-notify",
+      },
+      "aigro-cases-notify-interest"
+    );
+    setSubmitting(false);
+    if (mode) setSavedMode(mode);
+    else setError("暫時未能記錄，請稍後再試。");
   };
 
   return (
@@ -103,13 +117,15 @@ function HonestState() {
           </p>
 
           <div className="mx-auto mt-8 max-w-[440px] border-t pt-8">
-            {done ? (
+            {savedMode ? (
               <p
                 role="status"
                 className="inline-flex items-center gap-2 text-label text-success"
               >
                 <Check className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-                已登記 — 第一個真案例上架即通知你
+                {savedMode === "server"
+                  ? "已登記 — 第一個真案例上架即通知你"
+                  : "已儲存在此裝置 — 連線後請再登記"}
               </p>
             ) : (
               <form onSubmit={submit} className="flex gap-2 max-sm:flex-col">
@@ -127,11 +143,17 @@ function HonestState() {
                 />
                 <button
                   type="submit"
+                  disabled={submitting}
                   className="h-11 shrink-0 rounded-md bg-ink-solid px-5 text-label text-on-accent press hover:bg-ink-hover"
                 >
-                  上架通知我
+                  {submitting ? "記錄中" : "上架通知我"}
                 </button>
               </form>
+            )}
+            {error && (
+              <p role="alert" className="mt-2 text-caption text-error">
+                {error}
+              </p>
             )}
             <p className="mt-3 text-caption text-text-muted">
               有真實成果想投稿？用下面「提交案例」留低意向。

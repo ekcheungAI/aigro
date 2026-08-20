@@ -3,9 +3,9 @@ import { MessagesSquare } from "lucide-react";
 import AdminSlideOver from "@/components/admin/AdminSlideOver";
 import QueryState from "@/components/QueryState";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/lib/supabase";
 import {
   daysAgoUtcStartIso,
+  fetchRightsSafeEngagement,
   formatDate,
   last7DayBuckets,
   personaLabel,
@@ -24,24 +24,10 @@ interface EngagementData {
 }
 
 async function fetchEngagement(): Promise<EngagementData> {
-  if (!supabase) throw new Error("Supabase 未連接 — 請檢查環境變數。");
-  const [convRes, msgRes] = await Promise.all([
-    supabase
-      .from("conversations")
-      .select("id,user_id,anon_id,persona,title,created_at")
-      .order("created_at", { ascending: false })
-      .limit(500),
-    supabase
-      .from("messages")
-      .select("id,conversation_id,role,content,source,answer_basis,coverage,created_at")
-      .order("created_at", { ascending: true })
-      .limit(2000),
-  ]);
-  if (convRes.error) throw new Error(convRes.error.message);
-  if (msgRes.error) throw new Error(msgRes.error.message);
+  const safe = await fetchRightsSafeEngagement(null);
   return {
-    conversations: (convRes.data ?? []) as AdminConversationRow[],
-    messages: (msgRes.data ?? []) as AdminMessageRow[],
+    conversations: safe.conversations,
+    messages: safe.messages,
   };
 }
 

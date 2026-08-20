@@ -43,17 +43,12 @@ const STATIC_ROUTES = [
   { path: "/insights", changefreq: "hourly", priority: "0.9" },
   { path: "/insights/daily", changefreq: "daily", priority: "0.9" },
   { path: "/cases", changefreq: "weekly", priority: "0.8" },
-  { path: "/experts", changefreq: "weekly", priority: "0.8" },
-  { path: "/ask", changefreq: "monthly", priority: "0.6" },
   { path: "/developers", changefreq: "weekly", priority: "0.8" },
   { path: "/skills", changefreq: "weekly", priority: "0.7" },
   { path: "/branding", changefreq: "monthly", priority: "0.6" },
   { path: "/class-review", changefreq: "monthly", priority: "0.7" },
   { path: "/guides/100x-ai-growth-marketer", changefreq: "monthly", priority: "0.7" },
-  { path: "/data", changefreq: "monthly", priority: "0.6" },
   { path: "/access", changefreq: "monthly", priority: "0.5" },
-  { path: "/join", changefreq: "monthly", priority: "0.6" },
-  { path: "/login", changefreq: "monthly", priority: "0.4" },
 ];
 
 // --- insights:INSIGHT_ARTICLES keys(站內長文,非 AIHOT) ---

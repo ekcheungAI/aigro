@@ -3,11 +3,11 @@
  *
  * 「aigro-expert-interest」→ kind='expert';「aigro-partner-interest」→ kind='partner'。
  * 雙寫:localStorage 留底(離線 / 無 env fallback),Supabase 做真實收集。
- * Supabase 寫入 fire-and-forget + 靜默失敗,UI 成功態唔受影響。
+ * Caller 必須 await 回傳模式，先可以顯示誠實成功態。
  */
 
-import { captureWaitlist } from "@/lib/waitlist";
-import type { WaitlistKind } from "@/lib/waitlist";
+import { captureWaitlistWithFallback } from "@/lib/waitlist";
+import type { WaitlistKind, WaitlistSaveMode } from "@/lib/waitlist";
 
 export const EXPERT_INTEREST_KEY = "aigro-expert-interest";
 export const PARTNER_INTEREST_KEY = "aigro-partner-interest";
@@ -30,29 +30,35 @@ function noteFor(entry: Record<string, unknown>): string | null {
   return parts.length > 0 ? parts.join(" | ") : null;
 }
 
-/** 追加一條 interest 記錄(連 ISO 時間戳);寫入失敗(private mode 等)靜默。 */
-export function appendInterest(
+export type InterestSaveMode = WaitlistSaveMode;
+
+/** 追加一條 interest 記錄，並回報真正成功嘅 persistence path。 */
+export async function appendInterest(
   key: string,
   entry: Record<string, unknown>
-): void {
-  try {
-    const raw = localStorage.getItem(key);
-    const list: unknown[] = raw ? (JSON.parse(raw) as unknown[]) : [];
-    list.push({ ...entry, at: new Date().toISOString() });
-    localStorage.setItem(key, JSON.stringify(list));
-  } catch {
-    /* localStorage 不可用 — 靜默,唔阻塞 UI 成功態 */
-  }
-
-  // Supabase waitlist 真實收集(無 env / 離線 → 靜默)
+): Promise<InterestSaveMode | null> {
   const kind = kindForKey(key);
   const email = typeof entry.email === "string" ? entry.email.trim() : "";
   if (kind && email) {
-    void captureWaitlist({
-      email,
-      kind,
-      note: noteFor(entry),
-      source: `${kind}-interest`,
-    });
+    return captureWaitlistWithFallback(
+      {
+        email,
+        kind,
+        note: noteFor(entry),
+        source: `${kind}-interest`,
+      },
+      key,
+      entry
+    );
+  }
+
+  try {
+    const raw = window.localStorage.getItem(key);
+    const records: unknown[] = raw ? (JSON.parse(raw) as unknown[]) : [];
+    records.push({ ...entry, at: new Date().toISOString() });
+    window.localStorage.setItem(key, JSON.stringify(records));
+    return "local";
+  } catch {
+    return null;
   }
 }

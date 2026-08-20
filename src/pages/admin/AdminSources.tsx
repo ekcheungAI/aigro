@@ -21,6 +21,7 @@ import {
 } from "@/lib/argroHealth";
 import type { ArgroSourceStatus } from "@/lib/argroHealth";
 import { supabase } from "@/lib/supabase";
+import { mutateArgroSource } from "@/lib/argroSources";
 import {
   formatDate,
   timeAgo,
@@ -75,7 +76,7 @@ async function fetchSources(): Promise<AdminSourceRow[]> {
   const { data, error } = await supabase
     .from("sources")
     .select(
-      "id,name,type,domain,endpoint,vertical,lang,weight,fetch_interval_minutes,status,last_fetched_at,health,created_at"
+      "id,name,type,domain,vertical,lang,weight,fetch_interval_minutes,status,last_fetched_at,health,created_at"
     )
     .order("created_at", { ascending: true });
   if (error) throw new Error(error.message);
@@ -524,44 +525,52 @@ export default function AdminSources() {
 
   const activeCount = list.filter((s) => s.status === "active").length;
 
-  /** 啟用 / 暫停 — 真 update */
+  /** 啟用 / 暫停 — 同步 Argro registry，再更新 public status */
   const toggleSource = async (s: AdminSourceRow) => {
     if (!supabase || busyId) return;
     const next = s.status === "active" ? "paused" : "active";
     setBusyId(s.id);
-    const { error: updateError } = await supabase
-      .from("sources")
-      .update({ status: next })
-      .eq("id", s.id);
-    setBusyId(null);
-    if (updateError) {
-      toast(`更新失敗:${updateError.message}`);
+    try {
+      await mutateArgroSource({ action: "set_active", sourceId: s.id, isActive: next === "active" });
+      const { error: updateError } = await supabase
+        .from("sources")
+        .update({ status: next })
+        .eq("id", s.id);
+      if (updateError) throw new Error(updateError.message);
+    } catch (error) {
+      setBusyId(null);
+      toast(`更新失敗:${error instanceof Error ? error.message : String(error)}`);
       return;
     }
+    setBusyId(null);
     toast(`「${s.name}」已${next === "active" ? "啟用" : "暫停"}`);
     refetch();
   };
 
-  /** 刪除來源 — 真 delete(只限未產出/確認操作) */
+  /** 封存來源 — 停止 upstream，保留歷史 items/attribution */
   const deleteSource = async (s: AdminSourceRow) => {
     if (!supabase || busyId) return;
-    if (!window.confirm(`確定刪除「${s.name}」?呢個操作唔可以還原。`)) return;
+    if (!window.confirm(`確定封存「${s.name}」?封存會停止上游抓取,保留歷史資料。`)) return;
     setBusyId(s.id);
-    const { error: deleteError } = await supabase
-      .from("sources")
-      .delete()
-      .eq("id", s.id);
-    setBusyId(null);
-    if (deleteError) {
-      toast(`刪除失敗:${deleteError.message}`);
+    try {
+      await mutateArgroSource({ action: "archive", sourceId: s.id });
+      const { error: updateError } = await supabase
+        .from("sources")
+        .update({ status: "paused" })
+        .eq("id", s.id);
+      if (updateError) throw new Error(updateError.message);
+    } catch (error) {
+      setBusyId(null);
+      toast(`封存失敗:${error instanceof Error ? error.message : String(error)}`);
       return;
     }
-    toast(`已刪除「${s.name}」`);
+    setBusyId(null);
+    toast(`已封存「${s.name}」`);
     setOpenId(null);
     refetch();
   };
 
-  /** 新增來源 — 真 insert,status = pending(待管道接入) */
+  /** 新增來源 — 先寫 Argro registry/private connector，再進 public sources */
   const createSource = async () => {
     if (!supabase || creating) return;
     if (!form.name.trim() || !form.endpoint.trim()) {
@@ -569,27 +578,23 @@ export default function AdminSources() {
       return;
     }
     setCreating(true);
-    let domain = "";
     try {
-      domain = new URL(form.endpoint.trim()).hostname;
-    } catch {
-      domain = "";
-    }
-    const { error: insertError } = await supabase.from("sources").insert({
-      name: form.name.trim(),
-      type: form.type,
-      endpoint: form.endpoint.trim(),
-      domain: domain || null,
-      vertical: form.vertical.trim() || null,
-      lang: form.lang,
-      status: "pending",
-    });
-    setCreating(false);
-    if (insertError) {
-      toast(`新增失敗:${insertError.message}`);
+      await mutateArgroSource({
+        action: "upsert",
+        name: form.name.trim(),
+        type: form.type,
+        endpoint: form.endpoint.trim(),
+        vertical: form.vertical.trim() || "ai",
+        lang: form.lang,
+        isActive: false,
+      });
+    } catch (error) {
+      setCreating(false);
+      toast(`新增失敗:${error instanceof Error ? error.message : String(error)}`);
       return;
     }
-    toast(`已新增「${form.name.trim()}」— 狀態:待接入,管道下一輪 sync 會開始抓取`);
+    setCreating(false);
+    toast(`已接入「${form.name.trim()}」— 上游已建立,目前暫停等待 canary`);
     setCreateOpen(false);
     setForm({ name: "", type: "rss", endpoint: "", vertical: "AI", lang: "zh" });
     refetch();
@@ -755,7 +760,7 @@ export default function AdminSources() {
                             type="button"
                             disabled={busyId === s.id}
                             onClick={() => void deleteSource(s)}
-                            aria-label="刪除來源"
+                            aria-label="封存來源"
                             className="rounded-md border border-border p-1.5 text-text-muted transition-colors hover:border-[#A63A30] hover:text-[#A63A30] disabled:opacity-50"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -809,7 +814,7 @@ export default function AdminSources() {
           <div className="flex-1 space-y-6 px-6 py-5">
             <dl className="divide-y divide-border rounded-lg border border-border bg-surface">
               {[
-                ["Endpoint", active.endpoint ?? "—"],
+                ["Connector", "私有設定（不向 browser 暴露）"],
                 ["Domain", active.domain ?? "—"],
                 ["語言", active.lang ?? "—"],
                 ["權重", String(active.weight ?? 0)],
@@ -859,7 +864,7 @@ export default function AdminSources() {
                 className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border px-4 py-2 text-sm text-text-secondary transition-colors hover:border-[#A63A30] hover:text-[#A63A30] disabled:opacity-50"
               >
                 <Trash2 className="h-4 w-4" />
-                刪除
+                封存
               </button>
             </div>
           </div>
@@ -871,7 +876,7 @@ export default function AdminSources() {
         open={createOpen}
         onClose={() => setCreateOpen(false)}
         title="新增來源"
-        subtitle="寫入 sources 表,狀態「待接入」— argro 管道下一輪 sync 會開始抓取"
+        subtitle="同步 Argro registry + 私有 connector；首次建立會保持暫停,通過 canary 後再啟用"
         width={480}
       >
         <div className="flex h-full flex-col">

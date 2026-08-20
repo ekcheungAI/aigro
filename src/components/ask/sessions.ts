@@ -4,7 +4,7 @@
  * 同時遷移舊版單一 history(`aigro-ask-history`)→ 平台編輯部嘅第一個 session。
  */
 
-import type { AiReply } from "./AiMessage";
+import type { AiReply, Citation } from "./AiMessage";
 import {
   ensureAuthenticatedUser,
   supabase,
@@ -47,6 +47,8 @@ export interface SessionStore {
 const SESSIONS_KEY = "aigro-ask-sessions-v1";
 const LEGACY_HISTORY_KEY = "aigro-ask-history";
 export const MESSAGE_LIMIT = 40;
+/** Local device history is deliberately shorter than the server retention window. */
+export const SESSION_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 const MAX_SESSIONS_PER_PERSONA = 12;
 const TITLE_LENGTH = 22;
 
@@ -81,6 +83,7 @@ function sanitizeSession(raw: unknown): ChatSession | null {
 export function loadSessionStore(): SessionStore {
   const empty: SessionStore = { sessions: {}, active: {} };
   let store = empty;
+  const expiresBefore = Date.now() - SESSION_RETENTION_MS;
   try {
     const raw = window.localStorage.getItem(SESSIONS_KEY);
     if (raw) {
@@ -92,14 +95,27 @@ export function loadSessionStore(): SessionStore {
           const clean = list
             .map(sanitizeSession)
             .filter((s): s is ChatSession => s !== null)
+            .filter((session) => session.updatedAt >= expiresBefore)
             .slice(0, MAX_SESSIONS_PER_PERSONA);
           if (clean.length > 0) sessions[key] = clean;
         }
       }
+      const active: SessionStore["active"] = {};
+      if (parsed.active && typeof parsed.active === "object") {
+        for (const [personaKey, sessionId] of Object.entries(parsed.active)) {
+          if (
+            (typeof sessionId === "string" || sessionId === null) &&
+            sessions[personaKey]?.some((session) => session.id === sessionId)
+          ) {
+            active[personaKey] = sessionId;
+          } else if (sessions[personaKey]) {
+            active[personaKey] = null;
+          }
+        }
+      }
       store = {
         sessions,
-        active:
-          parsed.active && typeof parsed.active === "object" ? { ...parsed.active } : {},
+        active,
       };
     }
   } catch {
@@ -150,10 +166,71 @@ export function saveSessionStore(store: SessionStore): void {
 
 /** sessionId ↔ conversations.id 映射(持久,reload 後繼續寫入同一對話) */
 const CONV_MAP_KEY = "aigro-ask-conv-map";
-let convMapCache: Map<string, string> | null = null;
+interface ConversationMapEntry {
+  conversationId: string;
+  /** Prevent a mapping left by another signed-in/anonymous account being reused. */
+  ownerId: string | null;
+}
+let convMapCache: Map<string, ConversationMapEntry> | null = null;
 const pendingConv = new Map<string, Promise<string | null>>();
+/** Prevent any late UI path from creating a server row for a deleted session. */
+const deletedSessionTombstones = new Set<string>();
+export const CONVERSATION_CREATE_TIMEOUT_MS = 8_000;
+const DEADLINE_EXPIRED = Symbol("deadline-expired");
 
-function loadConvMap(): Map<string, string> {
+export interface ConversationCreateInput {
+  conversationId: string;
+  ownerId: string;
+  personaKey: string;
+  title: string;
+}
+
+export interface EnsureConversationDependencies {
+  authenticate?: () => Promise<string | null>;
+  createConversation?: (
+    input: ConversationCreateInput,
+    signal: AbortSignal,
+  ) => Promise<string | null>;
+  timeoutMs?: number;
+}
+
+async function settleBeforeDeadline<T>(
+  operation: () => Promise<T>,
+  timeoutMs: number,
+  onTimeout?: () => void,
+): Promise<T | typeof DEADLINE_EXPIRED> {
+  if (timeoutMs <= 0) {
+    onTimeout?.();
+    return DEADLINE_EXPIRED;
+  }
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<typeof DEADLINE_EXPIRED>((resolve) => {
+    timer = setTimeout(() => {
+      onTimeout?.();
+      resolve(DEADLINE_EXPIRED);
+    }, timeoutMs);
+  });
+  try {
+    const work = Promise.resolve().then(operation).catch(() => DEADLINE_EXPIRED);
+    return await Promise.race([work, timeout]) as T | typeof DEADLINE_EXPIRED;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+function runAbortableBeforeDeadline<T>(
+  operation: (signal: AbortSignal) => Promise<T>,
+  timeoutMs: number,
+): Promise<T | typeof DEADLINE_EXPIRED> {
+  const controller = new AbortController();
+  return settleBeforeDeadline(
+    () => operation(controller.signal),
+    timeoutMs,
+    () => controller.abort(),
+  );
+}
+
+function loadConvMap(): Map<string, ConversationMapEntry> {
   if (convMapCache) return convMapCache;
   convMapCache = new Map();
   try {
@@ -161,7 +238,21 @@ function loadConvMap(): Map<string, string> {
     if (raw) {
       const obj = JSON.parse(raw) as Record<string, unknown>;
       for (const [k, v] of Object.entries(obj)) {
-        if (typeof v === "string") convMapCache.set(k, v);
+        // String entries came from the pre-owner-bound map. They remain
+        // deletable, but are never reused for a newly authenticated create.
+        if (typeof v === "string") {
+          convMapCache.set(k, { conversationId: v, ownerId: null });
+        } else if (
+          v && typeof v === "object" &&
+          typeof (v as Partial<ConversationMapEntry>).conversationId === "string" &&
+          (typeof (v as Partial<ConversationMapEntry>).ownerId === "string" ||
+            (v as Partial<ConversationMapEntry>).ownerId === null)
+        ) {
+          convMapCache.set(k, {
+            conversationId: (v as ConversationMapEntry).conversationId,
+            ownerId: (v as ConversationMapEntry).ownerId,
+          });
+        }
       }
     }
   } catch {
@@ -171,12 +262,31 @@ function loadConvMap(): Map<string, string> {
 }
 
 function convMapGet(sessionId: string): string | null {
-  return loadConvMap().get(sessionId) ?? null;
+  return loadConvMap().get(sessionId)?.conversationId ?? null;
 }
 
-function convMapSet(sessionId: string, conversationId: string): void {
+function convMapGetForOwner(sessionId: string, ownerId: string): string | null {
+  const entry = loadConvMap().get(sessionId);
+  if (!entry) return null;
+  if (entry.ownerId === ownerId) return entry.conversationId;
+  // This covers both an account switch and legacy unbound entries. Reusing
+  // either could target a conversation owned by a different auth identity.
+  convMapDelete(sessionId);
+  return null;
+}
+
+/** Return the owner-scoped server conversation linked to a local session. */
+export function conversationIdForSession(sessionId: string): string | null {
+  return convMapGet(sessionId);
+}
+
+function convMapSet(
+  sessionId: string,
+  conversationId: string,
+  ownerId: string | null,
+): void {
   const m = loadConvMap();
-  m.set(sessionId, conversationId);
+  m.set(sessionId, { conversationId, ownerId });
   try {
     window.localStorage.setItem(CONV_MAP_KEY, JSON.stringify(Object.fromEntries(m)));
   } catch {
@@ -198,42 +308,76 @@ function convMapDelete(sessionId: string): void {
 export function ensureConversationId(
   sessionId: string,
   personaKey: string,
-  title: string
+  title: string,
+  dependencies: EnsureConversationDependencies = {},
 ): Promise<string | null> {
-  if (!supabase || !supabaseReady) return Promise.resolve(null);
+  if ((!supabase || !supabaseReady) && !dependencies.createConversation) {
+    return Promise.resolve(null);
+  }
+  if (deletedSessionTombstones.has(sessionId)) return Promise.resolve(null);
   const pending = pendingConv.get(sessionId);
-  if (pending) return pending;
+  if (pending) {
+    return pending.then((conversationId) =>
+      deletedSessionTombstones.has(sessionId) ? null : conversationId
+    );
+  }
 
   const p = (async (): Promise<string | null> => {
-    try {
-      const uid = await ensureAuthenticatedUser();
-      if (!uid) return null;
-      const cached = convMapGet(sessionId);
-      if (cached) {
-        const { data: ownedConversation } = await supabase
-          .from("conversations")
-          .select("id")
-          .eq("id", cached)
-          .eq("owner_id", uid)
-          .eq("persona", personaKey)
-          .maybeSingle();
-        if (ownedConversation) return cached;
-        convMapDelete(sessionId);
-      }
-      const { data, error } = await supabase.rpc("create_chat_conversation", {
-        p_persona_slug: personaKey,
-        p_title: title,
+    const configuredTimeout = dependencies.timeoutMs ?? CONVERSATION_CREATE_TIMEOUT_MS;
+    const timeoutMs = Number.isFinite(configuredTimeout)
+      ? Math.max(1, configuredTimeout)
+      : CONVERSATION_CREATE_TIMEOUT_MS;
+    const deadline = Date.now() + timeoutMs;
+    const remaining = () => Math.max(0, deadline - Date.now());
+    const authenticate = dependencies.authenticate ?? ensureAuthenticatedUser;
+    const uid = await settleBeforeDeadline(authenticate, remaining());
+    if (uid === DEADLINE_EXPIRED || !uid) return null;
+    if (deletedSessionTombstones.has(sessionId)) return null;
+
+    const conversationId = convMapGetForOwner(sessionId, uid) ?? crypto.randomUUID();
+    const input: ConversationCreateInput = {
+      conversationId,
+      ownerId: uid,
+      personaKey,
+      title,
+    };
+    // Persist the client-generated target before the request starts. If the
+    // transaction commits but its HTTP acknowledgement is lost, deletion and
+    // retry still address the same idempotent server row.
+    convMapSet(sessionId, conversationId, uid);
+    const createConversation = dependencies.createConversation ??
+      (async (
+        createInput: ConversationCreateInput,
+        signal: AbortSignal,
+      ): Promise<string | null> => {
+        if (!supabase) return null;
+        const { data, error } = await supabase
+          .rpc("create_chat_conversation_idempotent", {
+            p_conversation_id: createInput.conversationId,
+            p_persona_slug: createInput.personaKey,
+            p_title: createInput.title,
+          })
+          .abortSignal(signal);
+        if (error || typeof data !== "string") return null;
+        return data;
       });
-      if (error || typeof data !== "string") return null;
-      convMapSet(sessionId, data);
-      return data;
-    } catch {
-      return null;
-    }
+    const created = await runAbortableBeforeDeadline(
+      (signal) => createConversation(input, signal),
+      remaining(),
+    );
+    if (
+      created === DEADLINE_EXPIRED || !created ||
+      created !== conversationId
+    ) return null;
+    // Keep the raw id in the shared pending promise: deletion may have placed a
+    // tombstone while create was in flight and needs this id for server cleanup.
+    return created;
   })();
   pendingConv.set(sessionId, p);
   void p.finally(() => pendingConv.delete(sessionId));
-  return p;
+  return p.then((conversationId) =>
+    deletedSessionTombstones.has(sessionId) ? null : conversationId
+  );
 }
 
 /**
@@ -248,7 +392,9 @@ export function appendRound(
   /** 命中話題 id — 寫入 session memory;null(fallback)時保留舊 topic,唔洗走條 thread */
   topicId: string | null = null,
   /** ask-answer already persisted this round; avoid duplicate client writes. */
-  skipRemoteLog = false
+  skipRemoteLog = false,
+  /** Session that initiated an async request. Never append to a newly selected session. */
+  targetSessionId?: string,
 ): { store: SessionStore; aiMessageId: number } {
   const aiMessage: ChatMessage = { id: nextMessageId(), role: "ai", reply };
   const round: ChatMessage[] = [
@@ -257,10 +403,11 @@ export function appendRound(
   ];
   const aiMessageId = aiMessage.id;
   const list = store.sessions[personaKey] ?? [];
-  const activeId = store.active[personaKey];
+  const activeId = store.active[personaKey] ?? null;
+  const requestedId = targetSessionId ?? activeId;
   const now = Date.now();
 
-  const idx = activeId ? list.findIndex((s) => s.id === activeId) : -1;
+  const idx = requestedId ? list.findIndex((s) => s.id === requestedId) : -1;
   if (idx >= 0) {
     const prior = list[idx];
     const convId = convMapGet(prior.id) ?? prior.conversationId;
@@ -273,13 +420,23 @@ export function appendRound(
     };
     const nextList = [updated, ...list.filter((_, i) => i !== idx)];
     void skipRemoteLog;
+    const nextActiveId = targetSessionId && activeId !== targetSessionId
+      ? activeId
+      : updated.id;
     return {
       aiMessageId,
       store: {
         sessions: { ...store.sessions, [personaKey]: nextList },
-        active: { ...store.active, [personaKey]: updated.id },
+        active: { ...store.active, [personaKey]: nextActiveId },
       },
     };
+  }
+
+  // A user may delete the initiating session while an answer is still
+  // streaming. Do not resurrect the deleted transcript in a new session.
+  if (targetSessionId) {
+    void skipRemoteLog;
+    return { store, aiMessageId };
   }
 
   const created: ChatSession = {
@@ -337,6 +494,94 @@ export function prepareSession(
   };
 }
 
+export type DeleteSessionStatus = "deleted" | "local-only" | "retry-required";
+
+export interface DeleteSessionResult {
+  store: SessionStore;
+  status: DeleteSessionStatus;
+}
+
+export interface DeleteSessionDependencies {
+  deleteRemoteConversation?: (conversationId: string) => Promise<boolean>;
+  /** Test seam for the same in-flight create promise held in `pendingConv`. */
+  pendingConversationId?: Promise<string | null>;
+}
+
+async function deleteRemoteConversation(conversationId: string): Promise<boolean> {
+  if (!supabase || !supabaseReady) return false;
+  try {
+    if (!await ensureAuthenticatedUser()) return false;
+    const { data, error } = await supabase.rpc("delete_chat_conversation", {
+      p_conversation_id: conversationId,
+    });
+    return !error && data === true;
+  } catch {
+    return false;
+  }
+}
+
+function removeLocalSession(
+  store: SessionStore,
+  personaKey: string,
+  sessionId: string,
+): SessionStore {
+  const list = store.sessions[personaKey] ?? [];
+  const nextList = list.filter((session) => session.id !== sessionId);
+  const activeId = store.active[personaKey] ?? null;
+  return {
+    sessions: { ...store.sessions, [personaKey]: nextList },
+    active: {
+      ...store.active,
+      [personaKey]: activeId === sessionId ? null : activeId,
+    },
+  };
+}
+
+/**
+ * Delete a local session and its known owner-scoped server conversation. When
+ * the server delete cannot be confirmed, keep the transcript and mapping so the
+ * user can retry instead of silently orphaning retained server data.
+ */
+export async function deleteSession(
+  store: SessionStore,
+  personaKey: string,
+  sessionId: string,
+  dependencies: DeleteSessionDependencies = {},
+): Promise<DeleteSessionResult> {
+  deletedSessionTombstones.add(sessionId);
+  const target = (store.sessions[personaKey] ?? []).find((session) => session.id === sessionId);
+  let conversationId = convMapGet(sessionId) ?? target?.conversationId ?? null;
+  if (!conversationId) {
+    const pendingConversation = dependencies.pendingConversationId ?? pendingConv.get(sessionId);
+    if (pendingConversation) {
+      conversationId = await pendingConversation.catch(() => null);
+      // Preserve a just-created id until deletion is confirmed. If the delete
+      // genuinely fails, this mapping is the user's durable retry handle.
+      if (conversationId) convMapSet(sessionId, conversationId, null);
+    }
+  }
+  if (conversationId) {
+    const deleteKnownConversation = dependencies.deleteRemoteConversation
+      ?? deleteRemoteConversation;
+    const deleted = await deleteKnownConversation(conversationId).catch(() => false);
+    if (!deleted) {
+      deletedSessionTombstones.delete(sessionId);
+      return { store, status: "retry-required" };
+    }
+    convMapDelete(sessionId);
+    return {
+      store: removeLocalSession(store, personaKey, sessionId),
+      status: "deleted",
+    };
+  }
+
+  convMapDelete(sessionId);
+  return {
+    store: removeLocalSession(store, personaKey, sessionId),
+    status: "local-only",
+  };
+}
+
 export function setActiveSession(
   store: SessionStore,
   personaKey: string,
@@ -345,15 +590,28 @@ export function setActiveSession(
   return { ...store, active: { ...store.active, [personaKey]: sessionId } };
 }
 
-/** 集合對話入面所有引用(按 href 去重),俾右欄「引用來源」用 */
-export function collectCitations(messages: ChatMessage[]): { title: string; href: string }[] {
+function citationIdentity(citation: Citation): string {
+  const source = citation.revision_id || `${citation.title}|${citation.href}`;
+  return [
+    source,
+    citation.href,
+    citation.page ?? "",
+    citation.start_seconds ?? "",
+    citation.end_seconds ?? "",
+    citation.section ?? "",
+  ].join("|");
+}
+
+/** 集合對話入面所有引用(按來源 + locator 去重),俾右欄「引用來源」用 */
+export function collectCitations(messages: ChatMessage[]): Citation[] {
   const seen = new Set<string>();
-  const out: { title: string; href: string }[] = [];
+  const out: Citation[] = [];
   for (const m of messages) {
     if (m.role !== "ai" || !m.reply) continue;
     for (const c of m.reply.citations) {
-      if (seen.has(c.href)) continue;
-      seen.add(c.href);
+      const identity = citationIdentity(c);
+      if (seen.has(identity)) continue;
+      seen.add(identity);
       out.push(c);
     }
   }

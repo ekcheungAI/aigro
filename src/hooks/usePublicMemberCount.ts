@@ -11,7 +11,7 @@ export default function usePublicMemberCount(): number {
     if (!supabase) return;
     let active = true;
 
-    void supabase.rpc("public_member_count").then(({ data, error }) => {
+    void supabase.rpc("get_public_member_count").then(({ data, error }) => {
       const parsed = typeof data === "number" ? data : Number(data);
       if (active && !error && Number.isSafeInteger(parsed) && parsed >= 0) {
         setCount(MEMBER_BASE_COUNT + parsed);

@@ -23,6 +23,9 @@ expiry, and revocation timestamps record the capability without storing external
 No production grant is inserted by this migration.
 Migration of an existing database clears every legacy publication pointer that does not
 already have an explicit eligible grant; authorization must be recorded before republishing.
+The pinned repository does not itself supply a licence file, so public readability is
+not treated as commercial RAG or persona-synthesis permission. Use the actual signed or
+otherwise verifiable authorization record for `rights_holder` and `rights_evidence_ref`.
 
 Changing a published source to a non-granted, revoked, or already-expired state atomically
 clears `published_revision_id`. Future expiry is enforced immediately at retrieval time and
@@ -35,29 +38,58 @@ authorization-state retrieval, automatic unpublishing, and review/rollback publi
 
 ## Full distillation run
 
-After migrations and both Edge Functions are deployed, run the idempotent end-to-end
-pipeline with a server-side Supabase credential:
+After migrations and both Edge Functions are deployed, run the idempotent pipeline
+with a server-side Supabase credential. The first pass stops at explicit knowledge
+review:
 
 ```sh
 SUPABASE_URL="..." SUPABASE_SECRET_KEY="..." npm run distill:jimmy -- \
   --repo /path/to/growth-with-ai-guide \
-  --rights-holder "AIGRO / Jimmy Lau" \
-  --rights-evidence-ref "ekos-intake:2026-08-11_jimmy-lau-growth-with-ai-guide" \
-  --publish-persona
+  --rights-holder "RIGHTS_HOLDER_FROM_SIGNED_RECORD" \
+  --rights-evidence-ref "RIGHTS_EVIDENCE_REFERENCE"
 ```
 
+Inspect every reference, distilled output and citation in Admin Studio, enter a
+review note, and approve the revisions there with an authenticated admin account.
+The service runner cannot approve knowledge. After the human decisions are stored,
+rerun the same command to queue persona synthesis:
+
+The review panel is `/admin/studio` for AIGRO admins and `/portal/kb` for
+the instructor workspace. Before approval it exposes the signed/original file,
+provenance and content hash, exact rights scopes, extracted text, full structured
+summary/claims/evidence/methods/boundaries/questions, embedding coverage, job state,
+and the recorded human-review state. Approval remains disabled until the original,
+structured distillation, required rights, and a substantive review note are present.
+
+```sh
+SUPABASE_URL="..." SUPABASE_SECRET_KEY="..." npm run distill:jimmy -- \
+  --repo /path/to/growth-with-ai-guide \
+  --rights-holder "RIGHTS_HOLDER_FROM_SIGNED_RECORD" \
+  --rights-evidence-ref "RIGHTS_EVIDENCE_REFERENCE"
+```
+
+The persona compiler stops at its own human-review gate. Review the evidence-linked
+blueprint and fidelity report in Admin Studio, enter a review note, approve and publish
+it there, then rerun the same command once more. The runner reuses the exact reviewed
+job and only reports success for a current, human-reviewed published persona.
+The persona panel shows every active evaluation question (25–50), all blueprint
+sections, every evidence excerpt/revision/locator, the five-part fidelity breakdown,
+strengths, risks, response count, and evaluation-set hash. Partial review payloads
+cannot enable the approve action, and publication revalidates the same evidence and
+evaluation snapshot transactionally.
+
 Never use the public anon key. The runner imports one stable source per chapter,
-reuses identical SHA-256 revisions, drives the existing workers, approves only
-rights-eligible revisions with distilled chunks, requires persona fidelity to pass,
-publishes atomically, and then verifies that every pinned chapter has:
+reuses identical SHA-256 revisions, drives the existing workers, requires explicit
+knowledge and persona review, and then verifies that every pinned chapter has:
 
 - an approved published revision;
 - at least one embedded chunk;
 - citation metadata matching the pinned commit and file path; and
 - inclusion in the published persona version.
 
-Success prints a JSON coverage report. A partial run is safe to rerun; a failed or
-missing chapter, stale right, fidelity failure, or citation mismatch exits non-zero.
+Success is printed only after publication as a JSON coverage report. A review-stop or
+partial run is safe to rerun; a failed or missing chapter, stale right, fidelity failure,
+missing human review, or citation mismatch exits non-zero.
 
 Production execution requires `SUPABASE_ACCESS_TOKEN` or database credentials to
 apply migrations, plus `SUPABASE_SECRET_KEY` (or the legacy service-role key) to run

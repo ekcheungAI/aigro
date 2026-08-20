@@ -79,8 +79,8 @@ select throws_like(
   $$insert into public.conversations (id, owner_id, user_id, persona, expert_id, title)
     select '30000000-0000-0000-0000-000000000003', auth.uid(), auth.uid(), e.slug, e.id, 'private'
     from public.experts e where e.slug = 'elvin-cheung'$$,
-  '%row-level security policy%',
-  'browser clients cannot create instructor conversations outside the routed RPC'
+  '%permission denied%',
+  'browser clients have no direct conversation insert grant outside the routed RPC'
 );
 set local role postgres;
 insert into public.conversations (id, owner_id, user_id, persona, expert_id, title)
@@ -126,7 +126,11 @@ select set_config('request.jwt.claims',
   '{"sub":"20000000-0000-0000-0000-000000000002","role":"authenticated"}', true);
 
 select is((select count(*) from public.conversations), 0::bigint, 'another member cannot read private conversation');
-select is((select count(*) from public.messages), 0::bigint, 'another member cannot read private messages');
+select throws_like(
+  $$select count(*) from public.messages$$,
+  '%permission denied%',
+  'browser clients cannot bypass rights-safe transcript RPCs with direct message reads'
+);
 select is((select count(*) from public.knowledge_sources), 0::bigint, 'another member cannot read expert raw sources');
 select is((select count(*) from public.persona_synthesis_jobs), 0::bigint,
   'member cannot read an instructor persona synthesis evidence');

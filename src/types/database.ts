@@ -305,6 +305,8 @@ export type Database = {
         Row: {
           conversation_id: string
           created_at: string
+          evidence_bound_at: string | null
+          evidence_snapshot: Json | null
           error_code: string | null
           expert_id: string
           id: string
@@ -319,6 +321,8 @@ export type Database = {
         Insert: {
           conversation_id: string
           created_at?: string
+          evidence_bound_at?: string | null
+          evidence_snapshot?: Json | null
           error_code?: string | null
           expert_id: string
           id?: string
@@ -333,6 +337,8 @@ export type Database = {
         Update: {
           conversation_id?: string
           created_at?: string
+          evidence_bound_at?: string | null
+          evidence_snapshot?: Json | null
           error_code?: string | null
           expert_id?: string
           id?: string
@@ -1084,6 +1090,10 @@ export type Database = {
           created_by: string | null
           expert_id: string
           id: string
+          public_citation_review_note: string | null
+          public_citation_reviewed_at: string | null
+          public_citation_reviewed_by: string | null
+          public_citation_url: string | null
           published_revision_id: string | null
           source_type: string
           source_url: string | null
@@ -1097,6 +1107,10 @@ export type Database = {
           created_by?: string | null
           expert_id: string
           id?: string
+          public_citation_review_note?: string | null
+          public_citation_reviewed_at?: string | null
+          public_citation_reviewed_by?: string | null
+          public_citation_url?: string | null
           published_revision_id?: string | null
           source_type: string
           source_url?: string | null
@@ -1110,6 +1124,10 @@ export type Database = {
           created_by?: string | null
           expert_id?: string
           id?: string
+          public_citation_review_note?: string | null
+          public_citation_reviewed_at?: string | null
+          public_citation_reviewed_by?: string | null
+          public_citation_url?: string | null
           published_revision_id?: string | null
           source_type?: string
           source_url?: string | null
@@ -1139,6 +1157,7 @@ export type Database = {
           conversation_id: string
           expert_id: string
           id: string
+          included_in_legacy_crm_snapshot: boolean
           lead_id: string
           message_id: string
           occurred_at: string
@@ -1151,6 +1170,7 @@ export type Database = {
           conversation_id: string
           expert_id: string
           id?: string
+          included_in_legacy_crm_snapshot?: boolean
           lead_id: string
           message_id: string
           occurred_at?: string
@@ -1163,6 +1183,7 @@ export type Database = {
           conversation_id?: string
           expert_id?: string
           id?: string
+          included_in_legacy_crm_snapshot?: boolean
           lead_id?: string
           message_id?: string
           occurred_at?: string
@@ -1256,14 +1277,18 @@ export type Database = {
           analysis: string | null
           anon_id: string | null
           contact_consented_at: string | null
+          contact_email: string | null
           created_at: string | null
           email: string | null
           expert_id: string | null
           id: string
           last_activity_at: string | null
           last_message_id: string | null
+          legacy_crm_captured_at: string | null
           legacy_questions_captured_at: string | null
           legacy_questions_snapshot: Json
+          legacy_score_snapshot: number
+          legacy_signals_snapshot: string[]
           next_follow_up_at: string | null
           owner_id: string | null
           owner_is_anonymous: boolean
@@ -1280,14 +1305,18 @@ export type Database = {
           analysis?: string | null
           anon_id?: string | null
           contact_consented_at?: string | null
+          contact_email?: string | null
           created_at?: string | null
           email?: string | null
           expert_id?: string | null
           id?: string
           last_activity_at?: string | null
           last_message_id?: string | null
+          legacy_crm_captured_at?: string | null
           legacy_questions_captured_at?: string | null
           legacy_questions_snapshot?: Json
+          legacy_score_snapshot?: number
+          legacy_signals_snapshot?: string[]
           next_follow_up_at?: string | null
           owner_id?: string | null
           owner_is_anonymous?: boolean
@@ -1304,14 +1333,18 @@ export type Database = {
           analysis?: string | null
           anon_id?: string | null
           contact_consented_at?: string | null
+          contact_email?: string | null
           created_at?: string | null
           email?: string | null
           expert_id?: string | null
           id?: string
           last_activity_at?: string | null
           last_message_id?: string | null
+          legacy_crm_captured_at?: string | null
           legacy_questions_captured_at?: string | null
           legacy_questions_snapshot?: Json
+          legacy_score_snapshot?: number
+          legacy_signals_snapshot?: string[]
           next_follow_up_at?: string | null
           owner_id?: string | null
           owner_is_anonymous?: boolean
@@ -2211,6 +2244,21 @@ export type Database = {
         }
         Returns: undefined
       }
+      consent_lead_contact: {
+        Args: { p_conversation_id: string; p_email: string }
+        Returns: undefined
+      }
+      bind_chat_request_evidence: {
+        Args: {
+          p_conversation_id: string
+          p_expert_id: string
+          p_owner_id: string
+          p_persona_version_id: string
+          p_request_id: string
+          p_retrieval: Json
+        }
+        Returns: Json
+      }
       create_booking: {
         Args: {
           p_expert_slug: string
@@ -2225,9 +2273,37 @@ export type Database = {
         Args: { p_persona_slug: string; p_title?: string }
         Returns: string
       }
+      create_chat_conversation_idempotent: {
+        Args: {
+          p_conversation_id: string
+          p_persona_slug: string
+          p_title?: string
+        }
+        Returns: string
+      }
+      delete_chat_conversation: {
+        Args: { p_conversation_id: string }
+        Returns: boolean
+      }
       create_expert_invitation: {
         Args: { p_email: string; p_expert_id: string }
         Returns: string
+      }
+      create_authorized_knowledge_source: {
+        Args: {
+          p_expert_slug: string
+          p_expires_at?: string
+          p_raw_text?: string
+          p_rights_evidence_ref: string
+          p_rights_holder: string
+          p_rights_scope: Json
+          p_source_type: string
+          p_source_url?: string
+          p_storage_path?: string
+          p_tags?: string[]
+          p_title: string
+        }
+        Returns: Json
       }
       create_knowledge_source: {
         Args: {
@@ -2259,6 +2335,27 @@ export type Database = {
         }
         Returns: undefined
       }
+      finalize_authorized_chat_round: {
+        Args: {
+          p_answer: string
+          p_answer_basis: string
+          p_citations: Json
+          p_conversation_id: string
+          p_coverage: string
+          p_expert_id: string
+          p_latency_ms?: number
+          p_model?: string
+          p_owner_id: string
+          p_persona: string
+          p_persona_version_id: string
+          p_provider_request_id?: string
+          p_provider_usage?: Json
+          p_question: string
+          p_request_id: string
+          p_retrieval: Json
+        }
+        Returns: Json
+      }
       get_admin_crm_summary: {
         Args: never
         Returns: {
@@ -2286,6 +2383,48 @@ export type Database = {
         Args: { p_expert_id: string }
         Returns: Json
       }
+      get_expert_reference_files: {
+        Args: { p_expert_id: string }
+        Returns: {
+          archived_at: string | null
+          chunk_count: number
+          content_hash: string | null
+          distilled: boolean
+          embedded_chunk_count: number
+          external_key: string | null
+          human_reviewed: boolean
+          is_published: boolean
+          job_attempts: number | null
+          job_error: string | null
+          job_stage: string | null
+          job_status: string | null
+          revision_created_at: string | null
+          revision_id: string | null
+          revision_no: number | null
+          revision_status: string | null
+          public_citation_review_note: string | null
+          public_citation_reviewed_at: string | null
+          public_citation_reviewed_by: string | null
+          public_citation_ready: boolean
+          public_citation_url: string | null
+          rights_evidence_ref: string | null
+          rights_expires_at: string | null
+          rights_holder: string | null
+          rights_revoked_at: string | null
+          rights_scope: Json
+          rights_status: string
+          rights_valid: boolean
+          source_blob_url: string | null
+          source_commit_sha: string | null
+          source_file_path: string | null
+          source_id: string
+          source_type: string
+          source_updated_at: string
+          source_url: string | null
+          storage_path: string | null
+          title: string
+        }[]
+      }
       get_public_instructor_stats: {
         Args: { p_slug: string }
         Returns: {
@@ -2293,6 +2432,10 @@ export type Database = {
           insights: number
           knowledge: number
         }[]
+      }
+      get_rights_safe_engagement: {
+        Args: { p_expert_id?: string | null }
+        Returns: Json
       }
       has_current_passed_persona_evaluation: {
         Args: { p_expert_id: string; p_persona_version_id: string }
@@ -2368,7 +2511,7 @@ export type Database = {
           similarity: number
           source_id: string
           source_title: string
-          source_url: string
+          public_citation_url: string | null
         }[]
       }
       owns_expert: { Args: { target_expert_id: string }; Returns: boolean }
@@ -2465,6 +2608,10 @@ export type Database = {
         Args: { p_gap_id: string; p_status: string }
         Returns: undefined
       }
+      revoke_knowledge_source_rights: {
+        Args: { p_reason?: string; p_source_id: string }
+        Returns: undefined
+      }
       restore_expert_workspace: {
         Args: { p_expert_id: string }
         Returns: undefined
@@ -2496,6 +2643,23 @@ export type Database = {
       }
       set_knowledge_source_archived: {
         Args: { p_archived: boolean; p_source_id: string }
+        Returns: undefined
+      }
+      set_knowledge_source_public_citation: {
+        Args: {
+          p_public_citation_url: string | null
+          p_review_note: string
+          p_source_id: string
+        }
+        Returns: string | null
+      }
+      set_knowledge_source_rights: {
+        Args: {
+          p_rights_evidence_ref: string
+          p_rights_holder: string
+          p_rights_scope?: Json
+          p_source_id: string
+        }
         Returns: undefined
       }
       stage_social_content_for_distillation: {
@@ -2538,6 +2702,14 @@ export type Database = {
       update_lead_stage: {
         Args: { p_lead_id: string; p_stage: string }
         Returns: undefined
+      }
+      withdraw_lead_contact_consent: {
+        Args: { p_conversation_id: string }
+        Returns: undefined
+      }
+      withdraw_lead_contact_consent_for_expert: {
+        Args: { p_expert_slug: string }
+        Returns: boolean
       }
       upsert_admin_expert: {
         Args: {

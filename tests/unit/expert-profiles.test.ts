@@ -24,13 +24,12 @@ describe("public expert profile data", () => {
     supabaseMock.getSession.mockResolvedValue({ data: { session: null } });
   });
 
-  it("does not query protected expert activity without a session", async () => {
+  it("queries only the public published-items projection without a session", async () => {
     const stats = await fetchExpertLiveStats("jimmy-lau");
     const insights = await fetchExpertTopInsights("jimmy-lau", []);
 
     expect(stats).toEqual({ conversations: 0, insights: 0, knowledge: 0 });
     expect(insights).toEqual([]);
-    expect(supabaseMock.getSession).toHaveBeenCalled();
-    expect(supabaseMock.from).not.toHaveBeenCalled();
+    expect(supabaseMock.from).toHaveBeenCalledWith("items");
   });
 });

@@ -4,8 +4,11 @@ import {
   mergeCitationProvenance,
   normalizeSourceText,
   sha256Hex,
+  validateDistillationPayload,
 } from "../_shared/distillation.ts";
 import { buildKnowledgeDuplicateScope } from "../_shared/knowledge-dedupe.ts";
+import { buildDistillationFailurePlan } from "../_shared/distillation-failure.ts";
+import { assertDistillationAuthorized } from "../_shared/knowledge-rights.ts";
 
 const MAX_JOBS = 3;
 const CHUNK_TARGET_CHARS = 2_800;
@@ -24,6 +27,10 @@ interface SourceRow {
   source_type: SourceType;
   title: string;
   source_url: string | null;
+  rights_status: string;
+  rights_scope: Record<string, unknown> | null;
+  revoked_at: string | null;
+  expires_at: string | null;
   archived_at: string | null;
   source_meta: Record<string, unknown>;
 }
@@ -228,15 +235,7 @@ async function distill(title: string, text: string): Promise<Distillation> {
   const message = first?.message as Record<string, unknown> | undefined;
   const content = typeof message?.content === "string" ? message.content : "";
   const parsed = safeJsonObject(content);
-  return {
-    summary: String(parsed.summary ?? ""),
-    claims: Array.isArray(parsed.claims) ? parsed.claims as Distillation["claims"] : [],
-    methods: Array.isArray(parsed.methods) ? parsed.methods.map(String) : [],
-    boundaries: Array.isArray(parsed.boundaries) ? parsed.boundaries.map(String) : [],
-    suggested_questions: Array.isArray(parsed.suggested_questions)
-      ? parsed.suggested_questions.map(String)
-      : [],
-  };
+  return validateDistillationPayload(parsed);
 }
 
 function chunkDocument(document: ExtractedDocument): Chunk[] {
@@ -312,24 +311,21 @@ async function processJob(
     : {};
   const { data: sourceData, error: sourceError } = await client
     .from("knowledge_sources")
-    .select("id,expert_id,source_type,title,source_url,archived_at,source_meta")
+    .select("id,expert_id,source_type,title,source_url,rights_status,rights_scope,revoked_at,expires_at,archived_at,source_meta")
     .eq("id", revision.source_id)
     .single();
   if (sourceError || !sourceData) throw new Error(`Source unavailable: ${sourceError?.message}`);
   const source = sourceData as SourceRow;
-  if (source.archived_at) throw new Error("Source consent is no longer active");
+  assertDistillationAuthorized(source);
 
-  const { data: processingRevision, error: processingError } = await client
-    .from("knowledge_revisions")
-    .update({ status: "processing", error_message: null })
-    .eq("id", revision.id)
-    .neq("status", "archived")
-    .select("id")
-    .maybeSingle();
-  if (processingError || !processingRevision) {
-    throw new Error("Revision is no longer eligible for distillation");
+  const { data: started, error: startError } = await client.rpc(
+    "start_distillation_job",
+    { p_job_id: job.id, p_worker_id: workerId },
+  );
+  if (startError) {
+    throw new Error(`Cannot start distillation atomically: ${startError.message}`);
   }
-  await client.from("distillation_jobs").update({ stage: "extract" }).eq("id", job.id);
+  if (started !== true) throw new Error("distillation_job_lease_mismatch");
   const document = await extract(client, source, revision);
   const contentHash = await sha256Hex(document.text);
   const duplicateScope = buildKnowledgeDuplicateScope({
@@ -352,12 +348,26 @@ async function processJob(
   }
   if (duplicate) throw new Error("Duplicate content already exists for this instructor");
 
-  await client.from("distillation_jobs").update({ stage: "distill" }).eq("id", job.id);
+  const { data: distilling, error: distillStageError } = await client.rpc(
+    "advance_distillation_job_stage",
+    { p_job_id: job.id, p_worker_id: workerId, p_stage: "distill" },
+  );
+  if (distillStageError) {
+    throw new Error(`Cannot advance distillation stage: ${distillStageError.message}`);
+  }
+  if (distilling !== true) throw new Error("distillation_job_lease_mismatch");
   const distilled = await distill(source.title, document.text);
   const chunks = chunkDocument(document);
   if (!chunks.length) throw new Error("Chunker produced no chunks");
 
-  await client.from("distillation_jobs").update({ stage: "embed" }).eq("id", job.id);
+  const { data: embedding, error: embedStageError } = await client.rpc(
+    "advance_distillation_job_stage",
+    { p_job_id: job.id, p_worker_id: workerId, p_stage: "embed" },
+  );
+  if (embedStageError) {
+    throw new Error(`Cannot advance embedding stage: ${embedStageError.message}`);
+  }
+  if (embedding !== true) throw new Error("distillation_job_lease_mismatch");
   const vectors = await embed(chunks.map((chunk) => chunk.content));
   const { error: completionError } = await client.rpc("complete_distillation_job", {
     p_job_id: job.id,
@@ -388,26 +398,17 @@ async function failJob(
   job: ClaimedJob,
   workerId: string,
   error: unknown,
-): Promise<void> {
-  const message = error instanceof Error ? error.message : String(error);
-  const retry = job.attempts < 3;
-  const delayMinutes = Math.max(1, 2 ** Math.max(0, job.attempts - 1));
-  await Promise.all([
-    client.from("distillation_jobs").update({
-      status: retry ? "retry" : "failed",
-      next_retry_at: new Date(Date.now() + delayMinutes * 60_000).toISOString(),
-      error_message: message.slice(0, 1_000),
-      locked_at: null,
-      locked_by: null,
-    }).eq("id", job.id)
-      .eq("status", "processing")
-      .eq("locked_by", workerId),
-    client.from("knowledge_revisions").update({
-      status: retry ? "queued" : "failed",
-      error_message: message.slice(0, 1_000),
-    }).eq("id", job.revision_id)
-      .neq("status", "archived"),
-  ]);
+): Promise<boolean> {
+  const failure = buildDistillationFailurePlan(job, workerId, error);
+  const { data: applied, error: failureError } = await client.rpc(
+    "fail_distillation_job",
+    failure.args,
+  );
+  if (failureError) {
+    console.error("Cannot finalize distillation failure atomically", failureError.message);
+    return false;
+  }
+  return failure.retry && applied === true;
 }
 
 Deno.serve(async (request) => {
@@ -427,10 +428,10 @@ Deno.serve(async (request) => {
       await processJob(client, job, workerId);
       results.push({ id: job.id, status: "complete" });
     } catch (jobError) {
-      await failJob(client, job, workerId, jobError);
+      const retry = await failJob(client, job, workerId, jobError);
       results.push({
         id: job.id,
-        status: job.attempts < 3 ? "retry" : "failed",
+        status: retry ? "retry" : "failed",
         error: jobError instanceof Error ? jobError.message : String(jobError),
       });
     }

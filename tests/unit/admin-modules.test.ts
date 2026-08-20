@@ -4,7 +4,7 @@ import {
   PRODUCTION_INTEGRATIONS,
   adminModuleForPath,
 } from "@/components/admin/adminModules";
-import { STUDIO_REVIEW_SELECT } from "@/pages/admin/AdminStudio";
+import { STUDIO_PERSONA_SELECT, STUDIO_REVIEW_SELECT } from "@/pages/admin/AdminStudio";
 
 describe("master admin module status", () => {
   it("keeps every admin route unique and reviewable", () => {
@@ -45,6 +45,15 @@ describe("master admin module status", () => {
     expect(STUDIO_REVIEW_SELECT).toContain(
       "knowledge_sources!knowledge_revisions_source_id_fkey"
     );
+    expect(STUDIO_REVIEW_SELECT).toContain("extracted_text");
+    expect(STUDIO_REVIEW_SELECT).toContain("rights_scope");
+  });
+
+  it("loads the full persona evidence and fidelity material before human review", () => {
+    expect(STUDIO_PERSONA_SELECT).toContain("output_blueprint");
+    expect(STUDIO_PERSONA_SELECT).toContain("evidence_manifest");
+    expect(STUDIO_PERSONA_SELECT).toContain("fidelity_report");
+    expect(STUDIO_PERSONA_SELECT).toContain("source_revision_ids");
   });
 
   it("does not describe disconnected instructor pipelines as live", () => {

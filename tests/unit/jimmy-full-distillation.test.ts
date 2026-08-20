@@ -29,10 +29,14 @@ const chapters = [
   },
 ];
 
-function adapter() {
+function adapter({
+  knowledgeStatus = "approved",
+  personaStatus = "published",
+  fidelityStatus = "passed",
+  humanReviewed = true,
+  evaluationCurrent = true,
+} = {}) {
   const calls: string[] = [];
-  let approved = false;
-  let published = false;
   return {
     calls,
     async importChapter(chapter: (typeof chapters)[number]) {
@@ -45,14 +49,14 @@ function adapter() {
       return chapters.map((chapter) => ({
         path: chapter.path,
         revisionId: `revision-${chapter.stage}`,
-        status: approved ? "approved" : "review",
+        status: knowledgeStatus,
+        humanReviewed: knowledgeStatus === "approved" && humanReviewed,
         chunkCount: 2,
         distilled: true,
         citationCommit: "abc",
         citationPath: chapter.path,
       }));
     },
-    async approveRevisions(ids: string[]) { calls.push(`approve:${ids.join(",")}`); approved = true; },
     async queuePersona(ids: string[]) {
       calls.push(`persona:queue:${ids.join(",")}`);
       return "persona-job";
@@ -60,23 +64,30 @@ function adapter() {
     async drivePersonaWorker() { calls.push("drive:persona"); },
     async readPersonaState() {
       calls.push("read:persona");
-      return { jobId: "persona-job", status: published ? "published" : "review", fidelityStatus: "passed", sourceRevisionIds: ["revision-1", "revision-2"] };
+      return {
+        jobId: "persona-job",
+        status: personaStatus,
+        fidelityStatus,
+        sourceRevisionIds: ["revision-1", "revision-2"],
+        personaVersionId: personaStatus === "published" ? "persona-version" : null,
+        humanReviewed: personaStatus === "published" && humanReviewed,
+        evaluationCurrent: personaStatus === "published" && evaluationCurrent,
+      };
     },
-    async publishPersona() { calls.push("persona:publish"); published = true; return "persona-version"; },
     async readCoverage() {
+      calls.push("read:coverage");
       return { sourceCount: 2, approvedRevisionCount: 2, chunkedRevisionCount: 2, pinnedCitationCount: 2, publishedPersonaRevisionCount: 2, rightsValidCount: 2, exactRevisionSet: true };
     },
   };
 }
 
 describe("Jimmy full distillation", () => {
-  it("runs import, knowledge approval, persona fidelity and publication in order", async () => {
+  it("verifies an already human-reviewed knowledge pack and persona without impersonating approval", async () => {
     const api = adapter();
     const report = await runFullDistillation({
       adapter: api,
       chapters,
       commit: "abc",
-      publishPersona: true,
       poll: { intervalMs: 0, maxAttempts: 2 },
       expectedSourceCount: 2,
     });
@@ -86,16 +97,42 @@ describe("Jimmy full distillation", () => {
       `import:${chapters[1].path}`,
       "drive:knowledge",
       "read:knowledge",
-      "approve:revision-1,revision-2",
       "persona:queue:revision-1,revision-2",
       "drive:persona",
       "read:persona",
-      "persona:publish",
       "read:knowledge",
       "read:persona",
+      "read:coverage",
     ]);
     expect(report.complete).toBe(true);
     expect(report.personaVersionId).toBe("persona-version");
+  });
+
+  it("stops at authenticated human knowledge review", async () => {
+    const api = adapter({ knowledgeStatus: "review" });
+    await expect(runFullDistillation({
+      adapter: api,
+      chapters,
+      commit: "abc",
+      poll: { intervalMs: 0, maxAttempts: 1 },
+      expectedSourceCount: 2,
+    })).rejects.toThrow(/authenticated human approval/i);
+    expect(api.calls).not.toContain("persona:queue:revision-1,revision-2");
+  });
+
+  it.each([
+    ["review", /human approval/i],
+    ["approved", /authenticated publication/i],
+  ])("stops at the %s persona state for an Admin Studio decision", async (personaStatus, message) => {
+    const api = adapter({ personaStatus });
+    await expect(runFullDistillation({
+      adapter: api,
+      chapters,
+      commit: "abc",
+      poll: { intervalMs: 0, maxAttempts: 1 },
+      expectedSourceCount: 2,
+    })).rejects.toThrow(message);
+    expect(api.calls).not.toContain("persona:publish");
   });
 
   it("fails closed when any chapter has no pinned citation or distilled chunks", () => {
@@ -103,18 +140,17 @@ describe("Jimmy full distillation", () => {
       expectedCount: 2,
       commit: "abc",
       knowledge: [
-        { path: chapters[0].path, revisionId: "r1", status: "approved", chunkCount: 1, distilled: true, citationCommit: "abc", citationPath: chapters[0].path },
-        { path: chapters[1].path, revisionId: "r2", status: "approved", chunkCount: 0, distilled: true, citationCommit: null, citationPath: null },
+        { path: chapters[0].path, revisionId: "r1", status: "approved", humanReviewed: true, chunkCount: 1, distilled: true, citationCommit: "abc", citationPath: chapters[0].path },
+        { path: chapters[1].path, revisionId: "r2", status: "approved", humanReviewed: true, chunkCount: 0, distilled: true, citationCommit: null, citationPath: null },
       ],
-      persona: { status: "published", fidelityStatus: "passed", sourceRevisionIds: ["r1", "r2"] },
+      persona: { status: "published", fidelityStatus: "passed", humanReviewed: true, evaluationCurrent: true, sourceRevisionIds: ["r1", "r2"] },
       coverage: { sourceCount: 2, approvedRevisionCount: 2, chunkedRevisionCount: 1, pinnedCitationCount: 1, publishedPersonaRevisionCount: 2, rightsValidCount: 2, exactRevisionSet: false },
     })).toThrow(/incomplete distillation/i);
   });
 
   it("does not publish a persona whose fidelity gate failed", async () => {
-    const api = adapter();
-    api.readPersonaState = async () => ({ jobId: "persona-job", status: "review", fidelityStatus: "failed", sourceRevisionIds: ["revision-1", "revision-2"] });
-    await expect(runFullDistillation({ adapter: api, chapters, commit: "abc", publishPersona: true, expectedSourceCount: 2, poll: { intervalMs: 0, maxAttempts: 1 } }))
+    const api = adapter({ personaStatus: "review", fidelityStatus: "failed" });
+    await expect(runFullDistillation({ adapter: api, chapters, commit: "abc", expectedSourceCount: 2, poll: { intervalMs: 0, maxAttempts: 1 } }))
       .rejects.toThrow(/fidelity/i);
     expect(api.calls).not.toContain("persona:publish");
   });
@@ -125,7 +161,6 @@ describe("Jimmy full distillation", () => {
       adapter: api,
       chapters: chapters.slice(0, 1),
       commit: "abc",
-      publishPersona: true,
       expectedSourceCount: 2,
       poll: { intervalMs: 0, maxAttempts: 1 },
     })).rejects.toThrow(/expected 2 pinned chapters/i);

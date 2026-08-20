@@ -81,7 +81,7 @@ async function fetchMyCrm(expertId: string): Promise<ExpertCrmData> {
     supabase
       .from("leads")
       .select(
-        "id,expert_id,user_id,anon_id,owner_is_anonymous,persona,score,signals,stage,questions,analysis,timeline,next_follow_up_at,contact_consented_at,last_activity_at,created_at"
+        "id,expert_id,user_id,anon_id,owner_is_anonymous,persona,score,signals,stage,questions,analysis,timeline,next_follow_up_at,contact_consented_at,contact_email,last_activity_at,created_at"
       )
       .eq("expert_id", expertId)
       .order("score", { ascending: false })
@@ -184,7 +184,9 @@ export default function PortalLeads() {
   };
 
   const leadLabel = (l: AdminLeadRow) =>
-    l.owner_is_anonymous || l.anon_id
+    l.contact_consented_at && l.contact_email
+      ? l.contact_email
+      : l.owner_is_anonymous || l.anon_id
       ? `訪客 ${l.anon_id?.slice(0, 8) ?? l.id.slice(0, 8)}`
       : `會員 ${l.user_id?.slice(0, 8) ?? "—"}`;
 

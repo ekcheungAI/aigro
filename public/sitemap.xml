@@ -5,15 +5,10 @@
   <url><loc>https://aigro.io/insights</loc><changefreq>hourly</changefreq><priority>0.9</priority></url>
   <url><loc>https://aigro.io/insights/daily</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
   <url><loc>https://aigro.io/cases</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://aigro.io/experts</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://aigro.io/ask</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://aigro.io/developers</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://aigro.io/skills</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
   <url><loc>https://aigro.io/branding</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://aigro.io/class-review</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://aigro.io/guides/100x-ai-growth-marketer</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://aigro.io/data</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://aigro.io/access</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
-  <url><loc>https://aigro.io/join</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://aigro.io/login</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
 </urlset>

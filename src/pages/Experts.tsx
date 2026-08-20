@@ -12,7 +12,11 @@ import {
   expertHasPhoto,
   type Expert,
 } from "@/data/experts";
-import { appendInterest, EXPERT_INTEREST_KEY } from "@/lib/interest";
+import {
+  appendInterest,
+  EXPERT_INTEREST_KEY,
+  type InterestSaveMode,
+} from "@/lib/interest";
 import { useAdminQuery } from "@/components/admin/adminData";
 import { fetchPublicInstructors } from "@/lib/publicInstructors";
 
@@ -259,16 +263,23 @@ function InviteSection() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [field, setField] = useState("");
-  const [done, setDone] = useState(false);
+  const [savedMode, setSavedMode] = useState<InterestSaveMode | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
-  const submit = (e: FormEvent) => {
+  const submit = async (e: FormEvent) => {
     e.preventDefault();
-    appendInterest(EXPERT_INTEREST_KEY, {
+    if (submitting) return;
+    setSubmitting(true);
+    setError("");
+    const mode = await appendInterest(EXPERT_INTEREST_KEY, {
       name: name.trim(),
       email: email.trim(),
       field: field.trim(),
     });
-    setDone(true);
+    setSubmitting(false);
+    if (mode) setSavedMode(mode);
+    else setError("暫時未能記錄，請稍後再試。");
   };
 
   const inputCls =
@@ -304,13 +315,15 @@ function InviteSection() {
           </p>
         </Reveal>
         <Reveal delay={0.32}>
-          {done ? (
+          {savedMode ? (
             <p
               role="status"
               className="mx-auto mt-8 inline-flex items-center gap-2 rounded-md border border-gold bg-surface px-5 py-3 text-label text-text-primary"
             >
               <Check className="h-4 w-4 text-gold" strokeWidth={1.5} aria-hidden="true" />
-              已記低 — 邀請制開放時第一批通知你
+              {savedMode === "server"
+                ? "已記低 — 邀請制開放時第一批通知你"
+                : "已儲存在此裝置 — 連線後請再登記"}
             </p>
           ) : (
             <form
@@ -354,15 +367,21 @@ function InviteSection() {
               />
               <button
                 type="submit"
+                disabled={submitting}
                 className="group inline-flex h-11 items-center justify-center gap-1.5 rounded-md bg-ink-solid px-6 text-label text-on-accent press hover:bg-ink-hover sm:col-span-2"
               >
-                留低聯絡・開放時通知我
+                {submitting ? "記錄中" : "留低聯絡・開放時通知我"}
                 <ArrowRight
                   className="h-4 w-4 transition-transform duration-150 nudge-x"
                   strokeWidth={1.5}
                   aria-hidden="true"
                 />
               </button>
+              {error && (
+                <p role="alert" className="text-caption text-error sm:col-span-2">
+                  {error}
+                </p>
+              )}
             </form>
           )}
         </Reveal>

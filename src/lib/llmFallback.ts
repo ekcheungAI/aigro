@@ -39,10 +39,14 @@ export function safeClientCitationHref(value: unknown): string {
     return code <= 31 || code === 127 || character === "\\";
   });
   if (!href || hasUnsafeCharacter) return "";
-  if (href.startsWith("/") && !href.startsWith("//")) return href;
+  if (href.startsWith("/") && !href.startsWith("//")) {
+    return href.split(/[?#]/, 1)[0] ?? "";
+  }
   try {
     const url = new URL(href);
     if (url.protocol !== "https:" || url.username || url.password) return "";
+    url.search = "";
+    url.hash = "";
     return url.toString();
   } catch {
     return "";
@@ -157,6 +161,37 @@ export class InstructorChatError extends Error {
   }
 }
 
+export interface StreamInactivityTimer {
+  touch: () => void;
+  clear: () => void;
+}
+
+/** Abort only after 30 seconds without any SSE activity; progress heartbeats reset it. */
+export function createStreamInactivityTimer(
+  controller: AbortController,
+  timeoutMs = TIMEOUT_MS
+): StreamInactivityTimer {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const clear = () => {
+    if (timer !== undefined) globalThis.clearTimeout(timer);
+    timer = undefined;
+  };
+  const touch = () => {
+    clear();
+    timer = globalThis.setTimeout(() => controller.abort(), timeoutMs);
+  };
+  touch();
+  return { touch, clear };
+}
+
+/** Normalize a server-side safety response into the same safe UI deflection. */
+export function guardrailKindFromErrorCode(code: string): GuardKind | null {
+  const value = code.replace(/^chat_guardrail_/, "").replace(/_/g, "-");
+  return value === "spam" || value === "harmful" || value === "jailbreak" || value === "personal-data"
+    ? value
+    : null;
+}
+
 /* ---------------- C. Grounded streaming instructor chat ---------------- */
 
 export interface StreamCitation {
@@ -221,7 +256,7 @@ export async function streamInstructorReply(
   if (!supabaseUrl || !anonKey) throw new Error("Supabase environment is incomplete");
 
   const controller = new AbortController();
-  const timer = window.setTimeout(() => controller.abort(), TIMEOUT_MS);
+  const inactivity = createStreamInactivityTimer(controller);
   try {
     const response = await fetch(`${supabaseUrl}/functions/v1/ask-answer`, {
       method: "POST",
@@ -262,6 +297,8 @@ export async function streamInstructorReply(
       if (parsed.event === "retrieved_sources") {
         // Retrieval candidates are intentionally not exposed as citations. Only
         // the marker-validated citations in `done` are rendered or persisted.
+      } else if (parsed.event === "progress") {
+        // Non-content heartbeat only. Reading it has already reset inactivity.
       } else if (parsed.event === "delta" && typeof payload.text === "string") {
         fullText += payload.text;
         onDelta(fullText);
@@ -277,6 +314,7 @@ export async function streamInstructorReply(
     while (true) {
       const { value, done: streamDone } = await reader.read();
       if (streamDone) break;
+      inactivity.touch();
       buffer += decoder.decode(value, { stream: true });
       const blocks = buffer.split(/\r?\n\r?\n/);
       buffer = blocks.pop() ?? "";
@@ -310,6 +348,6 @@ export async function streamInstructorReply(
       followUps: persona.suggestions.slice(0, 2),
     };
   } finally {
-    window.clearTimeout(timer);
+    inactivity.clear();
   }
 }

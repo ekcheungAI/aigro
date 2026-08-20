@@ -31,33 +31,33 @@ secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET)"
 skip_nonce_check = false
 
 [auth.email.template.confirmation]
-subject = "確認你嘅 AIGRO 帳號"
+subject = "AIGRO｜確認你嘅電郵地址"
 content_path = "./supabase/templates/confirmation.html"
 
 [auth.email.template.recovery]
-subject = "重設你嘅 AIGRO 密碼"
+subject = "AIGRO｜重設密碼"
 content_path = "./supabase/templates/recovery.html"
 
 [auth.email.template.invite]
-subject = "你獲邀加入 AIGRO"
+subject = "AIGRO 專屬邀請｜加入會員專區"
 content_path = "./supabase/templates/invite.html"
 
 [auth.email.template.magic_link]
-subject = "登入 AIGRO"
+subject = "AIGRO｜安全登入連結"
 content_path = "./supabase/templates/magic-link.html"
 
 [auth.email.template.email_change]
-subject = "確認你嘅 AIGRO 新電郵地址"
+subject = "AIGRO 安全通知｜確認新電郵地址"
 content_path = "./supabase/templates/email-change.html"
 
 [auth.email.notification.password_changed]
 enabled = true
-subject = "你嘅 AIGRO 密碼已更新"
+subject = "AIGRO 安全通知｜密碼已更新"
 content_path = "./templates/password-changed.html"
 
 [auth.email.notification.email_changed]
 enabled = true
-subject = "你嘅 AIGRO 帳號電郵已更新"
+subject = "AIGRO 安全通知｜帳號電郵已更新"
 content_path = "./templates/email-changed.html"
 
 [functions.ask-answer]

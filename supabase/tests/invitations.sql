@@ -11,9 +11,7 @@ insert into auth.users (
   ('71000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000000',
    'authenticated', 'authenticated', 'invite-owner@test.local', '', now(), '{}', '{}', now(), now()),
   ('72000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000000',
-   'authenticated', 'authenticated', 'invite-admin@test.local', '', now(), '{}', '{}', now(), now()),
-  ('73000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000000',
-   'authenticated', 'authenticated', 'invited-member@test.local', '', null, '{}', '{}', now(), now())
+   'authenticated', 'authenticated', 'invite-admin@test.local', '', now(), '{}', '{}', now(), now())
 on conflict (id) do nothing;
 
 insert into public.profiles (id, email, name) values
@@ -27,12 +25,11 @@ update public.account_access set app_role = 'admin'
 where user_id = '72000000-0000-0000-0000-000000000002';
 
 insert into public.invitations (
-  email, name, invited_by, auth_user_id, member_class, tier,
+  email, name, invited_by, member_class, tier,
   status, delivery_status, sent_at
 ) values (
   'invited-member@test.local', 'Invited Member',
   '71000000-0000-0000-0000-000000000001',
-  '73000000-0000-0000-0000-000000000003',
   'founding', 'pro', 'sent', 'sent', now()
 );
 
@@ -43,10 +40,10 @@ select set_config('request.jwt.claims',
 select is((select count(*) from public.invitations), 1::bigint,
   'super-admin can read invitation records');
 
-select throws_like(
+select throws_ok(
   $$insert into public.invitations (email, name, invited_by)
     values ('blocked@test.local', 'Blocked', '71000000-0000-0000-0000-000000000001')$$,
-  '%row-level security policy%',
+  '42501', null,
   'browser clients cannot insert invitation records directly'
 );
 
@@ -58,12 +55,14 @@ select is((select count(*) from public.invitations), 0::bigint,
   'ordinary admins cannot read invitation records');
 
 set local role postgres;
-insert into public.profiles (
-  id, email, name
+insert into auth.users (
+  id, instance_id, aud, role, email, encrypted_password,
+  email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at
 ) values (
   '73000000-0000-0000-0000-000000000003',
-  'invited-member@test.local',
-  'Invited Member'
+  '00000000-0000-0000-0000-000000000000',
+  'authenticated', 'authenticated', 'invited-member@test.local', '', null,
+  '{}', '{"name":"Invited Member"}', now(), now()
 );
 
 select is(

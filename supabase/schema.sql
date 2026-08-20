@@ -61,7 +61,7 @@ create table if not exists public.messages (
 create table if not exists public.sources (
   id uuid primary key default gen_random_uuid(),
   name text not null,
-  type text not null check (type in ('rss','api','scraper')),
+  type text not null check (type in ('rss','api','scraper','mcp')),
   domain text,
   endpoint text,
   vertical text not null default 'ai',
@@ -73,6 +73,20 @@ create table if not exists public.sources (
   health text default 'ok' check (health in ('ok','warn','down')),
   created_at timestamptz default now()
 );
+
+-- Connector endpoints are server-only. Public clients use sources(name, type,
+-- domain, status, and health) but never receive feed URLs or secret refs.
+create table if not exists public.source_connectors (
+  source_id uuid primary key references public.sources(id) on delete cascade,
+  endpoint text not null,
+  auth_secret_ref text,
+  config jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+alter table public.source_connectors enable row level security;
+revoke all on public.source_connectors from anon, authenticated;
+grant all on public.source_connectors to service_role;
 
 create table if not exists public.items (
   id uuid primary key default gen_random_uuid(),
@@ -149,6 +163,12 @@ create policy "msg_owner_all" on public.messages for all
 -- items/sources: 公開讀 published;寫入只限 service role
 create policy "items_public_read" on public.items for select using (status = 'published');
 create policy "sources_public_read" on public.sources for select using (status = 'active');
+
+revoke all on public.sources from anon, authenticated;
+grant select (
+  id, name, type, domain, vertical, lang, weight,
+  fetch_interval_minutes, status, last_fetched_at, health, created_at
+) on public.sources to anon, authenticated;
 
 -- leads: 擁有者讀;insert 公開(系統生成)
 create policy "leads_insert_all" on public.leads for insert with check (true);

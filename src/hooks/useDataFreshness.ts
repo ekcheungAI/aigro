@@ -1,10 +1,8 @@
 import { aihotFetchedAt, timeAgo } from "@/data/aihot";
 import { useLiveFetchedAt } from "@/data/liveItems";
+import { useEffect, useState } from "react";
 
 const SNAPSHOT_FETCHED_AT_MS = new Date(aihotFetchedAt).getTime();
-const SNAPSHOT_IS_ARCHIVE =
-  Number.isNaN(SNAPSHOT_FETCHED_AT_MS) ||
-  Date.now() - SNAPSHOT_FETCHED_AT_MS > 24 * 3_600_000;
 
 /**
  * Keeps freshness copy honest: runtime data may be live, while the resilient
@@ -13,10 +11,17 @@ const SNAPSHOT_IS_ARCHIVE =
  */
 export default function useDataFreshness() {
   const liveFetchedAt = useLiveFetchedAt();
+  // Keep the first SSR/client render deterministic; refresh the wall clock
+  // only after hydration so prerendered pages cannot disagree on age/status.
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => setNow(Date.now()), []);
   const fetchedAt = liveFetchedAt ?? aihotFetchedAt;
+  const snapshotIsArchive =
+    Number.isNaN(SNAPSHOT_FETCHED_AT_MS) ||
+    (now !== null && now - SNAPSHOT_FETCHED_AT_MS > 24 * 3_600_000);
   const status = liveFetchedAt
     ? "live"
-    : SNAPSHOT_IS_ARCHIVE
+    : snapshotIsArchive
       ? "archive"
       : "current-snapshot";
 
@@ -25,6 +30,6 @@ export default function useDataFreshness() {
     isArchive: status === "archive",
     status,
     fetchedAt,
-    ago: timeAgo(fetchedAt),
+    ago: timeAgo(fetchedAt, liveFetchedAt ? now ?? Date.now() : now ?? SNAPSHOT_FETCHED_AT_MS),
   };
 }

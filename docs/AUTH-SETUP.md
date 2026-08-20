@@ -31,7 +31,7 @@ Create a Google OAuth client of type **Web application**:
   - `https://aigro.io`
   - `http://localhost:3000` (development only)
 - Authorized redirect URI:
-  - `https://mxjgavuzzpcvazxdnuzg.supabase.co/auth/v1/callback`
+  - `https://zpdwalqnhkbxhmaagkfc.supabase.co/auth/v1/callback`
 
 Add the resulting Client ID and Client Secret in Supabase Dashboard → Authentication
 → Providers → Google, then enable the provider. Configure the Google consent screen

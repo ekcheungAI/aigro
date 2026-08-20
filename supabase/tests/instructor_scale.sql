@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(47);
+select plan(86);
 
 set local role postgres;
 
@@ -130,27 +130,20 @@ select is(
   'seat reuse still preserves the twenty-instructor cap'
 );
 
-insert into public.expert_persona_versions (
-  id, expert_id, version, greeting, status, published_at
-) values (
-  '85100000-0000-0000-0000-000000000005',
-  '85000000-0000-0000-0000-000000000005', 1, 'Hello', 'published', now()
-);
-update public.experts
-set published_persona_version_id = '85100000-0000-0000-0000-000000000005',
-    feature_flags = feature_flags || '{"rag_enabled":true}'::jsonb
-where id = '85000000-0000-0000-0000-000000000005';
 insert into public.knowledge_sources (
-  id, expert_id, source_type, title, rights_status, authorized_at
+  id, expert_id, source_type, title, rights_status, rights_scope, authorized_at
 ) values (
   '85200000-0000-0000-0000-000000000005',
-  '85000000-0000-0000-0000-000000000005', 'manual', 'Scale source', 'granted', now()
+  '85000000-0000-0000-0000-000000000005', 'manual', 'Scale source', 'granted',
+  '{"commercial_rag":true,"distillation":true,"persona_synthesis":true,"model_training":false}'::jsonb,
+  now()
 );
 insert into public.knowledge_revisions (
-  id, source_id, revision_no, extracted_text, status, approved_at
+  id, source_id, revision_no, extracted_text, status, approved_by, approved_at
 ) values (
   '85300000-0000-0000-0000-000000000005',
-  '85200000-0000-0000-0000-000000000005', 1, 'Approved evidence', 'approved', now()
+  '85200000-0000-0000-0000-000000000005', 1, 'Approved evidence', 'approved',
+  '82000000-0000-0000-0000-000000000002', now()
 );
 update public.knowledge_sources
 set published_revision_id = '85300000-0000-0000-0000-000000000005'
@@ -163,16 +156,19 @@ insert into public.knowledge_chunks (
   ('[' || array_to_string(array_fill(0, array[1536]), ',') || ']')::extensions.halfvec
 );
 insert into public.knowledge_sources (
-  id, expert_id, source_type, title, rights_status, authorized_at
+  id, expert_id, source_type, title, rights_status, rights_scope, authorized_at
 ) values (
   '85400000-0000-0000-0000-000000000005',
-  '85000000-0000-0000-0000-000000000005', 'manual', 'Scale source two', 'granted', now()
+  '85000000-0000-0000-0000-000000000005', 'manual', 'Scale source two', 'granted',
+  '{"commercial_rag":true,"distillation":true,"persona_synthesis":true,"model_training":false}'::jsonb,
+  now()
 );
 insert into public.knowledge_revisions (
-  id, source_id, revision_no, extracted_text, status, approved_at
+  id, source_id, revision_no, extracted_text, status, approved_by, approved_at
 ) values (
   '85500000-0000-0000-0000-000000000005',
-  '85400000-0000-0000-0000-000000000005', 1, 'Second approved evidence', 'approved', now()
+  '85400000-0000-0000-0000-000000000005', 1, 'Second approved evidence', 'approved',
+  '82000000-0000-0000-0000-000000000002', now()
 );
 update public.knowledge_sources
 set published_revision_id = '85500000-0000-0000-0000-000000000005'
@@ -184,17 +180,41 @@ insert into public.knowledge_chunks (
   '85000000-0000-0000-0000-000000000005', 0, 'Second approved evidence',
   ('[' || array_to_string(array_fill(0, array[1536]), ',') || ']')::extensions.halfvec
 );
+insert into public.expert_persona_versions (
+  id, expert_id, version, greeting, persona_blueprint,
+  source_revision_ids, status, published_at
+) values (
+  '85100000-0000-0000-0000-000000000005',
+  '85000000-0000-0000-0000-000000000005', 1, 'Hello',
+  '{"fixture":"scale"}'::jsonb,
+  array[
+    '85300000-0000-0000-0000-000000000005'::uuid,
+    '85500000-0000-0000-0000-000000000005'::uuid
+  ],
+  'published', now()
+);
+update public.experts
+set published_persona_version_id = '85100000-0000-0000-0000-000000000005',
+    feature_flags = feature_flags || '{"rag_enabled":true}'::jsonb
+where id = '85000000-0000-0000-0000-000000000005';
 insert into public.persona_evaluation_questions (
-  expert_id, category, question
+  expert_id, category, question, expected, source_revision_ids
 )
 select
   '85000000-0000-0000-0000-000000000005',
   (array['known_stance', 'edge_honesty', 'voice', 'source_transparency'])[(g - 1) % 4 + 1],
-  'Scale evaluation question ' || g
+  'Scale evaluation question ' || g,
+  jsonb_build_object('criteria', 'Ground the answer in the approved scale evidence'),
+  array[
+    case when g % 2 = 0
+      then '85300000-0000-0000-0000-000000000005'::uuid
+      else '85500000-0000-0000-0000-000000000005'::uuid
+    end
+  ]
 from generate_series(1, 25) g;
 insert into public.persona_synthesis_jobs (
-  id, expert_id, source_revision_ids, status, fidelity_status,
-  persona_version_id
+  id, expert_id, source_revision_ids, status,
+  output_blueprint, reviewed_by, reviewed_at, review_notes, persona_version_id
 ) values (
   '85600000-0000-0000-0000-000000000005',
   '85000000-0000-0000-0000-000000000005',
@@ -202,36 +222,165 @@ insert into public.persona_synthesis_jobs (
     '85300000-0000-0000-0000-000000000005'::uuid,
     '85500000-0000-0000-0000-000000000005'::uuid
   ],
-  'published', 'passed', '85100000-0000-0000-0000-000000000005'
+  'published',
+  '{"fixture":"scale"}'::jsonb,
+  '82000000-0000-0000-0000-000000000002', now(),
+  'Human-reviewed scale release fixture',
+  '85100000-0000-0000-0000-000000000005'
 );
 insert into public.persona_evaluation_runs (
-  id, synthesis_job_id, generator_model, evaluator_model, score, status, report
+  id, synthesis_job_id, generator_model, evaluator_model, score, status, report,
+  evaluation_set_hash, output_blueprint_hash
 )
 select
   '85700000-0000-0000-0000-000000000005',
   '85600000-0000-0000-0000-000000000005',
   'test-generator', 'test-evaluator', 95, 'passed',
   jsonb_build_object(
+    'breakdown', jsonb_build_object(
+      'stance_consistency', 29,
+      'style_distinctiveness', 19,
+      'edge_honesty', 19,
+      'source_transparency', 14,
+      'structural_completeness', 14
+    ),
     'evaluation', jsonb_build_object(
       'question_count', count(*),
       'question_ids', jsonb_agg(id::text order by id),
       'response_count', count(*)
     )
-  )
+  ),
+  public.get_persona_evaluation_set_snapshot('85000000-0000-0000-0000-000000000005')->>'hash',
+  encode(extensions.digest(convert_to('{"fixture":"scale"}'::jsonb::text, 'UTF8'), 'sha256'), 'hex')
 from public.persona_evaluation_questions
 where expert_id = '85000000-0000-0000-0000-000000000005' and active;
+
+update public.persona_synthesis_jobs
+set finalized_evaluation_run_id = '85700000-0000-0000-0000-000000000005',
+    fidelity_score = r.score,
+    fidelity_status = r.status,
+    fidelity_report = r.report
+from public.persona_evaluation_runs r
+where public.persona_synthesis_jobs.id = '85600000-0000-0000-0000-000000000005'
+  and r.id = '85700000-0000-0000-0000-000000000005';
+
+update public.expert_persona_versions epv
+set fidelity_score = r.score,
+    fidelity_status = r.status,
+    fidelity_report = r.report
+from public.persona_evaluation_runs r
+where epv.id = '85100000-0000-0000-0000-000000000005'
+  and r.id = '85700000-0000-0000-0000-000000000005';
+
+update public.knowledge_chunks
+set embedding = null
+where revision_id = '85500000-0000-0000-0000-000000000005';
+select isnt(
+  public.is_expert_chat_ready('85000000-0000-0000-0000-000000000005'),
+  true,
+  'chat readiness fails when either counted published source has no embedding'
+);
+update public.knowledge_chunks
+set embedding = ('[' || array_to_string(array_fill(0, array[1536]), ',') || ']')::extensions.halfvec
+where revision_id = '85500000-0000-0000-0000-000000000005';
+select ok(
+  public.is_expert_chat_ready('85000000-0000-0000-0000-000000000005'),
+  'chat readiness recovers after the second published source embedding is restored'
+);
+
+update public.knowledge_sources
+set rights_status = 'revoked', revoked_at = now()
+where id = '85400000-0000-0000-0000-000000000005';
+select isnt(
+  public.is_expert_chat_ready('85000000-0000-0000-0000-000000000005'),
+  true,
+  'chat readiness fails when a pinned persona source is revoked'
+);
+update public.knowledge_sources
+set rights_status = 'granted', revoked_at = null,
+    published_revision_id = '85500000-0000-0000-0000-000000000005'
+where id = '85400000-0000-0000-0000-000000000005';
+
+update public.knowledge_sources
+set expires_at = now() - interval '1 minute'
+where id = '85400000-0000-0000-0000-000000000005';
+select isnt(
+  public.is_expert_chat_ready('85000000-0000-0000-0000-000000000005'),
+  true,
+  'chat readiness fails when a pinned persona source grant expires'
+);
+update public.knowledge_sources
+set expires_at = null,
+    published_revision_id = '85500000-0000-0000-0000-000000000005'
+where id = '85400000-0000-0000-0000-000000000005';
+
+update public.knowledge_sources
+set rights_scope = rights_scope || '{"persona_synthesis":false}'::jsonb
+where id = '85400000-0000-0000-0000-000000000005';
+select isnt(
+  public.is_expert_chat_ready('85000000-0000-0000-0000-000000000005'),
+  true,
+  'chat readiness fails when a pinned source loses persona synthesis scope'
+);
+update public.knowledge_sources
+set rights_scope = '{"commercial_rag":true,"distillation":true,"persona_synthesis":true,"model_training":false}'::jsonb,
+    published_revision_id = '85500000-0000-0000-0000-000000000005'
+where id = '85400000-0000-0000-0000-000000000005';
+
+insert into public.knowledge_sources (
+  id, expert_id, source_type, title, rights_status, rights_scope, authorized_at
+) values (
+  '85800000-0000-0000-0000-000000000005',
+  '85000000-0000-0000-0000-000000000005', 'manual', 'No commercial RAG', 'granted',
+  '{"commercial_rag":false,"distillation":true,"persona_synthesis":true,"model_training":false}'::jsonb,
+  now()
+);
+insert into public.knowledge_revisions (
+  id, source_id, revision_no, extracted_text, status, approved_by, approved_at
+) values (
+  '85900000-0000-0000-0000-000000000005',
+  '85800000-0000-0000-0000-000000000005', 1, 'Non-commercial evidence', 'approved',
+  '82000000-0000-0000-0000-000000000002', now()
+);
+update public.knowledge_sources
+set published_revision_id = '85900000-0000-0000-0000-000000000005'
+where id = '85800000-0000-0000-0000-000000000005';
+insert into public.knowledge_chunks (
+  revision_id, expert_id, chunk_index, content, embedding
+) values (
+  '85900000-0000-0000-0000-000000000005',
+  '85000000-0000-0000-0000-000000000005', 0, 'Non-commercial evidence',
+  ('[' || '1,' || repeat('0,', 1534) || '0]')::extensions.halfvec(1536)
+);
+set local role service_role;
+select is(
+  (select count(*) from public.match_expert_knowledge(
+    '85000000-0000-0000-0000-000000000005',
+    ('[' || '1,' || repeat('0,', 1534) || '0]')::extensions.halfvec(1536),
+    12, 0.99
+  ) where revision_id = '85900000-0000-0000-0000-000000000005'),
+  0::bigint,
+  'retrieval excludes a granted embedded source without commercial RAG scope'
+);
+set local role postgres;
+delete from public.knowledge_sources
+where id = '85800000-0000-0000-0000-000000000005';
 
 set local role authenticated;
 select set_config('request.jwt.claims',
   '{"sub":"84000000-0000-0000-0000-000000000004","role":"authenticated"}', true);
 
 select throws_ok(
-  $$select public.create_chat_conversation('scale-expert-b', 'Not ready')$$,
+  $$select public.create_chat_conversation_idempotent(
+    '86100000-0000-0000-0000-000000000006', 'scale-expert-b', 'Not ready'
+  )$$,
   'P0002', 'instructor_not_available',
   'member cannot create a conversation for an instructor that failed the chat release gate'
 );
 select ok(
-  public.create_chat_conversation('scale-expert-a', 'Scale chat') is not null,
+  public.create_chat_conversation_idempotent(
+    '85100000-0000-0000-0000-000000000005', 'scale-expert-a', 'Scale chat'
+  ) is not null,
   'member creates a server-routed instructor conversation'
 );
 select is(
@@ -241,9 +390,13 @@ select is(
   '85000000-0000-0000-0000-000000000005'::uuid,
   'conversation routing uses the immutable instructor id'
 );
-update public.conversations
-set expert_id = '86000000-0000-0000-0000-000000000006'
-where owner_id = '84000000-0000-0000-0000-000000000004';
+select throws_like(
+  $$update public.conversations
+    set expert_id = '86000000-0000-0000-0000-000000000006'
+    where owner_id = '84000000-0000-0000-0000-000000000004'$$,
+  '%permission denied for table conversations%',
+  'member cannot mutate a state-machine-managed conversation'
+);
 select is(
   (select expert_id from public.conversations
    where owner_id = '84000000-0000-0000-0000-000000000004'
@@ -326,6 +479,336 @@ select is(
   'reserved',
   'the next turn can reserve after the prior turn commits'
 );
+
+select set_config(
+  'test.scale_conversation_id',
+  (select id::text from public.conversations
+   where owner_id = '84000000-0000-0000-0000-000000000004'
+   order by created_at desc limit 1),
+  true
+);
+select set_config(
+  'test.scale_retrieval',
+  jsonb_build_array(jsonb_build_object(
+    'chunk_id', (select id::text from public.knowledge_chunks
+      where revision_id = '85300000-0000-0000-0000-000000000005' limit 1),
+    'revision_id', '85300000-0000-0000-0000-000000000005',
+    'similarity', 0.91,
+    'lineage_origin', 'current'
+  ))::text,
+  true
+);
+
+select ok(
+  to_regprocedure(
+    'public.bind_chat_request_evidence(uuid,uuid,uuid,uuid,uuid,jsonb)'
+  ) is not null,
+  'pre-provider evidence binding RPC exists'
+);
+select ok(
+  to_regprocedure(
+    'public.finalize_authorized_chat_round(uuid,uuid,uuid,text,uuid,text,text,text,text,jsonb,uuid,jsonb,jsonb,text,integer,text)'
+  ) is not null,
+  'commit-time authorization finalizer exists'
+);
+select ok(
+  to_regprocedure('public.get_rights_safe_engagement(uuid)') is not null,
+  'rights-safe dashboard transcript RPC exists'
+);
+select ok(
+  has_function_privilege(
+    'service_role',
+    'public.bind_chat_request_evidence(uuid,uuid,uuid,uuid,uuid,jsonb)',
+    'EXECUTE'
+  ),
+  'service worker can bind its exact evidence snapshot'
+);
+select ok(
+  has_function_privilege(
+    'service_role',
+    'public.finalize_authorized_chat_round(uuid,uuid,uuid,text,uuid,text,text,text,text,jsonb,uuid,jsonb,jsonb,text,integer,text)',
+    'EXECUTE'
+  ),
+  'service worker can invoke the commit-time finalizer'
+);
+select isnt(
+  has_function_privilege(
+    'service_role',
+    'public.persist_chat_round(uuid,uuid,uuid,text,text,text,text,text,text,jsonb,uuid,jsonb,jsonb,text,integer,text)',
+    'EXECUTE'
+  ),
+  true,
+  'service worker cannot bypass the finalizer through legacy persistence'
+);
+select isnt(
+  has_table_privilege('authenticated', 'public.messages', 'SELECT'),
+  true,
+  'authenticated browsers cannot query stored transcripts directly'
+);
+select isnt(
+  has_table_privilege('anon', 'public.messages', 'SELECT'),
+  true,
+  'anonymous browsers cannot query stored transcripts directly'
+);
+select isnt(
+  public.is_chat_evidence_snapshot_authorized(
+    '85000000-0000-0000-0000-000000000005', null::jsonb
+  ),
+  true,
+  'a SQL NULL evidence snapshot fails closed'
+);
+select ok(
+  position(
+    'lock table public.persona_evaluation_questions in share mode'
+    in lower(pg_get_functiondef(
+      'public.lock_current_chat_authorization_state(uuid,uuid)'::regprocedure
+    ))
+  ) > 0,
+  'finalizer blocks phantom active-question inserts during readiness validation'
+);
+select ok(
+  position(
+    'from public.persona_synthesis_jobs'
+    in lower(pg_get_functiondef(
+      'public.lock_current_chat_authorization_state(uuid,uuid)'::regprocedure
+    ))
+  ) < position(
+    'from public.experts'
+    in lower(pg_get_functiondef(
+      'public.lock_current_chat_authorization_state(uuid,uuid)'::regprocedure
+    ))
+  ),
+  'chat authorization follows publication job-before-expert lock order'
+);
+select ok(
+  position(
+    'lock_current_chat_authorization_state'
+    in lower(pg_get_functiondef(
+      'public.finalize_authorized_chat_round(uuid,uuid,uuid,text,uuid,text,text,text,text,jsonb,uuid,jsonb,jsonb,text,integer,text)'::regprocedure
+    ))
+  ) < position(
+    'is_chat_evidence_snapshot_authorized'
+    in lower(pg_get_functiondef(
+      'public.finalize_authorized_chat_round(uuid,uuid,uuid,text,uuid,text,text,text,text,jsonb,uuid,jsonb,jsonb,text,integer,text)'::regprocedure
+    ))
+  ),
+  'finalizer acquires authorization locks before evaluating evidence'
+);
+
+set local role service_role;
+select is(
+  public.bind_chat_request_evidence(
+    '84000000-0000-0000-0000-000000000004',
+    '87200000-0000-0000-0000-000000000007',
+    current_setting('test.scale_conversation_id')::uuid,
+    '85000000-0000-0000-0000-000000000005',
+    '85100000-0000-0000-0000-000000000005',
+    current_setting('test.scale_retrieval')::jsonb
+  ) ->> 'state',
+  'bound',
+  'service binds the exact retrieval snapshot before provider generation'
+);
+set local role postgres;
+select ok(
+  (select evidence_bound_at is not null
+   from public.chat_request_reservations
+   where request_id = '87200000-0000-0000-0000-000000000007'),
+  'reservation records that its evidence was bound'
+);
+
+-- Simulate a rights revoke while the provider is still generating. The
+-- buffered answer must neither persist nor become eligible for delivery.
+update public.knowledge_sources
+set rights_status = 'revoked', revoked_at = now()
+where id = '85200000-0000-0000-0000-000000000005';
+set local role service_role;
+select is(
+  public.finalize_authorized_chat_round(
+    '84000000-0000-0000-0000-000000000004',
+    current_setting('test.scale_conversation_id')::uuid,
+    '85000000-0000-0000-0000-000000000005', 'scale-expert-a',
+    '87200000-0000-0000-0000-000000000007',
+    'next question', 'private provider output', 'general', 'none',
+    '[]'::jsonb, '85100000-0000-0000-0000-000000000005',
+    current_setting('test.scale_retrieval')::jsonb,
+    '{"rights_lineage_complete":true}'::jsonb,
+    'test-model', 100, 'provider-midstream-revoke'
+  ) ->> 'state',
+  'authorization_changed',
+  'commit-time revalidation rejects a post-bind rights revoke'
+);
+set local role postgres;
+select is(
+  (select status from public.chat_request_reservations
+   where request_id = '87200000-0000-0000-0000-000000000007'),
+  'failed',
+  'rights-changed request is failed and its quota reservation released'
+);
+select is(
+  (select count(*) from public.messages
+   where request_id = '87200000-0000-0000-0000-000000000007'),
+  0::bigint,
+  'post-bind rights revoke persists zero user or assistant messages'
+);
+
+update public.knowledge_sources
+set rights_status = 'granted', revoked_at = null,
+    published_revision_id = '85300000-0000-0000-0000-000000000005'
+where id = '85200000-0000-0000-0000-000000000005';
+set local role service_role;
+select is(
+  public.reserve_chat_request(
+    '84000000-0000-0000-0000-000000000004',
+    '87200000-0000-0000-0000-000000000007',
+    current_setting('test.scale_conversation_id')::uuid,
+    '85000000-0000-0000-0000-000000000005',
+    encode(extensions.digest(convert_to('next question', 'UTF8'), 'sha256'), 'hex')
+  ) ->> 'state',
+  'reserved',
+  'failed authorization can retry without consuming duplicate quota'
+);
+set local role postgres;
+select ok(
+  (select evidence_snapshot is null and evidence_bound_at is null
+   from public.chat_request_reservations
+   where request_id = '87200000-0000-0000-0000-000000000007'),
+  'recycled reservation clears the stale evidence binding'
+);
+set local role service_role;
+select is(
+  public.bind_chat_request_evidence(
+    '84000000-0000-0000-0000-000000000004',
+    '87200000-0000-0000-0000-000000000007',
+    current_setting('test.scale_conversation_id')::uuid,
+    '85000000-0000-0000-0000-000000000005',
+    '85100000-0000-0000-0000-000000000005',
+    current_setting('test.scale_retrieval')::jsonb
+  ) ->> 'state',
+  'bound',
+  'retry binds a fresh current evidence snapshot'
+);
+select is(
+  public.finalize_authorized_chat_round(
+    '84000000-0000-0000-0000-000000000004',
+    current_setting('test.scale_conversation_id')::uuid,
+    '85000000-0000-0000-0000-000000000005', 'scale-expert-a',
+    '87200000-0000-0000-0000-000000000007',
+    'next question', 'authorised committed answer [S1]', 'knowledge', 'high',
+    '[{"marker":"S1","title":"Scale source","revision_id":"85300000-0000-0000-0000-000000000005"}]'::jsonb,
+    '85100000-0000-0000-0000-000000000005',
+    current_setting('test.scale_retrieval')::jsonb,
+    '{"rights_lineage_complete":true}'::jsonb,
+    'test-model', 110, 'provider-authorised'
+  ) ->> 'state',
+  'committed',
+  'unchanged current rights commit the buffered round atomically'
+);
+set local role postgres;
+select is(
+  (select count(*) from public.messages
+   where request_id = '87200000-0000-0000-0000-000000000007'),
+  2::bigint,
+  'successful finalization stores exactly one paired round'
+);
+select is(
+  (select status from public.chat_request_reservations
+   where request_id = '87200000-0000-0000-0000-000000000007'),
+  'completed',
+  'successful finalization consumes the reservation in the same transaction'
+);
+
+-- Exercise NULL citations through the actual finalizer, not only a helper.
+set local role service_role;
+select is(
+  public.reserve_chat_request(
+    '84000000-0000-0000-0000-000000000004',
+    '87300000-0000-0000-0000-000000000007',
+    current_setting('test.scale_conversation_id')::uuid,
+    '85000000-0000-0000-0000-000000000005',
+    encode(extensions.digest(convert_to('null citations', 'UTF8'), 'sha256'), 'hex')
+  ) ->> 'state',
+  'reserved',
+  'NULL-boundary test reserves a distinct turn'
+);
+select is(
+  public.bind_chat_request_evidence(
+    '84000000-0000-0000-0000-000000000004',
+    '87300000-0000-0000-0000-000000000007',
+    current_setting('test.scale_conversation_id')::uuid,
+    '85000000-0000-0000-0000-000000000005',
+    '85100000-0000-0000-0000-000000000005',
+    current_setting('test.scale_retrieval')::jsonb
+  ) ->> 'state',
+  'bound',
+  'NULL-boundary test binds current evidence'
+);
+select is(
+  public.finalize_authorized_chat_round(
+    '84000000-0000-0000-0000-000000000004',
+    current_setting('test.scale_conversation_id')::uuid,
+    '85000000-0000-0000-0000-000000000005', 'scale-expert-a',
+    '87300000-0000-0000-0000-000000000007',
+    'null citations', 'must not persist', 'general', 'none', null::jsonb,
+    '85100000-0000-0000-0000-000000000005',
+    current_setting('test.scale_retrieval')::jsonb,
+    '{"rights_lineage_complete":true}'::jsonb,
+    'test-model', 90, 'provider-null-citations'
+  ) ->> 'state',
+  'authorization_changed',
+  'NULL citations fail closed instead of skipping the boolean gate'
+);
+set local role postgres;
+select is(
+  (select count(*) from public.messages
+   where request_id = '87300000-0000-0000-0000-000000000007'),
+  0::bigint,
+  'NULL citations persist zero answer content'
+);
+
+set local role authenticated;
+select set_config('request.jwt.claims',
+  '{"sub":"84000000-0000-0000-0000-000000000004","role":"authenticated"}', true);
+select throws_ok(
+  $$select * from public.messages limit 1$$,
+  '42501', 'permission denied for table messages',
+  'conversation owner cannot bypass current-rights transcript validation'
+);
+select throws_ok(
+  $$select public.get_rights_safe_engagement(
+    '85000000-0000-0000-0000-000000000005'
+  )$$,
+  '42501', 'not_allowed',
+  'ordinary member cannot open the instructor engagement dashboard'
+);
+
+select set_config('request.jwt.claims',
+  '{"sub":"82000000-0000-0000-0000-000000000002","role":"authenticated"}', true);
+select ok(
+  public.get_rights_safe_engagement(
+    '85000000-0000-0000-0000-000000000005'
+  ) -> 'messages' @> '[{"content":"authorised committed answer [S1]"}]'::jsonb,
+  'owning instructor receives the currently authorised paired transcript'
+);
+
+select set_config('request.jwt.claims',
+  '{"sub":"83000000-0000-0000-0000-000000000003","role":"authenticated"}', true);
+select throws_ok(
+  $$select public.get_rights_safe_engagement(
+    '85000000-0000-0000-0000-000000000005'
+  )$$,
+  '42501', 'not_allowed',
+  'another instructor cannot read a different instructor transcript'
+);
+
+select set_config('request.jwt.claims',
+  '{"sub":"81000000-0000-0000-0000-000000000001","role":"authenticated"}', true);
+select ok(
+  public.get_rights_safe_engagement(null) -> 'messages'
+    @> '[{"content":"authorised committed answer [S1]"}]'::jsonb,
+  'admin engagement view uses the same rights-safe transcript boundary'
+);
+
+set local role postgres;
 select is(
   (select expert_id from public.leads
    where owner_id = '84000000-0000-0000-0000-000000000004'),

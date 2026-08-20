@@ -24,15 +24,6 @@ import useDataFreshness from "@/hooks/useDataFreshness";
 /** 日報 — 日期、星期、期號按今日動態生成 (src/lib/daily.ts)；內容來自真實情報 */
 const LIST_COUNT = 8;
 
-/** 近 7 日(期號按 src/lib/daily.ts 逐日遞減;有 live 數據嘅日期先可揀) */
-const RECENT_ISSUES = recentIssues(7).map((d) => ({
-  date: d.date,
-  weekday: d.weekday,
-  number: d.number,
-  issue: `第 ${d.number} 期`,
-  current: d.current,
-}));
-
 /**
  * Daily 日報 (daily.md): 報紙刊頭版式 — Masthead（期號行下接 slim 日期導航列,
  * popover 近 7 日）→ 雙髮絲線 → 頭條 Lead → 分類小標編號列表 → Ask CTA 細帶。
@@ -54,6 +45,23 @@ export function DailyContent({ embedded = false }: { embedded?: boolean }) {
   const liveInsights = useLiveInsights();
   const { isLive, isArchive } = useDataFreshness();
   const currentDaily = liveDaily ?? aihotDaily;
+  const issueAnchor = useMemo(() => {
+    const raw = liveInsights?.[0]?.publishedAt ??
+      (aihotDaily.date ? `${aihotDaily.date}T12:00:00Z` : null);
+    const parsed = raw ? new Date(raw) : null;
+    return parsed && !Number.isNaN(parsed.getTime()) ? parsed : new Date(0);
+  }, [liveInsights]);
+  const recentIssueRows = useMemo(
+    () =>
+      recentIssues(7, issueAnchor).map((d) => ({
+        date: d.date,
+        weekday: d.weekday,
+        number: d.number,
+        issue: `第 ${d.number} 期`,
+        current: d.current,
+      })),
+    [issueAnchor]
+  );
 
   /* 有 live 數據嘅香港日期集 — picker 只開放呢啲日期 */
   const availableDates = useMemo(() => {
@@ -78,7 +86,7 @@ export function DailyContent({ embedded = false }: { embedded?: boolean }) {
 
   const issue = useMemo(() => {
     const info = viewingDate
-      ? (RECENT_ISSUES.find((r) => r.date === viewingDate) ?? null)
+      ? (recentIssueRows.find((r) => r.date === viewingDate) ?? null)
       : null;
     const base = info
       ? { date: info.date, weekday: info.weekday, number: info.number }
@@ -91,7 +99,7 @@ export function DailyContent({ embedded = false }: { embedded?: boolean }) {
       sources: daily.itemCount,
       picks: (daily.lead ? 1 : 0) + listCount,
     };
-  }, [daily, viewingDate, isLive]);
+  }, [daily, viewingDate, isLive, recentIssueRows]);
   const lead = daily.lead;
 
   /* 編號列表按 section 分組(數據一早已計好) + 全刊連續編號(頭條 = 01)。
@@ -120,15 +128,15 @@ export function DailyContent({ embedded = false }: { embedded?: boolean }) {
     return groups;
   }, [daily]);
 
-  /* 前一日 / 後一日導航 — 喺 RECENT_ISSUES 序列上郁;前一日要有數據先開放 */
+  /* 前一日 / 後一日導航 — 喺 recentIssueRows 序列上郁;前一日要有數據先開放 */
   const viewingIndex = viewingDate
     ? Math.max(
         0,
-        RECENT_ISSUES.findIndex((r) => r.date === viewingDate)
+        recentIssueRows.findIndex((r) => r.date === viewingDate)
       )
     : 0;
-  const prevIssue = RECENT_ISSUES[viewingIndex + 1] ?? null;
-  const nextIssue = viewingIndex > 0 ? RECENT_ISSUES[viewingIndex - 1] : null;
+  const prevIssue = recentIssueRows[viewingIndex + 1] ?? null;
+  const nextIssue = viewingIndex > 0 ? recentIssueRows[viewingIndex - 1] : null;
   const prevEnabled = prevIssue !== null && availableDates.has(prevIssue.date);
 
   const goTo = (date: string | null) => {
@@ -270,7 +278,7 @@ export function DailyContent({ embedded = false }: { embedded?: boolean }) {
                   exit={{ opacity: 0, transform: "translateX(-50%) scale(0.96)" }}
                   transition={{ duration: 0.15, ease: REVEAL_EASE }}
                 >
-                  {RECENT_ISSUES.map((entry) => {
+                  {recentIssueRows.map((entry) => {
                     const enabled =
                       entry.current || availableDates.has(entry.date);
                     const active = entry.current

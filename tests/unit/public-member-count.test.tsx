@@ -21,7 +21,7 @@ describe("usePublicMemberCount", () => {
 
     expect(result.current).toBe(110);
     await waitFor(() => expect(result.current).toBe(157));
-    expect(rpc).toHaveBeenCalledWith("public_member_count");
+    expect(rpc).toHaveBeenCalledWith("get_public_member_count");
   });
 
   it("keeps the baseline when the aggregate is unavailable", async () => {

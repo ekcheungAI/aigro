@@ -39,7 +39,7 @@ function ComingSoonTag({
         data-ui="coming-soon-tag"
         data-layout="desktop-flag"
         className={cn(
-          "ml-1 inline-flex h-[22px] shrink-0 items-stretch overflow-hidden whitespace-nowrap rounded-[3px] border font-mono text-[9px] font-semibold uppercase leading-none tracking-[0.14em]",
+          "ml-0.5 inline-flex h-[22px] shrink-0 items-stretch overflow-hidden whitespace-nowrap rounded-[3px] border font-mono text-[8px] font-semibold uppercase leading-none tracking-[0.08em] 2xl:ml-1 2xl:text-[9px] 2xl:tracking-[0.14em]",
           overHero
             ? "border-band-ink/35 bg-band-surface text-band-ink"
             : "border-ink/35 bg-surface text-ink"
@@ -50,7 +50,7 @@ function ComingSoonTag({
           aria-hidden="true"
           className="w-[3px] shrink-0 bg-lime"
         />
-        <span className="flex items-center px-2">Coming Soon</span>
+        <span className="flex items-center px-1.5 2xl:px-2">Coming Soon</span>
       </span>
     );
   }
@@ -172,7 +172,7 @@ export default function Navbar() {
                   to={link.to}
                   aria-current={isActive ? "page" : undefined}
                   className={() => cn(
-                  "relative inline-flex h-full min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap px-3 font-sans text-label transition-colors duration-150 xl:px-4",
+                  "relative inline-flex h-full min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap px-2 font-sans text-label transition-colors duration-150 2xl:px-4",
                   overHero
                     ? "text-band-text-secondary hover:text-band-text"
                     : "text-text-secondary hover:text-text-primary",

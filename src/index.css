@@ -114,6 +114,8 @@
     --band-ink-solid: var(--lime);    /* solid button on band = green + navy text */
     --band-ink-hover: var(--lime-hover); /* dimmed green hover on band */
     --band-ink-soft: var(--lime-soft);
+    /* Official ekcheungAI partner wordmark; not an AIGRO interface accent. */
+    --partner-ek: 217 100% 51%;
     --band-gold: var(--lime);         /* ex-gold hairline accents → brand green */
     --band-warning: 38 67% 54%;       /* #D9A03C — amber LIVE dot (semantic status, not accent) */
   }
@@ -164,6 +166,7 @@
     --band-ink-solid: var(--lime);
     --band-ink-hover: var(--lime-hover);
     --band-ink-soft: 170 59% 14%;
+    --partner-ek: 217 100% 71%;
     --band-gold: var(--lime);
     --band-warning: 38 67% 54%;
   }

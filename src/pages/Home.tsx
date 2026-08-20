@@ -75,6 +75,7 @@ function Hero() {
           alt=""
           aria-hidden="true"
           decoding="async"
+          fetchPriority="high"
           className="absolute right-[-10%] top-[48%] w-[30rem] max-w-none -translate-y-1/2 opacity-[0.045] sm:w-[42rem] md:right-[-4%] md:w-[clamp(56rem,88vw,82rem)] dark:hidden"
         />
         <img
@@ -82,11 +83,9 @@ function Hero() {
           alt=""
           aria-hidden="true"
           decoding="async"
+          fetchPriority="high"
           className="absolute right-[-10%] top-[48%] hidden w-[30rem] max-w-none -translate-y-1/2 opacity-[0.035] sm:w-[42rem] md:right-[-4%] md:w-[clamp(56rem,88vw,82rem)] dark:block"
         />
-        {/* Masthead double rule, directly under the overlay nav */}
-        <span className="absolute inset-x-0 top-16 h-px bg-band-border-strong/50" />
-        <span className="absolute inset-x-0 top-[68px] h-px bg-band-border/60" />
       </div>
 
       <div className="mx-auto max-w-container px-6 pb-16 pt-12 md:pt-20 lg:pb-20">
@@ -138,24 +137,70 @@ function Hero() {
               每日精選全球 AI 情報，連接領航專家同 MCP，
               幫你由學習走到實踐。
             </p>
-            <div className="mt-8 flex flex-wrap items-center gap-6">
-              <Link
-                to="/insights"
-                className="inline-flex h-12 items-center rounded-md bg-band-ink-solid px-8 text-label text-on-accent press hover:bg-band-ink-hover"
+            <div className="mt-8 flex flex-wrap items-center gap-x-9 gap-y-5">
+              <div className="flex flex-wrap items-center gap-6">
+                <Link
+                  to="/insights"
+                  className="inline-flex h-12 items-center rounded-md bg-band-ink-solid px-8 text-label text-on-accent press hover:bg-band-ink-hover"
+                >
+                  {isArchive ? "閱讀最新快照" : "閱讀今日情報"}
+                </Link>
+                <Link
+                  to="/ask"
+                  className="group inline-flex items-center gap-1 text-label text-band-ink"
+                >
+                  試問 AIGRO 助手
+                  <ArrowRight
+                    className="h-4 w-4 transition-transform duration-150 nudge-x"
+                    strokeWidth={1.5}
+                    aria-hidden="true"
+                  />
+                </Link>
+              </div>
+
+              <div
+                className="flex items-center gap-2.5 text-band-text-muted"
+                role="group"
+                aria-label="AIGRO 共同創立品牌"
+                data-ui="founder-signature"
               >
-                {isArchive ? "閱讀最新快照" : "閱讀今日情報"}
-              </Link>
-              <Link
-                to="/ask"
-                className="group inline-flex items-center gap-1 text-label text-band-ink"
-              >
-                試問 AIGRO 助手
-                <ArrowRight
-                  className="h-4 w-4 transition-transform duration-150 nudge-x"
-                  strokeWidth={1.5}
-                  aria-hidden="true"
-                />
-              </Link>
+                <span className="font-mono text-[9px] uppercase tracking-[0.14em]">
+                  Founded by
+                </span>
+                <a
+                  href="https://dotai.hk/"
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="dotAI 官方網站"
+                  className="press inline-flex items-center"
+                >
+                  <img
+                    src="/brand/dotai-mark.png"
+                    alt="dotAI"
+                    className="h-6 w-6 rounded-[4px]"
+                  />
+                </a>
+                <span className="font-mono text-[10px] opacity-60" aria-hidden="true">
+                  ×
+                </span>
+                <a
+                  href="https://ekcheung.com/"
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="ekcheungAI 官方網站"
+                  className="press inline-flex h-6 items-center gap-1.5"
+                >
+                  <img
+                    src="/brand/ekcheungai-tile.svg"
+                    alt=""
+                    aria-hidden="true"
+                    className="h-6 w-6 rounded-[6px]"
+                  />
+                  <span className="font-sans text-[14px] font-bold leading-none tracking-[-0.02em] text-band-text">
+                    ekcheung<span className="text-partner-ek">AI</span>
+                  </span>
+                </a>
+              </div>
             </div>
           </motion.div>
 
@@ -167,7 +212,7 @@ function Hero() {
             transition={{ duration: 0.5, delay: 0.5, ease: REVEAL_EASE }}
           >
             <LiveStats memberCount={memberCount} />
-            <div className="mt-4 max-w-[640px] border-t border-band-border pt-4">
+            <div className="mt-4 max-w-[640px]">
               <HotTopicsTicker />
             </div>
           </motion.div>
@@ -267,15 +312,15 @@ function McpNetworkBand() {
             MCP Network
           </p>
           <h2 className="mt-4 font-display text-h2 text-band-text">
-            AI 情報 MCP 已就緒
+            AI 情報 MCP 接入準備中
           </h2>
           <p className="mt-4 max-w-[600px] text-body-sm text-band-text-secondary">
-            核心封裝已完成，公開接入準備中。更多行業 MCP
+            公開 endpoint 尚未上線；首版規格同配額仍在驗證。更多行業 MCP
             會按會員需求逐步建立。
           </p>
           <div className="mt-6 flex flex-wrap gap-2">
             <span className="inline-flex items-center rounded-sm border border-band-border-strong px-3 py-1.5 text-overline font-sans uppercase text-band-text-secondary">
-              AI 情報 MCP · Ready
+              AI 情報 MCP · In development
             </span>
           </div>
           <div className="mt-8 flex flex-wrap items-center gap-6">

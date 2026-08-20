@@ -3,7 +3,6 @@ import {
   createProviderDeadline,
   parseMiniMaxStream,
   providerTimeoutMs,
-  providerUnavailablePayload,
 } from "../_shared/minimax-stream.ts";
 import {
   citationPromptRules,
@@ -12,6 +11,21 @@ import {
   safeHttpsCitationHref,
   sanitizeCitationHrefs,
 } from "../_shared/chat-grounding.ts";
+import { classifyChatInput } from "../_shared/chat-guardrails.ts";
+import {
+  canBypassTurnstile,
+} from "../_shared/turnstile.ts";
+import { chatRuntimeConfigurationError } from "../_shared/chat-runtime-config.ts";
+import {
+  BoundedChatBuffer,
+  buildPersistedRetrievalLineage,
+  chatProgressPayload,
+  committedChatReleaseEvents,
+  parseAuthorizedChatCommit,
+  parseRightsSafeReplay,
+  type RightsSafeHistoryTurn,
+  type RightsSafeReplayResult,
+} from "../_shared/chat-rights.ts";
 
 const DEFAULT_BASE_URL = "https://api.minimax.io/v1";
 const DEFAULT_MODEL = "MiniMax-M3";
@@ -46,7 +60,7 @@ interface RetrievedChunk {
   revision_id: string;
   source_id: string;
   source_title: string;
-  source_url: string | null;
+  public_citation_url: string | null;
   content: string;
   citation_meta: Record<string, unknown>;
   similarity: number;
@@ -62,11 +76,6 @@ interface Citation {
   page?: number;
   start_seconds?: number;
   end_seconds?: number;
-}
-
-interface ExistingAnswerResult {
-  answer: Record<string, unknown> | null;
-  payloadMismatch: boolean;
 }
 
 function allowedOrigins(): string[] {
@@ -135,9 +144,15 @@ function bearerToken(request: Request): string | null {
 
 async function verifyTurnstile(request: Request, userId: string): Promise<boolean> {
   const secret = Deno.env.get("TURNSTILE_SECRET_KEY");
-  // Production is fail-closed by default. Local development must explicitly
-  // opt out with REQUIRE_TURNSTILE=false.
-  if (!secret) return Deno.env.get("REQUIRE_TURNSTILE") === "false";
+  // Hosted environments always fail closed. A missing secret can be bypassed
+  // only by an explicit opt-out against a loopback local Supabase runtime.
+  if (!secret) {
+    return canBypassTurnstile({
+      secret,
+      requirement: Deno.env.get("REQUIRE_TURNSTILE"),
+      supabaseUrl: Deno.env.get("SUPABASE_URL"),
+    });
+  }
   const token = request.headers.get("x-turnstile-token");
   if (!token) return false;
   const form = new FormData();
@@ -210,20 +225,7 @@ function buildCitations(
   for (const [index, chunk] of chunks.entries()) {
     if (!usedIndexes.has(index + 1)) continue;
     const meta = chunk.citation_meta ?? {};
-    let href = safeHttpsCitationHref(chunk.source_url);
-    if (href && typeof meta.start_seconds === "number") {
-      try {
-        const url = new URL(href);
-        if (url.hostname === "youtu.be" || url.hostname.endsWith("youtube.com")) {
-          url.searchParams.set("t", `${Math.max(0, Math.floor(meta.start_seconds))}s`);
-          href = url.toString();
-        }
-      } catch {
-        href = "";
-      }
-    } else if (href && typeof meta.page === "number") {
-      href = `${href.split("#")[0]}#page=${Math.max(1, Math.floor(meta.page))}`;
-    }
+    const href = safeHttpsCitationHref(chunk.public_citation_url);
     citations.push({
       marker: `S${index + 1}`,
       title: chunk.source_title,
@@ -289,25 +291,23 @@ function sseEvent(type: string, payload: Record<string, unknown>): Uint8Array {
   return new TextEncoder().encode(`event: ${type}\ndata: ${JSON.stringify(payload)}\n\n`);
 }
 
-async function existingAnswer(
+async function rightsSafeExistingAnswer(
   client: SupabaseClient,
+  ownerId: string,
   conversationId: string,
+  expertId: string,
   requestId: string,
   expectedMessage: string,
-): Promise<ExistingAnswerResult> {
-  const { data, error } = await client.from("messages")
-    .select("id,role,content,citations,answer_basis,coverage")
-    .eq("conversation_id", conversationId)
-    .eq("request_id", requestId)
-    .in("role", ["user", "assistant"]);
+): Promise<RightsSafeReplayResult> {
+  const { data, error } = await client.rpc("get_rights_safe_chat_replay", {
+    p_owner_id: ownerId,
+    p_conversation_id: conversationId,
+    p_expert_id: expertId,
+    p_request_id: requestId,
+    p_expected_question: expectedMessage,
+  });
   if (error) throw error;
-  const paired = (data ?? []) as Array<Record<string, unknown>>;
-  const answer = paired.find((row) => row.role === "assistant") ?? null;
-  const question = paired.find((row) => row.role === "user");
-  return {
-    answer,
-    payloadMismatch: Boolean(answer) && String(question?.content ?? "") !== expectedMessage,
-  };
+  return parseRightsSafeReplay(data);
 }
 
 function replayAnswerResponse(
@@ -380,6 +380,13 @@ Deno.serve(async (request) => {
   if (!message || message.length > MAX_MESSAGE_CHARS) {
     return json(request, { error: "Message must contain 1–800 characters" }, 400);
   }
+  const guardKind = classifyChatInput(message);
+  if (guardKind) {
+    return json(request, {
+      error: "Message is outside the instructor chat safety boundary",
+      code: `chat_guardrail_${guardKind.replace("-", "_")}`,
+    }, 422);
+  }
   if (!UUID_PATTERN.test(conversationId) || !UUID_PATTERN.test(requestId)) {
     return json(request, { error: "conversation_id and request_id must be UUIDs" }, 400);
   }
@@ -417,19 +424,58 @@ Deno.serve(async (request) => {
     }, 409);
   }
 
-  let previous: ExistingAnswerResult;
+  // Even an exact completed retry must fail closed when the hosted runtime has
+  // lost a required provider or abuse-protection secret. Once configuration is
+  // present, the stored answer can replay without challenging the same request
+  // a second time.
+  const runtimeEnvironment = {
+    minimaxApiKey: Deno.env.get("MINIMAX_API_KEY"),
+    openaiApiKey: Deno.env.get("OPENAI_API_KEY"),
+    turnstileSecret: Deno.env.get("TURNSTILE_SECRET_KEY"),
+    turnstileRequirement: Deno.env.get("REQUIRE_TURNSTILE"),
+    supabaseUrl: Deno.env.get("SUPABASE_URL"),
+  };
+  const runtimeConfigurationError = chatRuntimeConfigurationError(runtimeEnvironment);
+  if (runtimeConfigurationError === "model_provider_missing") {
+    return json(request, { error: "Instructor model is not configured" }, 503);
+  }
+  if (runtimeConfigurationError === "embedding_provider_missing") {
+    return json(request, { error: "Knowledge retrieval is not configured" }, 503);
+  }
+  if (runtimeConfigurationError === "turnstile_missing") {
+    return json(request, { error: "Human verification is not configured" }, 503);
+  }
+  const apiKey = runtimeEnvironment.minimaxApiKey!;
+
+  let previous: RightsSafeReplayResult;
   try {
-    previous = await existingAnswer(admin, conversationId, requestId, message);
+    previous = await rightsSafeExistingAnswer(
+      admin,
+      user.id,
+      conversationId,
+      expert.id,
+      requestId,
+      message,
+    );
   } catch {
     return json(request, { error: "Saved answer lookup is unavailable" }, 503);
   }
-  if (previous.payloadMismatch) {
+  if (previous.state === "payload_mismatch") {
     return json(request, {
       error: "Request id was already used for a different message",
       code: "idempotency_payload_mismatch",
     }, 409);
   }
-  if (previous.answer) {
+  if (previous.state === "sources_unavailable") {
+    return json(request, {
+      error: "Saved answer is no longer available because its sources changed",
+      code: "replay_sources_unavailable",
+    }, 409);
+  }
+  if (previous.state === "unavailable") {
+    return json(request, { error: "Saved answer lookup is unavailable" }, 503);
+  }
+  if (previous.state === "ready" && previous.answer) {
     return replayAnswerResponse(
       request,
       requestId,
@@ -440,8 +486,6 @@ Deno.serve(async (request) => {
 
   const model = Deno.env.get("MINIMAX_MODEL") ?? DEFAULT_MODEL;
   const baseUrl = (Deno.env.get("MINIMAX_BASE_URL") ?? DEFAULT_BASE_URL).replace(/\/+$/, "");
-  const apiKey = Deno.env.get("MINIMAX_API_KEY");
-  if (!apiKey) return json(request, { error: "Instructor model is not configured" }, 503);
   if (!(await verifyTurnstile(request, user.id))) {
     return json(request, { error: "Human verification required" }, 403);
   }
@@ -498,11 +542,32 @@ Deno.serve(async (request) => {
     }, 409);
   }
   if (reservation?.state === "replay") {
-    const replay = await existingAnswer(admin, conversationId, requestId, message);
-    if (replay.payloadMismatch) {
+    let replay: RightsSafeReplayResult;
+    try {
+      replay = await rightsSafeExistingAnswer(
+        admin,
+        user.id,
+        conversationId,
+        expert.id,
+        requestId,
+        message,
+      );
+    } catch {
+      return json(request, {
+        error: "Saved answer lookup is unavailable",
+        code: "replay_unavailable",
+      }, 503);
+    }
+    if (replay.state === "payload_mismatch") {
       return json(request, { code: "idempotency_payload_mismatch" }, 409);
     }
-    if (replay.answer) {
+    if (replay.state === "sources_unavailable") {
+      return json(request, {
+        error: "Saved answer is no longer available because its sources changed",
+        code: "replay_sources_unavailable",
+      }, 409);
+    }
+    if (replay.state === "ready" && replay.answer) {
       return replayAnswerResponse(
         request,
         requestId,
@@ -522,12 +587,15 @@ Deno.serve(async (request) => {
     }, 409);
   }
 
-  const { data: history, error: historyError } = await admin.from("messages")
-    .select("role,content")
-    .eq("conversation_id", conversationId)
-    .eq("server_generated", true)
-    .order("turn_sequence", { ascending: false })
-    .limit(8);
+  const { data: history, error: historyError } = await admin.rpc(
+    "get_rights_safe_chat_history",
+    {
+      p_owner_id: user.id,
+      p_conversation_id: conversationId,
+      p_expert_id: expert.id,
+      p_message_limit: 8,
+    },
+  );
   if (historyError) {
     await admin.rpc("fail_chat_request", {
       p_user_id: user.id,
@@ -539,6 +607,7 @@ Deno.serve(async (request) => {
       code: "history_unavailable",
     }, 503);
   }
+  const historyTurns = (history ?? []) as RightsSafeHistoryTurn[];
 
   let chunks: RetrievedChunk[] = [];
   const ragEnabled = expert.feature_flags?.rag_enabled === true;
@@ -566,6 +635,14 @@ Deno.serve(async (request) => {
       }, 503);
     }
   }
+  const persistedRetrievalLineage = buildPersistedRetrievalLineage(
+    chunks.map((chunk) => ({
+      chunk_id: chunk.chunk_id,
+      revision_id: chunk.revision_id,
+      similarity: chunk.similarity,
+    })),
+    historyTurns,
+  );
 
   if (!expert.published_persona_version_id) {
     await admin.rpc("fail_chat_request", {
@@ -595,22 +672,58 @@ Deno.serve(async (request) => {
   const persona = personaData as Record<string, unknown>;
   const prompt = personaPrompt(expert, persona, chunks);
 
+  const { data: bindingData, error: bindingError } = await admin.rpc(
+    "bind_chat_request_evidence",
+    {
+      p_owner_id: user.id,
+      p_request_id: requestId,
+      p_conversation_id: conversationId,
+      p_expert_id: expert.id,
+      p_persona_version_id: persona.id,
+      p_retrieval: persistedRetrievalLineage,
+    },
+  );
+  const binding = bindingData as Record<string, unknown> | null;
+  if (bindingError || binding?.state !== "bound") {
+    if (bindingError) {
+      console.error("Cannot bind chat evidence", bindingError);
+      await admin.rpc("fail_chat_request", {
+        p_user_id: user.id,
+        p_request_id: requestId,
+        p_error_code: "authorization_unavailable",
+      });
+    }
+    return json(request, {
+      error: "Instructor response is temporarily unavailable",
+      code: "instructor_unavailable",
+    }, 503);
+  }
+
   const startedAt = Date.now();
   const deadline = createProviderDeadline(
     providerTimeoutMs(Deno.env.get("MINIMAX_TIMEOUT_MS")),
   );
   let clientCancelled = false;
+  let progressTimer: number | undefined;
+  const stopProgress = () => {
+    if (progressTimer !== undefined) clearInterval(progressTimer);
+    progressTimer = undefined;
+  };
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       try {
-        controller.enqueue(sseEvent("retrieved_sources", {
-          sources: chunks.map((chunk, index) => ({
-            marker: `S${index + 1}`,
-            revision_id: chunk.revision_id,
-            similarity: chunk.similarity,
-          })),
-        }));
+        const enqueueProgress = () => {
+          if (clientCancelled) return;
+          try {
+            controller.enqueue(sseEvent("progress", chatProgressPayload()));
+          } catch {
+            stopProgress();
+          }
+        };
+        enqueueProgress();
+        progressTimer = setInterval(enqueueProgress, 8_000);
+
         const providerResponse = await fetch(`${baseUrl}/chat/completions`, {
           method: "POST",
           headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
@@ -624,20 +737,24 @@ Deno.serve(async (request) => {
             thinking: { type: "disabled" },
             messages: [
               { role: "system", content: prompt },
-              ...((history ?? []).reverse().map((turn) => ({ role: turn.role, content: turn.content }))),
+              ...(historyTurns.slice().reverse().map((turn) => ({
+                role: turn.role,
+                content: turn.content,
+              }))),
               { role: "user", content: message },
             ],
           }),
         });
+        const answerBuffer = new BoundedChatBuffer();
         const groundedGate = chunks.length > 0
           ? createGroundedStreamGate(chunks.length, (text) => {
-            if (!clientCancelled) controller.enqueue(sseEvent("delta", { text }));
+            answerBuffer.append(text);
           })
           : null;
         const generalFilter = groundedGate
           ? null
           : createGeneralStreamFilter((text) => {
-            if (!clientCancelled) controller.enqueue(sseEvent("delta", { text }));
+            answerBuffer.append(text);
           });
         const result = await parseMiniMaxStream(providerResponse, (piece) => {
           if (groundedGate) {
@@ -651,7 +768,8 @@ Deno.serve(async (request) => {
           indexes: new Set<number>(),
           abstained: false,
         };
-        const answerText = groundedGate ? result.text : generalFilter?.finish() ?? "";
+        if (!groundedGate) generalFilter?.finish();
+        const answerText = answerBuffer.text();
         if (!answerText.trim()) throw new Error("Provider returned an empty safe response");
         const usedIndexes = grounding.indexes;
         const citedChunks = chunks.filter((_, index) => usedIndexes.has(index + 1));
@@ -659,8 +777,18 @@ Deno.serve(async (request) => {
         const coverage = grounding.abstained ? "none" : coverageFor(citedChunks);
         const answerBasis = citations.length > 0 ? "knowledge" : "general";
         const latencyMs = Date.now() - startedAt;
-        const providerUsage = { model, ...result.usage, latency_ms: latencyMs };
-        const { data: assistantId, error: saveError } = await admin.rpc("persist_chat_round", {
+        const providerUsage = {
+          model,
+          ...result.usage,
+          latency_ms: latencyMs,
+          rights_lineage_complete: true,
+          rights_lineage_revision_count: new Set(
+            persistedRetrievalLineage.map((reference) => reference.revision_id),
+          ).size,
+        };
+        const { data: finalizeData, error: saveError } = await admin.rpc(
+          "finalize_authorized_chat_round",
+          {
           p_owner_id: user.id,
           p_conversation_id: conversationId,
           p_expert_id: expert.id,
@@ -672,26 +800,38 @@ Deno.serve(async (request) => {
           p_coverage: coverage,
           p_citations: citations,
           p_persona_version_id: persona?.id ?? null,
-          p_retrieval: chunks.map((chunk) => ({
-            chunk_id: chunk.chunk_id,
-            revision_id: chunk.revision_id,
-            similarity: chunk.similarity,
-          })),
+          p_retrieval: persistedRetrievalLineage,
           p_provider_usage: providerUsage,
           p_model: model,
           p_latency_ms: latencyMs,
           p_provider_request_id: result.providerRequestId ?? requestId,
-        });
-        if (saveError || !assistantId) throw new Error(`Cannot persist answer: ${saveError?.message}`);
+          },
+        );
+        const committedAnswer = parseAuthorizedChatCommit(finalizeData);
+        if (saveError || !committedAnswer) {
+          throw new Error(`Cannot authorize answer: ${saveError?.message ?? "authorization changed"}`);
+        }
+        stopProgress();
         if (!clientCancelled) {
-          controller.enqueue(sseEvent("done", {
-            message_id: assistantId,
-            request_id: requestId,
-            answer_basis: answerBasis,
-            coverage,
-            citations,
-            booking_intent: hasBookingIntent(message),
-          }));
+          const release = committedChatReleaseEvents(true, {
+            sources: chunks.map((chunk, index) => ({
+              marker: `S${index + 1}`,
+              revision_id: chunk.revision_id,
+              similarity: chunk.similarity,
+            })),
+            answer: committedAnswer.answer,
+            done: {
+              message_id: committedAnswer.messageId,
+              request_id: requestId,
+              answer_basis: committedAnswer.answerBasis,
+              coverage: committedAnswer.coverage,
+              citations: committedAnswer.citations,
+              booking_intent: hasBookingIntent(message),
+            },
+          });
+          for (const event of release) {
+            controller.enqueue(sseEvent(event.event, event.payload));
+          }
         }
       } catch (error) {
         const detail = error instanceof Error ? error.message : String(error);
@@ -705,7 +845,9 @@ Deno.serve(async (request) => {
           console.error("Cannot release chat reservation", reservationFailure);
         }
         if (!clientCancelled) {
-          controller.enqueue(sseEvent("error", providerUnavailablePayload()));
+          for (const event of committedChatReleaseEvents(false)) {
+            controller.enqueue(sseEvent(event.event, event.payload));
+          }
         }
         try {
           await admin.from("usage_logs").insert({
@@ -721,12 +863,14 @@ Deno.serve(async (request) => {
           console.error("Cannot write provider usage log", logError);
         }
       } finally {
+        stopProgress();
         deadline.clear();
         if (!clientCancelled) controller.close();
       }
     },
     cancel() {
       clientCancelled = true;
+      stopProgress();
       deadline.abort();
     },
   });

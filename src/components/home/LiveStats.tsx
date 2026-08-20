@@ -42,7 +42,7 @@ function CountUp({ value, delay }: { value: number; delay: number }) {
   );
 }
 
-/** Live platform proof, separated by hairlines instead of KPI cards. */
+/** Live platform proof, grouped through spacing and type hierarchy. */
 export default function LiveStats({ memberCount }: LiveStatsProps) {
   const stats: ScaleStat[] = [
     {
@@ -52,16 +52,13 @@ export default function LiveStats({ memberCount }: LiveStatsProps) {
       showPlus: true,
     },
     { value: 2, label: "位領航專家已上線", note: "8 位蒸餾中" },
-    { value: 1, label: "個 AI MCP 已就緒", note: "更多行業 MCP 籌備中" },
+    { value: 1, label: "個 AI MCP 開發中", note: "公開 endpoint 尚未開放" },
   ];
 
   return (
-    <dl className="grid max-w-[980px] gap-y-6 border-y border-band-border py-6 sm:grid-cols-[1.15fr_1fr_1fr] sm:py-7">
+    <dl className="grid max-w-[980px] gap-x-10 gap-y-6 py-3 sm:grid-cols-[1.15fr_1fr_1fr] sm:py-4">
       {stats.map((stat, index) => (
-        <div
-          key={stat.label}
-          className="sm:border-l sm:border-band-border sm:px-6 sm:first:border-l-0 sm:first:pl-0"
-        >
+        <div key={stat.label}>
           <dt className="flex flex-wrap items-baseline gap-x-2">
             <span className="sr-only">{`${stat.value}${stat.showPlus ? "+" : ""} ${stat.label}`}</span>
             <span aria-hidden="true" className="contents">

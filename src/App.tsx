@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import Layout from "@/components/Layout";
 import usePageMeta from "@/hooks/usePageMeta";
+import { EXPERT_CHAT_ROLLOUT_ENABLED } from "@/data/navigation";
 
 const Home = lazy(() => import("@/pages/Home"));
 const Insights = lazy(() => import("@/pages/Insights"));
@@ -10,6 +11,9 @@ const InsightDetail = lazy(() => import("@/pages/InsightDetail"));
 const Cases = lazy(() => import("@/pages/Cases"));
 const CaseDetail = lazy(() => import("@/pages/CaseDetail"));
 const FeatureUnavailable = lazy(() => import("@/pages/FeatureUnavailable"));
+const Ask = lazy(() => import("@/pages/Ask"));
+const Experts = lazy(() => import("@/pages/Experts"));
+const ExpertProfile = lazy(() => import("@/pages/ExpertProfile"));
 const Developers = lazy(() => import("@/pages/Developers"));
 const Account = lazy(() => import("@/pages/Account"));
 const Skills = lazy(() => import("@/pages/Skills"));
@@ -46,7 +50,7 @@ const PortalBookings = lazy(() => import("@/pages/portal/PortalBookings"));
 function RouteMeta() {
   const { pathname, search } = useLocation();
   const map: [RegExp, string, string?][] = [
-    [/^\/$/, "香港 #1 AI Builder 社群", "每日精選全球 AI 情報，連接香港 builders、導師與 MCP，將情報變成實戰成果。"],
+    [/^\/$/, "香港 #1 AI Builder 社群", "香港 #1 AI Builder 社群，匯聚最好嘅 AI 資源、每日精選情報同領航專家，陪你由學習走到實踐。"],
     [/^\/insights\/daily/, "每日精選日報", "編輯部每日精選 5 條必讀 AI・增長情報 — 3 分鐘掌握全球脈搏的香港意義。"],
     [/^\/insights\/[^/]+/, "情報詳情", "AI 摘要 + 香港視角長評 + 來源連結。"],
     [/^\/insights/, "資訊中心 Insights", "即時動態 feed、每日日報、主題地圖與數據合作 — 每日 AI・增長情報，附香港視角解讀。"],
@@ -89,7 +93,15 @@ function RouteMeta() {
   const isNotFound = !activeMeta;
   usePageMeta(
     isNotFound ? "找不到頁面" : activeMeta?.[0] || undefined,
-    isNotFound ? "此頁面不存在或已移除。返回 AIGRO 瀏覽最新 AI・增長情報。" : activeMeta?.[1] || undefined
+    isNotFound ? "此頁面不存在或已移除。返回 AIGRO 瀏覽最新 AI・增長情報。" : activeMeta?.[1] || undefined,
+    pathname === "/"
+      ? {
+          canonical: "/",
+          ogTitle: "香港 #1 AI Builder 社群｜AIGRO",
+          ogImage: "/og-image.png",
+          ogImageAlt: "AIGRO 香港 #1 AI Builder 社群",
+        }
+      : undefined
   );
   return null;
 }
@@ -126,8 +138,8 @@ export default function App() {
           element={<Navigate to="/insights" replace />}
         />
         <Route
-          path="experts/*"
-          element={
+          path="experts/:slug"
+          element={EXPERT_CHAT_ROLLOUT_ENABLED ? <ExpertProfile /> : (
             <FeatureUnavailable
               eyebrow="Experts · 暫未開放"
               title="領航專家平台即將開放"
@@ -137,11 +149,25 @@ export default function App() {
               screenshotAlt="AIGRO 領航專家平台產品預覽，展示已認證專家資料卡"
               screenshotPosition="center top"
             />
-          }
+          )}
+        />
+        <Route
+          path="experts"
+          element={EXPERT_CHAT_ROLLOUT_ENABLED ? <Experts /> : (
+            <FeatureUnavailable
+              eyebrow="Experts · 暫未開放"
+              title="領航專家平台即將開放"
+              description="我哋正完成專家授權、資料核實同預約流程。正式開放前，公開專家名單及個人頁暫時封鎖。"
+              betaMessage="而家免費註冊，Experts 進入 Beta 時會列入首批開放名單，優先收到專家平台測試邀請。"
+              screenshotSrc="/previews/experts-product.jpg"
+              screenshotAlt="AIGRO 領航專家平台產品預覽，展示已認證專家資料卡"
+              screenshotPosition="center top"
+            />
+          )}
         />
         <Route
           path="ask"
-          element={
+          element={EXPERT_CHAT_ROLLOUT_ENABLED ? <Ask /> : (
             <FeatureUnavailable
               eyebrow="Ask · 暫未開放"
               title="AI 問答功能準備中"
@@ -151,7 +177,7 @@ export default function App() {
               screenshotAlt="AIGRO Ask AI 問答產品預覽，展示分身選擇、對話介面及來源資料"
               screenshotPosition="center top"
             />
-          }
+          )}
         />
         <Route path="pricing" element={<Navigate to="/join" replace />} />
         <Route path="developers" element={<Developers />} />

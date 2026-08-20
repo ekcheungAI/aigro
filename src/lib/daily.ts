@@ -56,8 +56,11 @@ export function todayInfo(): DailyInfo {
 }
 
 /** 近 N 日嘅日報列表（今日排最前） */
-export function recentIssues(count: number): (DailyInfo & { current: boolean })[] {
-  const now = new Date();
+export function recentIssues(
+  count: number,
+  anchor: Date = new Date()
+): (DailyInfo & { current: boolean })[] {
+  const now = new Date(anchor.getFullYear(), anchor.getMonth(), anchor.getDate());
   return Array.from({ length: count }, (_, i) => {
     const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
     return { ...toDailyInfo(d), current: i === 0 };

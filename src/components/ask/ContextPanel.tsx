@@ -3,10 +3,12 @@ import { motion, useReducedMotion } from "framer-motion";
 import { ArrowUpRight, Quote } from "lucide-react";
 import AboutPersonaCard from "@/components/ask/AboutPersonaCard";
 import type { Citation } from "@/components/ask/AiMessage";
+import { citationLabel, citationSourceLabel } from "@/components/ask/citations";
 import { citationDomain } from "@/components/ask/sessions";
 import { aihotAllInsights, aihotFetchedAt } from "@/data/aihot";
 import { useLiveFetchedAt, useLiveItems } from "@/data/liveItems";
 import type { Persona } from "@/data/personas";
+import { safeClientCitationHref } from "@/lib/llmFallback";
 import { cn } from "@/lib/utils";
 
 interface ContextPanelProps {
@@ -136,12 +138,17 @@ export default function ContextPanel({
               呢段對話檢索咗 {citations.length} 個參考來源
             </p>
             <ul className="mt-2 flex flex-col gap-1.5">
-              {citations.map((c) => (
-                <li key={c.href}>
-                  <Link
-                    to={c.href}
-                    className="group flex items-center gap-2 rounded-sm border bg-bg px-2.5 py-2 transition-colors duration-120 hover:border-[var(--ask-accent)]"
-                  >
+              {citations.map((c, citationIndex) => {
+                const href = safeClientCitationHref(c.href);
+                const key = [
+                  c.revision_id ?? href ?? c.title,
+                  c.page ?? "",
+                  c.start_seconds ?? "",
+                  c.section ?? "",
+                  citationIndex,
+                ].join("-");
+                const content = (
+                  <>
                     <Quote
                       className="h-3.5 w-3.5 shrink-0 text-text-muted"
                       strokeWidth={1.5}
@@ -149,20 +156,49 @@ export default function ContextPanel({
                     />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-caption text-text-primary transition-colors duration-120 group-hover:text-[var(--ask-accent)] group-hover:underline">
-                        {c.title}
+                        {citationLabel(c)}
                       </span>
                       <span className="block text-caption text-text-muted">
-                        {citationDomain(c.href)}
+                        {href ? citationDomain(href) : citationSourceLabel(c)}
                       </span>
                     </span>
-                    <ArrowUpRight
-                      className="h-3 w-3 shrink-0 text-text-muted"
-                      strokeWidth={1.5}
-                      aria-hidden="true"
-                    />
-                  </Link>
-                </li>
-              ))}
+                    {href && (
+                      <ArrowUpRight
+                        className="h-3 w-3 shrink-0 text-text-muted"
+                        strokeWidth={1.5}
+                        aria-hidden="true"
+                      />
+                    )}
+                  </>
+                );
+                const className = cn(
+                  "flex items-center gap-2 rounded-sm border bg-bg px-2.5 py-2",
+                  href && "group transition-colors duration-120 hover:border-[var(--ask-accent)]"
+                );
+                return (
+                  <li key={key}>
+                    {href.startsWith("https://") ? (
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title={c.excerpt}
+                        className={className}
+                      >
+                        {content}
+                      </a>
+                    ) : href ? (
+                      <Link to={href} title={c.excerpt} className={className}>
+                        {content}
+                      </Link>
+                    ) : (
+                      <span title={c.excerpt} className={className}>
+                        {content}
+                      </span>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           </>
         )}

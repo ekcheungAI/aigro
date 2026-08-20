@@ -4,6 +4,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, ArrowUpRight, CornerDownRight, Sparkles } from "lucide-react";
 import TypewriterText from "./TypewriterText";
 import ThinkingBars from "./ThinkingBars";
+import { citationLabel, citationSourceLabel } from "./citations";
 import { tokenizeTypewriter } from "./typewriter";
 import { safeClientCitationHref } from "@/lib/llmFallback";
 import { cn } from "@/lib/utils";
@@ -100,18 +101,6 @@ function StaticReplyText({ text }: { text: string }) {
       ))}
     </div>
   );
-}
-
-function citationLabel(citation: Citation): string {
-  const prefix = citation.marker ? `[${citation.marker}] ` : "";
-  if (citation.page) return `${prefix}${citation.title} · p.${citation.page}`;
-  if (citation.start_seconds !== undefined) {
-    const minutes = Math.floor(citation.start_seconds / 60);
-    const seconds = Math.floor(citation.start_seconds % 60).toString().padStart(2, "0");
-    return `${prefix}${citation.title} · ${minutes}:${seconds}`;
-  }
-  if (citation.section) return `${prefix}${citation.title} · ${citation.section}`;
-  return `${prefix}${citation.title}`;
 }
 
 /**
@@ -237,7 +226,9 @@ export default function AiMessage({
                   className="inline-flex h-6 items-center gap-1.5 rounded-sm border bg-surface px-2 text-caption text-text-secondary"
                 >
                   <span aria-hidden="true" className="h-2 w-2 shrink-0 rounded-full bg-ink" />
-                  <span className="max-w-[220px] truncate">{citationLabel(c)} · 私人來源</span>
+                  <span className="max-w-[220px] truncate">
+                    {citationLabel(c)} · {citationSourceLabel(c)}
+                  </span>
                 </span>
               )}
             </motion.span>

@@ -105,11 +105,13 @@ Deno.test("never emits a segment containing an invalid marker", () => {
   assertEquals(emitted, [], "invalid segment was withheld");
 });
 
-Deno.test("keeps only credential-free HTTPS citation destinations", () => {
+Deno.test("keeps only credential-free HTTPS citation destinations without query or fragment secrets", () => {
   assertEquals(
-    safeHttpsCitationHref("  https://example.com/source?q=1  "),
-    "https://example.com/source?q=1",
-    "safe HTTPS URL",
+    safeHttpsCitationHref(
+      "  https://example.com/source?X-Amz-Signature=secret&token=private#access_token  ",
+    ),
+    "https://example.com/source",
+    "signed HTTPS URL is reduced to its public location",
   );
   for (
     const unsafe of [
@@ -129,13 +131,27 @@ Deno.test("keeps only credential-free HTTPS citation destinations", () => {
 Deno.test("sanitizes citation hrefs replayed from legacy database rows", () => {
   assertEquals(
     sanitizeCitationHrefs([
-      { marker: "S1", href: "https://example.com/source", title: "Safe" },
+      {
+        marker: "S1",
+        href: "https://example.com/source?signature=private#token",
+        signed_url: "https://storage.example.com/file?token=private",
+        source_url: "https://fetch.example.com/article?api_key=private",
+        storage_path: "expert/private.pdf",
+        provider_download_url: "https://provider.example.com/file?token=private",
+        title: "Safe",
+        page: 4,
+      },
       { marker: "S2", href: "javascript:alert(1)", title: "Unsafe" },
       { marker: "S3", href: "http://example.com/source", title: "Old HTTP" },
       null,
     ]),
     [
-      { marker: "S1", href: "https://example.com/source", title: "Safe" },
+      {
+        marker: "S1",
+        href: "https://example.com/source",
+        title: "Safe",
+        page: 4,
+      },
       { marker: "S2", href: "", title: "Unsafe" },
       { marker: "S3", href: "", title: "Old HTTP" },
     ],

@@ -70,9 +70,9 @@ export function normalizePublicInstructor(
     radar: radarDimensions(row.radar) ?? editorial?.radar,
     traits: row.traits?.filter(Boolean) ?? editorial?.traits,
     transparency: editorial?.transparency ??
-      "此 AI 導師只會使用已批准、可追溯嘅授權內容回答；知識覆蓋不足時會清楚講明，唔會假扮真人本人。",
+      "此 AI 導師優先使用已批准、可追溯嘅授權內容回答；未有足夠來源時會清楚標明一般知識回覆，唔會將內容冒充真人觀點。",
     askIntro: editorial?.askIntro ??
-      "基於已批准知識回答；命中來源時會顯示引用，資料不足會建議補充資料或預約真人導師。",
+      "優先基於已批准知識回答；命中來源時會顯示引用，資料不足會標明一般知識並建議補充資料或預約真人導師。",
     pendingNote: chatReady
       ? editorial?.pendingNote
       : "AI 導師仍在完成知識、角色評估或服務設定；公開檔案可瀏覽，聊天暫未開放。",

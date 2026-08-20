@@ -24,6 +24,8 @@ export interface WaitlistEntry {
   source?: string;
 }
 
+export type WaitlistSaveMode = "server" | "local";
+
 /**
  * Insert 一條 waitlist 記錄。永遠 resolve(唔 reject),並回傳有冇成功寫入。
  * 現有 fire-and-forget caller 可以繼續忽略回傳值;需要誠實成功態嘅表單
@@ -45,5 +47,27 @@ export async function captureWaitlist(entry: WaitlistEntry): Promise<boolean> {
     return error === null;
   } catch {
     return false;
+  }
+}
+
+/**
+ * Confirm a server insert, or persist an explicit device-local fallback.
+ * Returning null means neither path worked, so callers must not show success.
+ */
+export async function captureWaitlistWithFallback(
+  entry: WaitlistEntry,
+  storageKey: string,
+  localEntry: object = entry
+): Promise<WaitlistSaveMode | null> {
+  if (await captureWaitlist(entry)) return "server";
+
+  try {
+    const raw = window.localStorage.getItem(storageKey);
+    const records: unknown[] = raw ? (JSON.parse(raw) as unknown[]) : [];
+    records.push({ ...localEntry, at: new Date().toISOString() });
+    window.localStorage.setItem(storageKey, JSON.stringify(records));
+    return "local";
+  } catch {
+    return null;
   }
 }

@@ -80,7 +80,7 @@ async function fetchLeads(): Promise<AdminCrmData> {
     supabase
       .from("leads")
       .select(
-        "id,user_id,anon_id,owner_is_anonymous,persona,score,signals,stage,questions,analysis,timeline,last_activity_at,created_at"
+        "id,user_id,anon_id,owner_is_anonymous,persona,score,signals,stage,questions,analysis,timeline,contact_consented_at,contact_email,last_activity_at,created_at"
       )
       .order("last_activity_at", { ascending: false })
       .limit(500),
@@ -159,7 +159,9 @@ export default function AdminCRM() {
   );
 
   const leadLabel = (l: AdminLeadRow) =>
-    l.owner_is_anonymous || l.anon_id
+    l.contact_consented_at && l.contact_email
+      ? l.contact_email
+      : l.owner_is_anonymous || l.anon_id
       ? `訪客 ${l.anon_id?.slice(0, 8) ?? l.id.slice(0, 8)}`
       : `會員 ${l.user_id?.slice(0, 8) ?? "—"}`;
 

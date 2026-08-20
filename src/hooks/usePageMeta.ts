@@ -1,7 +1,9 @@
 import { useEffect } from "react";
 
 const SITE_NAME = "AIGRO";
-const SITE_URL = "https://aigro-blue.vercel.app";
+const SITE_URL = "https://aigro.io";
+const DEFAULT_OG_IMAGE = "/og-image.png";
+const DEFAULT_OG_IMAGE_ALT = "AIGRO 香港 AI Builder 社群";
 const DEFAULT_DESC =
   "香港最值得信賴的 AI・增長・商業情報平台 — 每日精選情報、實戰案例、認證導師 AI 分身，香港視角。";
 
@@ -27,8 +29,12 @@ export interface PageMetaOptions {
   canonical?: string;
   /** og:type,預設 "website";文章頁用 "article"、專家頁用 "profile" */
   ogType?: string;
-  /** 自訂 og:image(相對或絕對);不傳則沿用 index.html 靜態預設 */
+  /** Open Graph / Twitter 分享標題；不傳則使用完整頁面標題 */
+  ogTitle?: string;
+  /** 自訂 og:image(相對或絕對);不傳則使用全站預設分享圖 */
   ogImage?: string;
+  /** 分享圖替代文字 */
+  ogImageAlt?: string;
 }
 
 /**
@@ -41,23 +47,38 @@ export default function usePageMeta(
   description?: string,
   options: PageMetaOptions = {}
 ) {
-  const { canonical, ogType = "website", ogImage } = options;
+  const {
+    canonical,
+    ogType = "website",
+    ogTitle,
+    ogImage = DEFAULT_OG_IMAGE,
+    ogImageAlt = DEFAULT_OG_IMAGE_ALT,
+  } = options;
 
   useEffect(() => {
     const fullTitle = title
       ? `${title} — ${SITE_NAME} 香港 AI × Growth 情報平台`
       : `${SITE_NAME} — 香港 AI × Growth 情報平台`;
+    const shareTitle = ogTitle ?? fullTitle;
+    const shareImage = absolutize(ogImage);
     const desc = description ?? DEFAULT_DESC;
 
     document.title = fullTitle;
     setMeta("name", "description", desc);
-    setMeta("property", "og:title", fullTitle);
+    setMeta("property", "og:title", shareTitle);
     setMeta("property", "og:description", desc);
     setMeta("property", "og:site_name", SITE_NAME);
+    setMeta("property", "og:locale", "zh_HK");
     setMeta("property", "og:type", ogType);
+    setMeta("property", "og:image", shareImage);
+    setMeta("property", "og:image:width", "1200");
+    setMeta("property", "og:image:height", "630");
+    setMeta("property", "og:image:alt", ogImageAlt);
     setMeta("name", "twitter:card", "summary_large_image");
-
-    if (ogImage) setMeta("property", "og:image", absolutize(ogImage));
+    setMeta("name", "twitter:title", shareTitle);
+    setMeta("name", "twitter:description", desc);
+    setMeta("name", "twitter:image", shareImage);
+    setMeta("name", "twitter:image:alt", ogImageAlt);
 
     let canonicalEl: HTMLLinkElement | null = null;
     if (canonical) {
@@ -77,5 +98,5 @@ export default function usePageMeta(
       document.title = `${SITE_NAME} — 香港 AI × Growth 情報平台`;
       canonicalEl?.remove();
     };
-  }, [title, description, canonical, ogType, ogImage]);
+  }, [title, description, canonical, ogType, ogTitle, ogImage, ogImageAlt]);
 }

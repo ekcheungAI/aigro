@@ -86,6 +86,7 @@ interface AihotSnapshot {
 }
 
 const snapshot = rawSnapshot as AihotSnapshot;
+const SNAPSHOT_RENDER_NOW = new Date(snapshot.fetchedAt).getTime();
 
 /** snapshot 生成時間（構建時數據截止日期） */
 export const aihotFetchedAt: string = snapshot.fetchedAt;
@@ -104,19 +105,33 @@ const CATEGORY_MAP: Record<string, InsightCategory> = {
   "ai-models": "模型發布",
   model: "模型發布",
   models: "模型發布",
+  model_release: "模型發布",
+  模型發布: "模型發布",
+  "模型發佈": "模型發布",
   "ai-products": "產品發布",
   product: "產品發布",
   products: "產品發布",
+  product_update: "產品發布",
+  產品發布: "產品發布",
+  "產品發佈": "產品發布",
   industry: "行業動態",
+  industry_event: "行業動態",
+  行業動態: "行業動態",
   paper: "論文研究",
   papers: "論文研究",
   research: "論文研究",
+  research_paper: "論文研究",
+  論文研究: "論文研究",
   tip: "觀點與技巧",
   tips: "觀點與技巧",
+  opinion_tutorial: "觀點與技巧",
+  觀點與技巧: "觀點與技巧",
+  "技巧與觀點": "觀點與技巧",
 };
 
 export function mapAihotCategory(raw: string): InsightCategory {
-  return CATEGORY_MAP[raw] ?? "行業動態";
+  const normalized = raw.trim().toLowerCase().replace(/[\s-]+/g, "_");
+  return CATEGORY_MAP[raw] ?? CATEGORY_MAP[normalized] ?? "行業動態";
 }
 
 /** AIHOT daily section label → 本站繁體分類（snapshot 已轉繁體，簡體 key 作向下兼容） */
@@ -133,10 +148,10 @@ const DAILY_LABEL_MAP: Record<string, InsightCategory> = {
 /* ============ 工具 ============ */
 
 /** ISO 時間 → 中文相對時間（香港讀者習慣） */
-export function timeAgo(iso: string): string {
+export function timeAgo(iso: string, now = Date.now()): string {
   const then = new Date(iso).getTime();
   if (Number.isNaN(then)) return "";
-  const diffMin = Math.floor((Date.now() - then) / 60_000);
+  const diffMin = Math.floor((now - then) / 60_000);
   if (diffMin < 60) return `${Math.max(1, diffMin)} 分鐘前`;
   const diffHr = Math.floor(diffMin / 60);
   if (diffHr < 24) return `${diffHr} 小時前`;
@@ -171,7 +186,7 @@ export interface AihotInsight extends Insight {
   external: true;
 }
 
-export function toAihotInsight(raw: AihotRawItem): AihotInsight {
+export function toAihotInsight(raw: AihotRawItem, now = Date.now()): AihotInsight {
   return {
     slug: raw.id,
     category: mapAihotCategory(raw.category),
@@ -180,7 +195,7 @@ export function toAihotInsight(raw: AihotRawItem): AihotInsight {
     /** AIHOT 暫無香港視角短評 — 留空即不渲染該區塊（不虛構內容） */
     hkAngle: "",
     source: clean(raw.source),
-    timeAgo: timeAgo(raw.publishedAt),
+    timeAgo: timeAgo(raw.publishedAt, now),
     publishedAt: raw.publishedAt,
     score: raw.score,
     readMinutes: estimateReadMinutes(raw.summary),
@@ -196,7 +211,7 @@ export function toAihotInsight(raw: AihotRawItem): AihotInsight {
 
 /** 全部 AIHOT 精選情報（mode=selected，API 原序，最新在前） */
 export const aihotInsights: AihotInsight[] =
-  snapshot.items.map(toAihotInsight);
+  snapshot.items.map((raw) => toAihotInsight(raw, SNAPSHOT_RENDER_NOW));
 
 /**
  * 全部動態（mode=all&take=100）— 以 allItems 為主，補上 selected 精選中
@@ -219,7 +234,7 @@ export const aihotAllInsights: AihotInsight[] = (() => {
       (a, b) =>
         new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
     )
-    .map(toAihotInsight);
+    .map((raw) => toAihotInsight(raw, SNAPSHOT_RENDER_NOW));
 })();
 
 /** 按 slug 查找 AIHOT 情報 */

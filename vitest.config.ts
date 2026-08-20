@@ -11,6 +11,9 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./tests/setup.ts"],
     include: ["tests/unit/**/*.test.{ts,tsx}"],
+    // Bound worker fan-out so Node 25+ does not time out while starting a
+    // jsdom process for every test file on shared CI/developer machines.
+    maxWorkers: 4,
     coverage: { reporter: ["text", "json", "html"] },
   },
 });

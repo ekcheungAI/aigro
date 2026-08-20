@@ -138,6 +138,19 @@ const INVITATION_STATUS_LABEL: Record<AdminInvitationRow["status"], string> = {
   failed: "失敗",
 };
 
+const DELIVERY_STATUS_LABEL: Record<AdminInvitationRow["delivery_status"], string> = {
+  queued: "排隊中",
+  sent: "已寄出",
+  delivered: "已送達",
+  delayed: "延遲",
+  opened: "已開啟",
+  clicked: "已點擊",
+  bounced: "退信",
+  complained: "垃圾郵件投訴",
+  failed: "發送失敗",
+  suppressed: "已攔截",
+};
+
 function displayInvitationStatus(invitation: AdminInvitationRow): AdminInvitationRow["status"] {
   if (
     ["pending", "sent", "delivered"].includes(invitation.status) &&
@@ -714,7 +727,7 @@ export default function AdminMembers() {
                               </span>
                             </td>
                             <td className="px-4 py-3 font-mono text-xs text-text-secondary">
-                              {invitation.delivery_status}
+                              {DELIVERY_STATUS_LABEL[invitation.delivery_status]}
                             </td>
                             <td className="px-4 py-3 font-mono text-xs text-text-secondary">
                               {formatDate(invitation.created_at)}

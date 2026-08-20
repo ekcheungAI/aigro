@@ -3,6 +3,7 @@ import {
   fidelityPassed,
   hasCompleteRevisionCoverage,
   parseFidelityReport,
+  selectRoundRobinByRevision,
   validatePersonaBlueprint,
 } from "./persona-compiler.ts";
 
@@ -10,6 +11,21 @@ Deno.test("authorization coverage validates 501 revisions independently of evide
   const expected = Array.from({ length: 501 }, (_, index) => `revision-${index}`);
   assert(hasCompleteRevisionCoverage(expected, expected), "all 501 authorized revisions should validate");
   assert(!hasCompleteRevisionCoverage(expected, expected.slice(0, 500)), "one missing authorization must fail closed");
+  assert(!hasCompleteRevisionCoverage(expected, [...expected, expected[0]]), "duplicate authorization rows must fail closed");
+});
+
+Deno.test("round-robin evidence selection represents every requested revision", () => {
+  const rows = [
+    { revision_id: "r1", chunk: 1 },
+    { revision_id: "r1", chunk: 2 },
+    { revision_id: "r2", chunk: 1 },
+    { revision_id: "r3", chunk: 1 },
+  ];
+  const selected = selectRoundRobinByRevision(rows, ["r1", "r2", "r3"], 3);
+  assert(
+    new Set(selected.map((row) => row.revision_id)).size === 3,
+    "the first evidence pass must include every revision",
+  );
 });
 
 function assert(condition: unknown, message: string): asserts condition {

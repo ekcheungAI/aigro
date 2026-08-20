@@ -11,7 +11,11 @@ import {
   Workflow,
 } from "lucide-react";
 import Reveal from "@/components/Reveal";
-import { appendInterest, PARTNER_INTEREST_KEY } from "@/lib/interest";
+import {
+  appendInterest,
+  PARTNER_INTEREST_KEY,
+  type InterestSaveMode,
+} from "@/lib/interest";
 
 /* ================= 資料 ================= */
 
@@ -174,30 +178,39 @@ const FREE_USE: {
  * 寫 localStorage `aigro-partner-interest`(kind='source';Supabase swap
  * note 見 src/lib/interest.ts)。 */
 function SourceInterestForm() {
-  const [done, setDone] = useState(false);
+  const [savedMode, setSavedMode] = useState<InterestSaveMode | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [url, setUrl] = useState("");
 
-  const submit = (e: FormEvent) => {
+  const submit = async (e: FormEvent) => {
     e.preventDefault();
-    appendInterest(PARTNER_INTEREST_KEY, {
+    if (submitting) return;
+    setSubmitting(true);
+    setError("");
+    const mode = await appendInterest(PARTNER_INTEREST_KEY, {
       kind: "source",
       name: name.trim(),
       email: email.trim(),
       url: url.trim(),
     });
-    setDone(true);
+    setSubmitting(false);
+    if (mode) setSavedMode(mode);
+    else setError("暫時未能記錄，請稍後再試。");
   };
 
-  if (done) {
+  if (savedMode) {
     return (
       <p
         role="status"
         className="mt-6 inline-flex w-fit items-center gap-2 rounded-md border border-ink px-4 py-2.5 text-label text-ink"
       >
         <Check className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-        已記低 — 編輯部會親自覆你
+        {savedMode === "server"
+          ? "已記低 — 編輯部會親自覆你"
+          : "已儲存在此裝置 — 連線後請再登記"}
       </p>
     );
   }
@@ -247,10 +260,16 @@ function SourceInterestForm() {
       />
       <button
         type="submit"
+        disabled={submitting}
         className="press inline-flex h-10 items-center justify-center rounded-md bg-ink-solid px-4 text-label text-on-accent hover:bg-ink-hover"
       >
-        申請成為來源
+        {submitting ? "記錄中" : "申請成為來源"}
       </button>
+      {error && (
+        <p role="alert" className="text-caption text-error">
+          {error}
+        </p>
+      )}
     </form>
   );
 }

@@ -20,8 +20,34 @@ export function hasCompleteRevisionCoverage(expected: string[], authorized: stri
   const expectedIds = new Set(expected);
   const authorizedIds = new Set(authorized);
   return expectedIds.size === expected.length
+    && authorizedIds.size === authorized.length
     && authorizedIds.size === expectedIds.size
     && [...expectedIds].every((id) => authorizedIds.has(id));
+}
+
+/** Select evidence in revision round-robin order so no requested revision is
+ * silently omitted before filling the remaining context budget. */
+export function selectRoundRobinByRevision<T extends { revision_id: string }>(
+  rows: T[],
+  revisionIds: string[],
+  maxItems: number,
+): T[] {
+  if (maxItems <= 0) return [];
+  const grouped = new Map<string, T[]>();
+  for (const revisionId of revisionIds) grouped.set(revisionId, []);
+  for (const row of rows) grouped.get(row.revision_id)?.push(row);
+  const selected: T[] = [];
+  for (let index = 0; selected.length < maxItems; index += 1) {
+    let added = false;
+    for (const revisionId of revisionIds) {
+      const row = grouped.get(revisionId)?.[index];
+      if (!row || selected.length >= maxItems) continue;
+      selected.push(row);
+      added = true;
+    }
+    if (!added) break;
+  }
+  return selected;
 }
 
 export interface PersonaBlueprint {

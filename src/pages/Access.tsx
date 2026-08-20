@@ -27,7 +27,7 @@ const ROLE_CARDS: RoleCard[] = [
     icon: UserRound,
     title: "免費會員 Free",
     caption: "基本免費會員方案",
-    perks: ["無限 AI 分身對話", "情報閱讀 + 香港視角解讀", "對話紀錄跨裝置同步", "收藏情報同案例"],
+    perks: ["無限 AI 分身對話", "情報閱讀 + 香港視角解讀", "對話紀錄與會員帳戶管理", "收藏情報同案例"],
   },
   {
     id: "founding",

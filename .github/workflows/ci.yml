@@ -43,5 +43,19 @@ jobs:
       - run: supabase start
       - run: supabase test db
       - run: npm run test:functions
-      - run: deno check supabase/functions/ask-answer/index.ts supabase/functions/knowledge-worker/index.ts supabase/functions/persona-compiler/index.ts supabase/functions/booking-notify/index.ts supabase/functions/social-sync-worker/index.ts supabase/functions/invite-expert-owner/index.ts
+      - name: Type-check every Edge Function with its own import map
+        run: |
+          for entry in \
+            supabase/functions/ask-answer/index.ts \
+            supabase/functions/knowledge-worker/index.ts \
+            supabase/functions/persona-compiler/index.ts \
+            supabase/functions/booking-notify/index.ts \
+            supabase/functions/social-sync-worker/index.ts \
+            supabase/functions/invite-expert-owner/index.ts \
+            supabase/functions/admin-send-invite/index.ts \
+            supabase/functions/resend-webhook/index.ts
+          do
+            edge_config="${entry%/index.ts}/deno.json"
+            deno check --config "$edge_config" "$entry"
+          done
       - run: deno lint supabase/functions

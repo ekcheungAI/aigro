@@ -19,6 +19,24 @@ issues, source files, or shell history.
 Supabase Auth owns account confirmation and password sessions. Resend owns email
 delivery. The browser never receives a Resend or Supabase secret key.
 
+Resend-hosted templates are intentionally unused. Auth templates live in Supabase,
+while invitation and booking templates are versioned with the Edge Functions so copy
+changes can be reviewed and tested in Git.
+
+## Approved subject lines
+
+| Email | Subject |
+| --- | --- |
+| Confirm signup | `AIGRO｜確認你嘅電郵地址` |
+| Password recovery | `AIGRO｜重設密碼` |
+| Supabase invitation | `AIGRO 專屬邀請｜加入會員專區` |
+| Magic link | `AIGRO｜安全登入連結` |
+| Confirm email change | `AIGRO 安全通知｜確認新電郵地址` |
+| Password changed | `AIGRO 安全通知｜密碼已更新` |
+| Email changed | `AIGRO 安全通知｜帳號電郵已更新` |
+| Admin member invitation | `AIGRO 專屬邀請｜加入會員專區` |
+| Booking updates | `AIGRO 預約｜<event>` |
+
 ## 1. Revoke any exposed key
 
 If a Resend key has appeared in chat or another shared record, revoke it in
@@ -34,20 +52,21 @@ Do not add either value to `.env.example`; that file contains names and placehol
 
 ## 2. Verify the sending domain
 
-In **Resend → Domains**, add `aigro.io`, then publish every SPF, DKIM, and MX
-record supplied by Resend in the authoritative DNS provider. Add a DMARC record
-after SPF and DKIM pass. Do not alter or shorten the generated values.
+`aigro.io` is verified in Resend for the `ap-northeast-1` region. SPF, DKIM,
+the return-path MX record, and DMARC must remain DNS-only and must not be altered
+or shortened.
 
 Recommended identities:
 
 - Auth: `AIGRO <auth@aigro.io>`
 - Invitations: `AIGRO <invite@aigro.io>`
 - Bookings: `AIGRO <booking@aigro.io>`
-- Reply-to: `hello@aigro.io`
+- Reply-to: omit until `hello@aigro.io` has a real receiving mailbox
 
-Resend can send from these addresses once the domain is verified; they do not need
-separate Resend accounts. `hello@aigro.io` should be a real receiving mailbox so
-member replies are not lost.
+These sender addresses do not need separate Resend accounts. Sending capability
+does not create an inbox: only configure `RESEND_REPLY_TO=hello@aigro.io` after an
+inbound mail provider or Cloudflare Email Routing has been tested. Otherwise replies
+will bounce.
 
 Disable click tracking for Auth and invitation links. Link rewriting can interfere
 with single-use Supabase confirmation URLs. Delivery and bounce webhooks still work.
@@ -80,6 +99,7 @@ Use **Supabase → Edge Functions → Secrets**. Add the replacement values dire
 RESEND_API_KEY=<new aigro-edge-transactional key>
 RESEND_INVITE_FROM_EMAIL=AIGRO <invite@aigro.io>
 RESEND_FROM_EMAIL=AIGRO <booking@aigro.io>
+# Add only after hello@aigro.io can receive mail:
 RESEND_REPLY_TO=hello@aigro.io
 RESEND_WEBHOOK_SECRET=<created in step 5>
 INVITE_EXPIRY_HOURS=1
@@ -95,19 +115,30 @@ Functions. Do not create browser-prefixed copies of server secrets.
 Create a Resend webhook targeting:
 
 ```text
-https://mxjgavuzzpcvazxdnuzg.supabase.co/functions/v1/resend-webhook
+https://zpdwalqnhkbxhmaagkfc.supabase.co/functions/v1/resend-webhook
 ```
 
 Subscribe to `email.sent`, `email.delivered`, `email.delivery_delayed`,
-`email.bounced`, and `email.complained`. Copy its signing secret directly into the
-Supabase secret `RESEND_WEBHOOK_SECRET`. The handler rejects unsigned requests.
+`email.opened`, `email.clicked`, `email.bounced`, `email.complained`,
+`email.failed`, and `email.suppressed`.
+Copy its signing secret directly into the Supabase secret
+`RESEND_WEBHOOK_SECRET`. The handler rejects unsigned requests and returns a
+retryable error if a database write fails.
 
 ## 6. Deploy
 
-After authenticating the Supabase CLI and reviewing the migration:
+First inspect migration history:
 
 ```sh
-npx supabase db push
+npx supabase migration list --linked
+```
+
+This repository currently has local/remote migration drift. Do **not** run a broad
+`supabase db push` until that history is reconciled and the exact migration set has
+been reviewed. After the invitation migration is safely applied, deploy the reviewed
+functions:
+
+```sh
 npx supabase functions deploy admin-send-invite
 npx supabase functions deploy resend-webhook --no-verify-jwt
 npx supabase functions deploy booking-notify --no-verify-jwt
@@ -128,3 +159,27 @@ npx supabase functions deploy booking-notify --no-verify-jwt
 8. Send to Resend's bounce test recipient and confirm the admin delivery state changes.
 
 Never use a real customer address for initial testing.
+
+## Readiness audit — 2026-08-15
+
+- Resend OAuth connection: active.
+- `aigro.io`: verified; sending enabled; open and click tracking disabled.
+- Resend API key metadata: one key named `onboarding`; rotate it because keys were
+  previously shared outside a secret manager.
+- Supabase Edge Function secrets installed: `RESEND_API_KEY`,
+  `RESEND_WEBHOOK_SECRET`, both sender identities, invitation expiry, and
+  canonical site URL.
+- Intentionally unset: `RESEND_REPLY_TO` (no inbound mailbox yet).
+- Supabase Auth SMTP and hosted-template state still require confirmation from an
+  account with Dashboard access to this project.
+- Deployed email functions: `booking-notify`, `admin-send-invite`, and
+  `resend-webhook` are active with their intended JWT settings.
+- Applied migration: `20260813165248_admin_member_invitations.sql`; the table,
+  RLS policy, explicit grants, and acceptance triggers were verified in production.
+- Resend webhook: enabled for all delivery events supported by the handler. One
+  incomplete webhook from setup is disabled and may be deleted after explicit
+  confirmation.
+- Production integration audit: `14 pass, 0 blocked, 0 fail`.
+- Other historical local/remote migration drift remains and still blocks broad
+  `supabase db push`; the invitation migration itself is aligned.
+- No production email has been sent through this Resend workspace yet.

@@ -5,6 +5,14 @@ const migration = readFileSync(
   "supabase/migrations/20260811220000_full_knowledge_pack_distillation.sql",
   "utf8",
 );
+const hardeningMigration = readFileSync(
+  "supabase/migrations/20260820100000_release_hardening.sql",
+  "utf8",
+);
+const humanReviewMigration = readFileSync(
+  "supabase/migrations/20260820280000_human_reviewed_knowledge_pack.sql",
+  "utf8",
+);
 
 describe("full knowledge-pack migration", () => {
   it("provides idempotent service-only chapter import with explicit provenance", () => {
@@ -39,11 +47,9 @@ describe("full knowledge-pack migration", () => {
     expect(migration).toContain("coalesce(kr.source_blob_url, ks.source_url)");
   });
 
-  it("keeps approval, persona publication and coverage service-only and fail-closed", () => {
+  it("keeps import, state, queueing and coverage service-only and fail-closed", () => {
     for (const name of [
-      "approve_authorized_knowledge_pack_revisions",
       "queue_authorized_knowledge_pack_persona",
-      "publish_authorized_knowledge_pack_persona",
       "authorized_knowledge_pack_coverage",
     ]) {
       expect(migration).toContain(name);
@@ -51,5 +57,36 @@ describe("full knowledge-pack migration", () => {
     }
     expect(migration).toContain("persona_fidelity_gate_failed");
     expect(migration).toContain("knowledge_pack_incomplete");
+  });
+
+  it("does not let the service runner impersonate human knowledge or persona review", () => {
+    expect(humanReviewMigration).toContain("knowledge_pack_requires_human_review");
+    expect(humanReviewMigration).toContain("kr.approved_by is not null");
+    expect(humanReviewMigration).toContain("kr.approved_at is not null");
+    expect(humanReviewMigration).toContain("'humanReviewed'");
+    expect(humanReviewMigration).toContain("'evaluationCurrent'");
+    for (const signature of [
+      "public.approve_authorized_knowledge_pack_revisions(\n  text, uuid[]\n)",
+      "public.publish_authorized_knowledge_pack_persona(\n  uuid, text\n)",
+    ]) {
+      expect(humanReviewMigration).toContain(`revoke all on function ${signature}`);
+    }
+    expect(humanReviewMigration).not.toMatch(/grant execute on function public\.(approve_authorized_knowledge_pack_revisions|publish_authorized_knowledge_pack_persona)[\s\S]+to service_role/i);
+  });
+
+  it("requires a recorded human review before persona publication", () => {
+    expect(hardeningMigration).toContain("enforce_persona_publication_review");
+    expect(hardeningMigration).toContain("persona_publication_requires_human_review");
+    expect(hardeningMigration).toContain("reviewed_by is null");
+    for (const name of [
+      "match_expert_knowledge",
+      "claim_distillation_jobs",
+      "claim_persona_synthesis_jobs",
+      "get_authorized_persona_evidence",
+      "get_authorized_persona_revision_ids",
+    ]) {
+      expect(hardeningMigration).toMatch(new RegExp(`revoke all on function public\\.${name}`));
+      expect(hardeningMigration).toMatch(new RegExp(`grant execute on function public\\.${name}[\\s\\S]+to service_role`, "i"));
+    }
   });
 });

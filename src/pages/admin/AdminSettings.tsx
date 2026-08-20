@@ -180,7 +180,7 @@ export default function AdminSettings() {
             <dt className="text-xs text-text-muted">Supabase URL</dt>
             <dd className="font-mono text-xs text-text-primary">
               {supabaseReady
-                ? "mxjgavuzzpcvazxdnuzg.supabase.co"
+                ? "zpdwalqnhkbxhmaagkfc.supabase.co"
                 : "未設定(env 缺失)"}
             </dd>
           </div>

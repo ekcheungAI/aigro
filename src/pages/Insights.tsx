@@ -31,14 +31,13 @@ import {
   aihotHotTopics,
   aihotInsights,
   timeAgo,
-  toAihotInsight,
   type AihotInsight,
 } from "@/data/aihot";
 import {
   synthesizeWeeklyFromInsights,
   useLiveHotTopics,
   useLiveInsights,
-  useLiveItems,
+  useLiveFilteredInsights,
 } from "@/data/liveItems";
 import {
   TOPIC_GROUPS,
@@ -282,12 +281,16 @@ function FeedTab() {
     setQuery(qParam);
   }, [qParam]);
 
-  /** Supabase live items(argro→Supabase sync)— 成熟時取代 build-time snapshot */
-  const liveRaw = useLiveItems();
-  const liveInsights = useMemo(
-    () => (liveRaw ? liveRaw.map(toAihotInsight) : null),
-    [liveRaw]
-  );
+  /** 搜尋、分類及「全部」改由 Supabase 分頁，避免只查最新 200 筆。 */
+  const serverFilterActive = mode === "all" || Boolean(activeCategory || qParam.trim());
+  const serverFeed = useLiveFilteredInsights({
+    enabled: serverFilterActive,
+    mode,
+    category: activeCategory,
+    query: qParam,
+  });
+  const latestLiveInsights = useLiveInsights();
+  const liveInsights = serverFilterActive ? serverFeed.items : latestLiveInsights;
 
   const filtered = useMemo(() => {
     /* live 模式下精選/全部 toggle 都要生效:live 分支按 selected 旗標過濾 */
@@ -295,8 +298,8 @@ function FeedTab() {
       ? mode === "selected"
         ? liveInsights.filter((i) => i.selected)
         : liveInsights
-      : mode === "all"
-        ? aihotAllInsights
+      : serverFilterActive
+        ? []
         : aihotInsights;
     const q = query.trim().toLowerCase();
     return source.filter((i) => {
@@ -314,7 +317,7 @@ function FeedTab() {
         return false;
       return true;
     });
-  }, [mode, activeCategory, query, liveInsights]);
+  }, [mode, activeCategory, query, liveInsights, serverFilterActive]);
 
   const groups = useMemo(() => groupByDay(filtered), [filtered]);
 
@@ -424,7 +427,19 @@ function FeedTab() {
 
       {/* Feed：日期分組，髮絲線分隔的列（非卡片） */}
       <section className="mx-auto max-w-container px-6 pb-24 pt-4 max-md:pb-16">
-        {groups.length === 0 && (
+        {serverFeed.loading && (
+          <div className="py-16 text-center">
+            <p className="text-body-sm text-text-muted">正在載入完整情報庫…</p>
+          </div>
+        )}
+        {!serverFeed.loading && serverFeed.error && (
+          <div className="py-16 text-center">
+            <p className="text-body-sm text-[#A63A30]">
+              情報庫載入失敗：{serverFeed.error}
+            </p>
+          </div>
+        )}
+        {!serverFeed.loading && !serverFeed.error && groups.length === 0 && (
           <div className="py-16 text-center">
             {/* 空態 copy 分搜尋 / 分類兩款 — 唔會出現空引號「」 */}
             {query.trim() ? (

@@ -3,25 +3,44 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="AIGRO — 香港最值得信賴的 AI・增長・商業情報平台。每一篇內容經過編輯審核，每一位導師經過認證。" />
-    <meta property="og:title" content="AIGRO — 香港 AI・增長情報平台" />
-    <meta property="og:description" content="可信賴的 AI・增長・商業情報，香港視角。" />
-    <meta property="og:image" content="/editorial/og-image.png" />
+    <meta name="description" content="香港 #1 AI Builder 社群，匯聚最好嘅 AI 資源、每日精選情報同領航專家，陪你由學習走到實踐。" />
+    <meta property="og:title" content="香港 #1 AI Builder 社群｜AIGRO" />
+    <meta property="og:description" content="香港 #1 AI Builder 社群，匯聚最好嘅 AI 資源、每日精選情報同領航專家，陪你由學習走到實踐。" />
+    <meta property="og:url" content="https://aigro.io/" />
+    <meta property="og:site_name" content="AIGRO" />
+    <meta property="og:locale" content="zh_HK" />
     <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://aigro.io/og-image.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="AIGRO 香港 #1 AI Builder 社群" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:image" content="/editorial/og-image.png" />
+    <meta name="twitter:title" content="香港 #1 AI Builder 社群｜AIGRO" />
+    <meta name="twitter:description" content="香港 #1 AI Builder 社群，匯聚最好嘅 AI 資源、每日精選情報同領航專家，陪你由學習走到實踐。" />
+    <meta name="twitter:image" content="https://aigro.io/og-image.png" />
+    <meta name="twitter:image:alt" content="AIGRO 香港 #1 AI Builder 社群" />
     <meta name="theme-color" content="#F5F7FA" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#02122C" media="(prefers-color-scheme: dark)" />
-    <title>AIGRO — 香港 AI × Growth 情報平台</title>
+    <title>香港 #1 AI Builder 社群｜AIGRO</title>
+    <link rel="canonical" href="https://aigro.io/" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32-v2.png" />
     <link rel="shortcut icon" type="image/png" href="/favicon-32-v2.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-v2.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
+      id="aigro-fonts"
       href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Noto+Serif+TC:wght@500;700&family=Inter:wght@400;500;600&family=Noto+Sans+TC:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap"
       rel="stylesheet"
+      media="print"
     />
+    <noscript>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Noto+Serif+TC:wght@500;700&family=Inter:wght@400;500;600&family=Noto+Sans+TC:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet"
+      />
+    </noscript>
     <script>
       // Theme bootstrap: localStorage > system preference. Prevents flash of wrong theme.
       (function () {
@@ -32,6 +51,15 @@
             : window.matchMedia('(prefers-color-scheme: dark)').matches;
           if (dark) document.documentElement.classList.add('dark');
         } catch (e) {}
+
+        // Keep the large CJK font stylesheet off the render-critical path while
+        // preserving the exact brand families once it is available.
+        var fonts = document.getElementById('aigro-fonts');
+        if (fonts) {
+          var activateFonts = function () { fonts.media = 'all'; };
+          if (fonts.sheet) activateFonts();
+          else fonts.addEventListener('load', activateFonts, { once: true });
+        }
       })();
     </script>
   </head>

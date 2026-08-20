@@ -24,11 +24,14 @@ function allowedOrigins(): Set<string> {
 function corsHeaders(request: Request): Record<string, string> {
   const origin = request.headers.get("origin") ?? "";
   const headers: Record<string, string> = {
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Headers":
+      "authorization, x-client-info, apikey, content-type",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Vary": "Origin",
   };
-  if (allowedOrigins().has(origin)) headers["Access-Control-Allow-Origin"] = origin;
+  if (allowedOrigins().has(origin)) {
+    headers["Access-Control-Allow-Origin"] = origin;
+  }
   return headers;
 }
 
@@ -49,7 +52,10 @@ function serverConfiguration() {
   const from = Deno.env.get("RESEND_INVITE_FROM_EMAIL") ??
     Deno.env.get("RESEND_FROM_EMAIL");
   const replyTo = Deno.env.get("RESEND_REPLY_TO");
-  const siteUrl = (Deno.env.get("SITE_URL") ?? "https://aigro.io").replace(/\/+$/, "");
+  const siteUrl = (Deno.env.get("SITE_URL") ?? "https://aigro.io").replace(
+    /\/+$/,
+    "",
+  );
   if (!url || !publishableKey || !secretKey || !resendKey || !from) return null;
   return { url, publishableKey, secretKey, resendKey, from, replyTo, siteUrl };
 }
@@ -62,8 +68,12 @@ function inviteExpiryHours(): number {
 }
 
 Deno.serve(async (request) => {
-  if (request.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(request) });
-  if (request.method !== "POST") return json(request, { error: "Method not allowed" }, 405);
+  if (request.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders(request) });
+  }
+  if (request.method !== "POST") {
+    return json(request, { error: "Method not allowed" }, 405);
+  }
 
   const config = serverConfiguration();
   if (!config) {
@@ -79,14 +89,20 @@ Deno.serve(async (request) => {
   }
 
   const callerClient = createClient(config.url, config.publishableKey, {
-    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
     global: { headers: { Authorization: authorization } },
   });
-  const [{ data: userData, error: userError }, { data: isSuperAdmin, error: roleError }] =
-    await Promise.all([
-      callerClient.auth.getUser(),
-      callerClient.rpc("is_super_admin"),
-    ]);
+  const [
+    { data: userData, error: userError },
+    { data: isSuperAdmin, error: roleError },
+  ] = await Promise.all([
+    callerClient.auth.getUser(),
+    callerClient.rpc("is_super_admin"),
+  ]);
   const caller = userData.user;
   if (userError || roleError || !caller || isSuperAdmin !== true) {
     return json(request, {
@@ -95,9 +111,15 @@ Deno.serve(async (request) => {
     }, 403);
   }
 
-  const body = await request.json().catch(() => null) as Record<string, unknown> | null;
+  const body = await request.json().catch(() => null) as
+    | Record<string, unknown>
+    | null;
   const admin = createClient(config.url, config.secretKey, {
-    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
   });
 
   const { data: inviterProfile } = await admin
@@ -106,7 +128,8 @@ Deno.serve(async (request) => {
     .eq("id", caller.id)
     .maybeSingle();
   const inviterName = inviterProfile?.name?.trim() || "AIGRO 團隊";
-  const expiresAt = new Date(Date.now() + inviteExpiryHours() * 60 * 60 * 1000).toISOString();
+  const expiresAt = new Date(Date.now() + inviteExpiryHours() * 60 * 60 * 1000)
+    .toISOString();
   const resendId = body?.invitationId === undefined
     ? null
     : parseInvitationId(body.invitationId);
@@ -120,16 +143,23 @@ Deno.serve(async (request) => {
   if (resendId?.ok) {
     const { data: existing, error: existingError } = await admin
       .from("invitations")
-      .select("id,email,name,member_class,tier,personal_message,status,delivery_status,send_count,sent_at,expires_at,created_at")
+      .select(
+        "id,email,name,member_class,tier,personal_message,status,delivery_status,send_count,sent_at,expires_at,created_at",
+      )
       .eq("id", resendId.value)
       .maybeSingle();
     if (existingError || !existing) {
-      return json(request, { code: "invite_not_found", error: "找不到呢封邀請。" }, 404);
+      return json(request, {
+        code: "invite_not_found",
+        error: "找不到呢封邀請。",
+      }, 404);
     }
     if (["accepted", "revoked"].includes(existing.status)) {
       return json(request, {
         code: "invite_not_resendable",
-        error: existing.status === "accepted" ? "呢封邀請已經接受。" : "呢封邀請已經撤回。",
+        error: existing.status === "accepted"
+          ? "呢封邀請已經接受。"
+          : "呢封邀請已經撤回。",
       }, 409);
     }
     const parsedExisting = parseInvitationInput({
@@ -140,7 +170,10 @@ Deno.serve(async (request) => {
       personalMessage: existing.personal_message,
     });
     if (!parsedExisting.ok) {
-      return json(request, { code: "stored_invite_invalid", error: "邀請資料未能通過驗證。" }, 500);
+      return json(request, {
+        code: "stored_invite_invalid",
+        error: "邀請資料未能通過驗證。",
+      }, 500);
     }
     invitation = existing;
     invitationInput = parsedExisting.value;
@@ -162,7 +195,9 @@ Deno.serve(async (request) => {
     }
   } else {
     const parsed = parseInvitationInput(body);
-    if (!parsed.ok) return json(request, { code: parsed.code, error: parsed.error }, 400);
+    if (!parsed.ok) {
+      return json(request, { code: parsed.code, error: parsed.error }, 400);
+    }
     invitationInput = parsed.value;
     const { data: created, error: invitationError } = await admin
       .from("invitations")
@@ -175,7 +210,9 @@ Deno.serve(async (request) => {
         personal_message: invitationInput.personalMessage,
         expires_at: expiresAt,
       })
-      .select("id,email,name,member_class,tier,personal_message,status,delivery_status,send_count,sent_at,expires_at,created_at")
+      .select(
+        "id,email,name,member_class,tier,personal_message,status,delivery_status,send_count,sent_at,expires_at,created_at",
+      )
       .single();
     if (invitationError || !created) {
       const duplicate = invitationError?.code === "23505";
@@ -192,14 +229,15 @@ Deno.serve(async (request) => {
   const nextSendCount = invitation.send_count + 1;
 
   const redirectTo = `${config.siteUrl}/reset-password?invite=1`;
-  const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
-    type: "invite",
-    email: invitationInput.email,
-    options: {
-      data: { name: invitationInput.name },
-      redirectTo,
-    },
-  });
+  const { data: linkData, error: linkError } = await admin.auth.admin
+    .generateLink({
+      type: "invite",
+      email: invitationInput.email,
+      options: {
+        data: { name: invitationInput.name },
+        redirectTo,
+      },
+    });
 
   if (linkError || !linkData.properties?.action_link || !linkData.user?.id) {
     await admin.from("invitations").update({
@@ -208,7 +246,9 @@ Deno.serve(async (request) => {
       last_error_code: linkError?.code ?? "auth_link_failed",
     }).eq("id", invitation.id);
     return json(request, {
-      code: linkError?.code === "email_exists" ? "already_registered" : "auth_link_failed",
+      code: linkError?.code === "email_exists"
+        ? "already_registered"
+        : "auth_link_failed",
       error: linkError?.code === "email_exists"
         ? "呢個電郵已經有 AIGRO 帳號。"
         : "暫時未能建立安全邀請連結。",
@@ -224,6 +264,8 @@ Deno.serve(async (request) => {
     inviterName,
     actionUrl: linkData.properties.action_link,
     personalMessage: invitationInput.personalMessage,
+    memberClass: invitationInput.memberClass,
+    tier: invitationInput.tier,
   });
   const sendResponse = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -280,8 +322,15 @@ Deno.serve(async (request) => {
     action: isResend ? "invitation.resent" : "invitation.sent",
     entity_type: "invitation",
     entity_id: invitation.id,
-    metadata: { member_class: invitationInput.memberClass, tier: invitationInput.tier },
+    metadata: {
+      member_class: invitationInput.memberClass,
+      tier: invitationInput.tier,
+    },
   });
 
-  return json(request, { invitation: sentInvitation ?? invitation }, isResend ? 200 : 201);
+  return json(
+    request,
+    { invitation: sentInvitation ?? invitation },
+    isResend ? 200 : 201,
+  );
 });

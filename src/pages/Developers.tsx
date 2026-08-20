@@ -4,7 +4,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { ArrowRight, Check, Copy, Cpu } from "lucide-react";
 import Reveal from "@/components/Reveal";
 import CategoryChip from "@/components/CategoryChip";
-import { captureWaitlist } from "@/lib/waitlist";
+import { captureWaitlist, type WaitlistSaveMode } from "@/lib/waitlist";
 import { aihotAllInsights } from "@/data/aihot";
 
 /* ================= 資料 ================= */
@@ -45,39 +45,56 @@ function readSignup(): SignupRecord | null {
 
 function SignupCard({ initialInterests = [] }: { initialInterests?: string[] }) {
   const [record, setRecord] = useState<SignupRecord | null>(readSignup);
+  const [savedMode, setSavedMode] = useState<WaitlistSaveMode | null>(() =>
+    readSignup() ? "local" : null
+  );
   const [step, setStep] = useState<1 | 2>(1);
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
   const [interests, setInterests] = useState<string[]>(initialInterests);
   const [role, setRole] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
   const toggleInterest = (label: string) =>
     setInterests((prev) =>
       prev.includes(label) ? prev.filter((i) => i !== label) : [...prev, label]
     );
 
-  const save = (finalRole: string | null) => {
+  const save = async (finalRole: string | null) => {
+    if (saving) return;
     const rec: SignupRecord = {
       email: email.trim(),
       interests,
       role: finalRole,
       ts: Date.now(),
     };
-    try {
-      localStorage.setItem(LS_KEY, JSON.stringify(rec));
-    } catch {
-      /* localStorage 不可用時仍顯示成功態(前端原型) */
-    }
-    // 真實收集:寫入 Supabase waitlist(無 env / 離線 → 靜默,localStorage 已記低)
-    void captureWaitlist({
+    setSaving(true);
+    setSaveError("");
+    const serverSaved = await captureWaitlist({
       email: rec.email,
       kind: "mcp",
       vertical: rec.interests.join(", ") || null,
       role: rec.role,
       source: "developers-mcp",
     });
-    setRecord(rec);
+    let mode: WaitlistSaveMode | null = serverSaved ? "server" : null;
+    if (!serverSaved) {
+      try {
+        localStorage.setItem(LS_KEY, JSON.stringify(rec));
+        mode = "local";
+      } catch {
+        /* Private browsing can reject localStorage. */
+      }
+    }
+    setSaving(false);
+    if (mode) {
+      setSavedMode(mode);
+      setRecord(rec);
+    } else {
+      setSaveError("暫時未能記錄，請稍後再試。");
+    }
   };
 
   const submitStep1 = (e: FormEvent) => {
@@ -115,7 +132,9 @@ function SignupCard({ initialInterests = [] }: { initialInterests?: string[] }) 
           已加入優先名單
         </h3>
         <p className="mt-2 max-w-[520px] text-body-sm text-text-secondary">
-          MCP 開放時,你會係第一批收到接入文件嘅人。
+          {savedMode === "server"
+            ? "MCP 開放時,你會係第一批收到接入文件嘅人。"
+            : "資料已儲存在此裝置；連線後請再登記，先可以收到通知。"}
         </p>
         <p className="mt-4 font-mono text-caption text-text-muted">
           {record.email}
@@ -163,19 +182,26 @@ function SignupCard({ initialInterests = [] }: { initialInterests?: string[] }) 
         <div className="mt-6 flex flex-wrap items-center gap-4">
           <button
             type="button"
-            onClick={() => save(role)}
+            onClick={() => void save(role)}
+            disabled={saving}
             className="inline-flex h-11 items-center rounded-md bg-ink-solid px-6 text-label text-on-accent press hover:bg-ink-hover"
           >
-            完成登記
+            {saving ? "記錄中" : "完成登記"}
           </button>
           <button
             type="button"
-            onClick={() => save(null)}
+            onClick={() => void save(null)}
+            disabled={saving}
             className="link-underline text-label text-ink"
           >
             跳過
           </button>
         </div>
+        {saveError && (
+          <p role="alert" className="mt-3 text-caption text-error">
+            {saveError}
+          </p>
+        )}
       </div>
     );
   }

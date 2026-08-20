@@ -14,12 +14,6 @@ insert into auth.users (
   '{}', '{}', now(), now()
 );
 
-insert into public.profiles (id, email, name) values (
-  '64000000-0000-0000-0000-000000000004',
-  'new-founding@test.local',
-  'New Founding Member'
-);
-
 select is(
   (select member_class from public.account_access
    where user_id = '64000000-0000-0000-0000-000000000004'),

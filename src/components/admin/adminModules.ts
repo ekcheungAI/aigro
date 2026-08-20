@@ -128,8 +128,8 @@ export const ADMIN_MODULES: readonly AdminModule[] = [
     en: "Skills",
     icon: Puzzle,
     status: "beta",
-    betaReason: "目前只讀取程式內靜態目錄，尚無 skills 資料表及管理操作。",
-    reviewedAt: REVIEWED_AT,
+    betaReason: "Skills 目錄仍係程式內只讀；Public APIs 目錄已接通 Supabase 新增、下架、恢復同公開查詢。",
+    reviewedAt: "2026-08-20",
   },
   {
     to: "/admin/engagement",

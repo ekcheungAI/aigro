@@ -18,7 +18,7 @@ function exactSet(left, right) {
 export function assertCompleteDistillation({ expectedCount, commit, knowledge, persona, coverage }) {
   const revisionIds = knowledge.map((row) => row.revisionId);
   const knowledgeComplete = knowledge.length === expectedCount && knowledge.every((row) =>
-    row.status === "approved" && row.chunkCount > 0 && row.distilled === true &&
+    row.status === "approved" && row.humanReviewed === true && row.chunkCount > 0 && row.distilled === true &&
     row.citationCommit === commit && row.citationPath === row.path
   );
   const coverageComplete = coverage.sourceCount === expectedCount &&
@@ -28,6 +28,7 @@ export function assertCompleteDistillation({ expectedCount, commit, knowledge, p
     coverage.publishedPersonaRevisionCount === expectedCount &&
     coverage.rightsValidCount === expectedCount && coverage.exactRevisionSet === true;
   const personaComplete = persona.status === "published" && persona.fidelityStatus === "passed" &&
+    persona.humanReviewed === true && persona.evaluationCurrent === true &&
     exactSet(revisionIds, persona.sourceRevisionIds);
   if (!knowledgeComplete || !coverageComplete || !personaComplete) {
     throw new Error("Incomplete distillation: sources, citations, chunks, approvals, fidelity, or persona coverage do not match");
@@ -47,7 +48,7 @@ async function poll({ drive, read, done, failed, intervalMs, maxAttempts, label 
   throw new Error(`${label} timed out after ${maxAttempts} attempts`);
 }
 
-export async function runFullDistillation({ adapter, chapters, commit, publishPersona, poll: polling, expectedSourceCount = EXPECTED_JIMMY_SOURCE_COUNT }) {
+export async function runFullDistillation({ adapter, chapters, commit, poll: polling, expectedSourceCount = EXPECTED_JIMMY_SOURCE_COUNT }) {
   if (chapters.length !== expectedSourceCount) {
     throw new Error(`Expected ${expectedSourceCount} pinned chapters, received ${chapters.length}`);
   }
@@ -63,7 +64,9 @@ export async function runFullDistillation({ adapter, chapters, commit, publishPe
     label: "knowledge distillation",
   });
   const reviewIds = reviewState.filter((row) => row.status === "review").map((row) => row.revisionId);
-  if (reviewIds.length) await adapter.approveRevisions(reviewIds);
+  if (reviewIds.length) {
+    throw new Error("Knowledge revisions require authenticated human approval in Admin Studio");
+  }
   const jobId = await adapter.queuePersona(expectedRevisionIds);
   const personaReview = await poll({
     drive: () => adapter.drivePersonaWorker(),
@@ -74,8 +77,16 @@ export async function runFullDistillation({ adapter, chapters, commit, publishPe
     label: "persona distillation",
   });
   if (personaReview.fidelityStatus !== "passed") throw new Error("Persona fidelity gate did not pass");
-  let personaVersionId = personaReview.personaVersionId ?? null;
-  if (publishPersona && personaReview.status !== "published") personaVersionId = await adapter.publishPersona(jobId);
+  if (personaReview.status === "review") {
+    throw new Error("Persona blueprint requires authenticated human approval in Admin Studio");
+  }
+  if (personaReview.status === "approved") {
+    throw new Error("Persona blueprint requires authenticated publication in Admin Studio");
+  }
+  if (personaReview.status !== "published") {
+    throw new Error(`Persona is not publishable from its current ${personaReview.status} state`);
+  }
+  const personaVersionId = personaReview.personaVersionId ?? null;
   const knowledge = await adapter.readKnowledgeState(expectedRevisionIds);
   const persona = await adapter.readPersonaState(jobId);
   const coverage = await adapter.readCoverage();
@@ -120,11 +131,9 @@ function rpcAdapter(client, options) {
     },
     async driveKnowledgeWorkers() { await rpc("invoke_knowledge_worker"); },
     async readKnowledgeState(ids) { return rpc("authorized_knowledge_pack_revision_state", { p_revision_ids: ids }); },
-    async approveRevisions(ids) { await rpc("approve_authorized_knowledge_pack_revisions", { p_expert_slug: "jimmy-lau", p_revision_ids: ids }); },
     async queuePersona(ids) { return rpc("queue_authorized_knowledge_pack_persona", { p_expert_slug: "jimmy-lau", p_revision_ids: ids }); },
     async drivePersonaWorker() { await rpc("invoke_persona_compiler"); },
     async readPersonaState(jobId) { return rpc("authorized_knowledge_pack_persona_state", { p_job_id: jobId }); },
-    async publishPersona(jobId) { return rpc("publish_authorized_knowledge_pack_persona", { p_job_id: jobId, p_greeting: options.greeting }); },
     async readCoverage() { return rpc("authorized_knowledge_pack_coverage", { p_expert_slug: "jimmy-lau", p_commit_sha: options.commit }); },
   };
 }
@@ -133,12 +142,11 @@ function parseArgs(argv) {
   const args = {};
   for (let index = 0; index < argv.length; index += 1) {
     const key = argv[index];
-    if (key === "--publish-persona") args.publishPersona = true;
-    else if (key?.startsWith("--") && argv[index + 1]) args[key.slice(2)] = argv[++index];
+    if (key?.startsWith("--") && argv[index + 1]) args[key.slice(2)] = argv[++index];
     else throw new Error("Invalid arguments");
   }
   if (!args.repo || !args["rights-evidence-ref"] || !args["rights-holder"]) {
-    throw new Error("Usage: --repo DIR --rights-holder NAME --rights-evidence-ref REF [--publish-persona]");
+    throw new Error("Usage: --repo DIR --rights-holder NAME --rights-evidence-ref REF");
   }
   return args;
 }
@@ -153,13 +161,11 @@ async function main() {
     commit: EXPECTED_JIMMY_COMMIT,
     rightsHolder: args["rights-holder"],
     rightsEvidenceRef: args["rights-evidence-ref"],
-    greeting: args.greeting ?? "我係 Jimmy 嘅 AI 分身。講低你而家工作最卡嘅位置，我會按 Growth with AI 方法同你拆下一步。",
   });
   const report = await runFullDistillation({
     adapter,
     chapters: pack.chapters,
     commit: EXPECTED_JIMMY_COMMIT,
-    publishPersona: args.publishPersona === true,
     expectedSourceCount: EXPECTED_JIMMY_SOURCE_COUNT,
     poll: { intervalMs: Number(args["poll-ms"] ?? 10_000), maxAttempts: Number(args["max-polls"] ?? 180) },
   });

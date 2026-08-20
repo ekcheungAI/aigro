@@ -187,19 +187,29 @@ select is(
 );
 
 set local role postgres;
-insert into public.knowledge_sources (id, expert_id, source_type, title, rights_status, authorized_at)
-select '61000000-0000-0000-0000-000000000001', id, 'manual', 'Elvin published', 'granted', now()
+insert into public.knowledge_sources (
+  id, expert_id, source_type, title, rights_status, rights_scope, authorized_at
+)
+select '61000000-0000-0000-0000-000000000001', id, 'manual', 'Elvin published', 'granted',
+  '{"commercial_rag":true,"distillation":true,"persona_synthesis":true,"model_training":false}'::jsonb,
+  now()
 from public.experts where slug = 'elvin-cheung';
-insert into public.knowledge_sources (id, expert_id, source_type, title, rights_status, authorized_at)
-select '62000000-0000-0000-0000-000000000002', id, 'manual', 'Jimmy published', 'granted', now()
+insert into public.knowledge_sources (
+  id, expert_id, source_type, title, rights_status, rights_scope, authorized_at
+)
+select '62000000-0000-0000-0000-000000000002', id, 'manual', 'Jimmy published', 'granted',
+  '{"commercial_rag":true,"distillation":true,"persona_synthesis":true,"model_training":false}'::jsonb,
+  now()
 from public.experts where slug = 'jimmy-lau';
 insert into public.knowledge_sources (id, expert_id, source_type, title)
 select '63000000-0000-0000-0000-000000000003', id, 'manual', 'Elvin unapproved'
 from public.experts where slug = 'elvin-cheung';
-insert into public.knowledge_revisions (id, source_id, revision_no, status, content_hash) values
-  ('71000000-0000-0000-0000-000000000001', '61000000-0000-0000-0000-000000000001', 1, 'approved', 'hash-elvin'),
-  ('72000000-0000-0000-0000-000000000002', '62000000-0000-0000-0000-000000000002', 1, 'approved', 'hash-jimmy'),
-  ('73000000-0000-0000-0000-000000000003', '63000000-0000-0000-0000-000000000003', 1, 'review', 'hash-unapproved');
+insert into public.knowledge_revisions (
+  id, source_id, revision_no, status, content_hash, approved_by, approved_at
+) values
+  ('71000000-0000-0000-0000-000000000001', '61000000-0000-0000-0000-000000000001', 1, 'approved', 'hash-elvin', '51000000-0000-0000-0000-000000000001', now()),
+  ('72000000-0000-0000-0000-000000000002', '62000000-0000-0000-0000-000000000002', 1, 'approved', 'hash-jimmy', '51000000-0000-0000-0000-000000000001', now()),
+  ('73000000-0000-0000-0000-000000000003', '63000000-0000-0000-0000-000000000003', 1, 'review', 'hash-unapproved', null, null);
 update public.knowledge_sources set published_revision_id = '71000000-0000-0000-0000-000000000001'
 where id = '61000000-0000-0000-0000-000000000001';
 update public.knowledge_sources set published_revision_id = '72000000-0000-0000-0000-000000000002'
@@ -390,15 +400,52 @@ select lives_ok(
 set local role postgres;
 
 -- Persona Compiler: published evidence -> synthesis -> fidelity gate -> approval -> immutable publish.
-insert into public.knowledge_sources (id, expert_id, source_type, title, rights_status, authorized_at)
-select '64000000-0000-0000-0000-000000000004', id, 'manual', 'Elvin second published', 'granted', now()
+insert into public.knowledge_sources (
+  id, expert_id, source_type, title, rights_status, rights_scope, authorized_at
+)
+select '64000000-0000-0000-0000-000000000004', id, 'manual', 'Elvin second published', 'granted',
+  '{"commercial_rag":true,"distillation":true,"persona_synthesis":true,"model_training":false}'::jsonb,
+  now()
 from public.experts where slug = 'elvin-cheung';
-insert into public.knowledge_revisions (id, source_id, revision_no, status, content_hash, approved_at) values
-  ('74000000-0000-0000-0000-000000000004', '64000000-0000-0000-0000-000000000004', 1, 'approved', 'hash-elvin-two', now());
+insert into public.knowledge_revisions (
+  id, source_id, revision_no, status, content_hash, approved_by, approved_at
+) values (
+  '74000000-0000-0000-0000-000000000004', '64000000-0000-0000-0000-000000000004',
+  1, 'approved', 'hash-elvin-two', '51000000-0000-0000-0000-000000000001', now()
+);
 update public.knowledge_sources set published_revision_id = '74000000-0000-0000-0000-000000000004'
 where id = '64000000-0000-0000-0000-000000000004';
+insert into public.knowledge_chunks (
+  revision_id, expert_id, chunk_index, content, embedding
+)
+select '74000000-0000-0000-0000-000000000004', id, 0, 'Elvin second source',
+  ('[' || '1,' || repeat('0,', 1534) || '0]')::extensions.halfvec(1536)
+from public.experts where slug = 'elvin-cheung';
 update public.account_access set app_role = 'admin'
 where user_id = '51000000-0000-0000-0000-000000000001';
+
+-- Keep the persona corpus scoped to the two fixtures under test. The earlier
+-- rights-RPC fixture was intentionally published for its own assertions, but
+-- must not silently satisfy this section's two-source gate.
+update public.knowledge_sources
+set rights_status = 'restricted'
+where id = '65000000-0000-0000-0000-000000000005';
+
+insert into public.persona_evaluation_questions (
+  expert_id, category, question, expected, source_revision_ids
+)
+select
+  (select id from public.experts where slug = 'elvin-cheung'),
+  (array['known_stance', 'edge_honesty', 'voice', 'source_transparency'])[(g - 1) % 4 + 1],
+  'Workflow grounded evaluation question ' || g,
+  jsonb_build_object('criteria', 'Answer from the pinned workflow evidence'),
+  array[
+    case when g % 2 = 0
+      then '71000000-0000-0000-0000-000000000001'::uuid
+      else '74000000-0000-0000-0000-000000000004'::uuid
+    end
+  ]
+from generate_series(1, 25) g;
 
 set local role authenticated;
 select set_config('request.jwt.claims',
@@ -409,7 +456,7 @@ where id = '64000000-0000-0000-0000-000000000004';
 set local role authenticated;
 select throws_ok(
   $$select public.queue_persona_synthesis((select id from public.experts where slug = 'elvin-cheung'))$$,
-  'P0001', 'persona_needs_two_published_sources',
+  '23514', 'persona_needs_two_published_sources',
   'persona synthesis cannot queue from a rights-ineligible corpus'
 );
 set local role postgres;
@@ -438,6 +485,49 @@ update public.persona_synthesis_jobs set
   fidelity_status = 'failed'
 where expert_id = (select id from public.experts where slug = 'elvin-cheung');
 
+insert into public.persona_evaluation_runs (
+  synthesis_job_id, generator_model, evaluator_model, probe_responses,
+  score, status, report, evaluation_set_hash, output_blueprint_hash
+)
+select
+  j.id,
+  'workflow-generator',
+  'workflow-evaluator',
+  (select jsonb_agg(jsonb_build_object(
+    'question_id', question ->> 'id',
+    'answer', 'Grounded workflow answer'
+  )) from jsonb_array_elements(
+    public.get_persona_evaluation_set_snapshot(j.expert_id) -> 'questions'
+  ) question),
+  84,
+  'failed',
+  jsonb_build_object(
+    'breakdown', jsonb_build_object('edge_honesty', 15, 'source_transparency', 14),
+    'evaluation', jsonb_build_object(
+      'question_count', (public.get_persona_evaluation_set_snapshot(j.expert_id) ->> 'question_count')::integer,
+      'question_ids', (
+        select jsonb_agg(question ->> 'id' order by question ->> 'id')
+        from jsonb_array_elements(
+          public.get_persona_evaluation_set_snapshot(j.expert_id) -> 'questions'
+        ) question
+      ),
+      'response_count', (public.get_persona_evaluation_set_snapshot(j.expert_id) ->> 'question_count')::integer
+    )
+  ),
+  public.get_persona_evaluation_set_snapshot(j.expert_id) ->> 'hash',
+  encode(extensions.digest(convert_to(j.output_blueprint::text, 'UTF8'), 'sha256'), 'hex')
+from public.persona_synthesis_jobs j
+where j.expert_id = (select id from public.experts where slug = 'elvin-cheung');
+
+update public.persona_synthesis_jobs j
+set finalized_evaluation_run_id = r.id,
+    fidelity_report = r.report,
+    fidelity_score = r.score,
+    fidelity_status = r.status
+from public.persona_evaluation_runs r
+where r.synthesis_job_id = j.id
+  and j.expert_id = (select id from public.experts where slug = 'elvin-cheung');
+
 set local role authenticated;
 select set_config('request.jwt.claims',
   '{"sub":"51000000-0000-0000-0000-000000000001","role":"authenticated"}', true);
@@ -451,11 +541,24 @@ select throws_ok(
 );
 
 set local role postgres;
-update public.persona_synthesis_jobs set
-  fidelity_report = '{"breakdown":{"stance_consistency":25,"style_distinctiveness":17,"edge_honesty":18,"source_transparency":13,"structural_completeness":12}}'::jsonb,
-  fidelity_score = 85,
-  fidelity_status = 'passed'
-where expert_id = (select id from public.experts where slug = 'elvin-cheung');
+update public.persona_evaluation_runs r
+set score = 85,
+    status = 'passed',
+    report = jsonb_set(
+      r.report,
+      '{breakdown}',
+      '{"stance_consistency":25,"style_distinctiveness":17,"edge_honesty":18,"source_transparency":13,"structural_completeness":12}'::jsonb
+    )
+from public.persona_synthesis_jobs j
+where j.id = r.synthesis_job_id
+  and j.expert_id = (select id from public.experts where slug = 'elvin-cheung');
+update public.persona_synthesis_jobs j
+set fidelity_report = r.report,
+    fidelity_score = r.score,
+    fidelity_status = r.status
+from public.persona_evaluation_runs r
+where j.finalized_evaluation_run_id = r.id
+  and j.expert_id = (select id from public.experts where slug = 'elvin-cheung');
 set local role authenticated;
 select set_config('request.jwt.claims',
   '{"sub":"51000000-0000-0000-0000-000000000001","role":"authenticated"}', true);
