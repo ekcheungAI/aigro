@@ -201,3 +201,15 @@ insert into public.sources (name, type, domain, endpoint, vertical, lang, weight
   ('Hacker News 熱門','api','news.ycombinator.com','https://hacker-news.firebaseio.com/v0/topstories.json','ai','en',6),
   ('X 精選帳號','api','x.com','tikhub:x-accounts','ai','en',7)
 on conflict do nothing;
+
+-- Keep the seed connector URLs out of browser-readable sources as well. The
+-- production migration performs the same move for an existing database.
+insert into public.source_connectors (source_id, endpoint)
+select id, endpoint
+from public.sources
+where endpoint is not null and btrim(endpoint) <> ''
+on conflict (source_id) do nothing;
+
+update public.sources
+set endpoint = null
+where endpoint is not null;

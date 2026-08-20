@@ -41,6 +41,7 @@ export default function useDataFreshness() {
   return {
     isLive: Boolean(liveFetchedAt),
     isArchive: status === "archive",
+    isResolved: now !== null,
     status,
     fetchedAt,
     todayDate: HK_DATE.format(new Date(renderNow)),

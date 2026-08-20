@@ -6,8 +6,9 @@ import { cn } from "@/lib/utils";
  * the resilient build-time fallback is always labelled as a snapshot.
  */
 export default function UpdatedChip({ className }: { className?: string }) {
-  const { isLive, isArchive, ago } = useDataFreshness();
+  const { isLive, isArchive, isResolved, fetchedAt, ago } = useDataFreshness();
   if (!ago) return null;
+  const snapshotDate = fetchedAt.slice(0, 10);
   return (
     <span
       className={cn(
@@ -22,7 +23,9 @@ export default function UpdatedChip({ className }: { className?: string }) {
         )}
         aria-hidden="true"
       />
-      {isLive
+      {!isResolved && !isLive
+        ? `資料快照 · 截至 ${snapshotDate}`
+        : isLive
         ? `更新於 ${ago} · 每 30 分鐘同步`
         : isArchive
           ? `歷史快照 · 截至 ${ago}`
