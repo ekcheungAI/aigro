@@ -19,12 +19,22 @@ describe("Argro sync release contract", () => {
     expect(script).toContain('row.status = AUTO_PUBLISH ? "published" : "pending"');
   });
 
-  it("does not overwrite editorial decisions on an existing fingerprint", () => {
-    expect(script).toContain("delete row.status");
-    expect(script).toContain("delete row.placement");
-    expect(script).toContain("delete row.summary");
-    expect(script).toContain("delete row.category");
-    expect(script).toContain("if (!row.source_id) delete row.source_id");
+  it("preserves editorial decisions without creating mixed-shape upsert batches", () => {
+    expect(script).toContain(
+      "select=fingerprint,status,placement,source_id,summary,category",
+    );
+    expect(script).toContain("row.status = existing.status ?? \"pending\"");
+    expect(script).toContain("row.placement = existing.placement ?? row.placement");
+    expect(script).toContain(
+      "row.source_id = existing.source_id ?? row.source_id ?? null",
+    );
+    expect(script).toContain("if (existing.summary?.trim()) row.summary = existing.summary");
+    expect(script).toContain("if (existing.category?.trim()) row.category = existing.category");
+    expect(script).not.toContain("delete row.status");
+    expect(script).not.toContain("delete row.placement");
+    expect(script).not.toContain("delete row.summary");
+    expect(script).not.toContain("delete row.category");
+    expect(script).toContain("row.source_id = sourceId ?? null");
   });
 
   it("keeps fingerprint lookup URLs below PostgREST's request-size limit", () => {

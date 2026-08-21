@@ -196,14 +196,17 @@ for (const row of payload) {
     (it) => fingerprint(it) === row.fingerprint
   );
   const sourceId = matchSource(argroItem?.source?.name);
-  if (sourceId) row.source_id = sourceId;
+  // Every row in a PostgREST JSON array must expose the same object keys.
+  // Keep an explicit null when no source seed matches instead of omitting the
+  // key (mixed new/existing batches otherwise fail with PGRST102).
+  row.source_id = sourceId ?? null;
 }
 
 async function fetchExistingByFingerprint(fingerprints) {
   if (fingerprints.length === 0) return new Map();
   const filter = fingerprints.join(",");
   const res = await fetch(
-    `${SUPA_URL}/rest/v1/items?select=fingerprint,status,placement,source_id&fingerprint=in.(${filter})`,
+    `${SUPA_URL}/rest/v1/items?select=fingerprint,status,placement,source_id,summary,category&fingerprint=in.(${filter})`,
     { headers: { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}` } }
   );
   if (!res.ok) throw new Error(`supabase existing items → HTTP ${res.status}`);
@@ -224,13 +227,13 @@ for (const row of payload) {
     row.status = AUTO_PUBLISH ? "published" : "pending";
     continue;
   }
-  // Sync refreshes upstream fields but never republishes/replaces an editor's
-  // status, placement, summary, category, or attribution decision.
-  delete row.status;
-  delete row.placement;
-  if (!row.source_id) delete row.source_id;
-  delete row.summary;
-  delete row.category;
+  // Keep editor decisions when present, while preserving a uniform object
+  // shape across new and existing rows (required by PostgREST upsert).
+  row.status = existing.status ?? "pending";
+  row.placement = existing.placement ?? row.placement;
+  row.source_id = existing.source_id ?? row.source_id ?? null;
+  if (existing.summary?.trim()) row.summary = existing.summary;
+  if (existing.category?.trim()) row.category = existing.category;
 }
 
 // upsert(on_conflict=fingerprint)— 分批 100
