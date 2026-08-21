@@ -81,7 +81,7 @@ test("compact desktop navigation keeps Coming Soon flags on one line", async ({ 
 
   const desktopNav = page.getByRole("navigation", { name: "主導航" });
   const secondaryLabels = desktopNav.locator('[data-ui="nav-secondary-label"]');
-  await expect(secondaryLabels).toHaveCount(5);
+  await expect(secondaryLabels).toHaveCount(6);
   await expect(secondaryLabels.first()).toBeHidden();
   await expect(desktopNav.locator('[data-layout="desktop-flag"]')).toHaveCount(2);
 });
@@ -92,7 +92,7 @@ test("desktop navigation labels and account actions never wrap", async ({ page }
 
   const banner = page.getByRole("banner");
   const desktopLinks = banner.getByRole("navigation", { name: "主導航" }).getByRole("link");
-  await expect(desktopLinks).toHaveCount(5);
+  await expect(desktopLinks).toHaveCount(6);
   for (let index = 0; index < await desktopLinks.count(); index += 1) {
     await expect(desktopLinks.nth(index)).toHaveCSS("white-space", "nowrap");
   }

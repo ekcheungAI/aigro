@@ -18,6 +18,7 @@ const ExpertProfile = lazy(() => import("@/pages/ExpertProfile"));
 const Developers = lazy(() => import("@/pages/Developers"));
 const Account = lazy(() => import("@/pages/Account"));
 const Skills = lazy(() => import("@/pages/Skills"));
+const PublicApis = lazy(() => import("@/pages/PublicApis"));
 const Sources = lazy(() => import("@/pages/Sources"));
 const Access = lazy(() => import("@/pages/Access"));
 const Branding = lazy(() => import("@/pages/Branding"));
@@ -77,6 +78,14 @@ function AuthRouteRedirect({ mode }: { mode: "join" | "login" }) {
     requested?.startsWith("/") && !requested.startsWith("//") ? requested : "/";
   const modalSearch = new URLSearchParams({ auth: mode, next: nextPath });
   return <Navigate to={`${nextPath}?${modalSearch.toString()}`} replace />;
+}
+
+function SkillsRoute() {
+  const { search } = useLocation();
+  if (new URLSearchParams(search).get("tab") === "apis") {
+    return <Navigate to="/apis" replace />;
+  }
+  return <Skills />;
 }
 
 /**
@@ -144,7 +153,8 @@ export default function App() {
         />
         <Route path="pricing" element={<Navigate to="/join" replace />} />
         <Route path="developers" element={<Developers />} />
-        <Route path="skills" element={<Skills />} />
+        <Route path="skills" element={<SkillsRoute />} />
+        <Route path="apis" element={<PublicApis />} />
         <Route path="branding" element={<Branding />} />
         <Route path="class-review" element={<ClassReview />} />
         <Route path="guides" element={<Navigate to="/class-review" replace />} />

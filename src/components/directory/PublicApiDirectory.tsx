@@ -193,7 +193,7 @@ export default function PublicApiDirectory() {
     <section
       data-ui="public-api-directory"
       aria-labelledby="public-api-results-title"
-      className="mx-auto max-w-container px-6 pb-24 max-md:pb-16"
+      className="mx-auto max-w-container px-6 pb-24 pt-8 max-md:pb-16"
     >
       <Reveal>
         <div className="border-y py-4">

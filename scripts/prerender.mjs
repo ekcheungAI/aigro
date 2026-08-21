@@ -16,6 +16,7 @@ const routes = [
   { url: "/insights/daily", renderUrl: "/insights/daily" },
   { url: "/cases", renderUrl: "/cases" },
   { url: "/experts", renderUrl: "/experts" },
+  { url: "/apis", renderUrl: "/apis" },
   { url: "/guides", renderUrl: "/class-review" },
 ];
 

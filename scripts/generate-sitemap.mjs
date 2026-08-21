@@ -45,6 +45,7 @@ const STATIC_ROUTES = [
   { path: "/cases", changefreq: "weekly", priority: "0.8" },
   { path: "/developers", changefreq: "weekly", priority: "0.8" },
   { path: "/skills", changefreq: "weekly", priority: "0.7" },
+  { path: "/apis", changefreq: "weekly", priority: "0.8" },
   { path: "/branding", changefreq: "monthly", priority: "0.6" },
   { path: "/class-review", changefreq: "monthly", priority: "0.7" },
   { path: "/guides/100x-ai-growth-marketer", changefreq: "monthly", priority: "0.7" },

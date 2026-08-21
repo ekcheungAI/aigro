@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(28);
+select plan(31);
 
 set local role postgres;
 
@@ -75,8 +75,8 @@ select ok(
   'anonymous callers can execute the public category RPC'
 );
 select ok(
-  (select count(*) from public.list_public_api_entries()) >= 12,
-  'the deterministic reviewed launch set is publicly visible'
+  (select count(*) from public.list_public_api_entries(p_limit => 100)) >= 66,
+  'the reviewed cross-category directory is publicly visible'
 );
 set local role postgres;
 select is(
@@ -159,6 +159,49 @@ select ok(
     where name = 'CoinGecko'
   ),
   'manually reviewed seeds do not claim pinned-import provenance'
+);
+select is(
+  (
+    select count(*)
+    from public.api_directory_entries
+    where name = any(array[
+      'VirusTotal', 'Metropolitan Museum of Art', 'Auth0', 'Etherscan',
+      'Trello', 'Dropbox', 'CircleCI', 'Cloudflare', 'Docker Hub',
+      'JSONPlaceholder', 'Chinese Text Project', 'Notion', 'OpenAQ',
+      'Alpha Vantage', 'FRED', 'Open Food Facts', 'openFDA', 'Adzuna',
+      'Shields.io', 'Have I Been Pwned', 'eBay', 'OpenF1', 'RandomUser',
+      'Google Cloud Natural Language', 'Open Charge Map',
+      'Amadeus for Developers', 'Airtable', 'Asana', 'Google Drive',
+      'Transport for London'
+    ])
+      and status = 'published'
+      and review_state = 'aigro_reviewed'
+      and last_reviewed_at = date '2026-08-22'
+      and btrim(editorial_summary_zh_hk) <> ''
+  ),
+  30::bigint,
+  'the quality expansion publishes all reviewed upstream selections'
+);
+select is(
+  (
+    select count(*)
+    from public.api_directory_entries
+    where source_key = any(array[
+      'manual:curated:openai', 'manual:curated:anthropic',
+      'manual:curated:stripe', 'manual:curated:twilio',
+      'manual:curated:supabase', 'manual:curated:vercel'
+    ])
+      and status = 'published'
+      and source_kind = 'manual'
+      and source_url is null
+      and upstream_ref is null
+  ),
+  6::bigint,
+  'essential manual additions are published without false upstream provenance'
+);
+select ok(
+  (select count(*) from public.list_public_api_categories()) >= 40,
+  'the public directory covers at least forty useful categories'
 );
 set local role anon;
 select is(

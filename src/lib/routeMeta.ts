@@ -22,6 +22,7 @@ const ROUTE_META: [RegExp, string, string][] = [
   [/^\/developers/, "AIGRO MCP Network", "行業情報 MCP server — 你嘅 AI 工具一連接,即刻有行業雷達。AI 行業優先名單開放中。"],
   [/^\/sources/, "情報渠道", "AIGRO 情報渠道 — 公開透明嘅來源牆、數據流程與免費任用方式。"],
   [/^\/skills/, "Skills", "AIGRO Skills — 俾你嘅 AI agent 裝上專業能力。"],
+  [/^\/apis/, "Public APIs 公開 API 目錄", "為香港 builder 精選公開 API — 比較認證、HTTPS、CORS、使用場景同官方文件。"],
   [/^\/branding/, "品牌指南 Branding", "AIGRO 品牌識別、標誌、色彩、字體、語氣與應用規範。"],
   [/^\/class-review/, "Class Review 課堂重溫", "AIGRO 會員課堂重溫目錄 — 將直播、課堂同實戰分享整理成可閱讀、可重做嘅完整筆記。"],
   [/^\/guides\/100x-ai-growth-marketer/, "8.13 AI Growth Marketer 直播重溫攻略", "AIGRO 會員限定 8.13 直播重溫：18 章完整筆記，由 AI Marketing 觀念、八段 Campaign 工作流，到 Growth Builder 可重用嘅 Marketing 做法。"],

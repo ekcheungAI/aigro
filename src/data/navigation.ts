@@ -22,6 +22,7 @@ export const PRIMARY_NAVIGATION_LINKS = [
   { to: "/insights", en: "Insights", zh: "情報" },
   CLASS_REVIEW_NAV_LINK,
   { to: "/skills", en: "Skills", zh: "技能" },
+  { to: "/apis", en: "APIs", zh: "目錄" },
   { to: "/experts", en: "Experts", zh: "專家", comingSoon: !EXPERT_CHAT_ROLLOUT_ENABLED },
   { to: "/ask", en: "Ask", zh: "問答", comingSoon: !EXPERT_CHAT_ROLLOUT_ENABLED },
 ] as const satisfies readonly PrimaryNavigationLink[];
