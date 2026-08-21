@@ -1,0 +1,81 @@
+name: Deploy to Vercel
+
+# Deploy runs only after "Verify application and backend contracts" finishes on
+# main, and only when that run SUCCEEDED. Two deliberate choices:
+#
+#   * Not `on: push`. Push-triggered deploys race the test job and happily ship
+#     a red build - the deploy usually wins, because it has less to do.
+#   * `workflow_run` fires on failure too, so the conclusion check in `if:` is
+#     load-bearing, not decoration. Without it this is just a slower push
+#     trigger.
+#
+# Until 2026-08-21 aigro had no deploy automation at all: pushing to main
+# changed nothing until someone opened the Vercel dashboard. A content refresh
+# sat committed and invisible for a day because of it.
+
+on:
+  workflow_run:
+    workflows: ["Verify application and backend contracts"]
+    types: [completed]
+    branches: [main]
+  # Manual escape hatch: re-deploy the current main without an empty commit.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # workflow_run checks out the default branch, not the commit that was
+          # verified. Pin to the exact SHA that passed so the artifact deployed
+          # is the artifact tested.
+          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci --no-audit --no-fund
+
+      - name: Build
+        run: npm run build
+
+      - name: Deploy to Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "VERCEL_TOKEN is not set — see docs/DEPLOY-SETUP.md"
+            exit 1
+          fi
+          npx --yes vercel@latest deploy --prod --yes \
+            --token "$VERCEL_TOKEN" \
+            --prebuilt=false
+
+      - name: Verify the live site is serving this commit
+        run: |
+          # A deploy that returns 0 has still only told you the CLI exited.
+          # Confirm the origin actually answers before calling this done.
+          for i in 1 2 3 4 5 6; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' https://aigro.io/insights/daily || true)
+            echo "attempt $i: HTTP $code"
+            [ "$code" = "200" ] && exit 0
+            sleep 10
+          done
+          echo "site did not return 200 after the deploy"
+          exit 1

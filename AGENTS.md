@@ -12,7 +12,12 @@ marketplace (Verified expert AI avatars → human bookings → open MCP/API).
 - **Live URL**: https://aigro-blue.vercel.app (alias)
 - **Repo**: github.com/ekcheungAI/aigro
 - **Deploy target**: Vercel, project `aigro`, alias `aigro-blue.vercel.app`.
-  Push to `main` → trigger a **manual Vercel deploy** for now (no auto-deploy wired yet).
+  Push to `main` → CI verifies → **`.github/workflows/deploy.yml` deploys on
+  success only**. A failing verify means no deploy; the live site keeps the
+  last good build. Requires `VERCEL_TOKEN` / `VERCEL_ORG_ID` /
+  `VERCEL_PROJECT_ID` as repo secrets — see `docs/DEPLOY-SETUP.md`. To
+  re-deploy the current `main` without a code change, use **Run workflow** on
+  the deploy action rather than an empty commit.
 
 ## Commands
 
