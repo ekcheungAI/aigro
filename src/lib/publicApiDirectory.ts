@@ -384,6 +384,39 @@ export async function addPublicApiEntry(input: AdminPublicApiInput): Promise<voi
   if (error) throw new Error(error.message);
 }
 
+/**
+ * Turn an imported draft into an explicitly reviewed, published entry while
+ * preserving its upstream source key and provenance. The editor can only
+ * change presentation and classification fields here; importer identity stays
+ * immutable so a future sync cannot create a duplicate row.
+ */
+export async function updatePublicApiEntry(
+  id: string,
+  input: AdminPublicApiInput
+): Promise<void> {
+  if (!supabase) throw new Error("Supabase 未連接，未能更新 API。");
+  const clean = validatePublicApiInput(input);
+  const { error } = await supabase
+    .from("api_directory_entries")
+    .update({
+      name: clean.name,
+      description_en: clean.descriptionEn,
+      editorial_summary_zh_hk: clean.editorialSummaryZhHk,
+      category: clean.category,
+      use_cases: clean.useCases,
+      auth_type: clean.authType,
+      https_supported: clean.httpsSupported,
+      cors_status: clean.corsStatus,
+      docs_url: clean.docsUrl,
+      hk_relevance: clean.hkRelevance,
+      review_state: "aigro_reviewed",
+      last_reviewed_at: new Date().toISOString().slice(0, 10),
+      status: "published",
+    })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
 async function setPublicApiStatus(
   id: string,
   status: Extract<ApiDirectoryStatus, "published" | "hidden">

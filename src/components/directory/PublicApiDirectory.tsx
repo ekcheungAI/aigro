@@ -368,7 +368,7 @@ export default function PublicApiDirectory() {
       <Reveal>
         <aside className="mt-10 border-y py-6 text-body-sm text-text-secondary">
           <p>
-            資料以 AIGRO 編輯審閱為主，部分條目源自 public-apis/public-apis（MIT）。「已審閱」唔代表生產環境認證；接入前請核對供應商最新條款、價格、配額同資料處理要求。
+            目前先公開已由 AIGRO 編輯審閱嘅條目；public-apis/public-apis（MIT）其餘候選會先留喺後台草稿，補充香港中文摘要同基本核對後再逐項發佈。「已審閱」唔代表生產環境認證；接入前請核對供應商最新條款、價格、配額同資料處理要求。
           </p>
           <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1">
             <a

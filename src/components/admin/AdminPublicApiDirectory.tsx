@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import {
   Archive,
   ExternalLink,
+  Pencil,
   Plus,
   RotateCcw,
   Search,
@@ -16,9 +17,11 @@ import {
   fetchAdminPublicApiDirectory,
   hidePublicApiEntry,
   restorePublicApiEntry,
+  updatePublicApiEntry,
 } from "@/lib/publicApiDirectory";
 import { cn } from "@/lib/utils";
 import type {
+  AdminPublicApiEntry,
   AdminPublicApiInput,
   ApiCorsStatus,
   ApiDirectoryStatus,
@@ -58,6 +61,7 @@ export default function AdminPublicApiDirectory() {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<StatusFilter>("all");
   const [panelOpen, setPanelOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<AdminPublicApiInput>(EMPTY_FORM);
   const [useCasesText, setUseCasesText] = useState("");
   const [formError, setFormError] = useState("");
@@ -83,9 +87,34 @@ export default function AdminPublicApiDirectory() {
   }, [directory.data, query, status]);
 
   const resetForm = () => {
+    setEditingId(null);
     setForm(EMPTY_FORM);
     setUseCasesText("");
     setFormError("");
+  };
+
+  const openCreate = () => {
+    resetForm();
+    setPanelOpen(true);
+  };
+
+  const openReview = (entry: AdminPublicApiEntry) => {
+    setEditingId(entry.id);
+    setForm({
+      name: entry.name,
+      descriptionEn: entry.descriptionEn,
+      editorialSummaryZhHk: entry.editorialSummaryZhHk,
+      category: entry.category,
+      useCases: entry.useCases,
+      authType: entry.authType,
+      httpsSupported: entry.httpsSupported,
+      corsStatus: entry.corsStatus,
+      docsUrl: entry.docsUrl,
+      hkRelevance: entry.hkRelevance,
+    });
+    setUseCasesText(entry.useCases.join(", "));
+    setFormError("");
+    setPanelOpen(true);
   };
 
   const closePanel = () => {
@@ -100,16 +129,22 @@ export default function AdminPublicApiDirectory() {
     setSubmitting(true);
     setFormError("");
     try {
-      await addPublicApiEntry({
+      const input = {
         ...form,
         useCases: useCasesText.split(",").map((item) => item.trim()).filter(Boolean),
-      });
-      toast(`已新增並發佈 ${form.name.trim()}`);
+      };
+      if (editingId) {
+        await updatePublicApiEntry(editingId, input);
+        toast(`已審閱並發佈 ${form.name.trim()}`);
+      } else {
+        await addPublicApiEntry(input);
+        toast(`已新增並發佈 ${form.name.trim()}`);
+      }
       setPanelOpen(false);
       resetForm();
       directory.refetch();
     } catch (error) {
-      setFormError(error instanceof Error ? error.message : "新增 API 失敗。");
+      setFormError(error instanceof Error ? error.message : editingId ? "更新 API 失敗。" : "新增 API 失敗。");
     } finally {
       setSubmitting(false);
     }
@@ -160,7 +195,7 @@ export default function AdminPublicApiDirectory() {
         </div>
         <button
           type="button"
-          onClick={() => setPanelOpen(true)}
+          onClick={openCreate}
           className="press inline-flex h-10 items-center gap-2 rounded-md bg-lime px-4 text-sm font-medium text-on-accent hover:bg-lime-hover"
         >
           <Plus className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
@@ -260,6 +295,16 @@ export default function AdminPublicApiDirectory() {
                         {mutatingId === entry.id ? "處理中" : "下架"}
                       </button>
                     ) : null}
+                    {entry.status === "draft" ? (
+                      <button
+                        type="button"
+                        onClick={() => openReview(entry)}
+                        className="press inline-flex h-9 items-center gap-1.5 rounded-md border border-border-strong px-3 text-xs text-lime-text hover:bg-lime-soft"
+                      >
+                        <Pencil className="h-3.5 w-3.5" strokeWidth={1.5} aria-hidden="true" />
+                        審閱並發佈
+                      </button>
+                    ) : null}
                     {entry.status === "hidden" ? (
                       <button
                         type="button"
@@ -282,8 +327,10 @@ export default function AdminPublicApiDirectory() {
       <AdminSlideOver
         open={panelOpen}
         onClose={closePanel}
-        title="新增公開 API"
-        subtitle="手動條目會標示為 AIGRO 編輯內容，不會冒充 public-apis 來源。"
+        title={editingId ? "審閱並發佈 API" : "新增公開 API"}
+        subtitle={editingId
+          ? "補充香港中文摘要後，會保留原有 public-apis 來源身份並發佈。"
+          : "手動條目會標示為 AIGRO 編輯內容，不會冒充 public-apis 來源。"}
         width={560}
       >
         <form onSubmit={submit} className="space-y-5 p-6">
@@ -433,7 +480,7 @@ export default function AdminPublicApiDirectory() {
               ) : (
                 <Plus className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
               )}
-              {submitting ? "新增中" : "新增並發佈"}
+              {submitting ? (editingId ? "更新中" : "新增中") : editingId ? "審閱並發佈" : "新增並發佈"}
             </button>
           </div>
         </form>

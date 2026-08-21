@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AdminToastProvider } from "@/components/admin/AdminToast";
 import AdminPublicApiDirectory from "@/components/admin/AdminPublicApiDirectory";
@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   add: vi.fn(),
   hide: vi.fn(),
   restore: vi.fn(),
+  update: vi.fn(),
 }));
 
 vi.mock("@/lib/publicApiDirectory", () => ({
@@ -16,6 +17,7 @@ vi.mock("@/lib/publicApiDirectory", () => ({
   addPublicApiEntry: mocks.add,
   hidePublicApiEntry: mocks.hide,
   restorePublicApiEntry: mocks.restore,
+  updatePublicApiEntry: mocks.update,
 }));
 
 const baseEntry: AdminPublicApiEntry = {
@@ -57,10 +59,23 @@ describe("admin public API directory", () => {
         status: "hidden",
         hiddenAt: "2026-08-20T01:00:00.000Z",
       },
+      {
+        ...baseEntry,
+        id: "87300000-0000-4000-8000-000000000003",
+        name: "Draft API",
+        descriptionEn: "Draft test",
+        editorialSummaryZhHk: "",
+        sourceKey: "public-apis:draft",
+        sourceKind: "public-apis",
+        reviewState: "upstream_listed",
+        lastReviewedAt: null,
+        status: "draft",
+      },
     ]);
     mocks.add.mockResolvedValue(undefined);
     mocks.hide.mockResolvedValue(undefined);
     mocks.restore.mockResolvedValue(undefined);
+    mocks.update.mockResolvedValue(undefined);
   });
 
   it("wires confirmed unpublish and restore to the backend operations", async () => {
@@ -114,6 +129,32 @@ describe("admin public API directory", () => {
           name: "Manual API",
           editorialSummaryZhHk: "適合香港團隊建立自動化原型。",
           useCases: ["自動化", "原型"],
+        })
+      );
+    });
+  });
+
+  it("lets an admin complete a draft review without changing upstream identity", async () => {
+    render(
+      <AdminToastProvider>
+        <AdminPublicApiDirectory />
+      </AdminToastProvider>
+    );
+    await screen.findByText("Draft API");
+
+    fireEvent.click(screen.getByRole("button", { name: "審閱並發佈" }));
+    const panel = screen.getByRole("dialog");
+    fireEvent.change(screen.getByLabelText(/^香港中文編輯摘要/), {
+      target: { value: "適合香港團隊研究同建立資料原型。" },
+    });
+    fireEvent.click(within(panel).getByRole("button", { name: "審閱並發佈" }));
+
+    await waitFor(() => {
+      expect(mocks.update).toHaveBeenCalledWith(
+        "87300000-0000-4000-8000-000000000003",
+        expect.objectContaining({
+          name: "Draft API",
+          editorialSummaryZhHk: "適合香港團隊研究同建立資料原型。",
         })
       );
     });

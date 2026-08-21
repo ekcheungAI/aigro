@@ -20,11 +20,11 @@ test("public API directory is deep-linkable, searchable, and source-transparent"
     "aria-selected",
     "true"
   );
-  await expect(page.getByText("8 個已發佈 API", { exact: true })).toBeVisible();
+  await expect(page.getByText("26 個已發佈 API", { exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: /public-apis 原始目錄/ })).toBeVisible();
   await expect(page.getByRole("link", { name: /MIT 授權/ })).toBeVisible();
 
-  await page.getByRole("searchbox", { name: "搜尋公開 API" }).fill("HKD");
+  await page.getByRole("searchbox", { name: "搜尋公開 API" }).fill("Frankfurter");
   await expect(page.getByText("1 個已發佈 API", { exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { level: 3, name: "Frankfurter" })).toBeVisible();
   await expect(page.getByRole("heading", { level: 3, name: "GitHub" })).toHaveCount(0);
@@ -43,7 +43,7 @@ test("directory tabs preserve browser history and expose structured filters", as
   await expect(page.getByLabel("API CORS 狀態")).toBeVisible();
 
   await page.getByLabel("API 認證方式").selectOption("OAuth");
-  await expect(page.getByText("2 個已發佈 API", { exact: true })).toBeVisible();
+  await expect(page.getByText("9 個已發佈 API", { exact: true })).toBeVisible();
   await page.getByLabel("API CORS 狀態").selectOption("yes");
   await expect(page.getByText("1 個已發佈 API", { exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { level: 3, name: "GitHub" })).toBeVisible();

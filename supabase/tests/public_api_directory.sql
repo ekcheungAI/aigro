@@ -108,7 +108,25 @@ select is(
         ('REST Countries', 'https://restcountries.com'),
         ('Postman Echo', 'https://www.postman-echo.com'),
         ('Unsplash', 'https://unsplash.com/developers'),
-        ('GNews', 'https://gnews.io')
+        ('GNews', 'https://gnews.io'),
+        ('Jikan', 'https://jikan.moe'),
+        ('AniList', 'https://github.com/AniList/ApiV2-GraphQL-Docs'),
+        ('Open Library', 'https://openlibrary.org/developers/api'),
+        ('Google Books', 'https://developers.google.com/books'),
+        ('Nager.Date', 'https://date.nager.at'),
+        ('ExchangeRate-API', 'https://www.exchangerate-api.com'),
+        ('Mapbox', 'https://docs.mapbox.com'),
+        ('NASA', 'https://api.nasa.gov'),
+        ('World Bank', 'https://datahelpdesk.worldbank.org/knowledgebase/topics/125589'),
+        ('Spotify', 'https://beta.developer.spotify.com/documentation/web-api'),
+        ('Discord', 'https://discord.com/developers/docs/intro'),
+        ('Reddit', 'https://www.reddit.com/dev/api'),
+        ('Slack', 'https://api.slack.com'),
+        ('Telegram Bot', 'https://core.telegram.org/bots/api'),
+        ('YouTube', 'https://developers.google.com/youtube'),
+        ('Open-Meteo', 'https://open-meteo.com'),
+        ('WeatherAPI', 'https://www.weatherapi.com'),
+        ('Hacker News', 'https://github.com/HackerNews/API')
     )
     select count(*)
     from expected_seed_identity expected
@@ -122,7 +140,7 @@ select is(
        'hex'
      )
   ),
-  11::bigint,
+  29::bigint,
   'every public-apis launch seed is idempotent with the pinned importer identity'
 );
 select is(
