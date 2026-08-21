@@ -200,9 +200,16 @@ describe("public MCP news service", () => {
       {
         ...goodRow,
         id: "glasses",
-        title: "雷鳥發佈全天候主動式 AI 眼鏡",
+        title: "雷鳥 iO 發佈：兩天續航、全天候主動式 AI，輕至 34g",
         original_url: "https://example.com/glasses",
         category: "行業動態",
+      },
+      {
+        ...goodRow,
+        id: "driver",
+        title: "青少年藉助 Claude Code AI 編程工具開發出 macOS 原生驅動",
+        original_url: "https://example.com/driver",
+        category: "模型發布",
       },
     ];
     const service = createNewsService({
@@ -226,6 +233,7 @@ describe("public MCP news service", () => {
       sentiment: "行業動態",
       widget: "產品發布",
       glasses: "產品發布",
+      driver: "產品發布",
     });
   });
 

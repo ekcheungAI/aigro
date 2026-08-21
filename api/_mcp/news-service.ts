@@ -138,7 +138,8 @@ const AI_TITLE_SIGNAL = /(?:\bAI\b|\bAIGC\b|\bAGI\b|人工智(?:能|慧)|生成�
 const RESEARCH_SIGNAL = /(?:論文|研究|技術報告|基準(?:測試|評測|優化)?|評測|測量|實驗|科學研究|蛋白質|數學研究|paper|research|benchmark)/i;
 const GUIDANCE_SIGNAL = /(?:指南|手冊|教學|教程|實戰|如何|方法論|最佳實踐|規則|觀點|評論|深度思考|提示詞|Prompt|洞見|解析|解讀|playbook)/i;
 const MODEL_SIGNAL = /(?:\b(?:GPT|Claude|Gemini|Llama|Qwen|DeepSeek|Kimi|Mistral|Grok|LFM|GLM|MOSS)[-\w.]*\b|大模型|語言模型|推理模型|視覺語言模型|模型家族|模型系列)/i;
-const PRODUCT_SIGNAL = /(?:產品|工具|功能|平台|API|應用|服務|框架|資料集|數據集|系統|軟件|套件|插件|儀表盤|瀏覽器|代碼託管|開發工具|智能體|手機|眼鏡|硬件|驅動)/i;
+const PRODUCT_SIGNAL = /(?:產品|工具|功能|平台|API|應用|服務|框架|資料集|數據集|系統|軟件|套件|插件|儀表盤|瀏覽器|代碼託管|開發工具|智能體|手機|眼鏡|硬件|驅動|續航)/i;
+const STRONG_PRODUCT_SIGNAL = /(?:產品|工具|功能|應用|軟件|套件|插件|儀表盤|瀏覽器|手機|眼鏡|硬件|驅動|續航)/i;
 const RELEASE_SIGNAL = /(?:發佈|發布|推出|上線|更新|升級|開源|問世|新增|加入|引入|開發出|支援|支持|release|launch|ship|introduc)/i;
 const MAX_TITLE_LENGTH = 300;
 const MAX_SUMMARY_LENGTH = 600;
@@ -195,13 +196,17 @@ function inferDatabaseCategory(
 
   const normalized = normalizeCategory(rawCategory);
   const hasReleaseSignal = RELEASE_SIGNAL.test(title);
-  if (MODEL_SIGNAL.test(title) && hasReleaseSignal) return "模型發布";
+  const hasModelSignal = MODEL_SIGNAL.test(title);
+  const hasProductSignal = PRODUCT_SIGNAL.test(title);
   if (
-    PRODUCT_SIGNAL.test(title) &&
-    (hasReleaseSignal || normalized === "產品發布")
+    hasProductSignal &&
+    hasReleaseSignal &&
+    (!hasModelSignal || STRONG_PRODUCT_SIGNAL.test(title))
   ) {
     return "產品發布";
   }
+  if (hasModelSignal && hasReleaseSignal) return "模型發布";
+  if (hasProductSignal && normalized === "產品發布") return "產品發布";
 
   // Historical automatic labels were frequently over-broad. Model/product
   // labels need title evidence; otherwise the neutral industry category is
