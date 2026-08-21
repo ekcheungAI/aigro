@@ -58,10 +58,13 @@
     --warning: 37 83% 35%;       /* #A36A0F */
     --error: 5 55% 42%;          /* #A63A30 */
 
-    /* Fonts (design.md §3.1) */
-    --font-display: "Fraunces", "Noto Serif TC", serif;
-    --font-sans: "Inter", "Noto Sans TC", system-ui, sans-serif;
-    --font-mono: "IBM Plex Mono", "Noto Sans TC", monospace;
+    /* Fonts (design.md §3.1)
+       Chiron is the single Traditional Chinese brand voice across every role.
+       Latin display/UI/data retain their established specialist families. */
+    --font-cjk: "Chiron GoRound TC WS";
+    --font-display: "Fraunces", var(--font-cjk), "PingFang TC", "Microsoft JhengHei", serif;
+    --font-sans: "Inter", var(--font-cjk), "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+    --font-mono: "IBM Plex Mono", var(--font-cjk), "PingFang TC", "Microsoft JhengHei", monospace;
 
     --radius: 8px;
 

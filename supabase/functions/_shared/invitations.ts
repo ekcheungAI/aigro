@@ -118,7 +118,7 @@ export function renderInvitationEmail({
   const html = `<!doctype html>
 <html lang="zh-HK">
   <head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>${subject}</title></head>
-  <body style="margin:0;background:#F3F5F1;color:#0D0D0C;font-family:Inter,'Noto Sans TC',Arial,sans-serif">
+  <body style="margin:0;background:#F3F5F1;color:#0D0D0C;font-family:Inter,'Chiron GoRound TC','PingFang TC','Microsoft JhengHei',Arial,sans-serif">
     <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent">${safeInviter} 邀請你加入 AIGRO 會員專區。</div>
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#F3F5F1;padding:32px 16px">
       <tr><td align="center">
@@ -126,7 +126,7 @@ export function renderInvitationEmail({
           <tr><td style="padding:24px 32px;background:#0D0D0C;color:#FFFFFF;font-size:23px;font-weight:700;letter-spacing:.04em">AIGRO</td></tr>
           <tr><td style="padding:36px 32px">
             <p style="margin:0 0 12px;color:#1F7A06;font-size:12px;font-weight:700;letter-spacing:.12em">專屬邀請</p>
-            <h1 style="margin:0 0 20px;font-family:Georgia,'Noto Serif TC',serif;font-size:30px;line-height:1.3;font-weight:600">${safeRecipient}，歡迎加入 AIGRO</h1>
+            <h1 style="margin:0 0 20px;font-family:Georgia,'Chiron GoRound TC','PingFang TC','Microsoft JhengHei',serif;font-size:30px;line-height:1.3;font-weight:600">${safeRecipient}，歡迎加入 AIGRO</h1>
             <p style="margin:0 0 14px;font-size:16px;line-height:1.75;color:#343733">${safeInviter} 邀請你加入香港 AI・增長・商業情報平台 AIGRO。</p>
             <p style="margin:18px 0 0;font-size:13px;color:#676B65">邀請方案</p>
             <p style="margin:5px 0 0;font-size:16px;font-weight:700;color:#0D0D0C">${safeMembership}</p>

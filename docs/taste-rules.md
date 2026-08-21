@@ -3,7 +3,7 @@
 Distilled from Emil Kowalski's animation standards and the taste-skill anti-slop
 framework, filtered through AIGRO's brand system (`/mnt/agents/output/design/design.md`).
 **Brand rules win on any conflict**: no gradients, gold only for Verified/VIP, ink accent,
-Fraunces + Noto Serif TC, warm neutrals.
+Fraunces for Latin display + Chiron GoRound TC for all Traditional Chinese, warm neutrals.
 
 Sources:
 - Emil animation standards: https://github.com/ek-or-re/ek-skills (`skills/review-animations/STANDARDS.md`, local: `/mnt/agents/output/ek-skills/`)

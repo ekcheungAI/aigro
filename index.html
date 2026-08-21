@@ -31,13 +31,13 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       id="aigro-fonts"
-      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Noto+Serif+TC:wght@500;700&family=Inter:wght@400;500;600&family=Noto+Sans+TC:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
       rel="stylesheet"
       media="print"
     />
     <noscript>
       <link
-        href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Noto+Serif+TC:wght@500;700&family=Inter:wght@400;500;600&family=Noto+Sans+TC:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
         rel="stylesheet"
       />
     </noscript>
@@ -52,8 +52,8 @@
           if (dark) document.documentElement.classList.add('dark');
         } catch (e) {}
 
-        // Keep the large CJK font stylesheet off the render-critical path while
-        // preserving the exact brand families once it is available.
+        // Keep the supporting Latin font stylesheet off the render-critical path.
+        // The Unicode-subsetted Chiron CJK webfont is self-hosted in the app bundle.
         var fonts = document.getElementById('aigro-fonts');
         if (fonts) {
           var activateFonts = function () { fonts.media = 'all'; };

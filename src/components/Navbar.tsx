@@ -350,7 +350,7 @@ export default function Navbar() {
         </div>
       </header>
 
-      {/* Mobile full-screen drawer (design.md §6.1: solid overlay, big serif links, 80ms stagger) */}
+      {/* Mobile full-screen drawer (design.md §6.1: solid overlay, big display links, 80ms stagger) */}
       <AnimatePresence>
         {drawerOpen && (
           <motion.div

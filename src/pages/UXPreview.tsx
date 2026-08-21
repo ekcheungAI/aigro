@@ -303,7 +303,7 @@ export default function UXPreview() {
       <div className="border-b border-band-border bg-band-bg">
         <div className="mx-auto flex min-h-8 max-w-[1440px] items-center justify-between gap-3 px-4 py-1.5 font-mono text-[9px] uppercase tracking-[0.13em] text-band-text-muted sm:px-6">
           <span>Application direction · Mobbin informed</span>
-          <span className="hidden sm:inline">Type · Fraunces / Inter / IBM Plex Mono</span>
+          <span className="hidden sm:inline">Type · Chiron GoRound TC / Fraunces / Inter / IBM Plex Mono</span>
         </div>
       </div>
 

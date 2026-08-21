@@ -8,7 +8,7 @@ import {
 
 /**
  * Newsletter Block (design.md §6.9): surface full-width band + border top/bottom.
- * Left: serif h3 + body-sm. Right: email input (48px) + solid ink 訂閱 button.
+ * Left: display h3 + body-sm. Right: email input (48px) + solid ink 訂閱 button.
  * Success: success check + 「已訂閱成功」 replaces input. No modal, no confetti.
  */
 export default function Newsletter() {

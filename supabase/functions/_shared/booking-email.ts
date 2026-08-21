@@ -111,14 +111,14 @@ export function renderBookingEmail({
 <html lang="zh-HK"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>${
     escapeHtml(subject)
   }</title></head>
-<body style="margin:0;background:#F3F5F1;color:#0D0D0C;font-family:Inter,'Noto Sans TC',Arial,sans-serif">
+<body style="margin:0;background:#F3F5F1;color:#0D0D0C;font-family:Inter,'Chiron GoRound TC','PingFang TC','Microsoft JhengHei',Arial,sans-serif">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent">${safeMessage}</div>
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="padding:32px 16px;background:#F3F5F1"><tr><td align="center">
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;border:1px solid #D9DDD6;background:#FFFFFF">
 <tr><td style="padding:24px 32px;background:#0D0D0C;color:#FFFFFF;font-size:23px;font-weight:700;letter-spacing:.04em">AIGRO</td></tr>
 <tr><td style="padding:36px 32px">
 <p style="margin:0 0 12px;color:#1F7A06;font-size:12px;font-weight:700;letter-spacing:.12em">導師預約</p>
-<h1 style="margin:0 0 18px;font-family:Georgia,'Noto Serif TC',serif;font-size:30px;line-height:1.3;font-weight:600">${
+<h1 style="margin:0 0 18px;font-family:Georgia,'Chiron GoRound TC','PingFang TC','Microsoft JhengHei',serif;font-size:30px;line-height:1.3;font-weight:600">${
     escapeHtml(subject.replace("AIGRO 預約｜", ""))
   }</h1>
 <p style="margin:0 0 24px;font-size:16px;line-height:1.75;color:#343733">${safeMessage}</p>

@@ -54,7 +54,7 @@ const STEPS: Step[] = [
 
 /**
  * 「點樣用 AIGRO」3-step explainer — 首次訪客嘅理解錨點。
- * Plex Mono 編號 + 襯線標題 + 兩行白話說明 + ghost CTA;
+ * Plex Mono 編號 + display 標題 + 兩行白話說明 + ghost CTA;
  * hairline 分隔,desktop 3 欄 / mobile 單欄,Reveal stagger 80ms。
  */
 export default function HowToUse() {

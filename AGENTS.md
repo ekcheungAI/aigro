@@ -81,9 +81,12 @@ Violating these is a bug. When in doubt, read `docs/design-system.md`.
 - **Hairlines over shadows**: 1px borders first; dark mode uses borders only, no shadows.
 
 ### Typography
-- Display: **Fraunces + Noto Serif TC** · Body/UI: **Inter + Noto Sans TC** ·
-  Data/mono: **IBM Plex Mono** (via `--font-display/--font-sans/--font-mono`).
-- Headlines serif, UI sans. CJK body text ≥ 13px; article max-width 44rem.
+- Traditional Chinese brand voice: **Chiron GoRound TC** across display, body/UI,
+  and CJK fallback for data/mono. Latin remains **Fraunces** (display), **Inter**
+  (body/UI), and **IBM Plex Mono** (data), via
+  `--font-cjk/--font-display/--font-sans/--font-mono`.
+- Latin headlines use Fraunces; Chinese headlines and UI use Chiron. CJK body text
+  ≥ 13px; article max-width 44rem.
 
 ### Voice / copy
 - UI language is **繁體中文（香港用語）+ 書面粵語** where conversational (e.g. Ask,

@@ -850,7 +850,7 @@ function TopicMapView() {
 
 /**
  * 主題閱讀 — 單一主題嘅日期分組過濾 feed（v1.20）。
- * 結構：← 返回主題地圖 ghost button · logo tile + serif H2 + 描述 +
+ * 結構：← 返回主題地圖 ghost button · logo tile + display H2 + 描述 +
  * mono caption「顯示「{name}」最近 N 則情報」· 同主 feed 格式嘅
  * 日期分組列（mono rail + 髮絲線分隔）· 底部同群組相關主題 rail。
  */
@@ -890,7 +890,7 @@ function TopicView({
         </button>
       </Reveal>
 
-      {/* 標頭：overline + logo tile + serif H2 + 描述 + mono caption */}
+      {/* 標頭：overline + logo tile + display H2 + 描述 + mono caption */}
       <Reveal y={16} duration={0.4} delay={0.06}>
         <p className="mt-12 flex items-center gap-3 text-overline font-sans uppercase text-text-muted max-md:mt-10">
           <span
@@ -1380,7 +1380,7 @@ function SectorEmptyState({ sector }: { sector: SectorDef }) {
  * AI 行業內：即時動態（日期分組 feed：mono rail + 髮絲線列，精選/全部、
  * 搜尋、分類 chips）· 每日日報 · 主題地圖（最新焦點 + 31 主題卡
  * — 公司與模型用 Simple Icons 真實 logo,onError fallback monogram — + 熱議訊號）
- * · 主題閱讀 view（?tab=topics&topic=<id>：← 返回主題地圖 · logo tile + serif H2
+ * · 主題閱讀 view（?tab=topics&topic=<id>：← 返回主題地圖 · logo tile + display H2
  * + mono caption · 同格式日期分組過濾 feed · 同群組相關主題 rail;
  * topic param 改變時 scroll-to-top — 補 Layout 只睇 pathname 嘅缺口）。
  * URL 驅動：?sector= / ?tab= / ?topic= / ?mode= / ?category= / ?q=。

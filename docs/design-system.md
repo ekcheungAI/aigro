@@ -120,15 +120,22 @@
 
 | 角色 | Latin | 繁體中文 | 載入 |
 | --- | --- | --- | --- |
-| **Display**（hero、專家姓名、日報刊頭、KPI 數字） | **Fraunces** 400–600 | **Noto Serif TC** 500/700 | Google Fonts，`display: swap`，weight-limited |
-| **Body / UI**（正文、導航、卡片） | **Inter** 400–600 | **Noto Sans TC** 400/500 | 同上 |
-| **Data / mono**（指標、日期、期號） | **IBM Plex Mono** 400/500 | CJK 回落 Noto Sans TC | 同上 |
+| **Display**（hero、專家姓名、日報刊頭、KPI 數字） | **Fraunces** 400–600 | **Chiron GoRound TC** variable 200–900 | Latin: Google Fonts；CJK: self-hosted variable WOFF2，`display: swap` |
+| **Body / UI**（正文、導航、卡片） | **Inter** 400–600 | **Chiron GoRound TC** variable 200–900 | 同一套 CJK variable webfont |
+| **Data / mono**（指標、日期、期號） | **IBM Plex Mono** 400/500 | CJK 回落 Chiron GoRound TC | 同上 |
 
 ```css
---font-display: "Fraunces", "Noto Serif TC", serif;
---font-sans:    "Inter", "Noto Sans TC", system-ui, sans-serif;
---font-mono:    "IBM Plex Mono", "Noto Sans TC", monospace;
+--font-cjk:     "Chiron GoRound TC WS";
+--font-display: "Fraunces", var(--font-cjk), "PingFang TC", "Microsoft JhengHei", serif;
+--font-sans:    "Inter", var(--font-cjk), "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+--font-mono:    "IBM Plex Mono", var(--font-cjk), "PingFang TC", "Microsoft JhengHei", monospace;
 ```
+
+`chiron-go-round-tc-webfont@1.0.11` 以 exact version 自行託管，並由
+`src/main.tsx` 載入完整 `css/vf.css`。字型以 Unicode range 分割，涵蓋
+Big5/HKSCS、罕用繁體字及粵語專用字；瀏覽器只下載頁面實際用到的 subset。
+Chiron 內含 Nunito 拉丁字，因此三套 stack 必須維持 Latin 專用字型在前、
+Chiron 在後，避免改變既有 AIGRO 拉丁字聲音。
 
 標題設 `font-feature-settings: "palt"`（CJK 比例間距）。
 
@@ -136,21 +143,21 @@
 
 | Token | px | Line-height | Weight | Tracking | 用途 |
 | --- | --- | --- | --- | --- | --- |
-| `display-xl` | 64 | 1.1 | Fraunces 550 / Serif TC 700 | -0.01em | 首頁 hero 定位語 |
-| `display-lg` | 48 | 1.15 | 550 / 700 | -0.01em | 專家姓名、日報刊頭 |
-| `display` | 40 | 1.2 | 550 / 700 | -0.005em | 頁面 H1 |
-| `h2` | 32 | 1.25 | 550 / 700 | -0.005em | Section 標題 |
-| `h3` | 24 | 1.3 | sans 600 / Serif TC 700 | 0 | 卡組標題、文章 H2 |
-| `h4` | 20 | 1.35 | Inter 600 / Sans TC 500 | 0 | 卡片標題 |
+| `display-xl` | 64 | 1.1 | Fraunces / Chiron 550 | -0.01em | 首頁 hero 定位語 |
+| `display-lg` | 48 | 1.15 | Fraunces / Chiron 550 | -0.01em | 專家姓名、日報刊頭 |
+| `display` | 40 | 1.2 | Fraunces / Chiron 550 | -0.005em | 頁面 H1 |
+| `h2` | 32 | 1.25 | Fraunces / Chiron 550 | -0.005em | Section 標題 |
+| `h3` | 24 | 1.3 | Latin / Chiron 600 | 0 | 卡組標題、文章 H2 |
+| `h4` | 20 | 1.35 | Inter / Chiron 600 | 0 | 卡片標題 |
 | `body-lg` | 18 | 1.7 | 400 / 400 | 0 | 文章導言、AI 回答 |
 | `body` | 16 | 1.7 | 400 / 400 | 0 | 預設正文（CJK 下限） |
 | `body-sm` | 15 | 1.65 | 400 / 400 | 0 | 卡片摘要、AI 摘要 |
 | `label` | 14 | 1.4 | 500 / 500 | +0.01em | 按鈕、導航、表單標籤 |
 | `caption` | 13 | 1.45 | 400 / 400 | +0.01em | 時間戳、來源名 |
-| `overline` | 13 | 1.3 | 600 / 500 | Latin +0.12em 全大寫；CJK +0.2em 正常大小寫 | 分類標籤、section eyebrow |
+| `overline` | 13 | 1.3 | Latin / Chiron 600 | Latin +0.12em 全大寫；CJK +0.2em 正常大小寫 | 分類標籤、section eyebrow |
 | `metric` | 36 | 1.1 | Plex Mono 500 | 0 | 案例數據、KPI 數字 |
 
-規則：**標題用襯線，UI 用無襯線**。中文可讀文字不低於 13px；overline 統一使用 13px，避免中英混排時中文跌穿可讀下限。文章正文最大行寬 44rem（≈38–42 CJK 字/行）。CJK 行內不加 letter-spacing，Latin run 可加 0.02em。
+規則：拉丁 display 標題用 Fraunces，拉丁 UI 用 Inter；**所有繁體中文角色統一用 Chiron GoRound TC**。中文可讀文字不低於 13px；overline 統一使用 13px，避免中英混排時中文跌穿可讀下限。文章正文最大行寬 44rem（≈38–42 CJK 字/行）。CJK 行內不加 letter-spacing，Latin run 可加 0.02em。
 
 ---
 
@@ -212,7 +219,7 @@
 - 左：官方透明底三點 AIGRO wordmark（light 用 navy 版，dark 用 white 版）+ 可選 `caption` `text-muted`「香港 AI・增長情報」。不可用文字或 CSS 重畫 logo。
 - 中（desktop）：`label` 雙語連結 — `Insights 情報` · `Skills 技能` · `Experts 專家` · `Ask 問答` · `Pricing 方案`。英文係主標籤、中文係同一行嘅輔助 caption。Active：主文字加深 + 底部 2px lime bar；避免瀏覽器 underline 令中英基線顯得不齊。
 - 右：深淺色切換 + 身份動作。未登入顯示「登入」與「加入 Club」；已登入收斂成 avatar + 角色入口嘅單一帳戶選單，選單內先顯示完整名稱、角色、平台入口、帳戶設定與登出，避免長名稱擠壓主導航。
-- Mobile：<768px 漢堡選單（Lucide `menu`），全屏 drawer（`overlay` 背景，大襯線連結，stagger 80ms 滑入）。
+- Mobile：<768px 漢堡選單（Lucide `menu`），全屏 drawer（`overlay` 背景，大字級 display 連結，stagger 80ms 滑入）。
 
 ### 6.2 Footer（全站）
 
@@ -256,7 +263,7 @@
 
 ### 6.9 Newsletter Block 訂閱（全站共用，首頁與頁尾前）
 
-`surface` 全寬帶 + `border` 上下線。左：襯線 `h3`「每週精選，直達信箱」+ `body-sm` 說明；右：email 輸入（`border-strong`，radius-md，48px 高）+ brand-green 實心／deep-navy 字「訂閱」按鈕；下方 `caption` `text-muted`「每週一封，隨時退訂」。成功態：`success` 色勾圖標 +「已訂閱成功」替換輸入框。無 modal、無彩帶。
+`surface` 全寬帶 + `border` 上下線。左：`font-display h3`「每週精選，直達信箱」+ `body-sm` 說明；右：email 輸入（`border-strong`，radius-md，48px 高）+ brand-green 實心／deep-navy 字「訂閱」按鈕；下方 `caption` `text-muted`「每週一封，隨時退訂」。成功態：`success` 色勾圖標 +「已訂閱成功」替換輸入框。無 modal、無彩帶。
 
 ---
 
@@ -266,7 +273,7 @@
 - **動效**: framer-motion（進場 reveal、stagger、hover 微互動、頁面轉場）；GSAP 可選（僅用於 metric count-up）
 - **滾動**: lenis（平滑滾動）
 - **圖標**: lucide-react（1.5px stroke，16/20/24px）
-- **字體**: Google Fonts — Fraunces (400/500/600), Noto Serif TC (500/700), Inter (400/500/600), Noto Sans TC (400/500), IBM Plex Mono (400/500)
+- **字體**: self-hosted Chiron GoRound TC variable WOFF2 (200–900，完整繁中／HKSCS／粵語覆蓋)；Google Fonts — Fraunces (400/500/600), Inter (400/500/600), IBM Plex Mono (400/500)
 - **主題**: class-based dark mode（`.dark` on `<html>`），localStorage 持久化，預設跟隨系統
 - **路由**: react-router-dom v7（前端原型，mock data，無後端）
 - 禁用：任何會引入漸層預設的 UI kit 主題。
@@ -306,7 +313,7 @@
 | `expert-kelvin-wong.jpg` | Editorial environmental portrait of a Hong Kong Chinese man in his mid 30s, glasses, dark knit sweater, co-working space background softly blurred, muted warm-gray desaturated tones, shallow depth of field, magazine editorial quality, thoughtful expression | Experts 牆（待用態）、專家頁 | 800×800 1:1 | Image |
 | `expert-jocelyn-ng.jpg` | Editorial environmental portrait of a Hong Kong Chinese woman in her early 30s, tied-back hair, minimalist dark blouse, modern retail-tech office background blurred, muted warm-gray desaturated tones, shallow depth of field, magazine editorial quality, poised expression | Experts 牆（待用態）、專家頁 | 800×800 1:1 | Image |
 | `expert-eric-cheng.jpg` | Editorial environmental portrait of a Hong Kong Chinese man in his late 30s, light stubble, charcoal suit no tie, fintech office glass wall background blurred, muted warm-gray desaturated tones, shallow depth of field, magazine editorial quality, steady expression | Experts 牆（待用態）、專家頁 | 800×800 1:1 | Image |
-| `og-image.png` | Approved AIGRO editorial share card: cool-paper `#F5F7FA` or deep-navy `#02122C` canvas, official supplied three-dot wordmark used unchanged, Chinese tagline 「香港 AI・增長情報平台」 in Noto Serif TC, one restrained brand-green `#42CAAC` rule or focal detail, generous negative space, no gradients and no extra logo-blue UI decoration | 社群分享 OG 圖 | 1200×630 | Image |
+| `og-image.png` | Approved AIGRO editorial share card: cool-paper `#F5F7FA` or deep-navy `#02122C` canvas, official supplied three-dot wordmark used unchanged, Chinese tagline 「香港 AI・增長情報平台」 in Chiron GoRound TC, one restrained brand-green `#42CAAC` rule or focal detail, generous negative space, no gradients and no extra logo-blue UI decoration | 社群分享 OG 圖 | 1200×630 | Image |
 
 ---
 

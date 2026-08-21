@@ -4,7 +4,7 @@ Portable brand and interface contract for AIGRO, the Hong Kong AI, growth, and
 business intelligence platform.
 
 - Status: current working specification
-- Updated: 2026-08-15
+- Updated: 2026-08-22
 - Runtime source: `src/index.css`
 - Brand guide: `/branding`
 
@@ -33,16 +33,17 @@ component.
 
 | Role | Latin | Traditional Chinese | Use |
 | --- | --- | --- | --- |
-| Display | Fraunces 400, 500, 600 | Noto Serif TC 500, 700 | H1, H2, H3, hero copy, editorial emphasis |
-| UI and body | Inter 400, 500, 600 | Noto Sans TC 400, 500 | Navigation, paragraphs, cards, forms, buttons |
-| Data and metadata | IBM Plex Mono 400, 500 | Noto Sans TC fallback | Dates, metrics, source IDs, version strings |
+| Display | Fraunces 400, 500, 600 | Chiron GoRound TC variable 200-900 | H1, H2, H3, hero copy, editorial emphasis |
+| UI and body | Inter 400, 500, 600 | Chiron GoRound TC variable 200-900 | Navigation, paragraphs, cards, forms, buttons |
+| Data and metadata | IBM Plex Mono 400, 500 | Chiron GoRound TC fallback | Dates, metrics, source IDs, version strings |
 
 ### Font variables
 
 ```css
---font-display: "Fraunces", "Noto Serif TC", serif;
---font-sans: "Inter", "Noto Sans TC", system-ui, sans-serif;
---font-mono: "IBM Plex Mono", "Noto Sans TC", monospace;
+--font-cjk: "Chiron GoRound TC WS";
+--font-display: "Fraunces", var(--font-cjk), "PingFang TC", "Microsoft JhengHei", serif;
+--font-sans: "Inter", var(--font-cjk), "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+--font-mono: "IBM Plex Mono", var(--font-cjk), "PingFang TC", "Microsoft JhengHei", monospace;
 ```
 
 ### Font role rules
@@ -52,14 +53,18 @@ component.
   existing utility when the denser UI treatment is intentional.
 - H4, H5, H6, body copy, navigation, form labels, and buttons use `font-sans`.
 - Metrics, dates, source names, status metadata, and code use `font-mono`.
+- Every Traditional Chinese role uses the same Chiron family. Keep Fraunces,
+  Inter, and IBM Plex Mono first in their stacks so Latin retains its assigned
+  voice; Chiron includes its own Nunito-based Latin glyphs.
 - Use the existing Tailwind utilities `font-display`, `font-sans`, and
   `font-mono`. Do not add an inline `font-family`.
 - CJK body text must not be smaller than 13px. Long-form reading content is
   limited to 44rem.
 - Use normal CJK spacing. Tracking is reserved for short Latin metadata and
   overlines, not paragraphs.
-- Do not use fake bold or fake italic. Load a supported weight from the shared
-  font import in `index.html`.
+- Do not use fake bold or fake italic. Chiron provides upright variable weights
+  from 200 to 900; it does not ship an italic. The full Unicode-subsetted
+  webfont is self-hosted from the pinned npm package.
 
 ### Type scale
 

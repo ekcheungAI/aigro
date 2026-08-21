@@ -63,7 +63,7 @@ No environment variables are required for the current frontend-only build; see
 | Motion | framer-motion, lenis smooth scroll, custom Reveal primitives |
 | Routing | react-router-dom v7 (nested Layout/Outlet, SPA rewrites on Vercel) |
 | Data | AIHOT public API → `scripts/fetch-aihot.mjs` (OpenCC s2hk) → typed snapshot loaders; typed mock content for experts/cases/personas |
-| Fonts | Fraunces + Noto Serif TC (display), Inter + Noto Sans TC (UI), IBM Plex Mono (data) |
+| Fonts | Chiron GoRound TC (all Traditional Chinese), Fraunces (Latin display), Inter (Latin UI), IBM Plex Mono (Latin data) |
 | Hosting | Vercel, project `aigro`, alias `aigro-blue.vercel.app` |
 
 ## Docs

@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { dirname, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 
@@ -11,6 +11,14 @@ const logoPath = resolve(
 const outputPath = resolve(projectRoot, "public/og-image.png");
 const logo = await readFile(logoPath);
 const logoDataUrl = `data:image/png;base64,${logo.toString("base64")}`;
+const chironPackageRoot = resolve(
+  projectRoot,
+  "node_modules/chiron-go-round-tc-webfont"
+);
+const chironFontRoot = resolve(chironPackageRoot, "woff2");
+const chironCss = (
+  await readFile(resolve(chironPackageRoot, "css/vf.css"), "utf8")
+).replaceAll("../woff2/", "https://aigro-font.local/woff2/");
 
 const browser = await chromium.launch();
 
@@ -20,18 +28,39 @@ try {
     deviceScaleFactor: 1,
   });
 
+  // Serve the same pinned, self-hosted webfont used by the app. Routing the
+  // files through a local synthetic origin keeps page.setContent deterministic
+  // without relying on a third-party CDN during asset generation.
+  await page.route("https://aigro-font.local/**", async (route) => {
+    const requestPath = decodeURIComponent(new URL(route.request().url()).pathname);
+    const fontPath = resolve(chironPackageRoot, `.${requestPath}`);
+
+    if (!fontPath.startsWith(`${chironFontRoot}${sep}`)) {
+      await route.abort();
+      return;
+    }
+
+    await route.fulfill({
+      status: 200,
+      body: await readFile(fontPath),
+      contentType: "font/woff2",
+      headers: { "Access-Control-Allow-Origin": "*" },
+    });
+  });
+
   await page.setContent(`<!doctype html>
     <html lang="zh-Hant-HK">
       <head>
         <meta charset="utf-8" />
         <style>
+          ${chironCss}
           * { box-sizing: border-box; }
           html, body { width: 1200px; height: 630px; margin: 0; }
           body {
             overflow: hidden;
             background: #f5f7fa;
             color: #02122c;
-            font-family: Inter, "Noto Sans TC", "PingFang TC", sans-serif;
+            font-family: Inter, Arial, "Chiron GoRound TC WS", "PingFang TC", "Microsoft JhengHei", sans-serif;
           }
           .card {
             position: relative;
@@ -79,7 +108,7 @@ try {
             z-index: 1;
             margin-top: 82px;
             max-width: 980px;
-            font-family: Fraunces, "Noto Serif TC", "Songti TC", serif;
+            font-family: Fraunces, Georgia, "Chiron GoRound TC WS", "PingFang TC", "Microsoft JhengHei", serif;
             font-weight: 600;
             letter-spacing: -0.035em;
             line-height: 1.04;
@@ -128,7 +157,19 @@ try {
       </body>
     </html>`);
 
-  await page.evaluate(() => document.fonts.ready);
+  await page.evaluate(async () => {
+    await Promise.all([
+      document.fonts.load(
+        '500 21px "Chiron GoRound TC WS"',
+        "每日精選情報領航專家實用資源"
+      ),
+      document.fonts.load(
+        '600 64px "Chiron GoRound TC WS"',
+        "香港最好嘅資源一齊學習成長"
+      ),
+    ]);
+    await document.fonts.ready;
+  });
   await page.screenshot({ path: outputPath, type: "png" });
   process.stdout.write(`Rendered ${outputPath}\n`);
 } finally {

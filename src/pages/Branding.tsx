@@ -85,18 +85,18 @@ const TYPE_ROLES = [
   },
   {
     name: "Editorial display",
-    family: "Fraunces + Noto Serif TC",
-    use: "長篇品牌敘事、重點標題與需要權威感的編輯式內容。",
+    family: "Fraunces + Chiron GoRound TC",
+    use: "Fraunces 處理拉丁字；昭源環方統一中文標題、品牌敘事與編輯式內容。",
   },
   {
     name: "UI / corporate",
-    family: "Inter + Noto Sans TC",
-    use: "介面、提案、caption、雙語訊息與日常操作文字。",
+    family: "Inter + Chiron GoRound TC",
+    use: "Inter 處理拉丁字；昭源環方統一中文介面、提案、caption 與日常操作文字。",
   },
   {
     name: "Data / metadata",
-    family: "IBM Plex Mono",
-    use: "日期、指標、來源、工具名與版本類資訊。",
+    family: "IBM Plex Mono + Chiron GoRound TC",
+    use: "Plex Mono 處理拉丁數據；昭源環方承接中文日期、來源與 metadata。",
   },
 ] as const;
 
@@ -594,7 +594,7 @@ export default function Branding() {
       >
         <Reveal>
           <h2 id="typography-layout-title" className="font-display text-h2 text-text-primary">Typography & layout</h2>
-          <p className="mt-4 max-w-prose text-body text-text-secondary">排版要讓資訊有份量而不顯得遙遠。襯線只用於有編輯價值的重點，日常閱讀和操作則以清晰的無襯線字體完成。</p>
+          <p className="mt-4 max-w-prose text-body text-text-secondary">排版要讓資訊有份量而不顯得遙遠。拉丁編輯重點用 Fraunces 建立份量；所有中文統一用昭源環方，再以字重和字級分出敘事與操作層次。</p>
         </Reveal>
 
         <div className="mt-12 grid gap-px border-y border-border bg-border lg:grid-cols-[0.85fr_1.15fr]">
