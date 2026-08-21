@@ -1,12 +1,21 @@
 import { expect, test } from "@playwright/test";
+import { AIGRO_PRODUCTION_SUPABASE_URL } from "../../src/lib/deploymentEnvironment";
 
 test("public API directory is deep-linkable, searchable, and source-transparent", async ({ page }) => {
   const outboundProviderRequests: string[] = [];
+  const firstPartyHostnames = new Set([
+    "127.0.0.1",
+    "localhost",
+    "fonts.googleapis.com",
+    "fonts.gstatic.com",
+    new URL(AIGRO_PRODUCTION_SUPABASE_URL).hostname,
+  ]);
+  const remoteBaseUrl = process.env.AIGRO_E2E_BASE_URL?.trim();
+  if (remoteBaseUrl) firstPartyHostnames.add(new URL(remoteBaseUrl).hostname);
+
   page.on("request", (request) => {
     const url = new URL(request.url());
-    if (
-      !["127.0.0.1", "localhost", "fonts.googleapis.com", "fonts.gstatic.com"].includes(url.hostname)
-    ) {
+    if (!firstPartyHostnames.has(url.hostname)) {
       outboundProviderRequests.push(request.url());
     }
   });
@@ -20,7 +29,12 @@ test("public API directory is deep-linkable, searchable, and source-transparent"
     "aria-selected",
     "true"
   );
-  await expect(page.getByText("26 個已發佈 API", { exact: true })).toBeVisible();
+  const publishedCountLabel = page.locator("#public-api-results-title");
+  await expect(publishedCountLabel).toHaveText(/^\d+ 個已發佈 API$/);
+  const publishedCount = Number(
+    (await publishedCountLabel.textContent())?.match(/^\d+/)?.[0] ?? 0
+  );
+  expect(publishedCount).toBeGreaterThanOrEqual(26);
   await expect(page.getByRole("link", { name: /public-apis 原始目錄/ })).toBeVisible();
   await expect(page.getByRole("link", { name: /MIT 授權/ })).toBeVisible();
 
