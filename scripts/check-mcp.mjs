@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+import { toTraditionalChinese } from "./lib/traditional-chinese.mjs";
+
 /**
  * MCP Streamable HTTP launch gate.
  *
@@ -187,15 +189,29 @@ if (Array.isArray(items) && items.length > 0) {
       CJK.test(item?.title ?? "") &&
       CJK.test(item?.summary ?? "") &&
       /^https:\/\//.test(item?.original_url ?? "") &&
+      /^https:\/\//.test(item?.canonical_url ?? "") &&
+      Boolean(item?.attribution) &&
       Boolean(item?.source) &&
+      Array.from(item?.title ?? "").length <= 300 &&
+      Array.from(item?.summary ?? "").length <= 1_200 &&
       !Number.isNaN(Date.parse(item?.published_at ?? "")),
   );
   record(
     "data.evidence_fields",
     complete,
     complete
-      ? "繁體標題、摘要、來源、原文連結及時間齊全"
+      ? "繁體標題、精簡摘要、來源、原文、canonical 連結及時間齊全"
       : "有項目缺少香港繁體內容或來源證據",
+  );
+  const fullyTraditional = items.every(
+    (item) =>
+      item?.title === toTraditionalChinese(item?.title ?? "") &&
+      item?.summary === toTraditionalChinese(item?.summary ?? ""),
+  );
+  record(
+    "data.traditional_chinese",
+    fullyTraditional,
+    fullyTraditional ? "標題及摘要通過全繁體字形檢查" : "偵測到未轉換的簡體字形",
   );
   const latestMs = Date.parse(items[0]?.published_at ?? "");
   const ageMinutes = Number.isNaN(latestMs)

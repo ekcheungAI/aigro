@@ -2,9 +2,10 @@
 
 公開 Beta endpoint：`https://aigro.io/api/mcp`
 
-呢個 Streamable HTTP MCP 同 `/insights` 共用已發佈資料。公開層只讀，毋須
-API key；每項結果固定標示 `language: zh-HK`，並保留原文連結、來源同發佈
-時間。英文、非 AI、過期或資料不完整嘅項目會喺同步及讀取兩層被拒絕。
+呢個 Streamable HTTP MCP 同 `/insights` 共用策展快照及已發佈資料。公開層
+只讀，毋須 API key；每項結果固定標示 `language: zh-HK`，並保留來源原文
+`original_url`、策展頁 `canonical_url`、`attribution` 同發佈時間。英文、非 AI、
+過期或資料不完整嘅項目會喺同步及讀取兩層被拒絕。
 
 ## 客戶端設定
 
@@ -30,7 +31,8 @@ API key；每項結果固定標示 `language: zh-HK`，並保留原文連結、�
 | `get_daily_brief` | 取得同一香港日期嘅每日重點 | `limit` 1–12 |
 
 所有工具同時回傳 MCP `structuredContent` 同文字 JSON fallback，並有穩定
-`outputSchema`。分頁使用 `published_at` 游標，避免 offset 漂移。
+`outputSchema`。標題上限 300 字、摘要上限 1,200 字；最新列表每個來源最多
+三則，避免單一媒體霸榜。分頁使用 `published_at` 游標，避免 offset 漂移。
 
 ## Production smoke
 
@@ -42,7 +44,8 @@ npm run check:mcp
 
 1. 驗證 HTTPS、initialize、tools/list 同四個 output schema；
 2. 確認惡意 `Origin` 回傳 403；
-3. 真實呼叫 `get_latest_news`，檢查香港繁體內容、來源、原文連結同時間；
+3. 真實呼叫 `get_latest_news`，檢查全繁體字形、來源、原文、canonical 連結、
+   attribution、摘要上限同時間；
 4. 確認最新項目不超過 180 分鐘（可用 `MCP_MAX_AGE_MINUTES` 調整）。
 
 如將來改為私人部署，可設定 `AIGRO_MCP_BEARER_TOKEN`，並用：
@@ -56,8 +59,9 @@ issue 或 fixture。
 
 ## 安全與資料邊界
 
-- 公開 MCP 只讀取 Supabase `status=published`、`lang=zh-HK` 嘅欄位；service
-  key、未發佈內容、來源憑證同內部 connector 設定永不出現在 response。
+- 公開 MCP 合併版本控制內嘅策展快照，以及 Supabase `status=published`、
+  `lang=zh-HK` 嘅公開欄位；策展版本優先去重，資料庫失效時亦可安全降級。
+  Service key、未發佈內容、來源憑證同內部 connector 設定永不出現在 response。
 - Browser `Origin` 使用 allow-list；一般 CLI/agent client 唔會帶 `Origin`，因此
   保留無 Origin 接入。Host 亦經 allow-list 驗證。
 - 所有 limit 有上下限；搜尋字串會 escape 後先進入 PostgREST filter。

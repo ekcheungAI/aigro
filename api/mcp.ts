@@ -15,13 +15,15 @@ interface AigroMcpConfig extends NewsServiceConfig {
 
 const NewsItemSchema = z.object({
   id: z.string(),
-  title: z.string(),
-  summary: z.string(),
+  title: z.string().max(300),
+  summary: z.string().max(1_200),
   category: z.enum(NEWS_CATEGORIES),
   tags: z.array(z.string()),
   score: z.number(),
   source: z.string(),
   original_url: z.string().url(),
+  canonical_url: z.string().url(),
+  attribution: z.string().min(1),
   published_at: z.string(),
   language: z.literal("zh-HK"),
   placement: z.string(),
@@ -83,7 +85,7 @@ export function createAigroMcpHandler(config: AigroMcpConfig) {
         {
           title: "取得最新 AI 新聞",
           description:
-            "按發佈時間倒序取得已通過 AI 相關度、來源完整度及香港繁中品質閘門的最新新聞。",
+            "按發佈時間倒序取得已通過 AI 相關度、來源完整度及香港繁中品質閘門的最新新聞；結果會限制單一來源比例並附追溯資料。",
           inputSchema: z.object(CommonQuerySchema),
           outputSchema: NewsPageSchema,
           annotations: READ_ONLY_ANNOTATIONS,
@@ -96,7 +98,7 @@ export function createAigroMcpHandler(config: AigroMcpConfig) {
         {
           title: "搜尋 AI 新聞",
           description:
-            "搜尋已發佈的香港繁中 AI 新聞；結果包含來源、原文連結、發佈時間及下一頁游標。",
+            "搜尋已發佈的香港繁中 AI 新聞；結果包含來源、原文及 canonical 連結、發佈時間與下一頁游標。",
           inputSchema: z.object({
             query: z.string().trim().min(2).max(120),
             ...CommonQuerySchema,
@@ -112,7 +114,7 @@ export function createAigroMcpHandler(config: AigroMcpConfig) {
         {
           title: "取得新聞詳情",
           description:
-            "按文章 ID 取得完整摘要、來源、原文連結、語言及發佈時間；找不到時會明確回傳 null。",
+            "按文章 ID 取得精簡摘要、來源、原文及 canonical 連結、語言與發佈時間；找不到時會明確回傳 null。",
           inputSchema: z.object({ id: z.string().trim().min(1).max(120) }),
           outputSchema: z.object({
             as_of: z.string(),

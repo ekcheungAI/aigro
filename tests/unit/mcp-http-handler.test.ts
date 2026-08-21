@@ -56,6 +56,7 @@ describe("AIGRO MCP HTTP handler", () => {
     const handler = createAigroMcpHandler({
       supabaseUrl: "https://example.supabase.co",
       publishableKey: "public-key",
+      snapshotItems: [],
       fetchImpl,
     });
     const response = await handler.fetch(
@@ -82,6 +83,7 @@ describe("AIGRO MCP HTTP handler", () => {
     const handler = createAigroMcpHandler({
       supabaseUrl: "https://example.supabase.co",
       publishableKey: "public-key",
+      snapshotItems: [],
       fetchImpl,
     });
     const response = await handler.fetch(
@@ -95,6 +97,12 @@ describe("AIGRO MCP HTTP handler", () => {
     expect(response.status).toBe(200);
     expect(latest?.inputSchema?.properties?.limit?.maximum).toBe(50);
     expect(latest?.outputSchema).toBeTruthy();
+    expect(
+      latest?.outputSchema?.properties?.items?.items?.properties?.canonical_url,
+    ).toBeTruthy();
+    expect(
+      latest?.outputSchema?.properties?.items?.items?.properties?.attribution,
+    ).toBeTruthy();
     expect(body?.result?.tools?.map((tool: { name: string }) => tool.name)).toEqual(
       expect.arrayContaining([
         "get_latest_news",
@@ -109,6 +117,7 @@ describe("AIGRO MCP HTTP handler", () => {
     const handler = createAigroMcpHandler({
       supabaseUrl: "https://example.supabase.co",
       publishableKey: "public-key",
+      snapshotItems: [],
       fetchImpl,
       now: () => Date.parse("2026-08-22T02:00:00Z"),
     });

@@ -20,6 +20,32 @@ const goodRow = {
 };
 
 describe("public MCP news service", () => {
+  it("ships a curated zh-HK fallback without requiring database credentials", async () => {
+    const service = createNewsService({
+      supabaseUrl: "",
+      publishableKey: "",
+    });
+
+    const page = await service.latest({ limit: 5 });
+
+    expect(page.items).toHaveLength(5);
+    expect(page.items).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          language: "zh-HK",
+          attribution: "AI HOT (aihot.virxact.com)・AI 生成摘要",
+        }),
+      ]),
+    );
+    expect(
+      page.items.every(
+        (item) =>
+          item.original_url.startsWith("https://") &&
+          item.canonical_url.startsWith("https://"),
+      ),
+    ).toBe(true);
+  });
+
   it("returns only complete Hong Kong Chinese AI news with evidence fields", async () => {
     const fetchImpl = vi.fn(async () =>
       new Response(
@@ -34,6 +60,7 @@ describe("public MCP news service", () => {
     const service = createNewsService({
       supabaseUrl: "https://example.supabase.co",
       publishableKey: "public-key",
+      snapshotItems: [],
       fetchImpl,
       now: () => Date.parse("2026-08-22T02:00:00Z"),
     });
@@ -70,6 +97,7 @@ describe("public MCP news service", () => {
     const service = createNewsService({
       supabaseUrl: "https://example.supabase.co",
       publishableKey: "public-key",
+      snapshotItems: [],
       fetchImpl,
     });
 
@@ -86,6 +114,103 @@ describe("public MCP news service", () => {
       "lt.2026-08-22T01:00:00Z",
     );
     expect(requested.searchParams.get("or")).toContain("title.ilike.*OpenAI*");
+  });
+
+  it("keeps curated snapshot news available when the database is unavailable", async () => {
+    const snapshotItem = {
+      id: "snapshot-1",
+      title: "Anthropic 發佈 AI 原生開發手冊",
+      summary: "手冊整理如何將 Claude 應用於軟件開發生命週期。",
+      category: "觀點與技巧" as const,
+      tags: ["Claude"],
+      score: 88,
+      source: "Anthropic",
+      original_url: "https://claude.com/example",
+      canonical_url: "https://aihot.virxact.com/items/snapshot-1",
+      attribution: "AI HOT (aihot.virxact.com)・AI 生成摘要",
+      published_at: "2026-08-22T01:30:00Z",
+      language: "zh-HK" as const,
+      placement: "featured",
+    };
+    const service = createNewsService({
+      supabaseUrl: "https://example.supabase.co",
+      publishableKey: "public-key",
+      snapshotItems: [snapshotItem],
+      fetchImpl: vi.fn(async () => new Response("unavailable", { status: 503 })),
+      now: () => Date.parse("2026-08-22T02:00:00Z"),
+    });
+
+    await expect(service.latest({ limit: 10 })).resolves.toEqual(
+      expect.objectContaining({ items: [snapshotItem], language: "zh-HK" }),
+    );
+  });
+
+  it("corrects unsupported release labels and bounds oversized summaries", async () => {
+    const fetchImpl = vi.fn(async () =>
+      new Response(
+        JSON.stringify([
+          {
+            ...goodRow,
+            id: "mislabelled",
+            title: "對 AI 牴觸情緒正在上升",
+            summary: "調查顯示公眾對人工智能嘅態度正在轉變。".repeat(100),
+            original_url: "https://example.com/ai-sentiment",
+            category: "模型發布",
+          },
+        ]),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
+    );
+    const service = createNewsService({
+      supabaseUrl: "https://example.supabase.co",
+      publishableKey: "public-key",
+      snapshotItems: [],
+      fetchImpl,
+    });
+
+    const page = await service.latest({ limit: 10 });
+
+    expect(page.items[0]).toEqual(
+      expect.objectContaining({
+        category: "行業動態",
+        canonical_url: "https://example.com/ai-sentiment",
+        attribution: "AIGRO 情報管道",
+      }),
+    );
+    expect(Array.from(page.items[0]?.summary ?? "")).toHaveLength(1_200);
+    expect(page.items[0]?.summary.endsWith("…")).toBe(true);
+  });
+
+  it("prevents one publisher from dominating the latest-news response", async () => {
+    const rows = Array.from({ length: 5 }, (_, index) => ({
+      ...goodRow,
+      id: `same-source-${index}`,
+      original_url: `https://openai.com/example-${index}`,
+      published_at: `2026-08-22T0${index + 1}:00:00Z`,
+    }));
+    rows.push({
+      ...goodRow,
+      id: "second-source",
+      original_url: "https://anthropic.com/example",
+      published_at: "2026-08-22T00:30:00Z",
+      sources: { name: "Anthropic" },
+    });
+    const service = createNewsService({
+      supabaseUrl: "https://example.supabase.co",
+      publishableKey: "public-key",
+      snapshotItems: [],
+      fetchImpl: vi.fn(async () =>
+        new Response(JSON.stringify(rows), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      ),
+    });
+
+    const page = await service.latest({ limit: 10 });
+
+    expect(page.items.filter((item) => item.source === "OpenAI Blog")).toHaveLength(3);
+    expect(page.items.some((item) => item.source === "Anthropic")).toBe(true);
   });
 
   it("rejects untrusted browser origins while allowing CLI clients without Origin", () => {
