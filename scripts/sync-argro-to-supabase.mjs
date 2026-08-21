@@ -42,6 +42,9 @@ const SUPA_URL =
 const SUPA_KEY = process.env.SUPABASE_SECRET_KEY;
 const STREAM_PAGE_LIMIT = Math.max(1, Math.min(100, Number(process.env.ARGRO_STREAM_PAGE_LIMIT ?? 100)));
 const STREAM_MAX_PAGES = Math.max(1, Math.min(50, Number(process.env.ARGRO_STREAM_MAX_PAGES ?? 20)));
+// PostgREST's URL parser rejects the 32KB URL produced by 500 SHA-256
+// fingerprints. Keep lookup requests comfortably below that limit.
+const EXISTING_LOOKUP_CHUNK = 100;
 const AUTO_PUBLISH = process.env.ARGRO_AUTO_PUBLISH === "true";
 
 if (!SUPA_KEY || !ARGRO_KEY) {
@@ -209,8 +212,10 @@ async function fetchExistingByFingerprint(fingerprints) {
 }
 
 const existingByFingerprint = new Map();
-for (let i = 0; i < payload.length; i += 500) {
-  const chunk = await fetchExistingByFingerprint(payload.slice(i, i + 500).map((row) => row.fingerprint));
+for (let i = 0; i < payload.length; i += EXISTING_LOOKUP_CHUNK) {
+  const chunk = await fetchExistingByFingerprint(
+    payload.slice(i, i + EXISTING_LOOKUP_CHUNK).map((row) => row.fingerprint),
+  );
   for (const [fingerprint, row] of chunk) existingByFingerprint.set(fingerprint, row);
 }
 for (const row of payload) {

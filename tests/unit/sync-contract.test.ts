@@ -26,4 +26,10 @@ describe("Argro sync release contract", () => {
     expect(script).toContain("delete row.category");
     expect(script).toContain("if (!row.source_id) delete row.source_id");
   });
+
+  it("keeps fingerprint lookup URLs below PostgREST's request-size limit", () => {
+    expect(script).toContain("const EXISTING_LOOKUP_CHUNK = 100");
+    expect(script).toContain("i += EXISTING_LOOKUP_CHUNK");
+    expect(script).toContain("i + EXISTING_LOOKUP_CHUNK");
+  });
 });
