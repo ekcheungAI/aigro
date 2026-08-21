@@ -59,3 +59,57 @@ jobs:
             deno check --config "$edge_config" "$entry"
           done
       - run: deno lint supabase/functions
+
+  # Deploy is a JOB, not a separate workflow. It was a workflow_run chain for
+  # about an hour on 2026-08-21; `needs` is strictly better here because the
+  # platform enforces what the chain could only approximate:
+  #
+  #   * workflow_run fires on failure too, so it needed an explicit
+  #     `conclusion == 'success'` guard. A needed job that fails simply skips
+  #     its dependants - nothing to get wrong.
+  #   * workflow_run checks out the branch tip, not the commit that was
+  #     verified, so it needed an explicit head_sha pin. In-run jobs already
+  #     share one SHA.
+  #   * Two workflows meant two entries per push in the Actions list, and the
+  #     deploy result did not show on the commit that caused it.
+  #
+  # `needs` does NOT imply main-only: without the `if`, every PR would deploy
+  # to production.
+  deploy:
+    needs: [application, database-and-functions]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
+
+      - name: Deploy to Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "VERCEL_TOKEN is not set — see docs/DEPLOY-SETUP.md"
+            exit 1
+          fi
+          npx --yes vercel@latest deploy --prod --yes --token "$VERCEL_TOKEN"
+
+      - name: Verify the live site is serving
+        run: |
+          # A deploy command exiting 0 only tells you the CLI exited. Confirm
+          # the origin actually answers before calling this shipped.
+          for i in 1 2 3 4 5 6; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' https://aigro.io/insights/daily || true)
+            echo "attempt $i: HTTP $code"
+            [ "$code" = "200" ] && exit 0
+            sleep 10
+          done
+          echo "site did not return 200 after the deploy"
+          exit 1

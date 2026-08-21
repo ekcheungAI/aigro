@@ -63,31 +63,33 @@ Names must match exactly — a typo reads as "unset" and the job fails closed.
 
 Do **not** test by pushing something you care about. Use the manual trigger:
 
-<https://github.com/ekcheungAI/aigro/actions/workflows/deploy.yml>
-→ **Run workflow** → branch `main`
+Push any small change to `main` (a docs typo will do). The `deploy` job runs
+as the last stage of **Verify application and backend contracts**, after both
+test jobs go green.
 
-Green run means the pipeline is live. The workflow's last step polls
+Green run means the pipeline is live. The job's last step polls
 `https://aigro.io/insights/daily` until it returns 200, so a green run is
 evidence the origin actually answered — not just that the CLI exited 0.
 
 ## How it behaves afterwards
 
-- Push to `main` → verify runs → **only on success** does deploy run.
-- Verify fails → no deploy. The live site keeps serving the last good build.
-- Need to re-deploy the current `main` without a code change → use
-  **Run workflow** rather than an empty commit.
-- Two pushes in quick succession queue rather than race
-  (`concurrency: deploy-production`, `cancel-in-progress: false`), so a
-  half-finished deploy is never cancelled midway.
+- Push to `main` → both test jobs run → `deploy` runs only if **both** pass.
+- Either test job fails → `deploy` is skipped by the platform. The live site
+  keeps serving the last good build.
+- Pull requests never deploy: the job is gated on
+  `github.ref == 'refs/heads/main' && github.event_name == 'push'`.
 
-The deploy checks out `workflow_run.head_sha`, not the tip of `main`. If
-another commit lands while verification is running, the deployed artifact is
-still the one that was tested.
+`deploy` is a job inside `ci.yml`, not a separate workflow. That was a
+deliberate change on 2026-08-21 (it briefly lived in its own `deploy.yml`
+chained by `workflow_run`). Keeping it in-run means GitHub enforces the
+ordering with `needs:`, every job shares one commit SHA, and the deploy result
+shows on the commit that caused it instead of in a second Actions entry.
 
 ## Alternative: Vercel's own Git integration
 
 Connecting the repo in the Vercel dashboard also gives push-to-deploy, with
 less YAML. It deploys on push **without waiting for CI**, so a red build ships
 and gets rolled back after the fact. That trade was rejected here. If you turn
-the Git integration on later, delete `.github/workflows/deploy.yml` — running
-both means two deploys per push, racing each other.
+the Git integration on later, remove the `deploy` job from
+`.github/workflows/ci.yml` — running both means two deploys per push, racing
+each other.

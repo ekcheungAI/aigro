@@ -45,21 +45,37 @@ describe("GitHub workflows", () => {
     }
   });
 
-  it("deploys only after verification succeeds on main", () => {
-    const raw = readFileSync(join(WORKFLOW_DIR, "deploy.yml"), "utf8");
+  it("deploys only after verification succeeds, in the same workflow run", () => {
+    const raw = readFileSync(join(WORKFLOW_DIR, "ci.yml"), "utf8");
     const doc = yaml.load(raw) as {
-      on?: { workflow_run?: { workflows?: string[]; types?: string[]; branches?: string[] } };
-      jobs?: Record<string, { if?: string }>;
+      on?: Record<string, unknown>;
+      jobs?: Record<string, { needs?: string | string[]; if?: string }>;
     };
-    // Deploying on raw push would ship a red build. It must key off the
-    // verify workflow completing.
-    const trigger = doc.on?.workflow_run;
-    expect(trigger, "deploy must trigger on workflow_run, not push").toBeTruthy();
-    expect(trigger?.workflows).toContain("Verify application and backend contracts");
-    expect(trigger?.branches).toContain("main");
 
-    // workflow_run fires on FAILURE too; the guard is the conclusion check.
-    const guard = Object.values(doc.jobs ?? {})[0]?.if ?? "";
-    expect(guard).toContain("success");
+    const deploy = doc.jobs?.deploy;
+    expect(deploy, "deploy must live in ci.yml, not a separate workflow").toBeTruthy();
+
+    // `needs` is the whole guarantee. Without it the deploy job runs in
+    // parallel with the tests and usually wins, because it has less to do -
+    // which ships a red build.
+    const needs = Array.isArray(deploy?.needs) ? deploy?.needs : [deploy?.needs];
+    expect(needs).toContain("application");
+    expect(needs).toContain("database-and-functions");
+
+    // A needed job that FAILS skips the dependant, so no conclusion guard is
+    // required. But main-only is not implied by `needs` — assert it, or every
+    // PR would deploy to production.
+    expect(deploy?.if ?? "").toContain("refs/heads/main");
+  });
+
+  it("does not merge the scheduled sync into the code pipeline", () => {
+    // The sync runs every 30 minutes on a timer and touches no code. Folding
+    // it in would either run the full suite 48x/day or bury the pipeline in
+    // `if: github.event_name != 'schedule'` guards.
+    const ci = yaml.load(readFileSync(join(WORKFLOW_DIR, "ci.yml"), "utf8")) as {
+      on?: Record<string, unknown>;
+    };
+    expect(ci.on).not.toHaveProperty("schedule");
+    expect(workflowFiles()).toContain("sync-supabase.yml");
   });
 });
