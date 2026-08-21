@@ -294,13 +294,12 @@ function FeedTab() {
 
   const filtered = useMemo(() => {
     /* live 模式下精選/全部 toggle 都要生效:live 分支按 selected 旗標過濾 */
+    const fallbackInsights = mode === "all" ? aihotAllInsights : aihotInsights;
     const source = liveInsights
       ? mode === "selected"
         ? liveInsights.filter((i) => i.selected)
         : liveInsights
-      : serverFilterActive
-        ? []
-        : aihotInsights;
+      : fallbackInsights;
     const q = query.trim().toLowerCase();
     return source.filter((i) => {
       if (activeCategory && i.category !== activeCategory) return false;
@@ -317,7 +316,7 @@ function FeedTab() {
         return false;
       return true;
     });
-  }, [mode, activeCategory, query, liveInsights, serverFilterActive]);
+  }, [mode, activeCategory, query, liveInsights]);
 
   const groups = useMemo(() => groupByDay(filtered), [filtered]);
 
