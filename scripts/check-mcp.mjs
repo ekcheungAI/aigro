@@ -193,7 +193,7 @@ if (Array.isArray(items) && items.length > 0) {
       Boolean(item?.attribution) &&
       Boolean(item?.source) &&
       Array.from(item?.title ?? "").length <= 300 &&
-      Array.from(item?.summary ?? "").length <= 1_200 &&
+      Array.from(item?.summary ?? "").length <= 600 &&
       !Number.isNaN(Date.parse(item?.published_at ?? "")),
   );
   record(

@@ -31,7 +31,7 @@
 | `get_daily_brief` | 取得同一香港日期嘅每日重點 | `limit` 1–12 |
 
 所有工具同時回傳 MCP `structuredContent` 同文字 JSON fallback，並有穩定
-`outputSchema`。標題上限 300 字、摘要上限 1,200 字；最新列表每個來源最多
+`outputSchema`。標題上限 300 字、摘要上限 600 字；最新列表每個來源最多
 三則，避免單一媒體霸榜。分頁使用 `published_at` 游標，避免 offset 漂移。
 
 ## Production smoke

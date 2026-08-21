@@ -16,7 +16,7 @@ interface AigroMcpConfig extends NewsServiceConfig {
 const NewsItemSchema = z.object({
   id: z.string(),
   title: z.string().max(300),
-  summary: z.string().max(1_200),
+  summary: z.string().max(600),
   category: z.enum(NEWS_CATEGORIES),
   tags: z.array(z.string()),
   score: z.number(),

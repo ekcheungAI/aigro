@@ -177,8 +177,56 @@ describe("public MCP news service", () => {
         attribution: "AIGRO 情報管道",
       }),
     );
-    expect(Array.from(page.items[0]?.summary ?? "")).toHaveLength(1_200);
+    expect(Array.from(page.items[0]?.summary ?? "")).toHaveLength(600);
     expect(page.items[0]?.summary.endsWith("…")).toBe(true);
+  });
+
+  it("uses title evidence to distinguish AI products from general industry news", async () => {
+    const rows = [
+      {
+        ...goodRow,
+        id: "sentiment",
+        title: "對 AI 牴觸情緒正在上升",
+        original_url: "https://example.com/sentiment",
+        category: "模型發布",
+      },
+      {
+        ...goodRow,
+        id: "widget",
+        title: "三星準備為手機引入 AI 小組件功能",
+        original_url: "https://example.com/widget",
+        category: "模型發布",
+      },
+      {
+        ...goodRow,
+        id: "glasses",
+        title: "雷鳥發佈全天候主動式 AI 眼鏡",
+        original_url: "https://example.com/glasses",
+        category: "行業動態",
+      },
+    ];
+    const service = createNewsService({
+      supabaseUrl: "https://example.supabase.co",
+      publishableKey: "public-key",
+      snapshotItems: [],
+      fetchImpl: vi.fn(async () =>
+        new Response(JSON.stringify(rows), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      ),
+    });
+
+    const page = await service.search({ query: "AI", limit: 10 });
+    const categories = Object.fromEntries(
+      page.items.map((item) => [item.id, item.category]),
+    );
+
+    expect(categories).toEqual({
+      sentiment: "行業動態",
+      widget: "產品發布",
+      glasses: "產品發布",
+    });
   });
 
   it("prevents one publisher from dominating the latest-news response", async () => {
