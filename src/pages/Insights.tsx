@@ -202,7 +202,7 @@ function FeedRow({ insight }: { insight: AihotInsight }) {
 
 type FeedMode = "selected" | "all";
 
-/** 全部動態模式下每個日期分組首 10 條,「顯示更多」每次遞增 10 */
+/** 最新動態模式下每個日期分組首 10 條,「顯示更多」每次遞增 10 */
 const FEED_PAGE_SIZE = 10;
 
 /**
@@ -263,7 +263,7 @@ function FeedGroupSection({
 
 const MODE_OPTIONS: { key: FeedMode; label: string }[] = [
   { key: "selected", label: "精選" },
-  { key: "all", label: "全部動態" },
+  { key: "all", label: "最新動態" },
 ];
 
 function FeedTab() {
@@ -281,16 +281,15 @@ function FeedTab() {
     setQuery(qParam);
   }, [qParam]);
 
-  /** 搜尋、分類及「全部」改由 Supabase 分頁，避免只查最新 200 筆。 */
-  const serverFilterActive = mode === "all" || Boolean(activeCategory || qParam.trim());
+  /** 所有 feed 模式都由 Supabase 先做 placement/filter，避免精選被最新 200 筆截斷。 */
+  const serverFilterActive = true;
   const serverFeed = useLiveFilteredInsights({
     enabled: serverFilterActive,
     mode,
     category: activeCategory,
     query: qParam,
   });
-  const latestLiveInsights = useLiveInsights();
-  const liveInsights = serverFilterActive ? serverFeed.items : latestLiveInsights;
+  const liveInsights = serverFeed.items;
 
   const filtered = useMemo(() => {
     /* live 模式下精選/全部 toggle 都要生效:live 分支按 selected 旗標過濾 */
@@ -331,7 +330,7 @@ function FeedTab() {
 
   return (
     <>
-      {/* 工具列：精選/全部動態 + 搜尋 + 分類 chips + 計數 */}
+      {/* 工具列：精選/最新動態 + 搜尋 + 分類 chips + 計數 */}
       <section className="mx-auto max-w-container px-6 pt-4 md:pt-12">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
           <div
@@ -379,7 +378,7 @@ function FeedTab() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="例如 OpenAI、Sora"
-                aria-label="搜尋情報標題、英文標題、標籤、摘要或來源"
+                aria-label="搜尋情報標題、標籤、摘要或來源"
                 className="h-11 w-full rounded-md border border-border-strong bg-surface pl-9 pr-3 text-body-sm text-text-primary placeholder:text-text-muted focus:border-ink focus:outline-none"
               />
             </div>
@@ -428,17 +427,10 @@ function FeedTab() {
       <section className="mx-auto max-w-container px-6 pb-24 pt-4 max-md:pb-16">
         {serverFeed.loading && (
           <div className="py-16 text-center">
-            <p className="text-body-sm text-text-muted">正在載入完整情報庫…</p>
+            <p className="text-body-sm text-text-muted">正在檢查最新情報…</p>
           </div>
         )}
-        {!serverFeed.loading && serverFeed.error && (
-          <div className="py-16 text-center">
-            <p className="text-body-sm text-[#A63A30]">
-              情報庫載入失敗：{serverFeed.error}
-            </p>
-          </div>
-        )}
-        {!serverFeed.loading && !serverFeed.error && groups.length === 0 && (
+        {!serverFeed.loading && groups.length === 0 && (
           <div className="py-16 text-center">
             {/* 空態 copy 分搜尋 / 分類兩款 — 唔會出現空引號「」 */}
             {query.trim() ? (
@@ -470,6 +462,10 @@ function FeedTab() {
                   清除分類篩選
                 </button>
               </>
+            ) : serverFeed.error ? (
+              <p className="text-body-sm text-error">
+                暫時未能更新情報，請稍後再試。
+              </p>
             ) : (
               <p className="text-body-sm text-text-muted">
                 暫無情報 — 數據同步中，稍後再試。
@@ -1516,24 +1512,23 @@ export default function Insights() {
                       : "border-border-strong bg-surface text-ink hover:border-ink"
                   )}
                 >
-                  {s.iconSrc ? (
-                    <img
-                      src={s.iconSrc}
+                   {s.iconSrc ? (
+                     <img
+                       src={s.iconSrc}
                       alt={`${s.name}圖標`}
                       loading="lazy"
-                      className="h-10 w-10 shrink-0 md:h-12 md:w-12"
-                    />
-                  ) : (
-                    <Icon
-                      className="h-4 w-4"
-                      strokeWidth={1.5}
-                      aria-hidden="true"
-                    />
-                  )}
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm bg-ink-soft text-ink">
-                    <Icon className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
-                  </span>
-                  <span className="whitespace-nowrap">{s.name}</span>
+                       className="h-10 w-10 shrink-0 md:h-12 md:w-12"
+                     />
+                   ) : (
+                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-sm bg-ink-soft text-ink md:h-12 md:w-12">
+                       <Icon
+                         className="h-5 w-5"
+                         strokeWidth={1.5}
+                         aria-hidden="true"
+                       />
+                     </span>
+                   )}
+                   <span className="whitespace-nowrap">{s.name}</span>
                   <span
                     className={cn(
                       "ml-auto rounded-sm px-2 py-1 text-overline font-sans uppercase",
@@ -1608,6 +1603,9 @@ export default function Insights() {
                 </button>
               ))}
             </div>
+            <p className="px-6 pb-1 text-right text-caption text-text-muted md:hidden">
+              左右滑動查看更多
+            </p>
           </div>
 
           {/* Tab 內容（key remount：切換時重播進場 reveal） */}

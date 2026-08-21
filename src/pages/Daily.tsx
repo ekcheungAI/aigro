@@ -90,7 +90,7 @@ export function DailyContent({ embedded = false }: { embedded?: boolean }) {
       : null;
     const base = info
       ? { date: info.date, weekday: info.weekday, number: info.number }
-      : !isLive && daily.date
+      : daily.date
         ? dailyInfoForDate(daily.date)
         : dailyInfoForDate(todayDate);
     const listCount = Math.min(daily.items.length, LIST_COUNT);
@@ -99,7 +99,7 @@ export function DailyContent({ embedded = false }: { embedded?: boolean }) {
       sources: daily.itemCount,
       picks: (daily.lead ? 1 : 0) + listCount,
     };
-  }, [daily, viewingDate, isLive, recentIssueRows, todayDate]);
+  }, [daily, viewingDate, recentIssueRows, todayDate]);
   const lead = daily.lead;
 
   /* 編號列表按 section 分組(數據一早已計好) + 全刊連續編號(頭條 = 01)。

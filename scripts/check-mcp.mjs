@@ -3,17 +3,16 @@
 /**
  * MCP Streamable HTTP launch gate.
  *
- * This deliberately does not call a data tool: a protocol smoke must be safe
- * to run in CI and must not spend embedding/LLM quota. Set MCP_EXPECT_AUTH=true
- * (the default) for a release gate; use MCP_EXPECT_AUTH=false only while
- * diagnosing an intentionally anonymous development endpoint.
+ * The public tool call is read-only and verifies the same curated rows that
+ * power /insights. Set MCP_EXPECT_AUTH=true only for a private deployment.
  */
 
-const endpoint = process.env.MCP_URL ?? "https://argro-mcp.zeabur.app/mcp";
-const origin = process.env.MCP_ORIGIN ?? "https://aigro-blue.vercel.app";
+const endpoint = process.env.MCP_URL ?? "https://aigro.io/api/mcp";
+const origin = process.env.MCP_ORIGIN ?? "https://aigro.io";
 const token = process.env.MCP_TOKEN?.trim() ?? "";
-const expectAuth = process.env.MCP_EXPECT_AUTH !== "false";
+const expectAuth = process.env.MCP_EXPECT_AUTH === "true";
 const strictTools = process.env.MCP_STRICT_CONTRACT !== "false";
+const maxAgeMinutes = Number.parseInt(process.env.MCP_MAX_AGE_MINUTES ?? "180", 10);
 
 const failures = [];
 const record = (name, ok, detail) => {
@@ -121,12 +120,8 @@ const invalidOrigin = await fetch(endpoint, {
 await readPayload(invalidOrigin);
 record("transport.invalid_origin", invalidOrigin.status === 403, `HTTP ${invalidOrigin.status} (expected 403)`);
 
-if (expectAuth || !token) {
-  // A failed anonymous probe is sufficient for the auth path; without a
-  // token there is no safe way to continue into the data-bearing session.
-  if (failures.length > 0 || !token) {
-    process.exit(failures.length > 0 ? 1 : 0);
-  }
+if (failures.length > 0) {
+  process.exit(1);
 }
 
 const initialized = await postRpc(
@@ -165,6 +160,52 @@ if (Array.isArray(tools)) {
       ? "object input, bounded limit, outputSchema"
       : "object input");
   }
+}
+
+const latest = await postRpc(
+  "tools/call",
+  { name: "get_latest_news", arguments: { limit: 3 } },
+  sessionId,
+);
+const structuredContent = latest.payload?.result?.structuredContent;
+const items = structuredContent?.items;
+const CJK = /[\u3400-\u9fff]/;
+record(
+  "data.language",
+  latest.response.status === 200 && structuredContent?.language === "zh-HK",
+  `HTTP ${latest.response.status}; ${structuredContent?.language ?? "missing"}`,
+);
+record(
+  "data.latest_items",
+  Array.isArray(items) && items.length > 0,
+  `${Array.isArray(items) ? items.length : 0} item(s)`,
+);
+if (Array.isArray(items) && items.length > 0) {
+  const complete = items.every(
+    (item) =>
+      item?.language === "zh-HK" &&
+      CJK.test(item?.title ?? "") &&
+      CJK.test(item?.summary ?? "") &&
+      /^https:\/\//.test(item?.original_url ?? "") &&
+      Boolean(item?.source) &&
+      !Number.isNaN(Date.parse(item?.published_at ?? "")),
+  );
+  record(
+    "data.evidence_fields",
+    complete,
+    complete
+      ? "繁體標題、摘要、來源、原文連結及時間齊全"
+      : "有項目缺少香港繁體內容或來源證據",
+  );
+  const latestMs = Date.parse(items[0]?.published_at ?? "");
+  const ageMinutes = Number.isNaN(latestMs)
+    ? null
+    : Math.round((Date.now() - latestMs) / 60_000);
+  record(
+    "data.freshness",
+    ageMinutes !== null && ageMinutes >= -360 && ageMinutes <= maxAgeMinutes,
+    `${ageMinutes ?? "unknown"} minute(s); limit ${maxAgeMinutes}`,
+  );
 }
 
 if (failures.length > 0) {

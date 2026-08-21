@@ -312,15 +312,14 @@ function McpNetworkBand() {
             MCP Network
           </p>
           <h2 className="mt-4 font-display text-h2 text-band-text">
-            AI 情報 MCP 接入準備中
+            AI 情報 MCP 公開 Beta 已上線
           </h2>
           <p className="mt-4 max-w-[600px] text-body-sm text-band-text-secondary">
-            公開 endpoint 尚未上線；首版規格同配額仍在驗證。更多行業 MCP
-            會按會員需求逐步建立。
+            連接一次，即時查詢附原文來源嘅香港繁體 AI 情報。更多行業 MCP 會按實際需求逐步建立。
           </p>
           <div className="mt-6 flex flex-wrap gap-2">
             <span className="inline-flex items-center rounded-sm border border-band-border-strong px-3 py-1.5 text-overline font-sans uppercase text-band-text-secondary">
-              AI 情報 MCP · In development
+              AI 情報 MCP · Public Beta
             </span>
           </div>
           <div className="mt-8 flex flex-wrap items-center gap-6">
@@ -328,13 +327,13 @@ function McpNetworkBand() {
               to="/developers"
               className="inline-flex h-12 items-center rounded-md bg-band-ink-solid px-8 text-label text-on-accent press hover:bg-band-ink-hover"
             >
-              登記優先名單
+              立即接入
             </Link>
             <Link
               to="/developers#endpoints"
               className="group inline-flex items-center gap-1 text-label text-band-ink"
             >
-              查看接入計劃
+              查看接入方法
               <ArrowRight
                 className="h-4 w-4 transition-transform duration-150 nudge-x"
                 strokeWidth={1.5}

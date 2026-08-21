@@ -41,8 +41,16 @@ jobs:
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
           ARGRO_API_BASE: https://argro-api.zeabur.app
           ARGRO_API_KEY: ${{ secrets.ARGRO_API_KEY }}
-          ARGRO_AUTO_PUBLISH: "false"
+          # The sync script still fails closed: this flag only publishes rows
+          # that pass the AI relevance, source, freshness and zh-HK gates.
+          ARGRO_AUTO_PUBLISH: "true"
         run: node scripts/sync-argro-to-supabase.mjs
+
+      - name: Verify published AI news freshness and quality
+        run: npm run check:news
+
+      - name: Verify public MCP protocol and latest data
+        run: npm run check:mcp
 
       - name: Verify production read paths and function guards
         run: npm run check:production

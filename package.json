@@ -21,6 +21,7 @@
     "test:db": "supabase test db",
     "test:functions": "deno test supabase/functions/_shared/distillation_test.ts supabase/functions/_shared/persona-compiler_test.ts supabase/functions/_shared/persona-stage-rights_test.ts supabase/functions/_shared/persona-job_test.ts supabase/functions/_shared/chat-guardrails_test.ts supabase/functions/_shared/knowledge-dedupe_test.ts supabase/functions/_shared/knowledge-rights_test.ts supabase/functions/_shared/distillation-failure_test.ts supabase/functions/_shared/minimax-stream_test.ts supabase/functions/_shared/chat-grounding_test.ts supabase/functions/_shared/chat-rights_test.ts supabase/functions/_shared/social-sync_test.ts supabase/functions/_shared/expert-invitation_test.ts supabase/functions/_shared/invitations_test.ts supabase/functions/_shared/booking_email_test.ts supabase/functions/_shared/turnstile_test.ts supabase/functions/_shared/chat-runtime-config_test.ts",
     "check:production": "node scripts/check-production-integrations.mjs",
+    "check:news": "node scripts/check-news-quality.mjs",
     "check:mcp": "node scripts/check-mcp.mjs",
     "verify": "npm run lint && npm run test && npm run build",
     "preview": "vite preview",
@@ -29,6 +30,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
+    "@modelcontextprotocol/server": "^2.0.0",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",
     "@radix-ui/react-aspect-ratio": "^1.1.8",

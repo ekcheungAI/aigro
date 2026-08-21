@@ -230,11 +230,11 @@ test("homepage hero presents the scale of the AIGRO network", async ({ page }) =
   await expect(page.getByText("連接中", { exact: true })).toHaveCount(0);
   await expect(page.getByText("8 位蒸餾中", { exact: true })).toBeVisible();
   await expect(
-    page.locator("dt").filter({ hasText: "1 個 AI MCP 開發中" })
+    page.locator("dt").filter({ hasText: "1 個 AI MCP 公開 Beta" })
   ).toBeVisible();
-  await expect(page.getByText("公開 endpoint 尚未開放", { exact: true })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "AI 情報 MCP 接入準備中" })).toBeVisible();
-  await expect(page.getByText("AI 情報 MCP · In development", { exact: true })).toBeVisible();
+  await expect(page.getByText("可即時接入", { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "AI 情報 MCP 公開 Beta 已上線" })).toBeVisible();
+  await expect(page.getByText("AI 情報 MCP · Public Beta", { exact: true })).toBeVisible();
 });
 
 test("homepage credits dotAI and ekcheungAI with their official marks", async ({ page }) => {

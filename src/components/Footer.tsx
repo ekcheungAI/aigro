@@ -121,14 +121,14 @@ export default function Footer() {
           <div className="col-span-2 lg:col-span-1">
             <p className="text-overline font-sans uppercase text-band-text-muted">AIGRO MCP Network</p>
             <p className="mt-3 text-body-sm text-band-text-secondary">
-              MCP / API 即將開放 — 將 AIGRO 情報接入你的 AI 工作流。
+              AI 情報 MCP 已公開 — 將香港繁體情報接入你嘅 AI 工作流。
             </p>
             <div className="mt-2 flex flex-col items-start gap-0.5">
               <Link
                 to="/developers"
                 className="text-label text-band-ink transition-colors duration-150 hover:text-band-text"
               >
-                MCP Network 優先名單
+                MCP 接入與新功能名單
               </Link>
               <Link
                 to="/insights?tab=data"
@@ -141,7 +141,7 @@ export default function Footer() {
               <p role="status" className="mt-3 flex min-h-10 items-center gap-2 text-caption text-band-ink">
                 <Check className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
                 {devSavedMode === "server"
-                  ? "已記低 — MCP 開放時通知你"
+                  ? "已記低 — 有新 MCP 功能時通知你"
                   : "已儲存在此裝置 — 連線後請再登記"}
               </p>
             ) : (

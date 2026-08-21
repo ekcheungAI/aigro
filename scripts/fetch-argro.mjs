@@ -12,16 +12,7 @@
 import { writeFile, mkdir } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { Converter } from "opencc-js/cn2t";
-
-const toHK = Converter({ from: "cn", to: "hk" });
-const tc = (s) =>
-  typeof s === "string" && s
-    ? toHK(s)
-        .replace(/[\u{1F000}-\u{1FAFF}\u2600-\u27BF\u2B00-\u2BFF\uFE0F]/gu, "")
-        .replace(/[ \t]+\n/g, "\n")
-        .trim()
-    : s;
+import { toTraditionalChinese as tc } from "./lib/traditional-chinese.mjs";
 
 const BASE = process.env.ARGRO_API_BASE ?? "https://argro-api.zeabur.app";
 const KEY = process.env.ARGRO_API_KEY;

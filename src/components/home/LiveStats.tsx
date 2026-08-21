@@ -52,7 +52,7 @@ export default function LiveStats({ memberCount }: LiveStatsProps) {
       showPlus: true,
     },
     { value: 2, label: "位領航專家已上線", note: "8 位蒸餾中" },
-    { value: 1, label: "個 AI MCP 開發中", note: "公開 endpoint 尚未開放" },
+    { value: 1, label: "個 AI MCP 公開 Beta", note: "可即時接入" },
   ];
 
   return (

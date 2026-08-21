@@ -15,6 +15,8 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { supabase, supabaseReady } from "@/lib/supabase";
 import {
+  aihotAllInsights,
+  aihotInsights,
   toAihotInsight,
   type AihotDaily,
   type AihotDailyEntry,
@@ -26,6 +28,21 @@ import type { InsightCategory } from "./insights";
 
 /** 少過呢個數就當 live 數據未成熟(sync 未行過/管道異常),繼續用 snapshot */
 const MIN_LIVE_ITEMS = 5;
+const SNAPSHOT_LATEST_PUBLISHED_MS = aihotAllInsights.reduce(
+  (latest, item) => Math.max(latest, Date.parse(item.publishedAt) || 0),
+  0,
+);
+const CJK = /[\u3400-\u9fff]/;
+const AI_TITLE_SIGNAL = /(?:\bAI\b|\bAIGC\b|\bAGI\b|人工智(?:能|慧)|生成式|大模型|語言模型|機器學習|机器学习|深度學習|深度学习|神經網絡|神经网络|智能體|智能体|具身智能|多模態|多模态|推理模型|模型訓練|模型训练|OpenAI|ChatGPT|GPT-?\d|Anthropic|Claude|Gemini|DeepMind|Llama|Qwen|DeepSeek|Kimi|Mistral|Grok|Sora|Copilot|Hugging\s*Face|英偉達|英伟达|NVIDIA|人形機器人|人形机器人|AI\s*Agent|Agentic)/i;
+const AI_SPECIALIST_SOURCES = [
+  "OpenAI",
+  "Anthropic",
+  "DeepMind",
+  "HuggingFace",
+  "TechCrunch AI",
+  "量子位",
+  "The Decoder",
+];
 
 interface ItemRow {
   id: string;
@@ -65,7 +82,28 @@ function isPublishableRow(row: ItemRow): boolean {
       row.summary?.trim() &&
       row.original_url?.trim() &&
       row.sources?.name?.trim() &&
-      row.published_at
+      row.published_at &&
+      row.lang === "zh-HK" &&
+      CJK.test(row.title) &&
+      CJK.test(row.summary ?? "") &&
+      isAiSpecific(row.title, row.sources?.name ?? "")
+  );
+}
+
+function isAiSpecific(title: string, source: string): boolean {
+  return (
+    AI_TITLE_SIGNAL.test(title) ||
+    AI_SPECIALIST_SOURCES.some((name) =>
+      source.toLowerCase().includes(name.toLowerCase()),
+    )
+  );
+}
+
+function isDisplayReadyInsight(insight: AihotInsight): boolean {
+  return Boolean(
+    CJK.test(insight.title) &&
+      CJK.test(insight.summary) &&
+      isAiSpecific(insight.title, insight.source),
   );
 }
 
@@ -118,6 +156,12 @@ export function startLiveItems(): void {
       const validRows = rows.filter(isPublishableRow);
       if (validRows.length < MIN_LIVE_ITEMS) {
         state = { items: null, fetchedAt: null, error: null }; // 未成熟,保持 snapshot
+        return;
+      }
+      const liveLatestMs = Date.parse(validRows[0]?.published_at ?? "") || 0;
+      if (liveLatestMs < SNAPSHOT_LATEST_PUBLISHED_MS) {
+        state = { items: null, fetchedAt: null, error: null };
+        emit();
         return;
       }
       const items = validRows.map(toRawItem);
@@ -176,17 +220,56 @@ export interface LiveFeedState {
   error: string | null;
 }
 
+function matchesFeedFilter(
+  insight: AihotInsight,
+  filter: Pick<LiveFeedFilter, "mode" | "category" | "query">,
+): boolean {
+  if (filter.mode === "selected" && !insight.selected) return false;
+  if (filter.category && insight.category !== filter.category) return false;
+  const query = filter.query?.trim().toLowerCase() ?? "";
+  return !query || Boolean(
+    insight.title.toLowerCase().includes(query) ||
+      (insight.titleEn ?? "").toLowerCase().includes(query) ||
+      insight.summary.toLowerCase().includes(query) ||
+      insight.source.toLowerCase().includes(query) ||
+      insight.tags.some((tag) => tag.toLowerCase().includes(query)),
+  );
+}
+
+/**
+ * A filtered live response may be empty even while the bundled snapshot has
+ * newer matching stories. Only let Supabase take over that exact view when
+ * its matching watermark is at least as recent as the matching snapshot.
+ */
+export function shouldPreferFilteredSnapshot(
+  liveInsights: AihotInsight[],
+  filter: Pick<LiveFeedFilter, "mode" | "category" | "query">,
+): boolean {
+  const fallback = (filter.mode === "selected" ? aihotInsights : aihotAllInsights)
+    .filter((insight) => matchesFeedFilter(insight, filter));
+  if (fallback.length === 0) return false;
+  const snapshotLatestMs = fallback.reduce(
+    (latest, insight) => Math.max(latest, Date.parse(insight.publishedAt) || 0),
+    0,
+  );
+  const liveLatestMs = liveInsights.reduce(
+    (latest, insight) => Math.max(latest, Date.parse(insight.publishedAt) || 0),
+    0,
+  );
+  return liveLatestMs < snapshotLatestMs;
+}
+
 const LIVE_PAGE_SIZE = 500;
-const LIVE_MAX_PAGES = 20;
+const LIVE_MAX_PAGES = 1;
 
 function escapePostgrestLike(value: string): string {
   return value.replace(/[\\%_(),]/g, (character) => `\\${character}`);
 }
 
 /**
- * Filtered feed loader. The default site chrome still uses the cheap latest
- * 200-item snapshot, while search/category/all-feed requests are paginated at
- * Supabase so historical rows are not silently excluded from the UI.
+ * Filtered feed loader. Supabase applies placement/category/search before a
+ * bounded newest-first page is returned; the browser never downloads the
+ * entire archive merely to render the first ten rows.
  */
 export function useLiveFilteredInsights(filter: LiveFeedFilter): LiveFeedState {
   const enabled = filter.enabled !== false;
@@ -252,7 +335,22 @@ export function useLiveFilteredInsights(filter: LiveFeedFilter): LiveFeedState {
           }
         }
         if (cancelled) return;
-        setState({ items: rows.map(toRawItem).map(toAihotInsight), loading: false, error: null });
+        const liveInsights = rows.map(toRawItem).map(toAihotInsight);
+        if (
+          shouldPreferFilteredSnapshot(liveInsights, {
+            mode: filter.mode,
+            category: filter.category,
+            query: queryText,
+          })
+        ) {
+          setState({ items: null, loading: false, error: null });
+          return;
+        }
+        setState({
+          items: liveInsights,
+          loading: false,
+          error: null,
+        });
       } catch (error) {
         if (cancelled) return;
         setState({
@@ -279,7 +377,15 @@ export function useLiveFilteredInsights(filter: LiveFeedFilter): LiveFeedState {
 export function synthesizeDailyFromInsights(
   insights: AihotInsight[]
 ): AihotDaily {
-  const byScore = [...insights].sort((a, b) => b.score - a.score);
+  const ready = insights.filter(isDisplayReadyInsight);
+  const latestKey = ready.reduce<string | null>((latest, insight) => {
+    const key = hkDayKey(insight.publishedAt);
+    return key && (!latest || key > latest) ? key : latest;
+  }, null);
+  const dayItems = latestKey
+    ? ready.filter((insight) => hkDayKey(insight.publishedAt) === latestKey)
+    : [];
+  const byScore = [...dayItems].sort((a, b) => b.score - a.score);
   const selected = byScore.filter((i) => i.selected).slice(0, 9);
   const top = (selected.length >= 5 ? selected : byScore.slice(0, 9)).map(
     (i): AihotDailyEntry => ({
@@ -302,9 +408,8 @@ export function synthesizeDailyFromInsights(
     counts.set(entry.category, (counts.get(entry.category) ?? 0) + 1);
   }
 
-  const latest = insights[0]?.publishedAt ?? "";
   return {
-    date: latest ? latest.slice(0, 10) : null,
+    date: latestKey,
     canonical: "",
     lead: top[0] ?? null,
     items: top.slice(1),
@@ -313,7 +418,7 @@ export function synthesizeDailyFromInsights(
       category,
       count: counts.get(category) ?? 0,
     })),
-    itemCount: top.length,
+    itemCount: dayItems.length,
   };
 }
 
@@ -430,10 +535,11 @@ export interface AihotWeekly {
 export function synthesizeWeeklyFromInsights(
   insights: AihotInsight[]
 ): AihotWeekly | null {
-  if (insights.length === 0) return null;
+  const ready = insights.filter(isDisplayReadyInsight);
+  if (ready.length === 0) return null;
   /* 數據時鐘 — 同 LiveStats 做法:以最新情報日期為基準,
      唔會因為數據日期同訪客「今日」有落差而顯示空週 */
-  const latestKey = insights.reduce<string | null>(
+  const latestKey = ready.reduce<string | null>(
     (max, i) => {
       const k = hkDayKey(i.publishedAt);
       return k && (!max || k > max) ? k : max;
@@ -444,7 +550,7 @@ export function synthesizeWeeklyFromInsights(
   const weekStart = mondayOfWeek(latestKey);
   const weekEnd = shiftDayKey(weekStart, 6);
 
-  const inWeek = insights.filter((i) => {
+  const inWeek = ready.filter((i) => {
     const k = hkDayKey(i.publishedAt);
     return k !== null && k >= weekStart && k <= weekEnd;
   });

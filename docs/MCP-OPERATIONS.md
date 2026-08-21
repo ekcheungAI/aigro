@@ -1,51 +1,79 @@
-# MCP operations and launch gate
+# AIGRO AI 情報 MCP — 接入與營運手冊
 
-The AIGRO website currently describes the MCP as “封裝中・尚未公開”. The
-Zeabur service is reachable, but its running image is not present in this
-repository and the live endpoint is not yet an approved public product. Treat
-the endpoint as an incident/diagnostic target until the gates below pass.
+公開 Beta endpoint：`https://aigro.io/api/mcp`
 
-## Safe smoke test
+呢個 Streamable HTTP MCP 同 `/insights` 共用已發佈資料。公開層只讀，毋須
+API key；每項結果固定標示 `language: zh-HK`，並保留原文連結、來源同發佈
+時間。英文、非 AI、過期或資料不完整嘅項目會喺同步及讀取兩層被拒絕。
 
-`npm run check:mcp` runs a no-tool protocol check. It never calls search,
-embedding, or an LLM. The default is intentionally a release gate:
+## 客戶端設定
+
+任何支援遠端 MCP URL 嘅客戶端都可以使用以下設定：
+
+```json
+{
+  "mcpServers": {
+    "aigro": {
+      "url": "https://aigro.io/api/mcp"
+    }
+  }
+}
+```
+
+現時提供四個只讀工具：
+
+| 工具 | 用途 | 主要限制 |
+| --- | --- | --- |
+| `get_latest_news` | 按發佈時間取得最新 AI 情報 | `limit` 1–50 |
+| `search_news` | 搜尋標題及摘要 | query 2–120 字；`limit` 1–50 |
+| `get_article_detail` | 按文章 ID 取得來源證據 | ID 1–120 字 |
+| `get_daily_brief` | 取得同一香港日期嘅每日重點 | `limit` 1–12 |
+
+所有工具同時回傳 MCP `structuredContent` 同文字 JSON fallback，並有穩定
+`outputSchema`。分頁使用 `published_at` 游標，避免 offset 漂移。
+
+## Production smoke
 
 ```sh
-MCP_URL=https://argro-mcp.zeabur.app/mcp \
-MCP_TOKEN="$MCP_TOKEN" \
-MCP_ORIGIN=https://aigro-blue.vercel.app \
 npm run check:mcp
 ```
 
-The check requires anonymous initialize to return `401` or `403`, rejects an
-untrusted `Origin` with `403`, verifies initialize/tools-list, and (unless
-`MCP_STRICT_CONTRACT=false`) requires bounded `limit` schemas and an
-`outputSchema` for every tool. Keep the token in the CI secret store; never put
-it in a browser bundle, URL, issue, or fixture.
+檢查會：
 
-For a temporary transport-only diagnosis of an intentionally anonymous local
-server, set `MCP_EXPECT_AUTH=false` and provide `MCP_TOKEN` if the protocol
-session should continue after the anonymous probe. This mode is not a launch
-approval.
+1. 驗證 HTTPS、initialize、tools/list 同四個 output schema；
+2. 確認惡意 `Origin` 回傳 403；
+3. 真實呼叫 `get_latest_news`，檢查香港繁體內容、來源、原文連結同時間；
+4. 確認最新項目不超過 180 分鐘（可用 `MCP_MAX_AGE_MINUTES` 調整）。
 
-## Required before adding another MCP or opening this one
+如將來改為私人部署，可設定 `AIGRO_MCP_BEARER_TOKEN`，並用：
 
-1. Put the MCP server source, lockfile, container definition, deployment
-   manifests, and image-to-commit provenance in Git.
-2. Decide the access model (OAuth/protected-resource metadata or scoped API
-   keys), then enforce it at the server and edge with quotas, rate limits, and
-   audit logs.
-3. Validate `Origin` against an allow-list and expose a dependency-aware
-   readiness/liveness check. TCP readiness alone is insufficient.
-4. Return structured MCP output with stable error codes, provenance, and bounded
-   cursors/limits; keep text as an agent-friendly fallback.
-5. Gate release on upstream semantic health: provider authentication, source
-   freshness, translation/classification coverage, summary/content completeness,
-   and duplicate/relevance checks. A process-health `200` is not enough.
-6. Add a canary source and rollback path before enabling additional sources.
-   Connector URLs and auth references belong in the private `source_connectors`
-   table, never the browser-readable `sources` columns.
+```sh
+MCP_EXPECT_AUTH=true MCP_TOKEN="$MCP_TOKEN" npm run check:mcp
+```
 
-The repo-side Insights and source-control changes implement the last point and
-the pagination/editorial gates. Remote MCP and host hardening still require a
-new SSH key and rotated provider/database credentials before any write action.
+Token 只可放 CI secret 或伺服器環境變數，唔可以進入 browser bundle、URL、
+issue 或 fixture。
+
+## 安全與資料邊界
+
+- 公開 MCP 只讀取 Supabase `status=published`、`lang=zh-HK` 嘅欄位；service
+  key、未發佈內容、來源憑證同內部 connector 設定永不出現在 response。
+- Browser `Origin` 使用 allow-list；一般 CLI/agent client 唔會帶 `Origin`，因此
+  保留無 Origin 接入。Host 亦經 allow-list 驗證。
+- 所有 limit 有上下限；搜尋字串會 escape 後先進入 PostgREST filter。
+- `npm run check:news` 會攔截過期、英文、非 AI、缺摘要／來源及單一來源壟斷。
+- 舊 `argro-mcp.zeabur.app/mcp` 唔再係產品 endpoint；停用前只可視為相容性
+  遺留服務。任何公開文件同客戶端設定一律使用 `aigro.io/api/mcp`。
+
+## 加入新資料來源／新 MCP
+
+1. 先建立 source contract：授權、canonical URL、語言、更新頻率、錯誤率同
+   rollback owner。
+2. Connector URL、auth reference 同 parser version 放 server-side 私有設定；
+   browser-readable `sources` row 只負責顯示同 attribution。
+3. 先以 pending/canary 模式同步，通過 relevance、zh-HK、完整度、重複及
+   freshness gate，先可以自動發佈。
+4. 新 MCP 必須加入版本控制、鎖檔、協議測試、Origin 測試、output schema、
+   semantic health check 同 production rollback。
+5. 推出後以 `npm run check:news`、`npm run check:mcp` 同瀏覽器 QA 作 release
+   evidence，唔可以只靠 process health 200。

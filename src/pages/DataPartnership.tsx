@@ -38,8 +38,8 @@ const PIPELINE = [
   },
   {
     step: "04",
-    title: "接入準備",
-    body: "蒸餾後嘅情報正整理成 MCP / API 介面；公開 endpoint 尚未上線。",
+    title: "公開接入",
+    body: "通過品質閘門嘅香港繁體 AI 情報，會同步到公開只讀 MCP；新資料來源先經審核再加入。",
   },
 ];
 

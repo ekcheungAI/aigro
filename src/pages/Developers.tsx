@@ -5,9 +5,19 @@ import { ArrowRight, Check, Copy, Cpu } from "lucide-react";
 import Reveal from "@/components/Reveal";
 import CategoryChip from "@/components/CategoryChip";
 import { captureWaitlist, type WaitlistSaveMode } from "@/lib/waitlist";
-import { aihotAllInsights } from "@/data/aihot";
 
 /* ================= 資料 ================= */
+
+const MCP_ENDPOINT = "https://aigro.io/api/mcp";
+const MCP_CONFIG = JSON.stringify(
+  {
+    mcpServers: {
+      aigro: { url: MCP_ENDPOINT },
+    },
+  },
+  null,
+  2,
+);
 
 const INTERESTS = ["AI", "Beauty", "Technology", "Finance", "Property", "其他"];
 const SECTOR_INTEREST: Record<string, string> = {
@@ -133,7 +143,7 @@ function SignupCard({ initialInterests = [] }: { initialInterests?: string[] }) 
         </h3>
         <p className="mt-2 max-w-[520px] text-body-sm text-text-secondary">
           {savedMode === "server"
-            ? "MCP 開放時,你會係第一批收到接入文件嘅人。"
+            ? "新 MCP 或功能開放時，你會係第一批收到接入文件嘅人。"
             : "資料已儲存在此裝置；連線後請再登記，先可以收到通知。"}
         </p>
         <p className="mt-4 font-mono text-caption text-text-muted">
@@ -261,10 +271,63 @@ function SignupCard({ initialInterests = [] }: { initialInterests?: string[] }) 
           <ArrowRight className="ml-1 h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
         </button>
         <p className="text-caption text-text-muted">
-          唔會 spam — MCP 開放時先通知你。
+          唔會 spam — 有新 MCP 或接入功能時先通知你。
         </p>
       </div>
     </form>
+  );
+}
+
+function McpSetupCard() {
+  const [copied, setCopied] = useState<"endpoint" | "config" | null>(null);
+
+  const copy = async (value: string, kind: "endpoint" | "config") => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(kind);
+      window.setTimeout(() => setCopied(null), 2000);
+    } catch {
+      setCopied(null);
+    }
+  };
+
+  return (
+    <div className="grid overflow-hidden rounded-md border bg-surface lg:grid-cols-[0.9fr_1.1fr]">
+      <div className="p-8 md:p-10">
+        <p className="text-overline font-sans uppercase text-text-muted">Streamable HTTP</p>
+        <h2 className="mt-3 font-display text-h3 text-text-primary">即時接入</h2>
+        <p className="mt-3 text-body-sm text-text-secondary">
+          將 endpoint 加入任何支援遠端 MCP 嘅客戶端。公開 Beta 只提供已發佈情報嘅只讀查詢，毋須 API key。
+        </p>
+        <div className="mt-6 rounded-md border border-border-strong bg-card p-4">
+          <code className="break-all font-mono text-caption text-text-primary">
+            {MCP_ENDPOINT}
+          </code>
+        </div>
+        <button
+          type="button"
+          onClick={() => void copy(MCP_ENDPOINT, "endpoint")}
+          className="press mt-4 inline-flex h-11 items-center gap-2 rounded-md bg-ink-solid px-6 text-label text-on-accent hover:bg-ink-hover"
+        >
+          <Copy className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+          {copied === "endpoint" ? "已複製 endpoint" : "複製 endpoint"}
+        </button>
+      </div>
+      <div className="border-t bg-card p-8 lg:border-l lg:border-t-0 md:p-10">
+        <p className="text-overline font-sans uppercase text-text-muted">通用 MCP 設定</p>
+        <pre className="mt-4 overflow-x-auto rounded-md border border-border-strong bg-surface p-4 font-mono text-caption leading-6 text-text-primary">
+          <code>{MCP_CONFIG}</code>
+        </pre>
+        <button
+          type="button"
+          onClick={() => void copy(MCP_CONFIG, "config")}
+          className="press mt-4 inline-flex h-11 items-center gap-2 rounded-md border border-border-strong px-6 text-label text-ink hover:bg-ink-soft"
+        >
+          <Copy className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+          {copied === "config" ? "已複製設定" : "複製設定"}
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -305,8 +368,7 @@ export default function Developers() {
             將 AIGRO 情報接入你嘅 AI 工作流
           </h1>
           <p className="mt-6 max-w-[680px] text-body-lg text-text-secondary">
-            首個 AI 情報 MCP 正在封裝；公開 endpoint 尚未上線。登記後，
-            接入文件準備好就會第一批通知你。
+            首個 AI 情報 MCP 已推出公開 Beta。所有工具只回傳經品質閘門審核、附原文來源嘅香港繁體 AI 情報。
           </p>
         </Reveal>
       </section>
@@ -324,37 +386,53 @@ export default function Developers() {
                   <Cpu className="h-5 w-5" strokeWidth={1.5} aria-hidden="true" />
                 </span>
                 <span className="rounded-sm border border-border-strong px-3 py-1.5 text-overline font-sans uppercase text-text-secondary">
-                  封裝中・尚未公開
+                  公開 Beta・只讀
                 </span>
               </div>
               <h2 className="mt-6 font-display text-h2 text-text-primary">AI 情報 MCP</h2>
               <p className="mt-4 max-w-[560px] text-body text-text-secondary">
-                網站目前已有 {aihotAllInsights.length}+ 則可讀情報快照；MCP 首版會把
-                情報、日報與熱門主題整理成可供 agent 查詢嘅介面。
+                即時讀取同網站一致嘅已發佈情報。資料會保留標題、摘要、來源、原文連結、發佈時間及分類；英文、非 AI 或資料不完整嘅項目唔會公開。
               </p>
               <a
-                href="#signup"
+                href="#setup"
                 className="press mt-8 inline-flex h-11 items-center gap-2 rounded-md bg-ink-solid px-6 text-label text-on-accent hover:bg-ink-hover"
               >
-                登記接入通知
+                立即接入
                 <ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
               </a>
             </div>
             <div className="border-t bg-card p-8 lg:border-l lg:border-t-0 md:p-10">
-              <p className="text-overline font-sans uppercase text-text-muted">首版承諾範圍</p>
+              <p className="text-overline font-sans uppercase text-text-muted">可用工具</p>
               <ol className="mt-6 space-y-5">
-                {["搜尋與讀取情報", "取得精選日報", "查詢熱門主題"].map((item, index) => (
-                  <li key={item} className="flex gap-4 border-t pt-4 first:border-t-0 first:pt-0">
+                {[
+                  ["get_latest_news", "取得最新 AI 情報"],
+                  ["search_news", "搜尋已發佈情報"],
+                  ["get_article_detail", "讀取單篇來源資料"],
+                  ["get_daily_brief", "取得每日精選"],
+                ].map(([tool, label], index) => (
+                  <li key={tool} className="flex gap-4 border-t pt-4 first:border-t-0 first:pt-0">
                     <span className="font-mono text-caption text-ink">{String(index + 1).padStart(2, "0")}</span>
-                    <span className="text-body-sm text-text-secondary">{item}</span>
+                    <span>
+                      <code className="block font-mono text-caption text-text-primary">{tool}</code>
+                      <span className="mt-1 block text-body-sm text-text-secondary">{label}</span>
+                    </span>
                   </li>
                 ))}
               </ol>
               <p className="mt-8 text-caption text-text-muted">
-                Endpoint、配額與正式推出日期會喺實作確認後公布。
+                固定輸出語言：繁體中文（香港）· 結構化 JSON · 保留原文引用
               </p>
             </div>
           </div>
+        </Reveal>
+      </section>
+
+      <section
+        id="setup"
+        className="mx-auto max-w-container scroll-mt-24 px-6 pb-24 max-md:pb-16"
+      >
+        <Reveal>
+          <McpSetupCard />
         </Reveal>
       </section>
 
@@ -365,6 +443,9 @@ export default function Developers() {
       >
         <Reveal>
           <div className="mx-auto max-w-[720px]">
+            <p className="mb-6 text-center text-body-sm text-text-secondary">
+              想加入更多資料來源，或者希望我哋建立其他行業 MCP？登記需求俾我哋。
+            </p>
             <SignupCard
               key={requestedInterest ?? "none"}
               initialInterests={

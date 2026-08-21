@@ -23,6 +23,35 @@ const clean = (s: string): string =>
         .trim()
     : s;
 
+const CJK = /[\u3400-\u9fff]/;
+const AI_TITLE_SIGNAL = /(?:\bAI\b|\bAIGC\b|\bAGI\b|人工智(?:能|慧)|生成式|大模型|語言模型|機器學習|机器学习|深度學習|深度学习|神經網絡|神经网络|智能體|智能体|具身智能|多模態|多模态|推理模型|OpenAI|ChatGPT|GPT-?\d|Anthropic|Claude|Gemini|DeepMind|Llama|Qwen|DeepSeek|Kimi|Mistral|Grok|Sora|Copilot|Hugging\s*Face|英偉達|英伟达|NVIDIA|人形機器人|人形机器人|AI\s*Agent|Agentic)/i;
+const TRUSTED_AI_CATEGORIES = new Set([
+  "ai-models",
+  "ai-products",
+  "model_release",
+  "product_update",
+  "paper",
+  "research_paper",
+  "tip",
+  "opinion_tutorial",
+  "模型發布",
+  "模型發佈",
+  "產品發布",
+  "產品發佈",
+  "論文研究",
+  "觀點與技巧",
+]);
+
+function isFallbackDisplayReady(raw: AihotRawItem): boolean {
+  const title = clean(raw.title);
+  const summary = clean(raw.summary);
+  return Boolean(
+    CJK.test(title) &&
+      CJK.test(summary) &&
+      (TRUSTED_AI_CATEGORIES.has(raw.category) || AI_TITLE_SIGNAL.test(title)),
+  );
+}
+
 /* ============ Snapshot 原始型別 ============ */
 
 export interface AihotAttribution {
@@ -146,11 +175,19 @@ export function mapAihotCategory(raw: string): InsightCategory {
 
 /** AIHOT daily section label → 本站繁體分類（snapshot 已轉繁體，簡體 key 作向下兼容） */
 const DAILY_LABEL_MAP: Record<string, InsightCategory> = {
+  模型發布: "模型發布",
+  模型發佈: "模型發布",
+  "模型發布/更新": "模型發布",
+  "模型發佈/更新": "模型發布",
+  "模型发布/更新": "模型發布",
   產品發布: "產品發布",
   "產品發佈/更新": "產品發布",
   "产品发布/更新": "產品發布",
   行業動態: "行業動態",
   行业动态: "行業動態",
+  論文研究: "論文研究",
+  论文研究: "論文研究",
+  觀點與技巧: "觀點與技巧",
   技巧與觀點: "觀點與技巧",
   技巧与观点: "觀點與技巧",
 };
@@ -221,7 +258,9 @@ export function toAihotInsight(raw: AihotRawItem, now = Date.now()): AihotInsigh
 
 /** 全部 AIHOT 精選情報（mode=selected，API 原序，最新在前） */
 export const aihotInsights: AihotInsight[] =
-  snapshot.items.map((raw) => toAihotInsight(raw, SNAPSHOT_RENDER_NOW));
+  snapshot.items
+    .filter(isFallbackDisplayReady)
+    .map((raw) => toAihotInsight(raw, SNAPSHOT_RENDER_NOW));
 
 /**
  * 全部動態（mode=all&take=100）— 以 allItems 為主，補上 selected 精選中
@@ -231,12 +270,14 @@ export const aihotAllInsights: AihotInsight[] = (() => {
   const selectedIds = new Set(snapshot.items.map((i) => i.id));
   const merged = new Map<string, AihotRawItem>();
   for (const raw of snapshot.allItems ?? []) {
+    if (!isFallbackDisplayReady(raw)) continue;
     merged.set(raw.id, {
       ...raw,
       selected: raw.selected || selectedIds.has(raw.id),
     });
   }
   for (const raw of snapshot.items) {
+    if (!isFallbackDisplayReady(raw)) continue;
     if (!merged.has(raw.id)) merged.set(raw.id, { ...raw, selected: true });
   }
   return [...merged.values()]
@@ -340,6 +381,7 @@ function buildDaily(): AihotDaily {
   // 必須共用同一份去重列表，否則 masthead picks 同可見條目會對唔上。
   const seen = new Set<string>();
   const uniqueFlat = flat.filter((entry) => {
+    if (!CJK.test(entry.title) || !CJK.test(entry.summary)) return false;
     const key =
       entry.slug ??
       entry.canonical ??

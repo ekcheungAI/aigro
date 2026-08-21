@@ -16,7 +16,7 @@
  *
  * 行為:
  *   1. 拉 argro /news/hot + 分頁 /news/stream + /insights/daily
- *   2. 關鍵詞分類 + OpenCC cn→hk(同 fetch-argro.mjs 一致)
+ *   2. 關鍵詞分類 + OpenCC 全繁體字形正規化(同 fetch-argro.mjs 一致)
  *   3. fingerprint = sha256(url || title) 去重;placement: daily > featured > normal
  *   4. 新條目預設 pending；只在明確 ARGRO_AUTO_PUBLISH=true 時公開，
  *      fingerprint 衝突時只 merge upstream fields，保留人工 status/placement/source
@@ -24,16 +24,11 @@
  */
 
 import { createHash } from "node:crypto";
-import { Converter } from "opencc-js/cn2t";
-
-const toHK = Converter({ from: "cn", to: "hk" });
-const tc = (s) =>
-  typeof s === "string" && s
-    ? toHK(s)
-        .replace(/[\u{1F000}-\u{1FAFF}\u2600-\u27BF\u2B00-\u2BFF\uFE0F]/gu, "")
-        .replace(/[ \t]+\n/g, "\n")
-        .trim()
-    : s;
+import {
+  assessNewsQuality,
+  selectPublicationCandidates,
+} from "./lib/news-quality.mjs";
+import { toTraditionalChinese as tc } from "./lib/traditional-chinese.mjs";
 
 const ARGRO_BASE = process.env.ARGRO_API_BASE ?? "https://argro-api.zeabur.app";
 const ARGRO_KEY = process.env.ARGRO_API_KEY;
@@ -46,6 +41,10 @@ const STREAM_MAX_PAGES = Math.max(1, Math.min(50, Number(process.env.ARGRO_STREA
 // fingerprints. Keep lookup requests comfortably below that limit.
 const EXISTING_LOOKUP_CHUNK = 100;
 const AUTO_PUBLISH = process.env.ARGRO_AUTO_PUBLISH === "true";
+const MAX_AUTO_PUBLISH_PER_SOURCE_DAY = Math.max(
+  1,
+  Math.min(50, Number(process.env.ARGRO_MAX_AUTO_PUBLISH_PER_SOURCE_DAY ?? 12)),
+);
 
 if (!SUPA_KEY || !ARGRO_KEY) {
   console.error("SUPABASE_SECRET_KEY and ARGRO_API_KEY are required server-side.");
@@ -81,12 +80,33 @@ async function fetchStreamPages() {
 
 const CATEGORY_MAP = {
   model_release: "模型發布",
+  model: "模型發布",
+  模型发布: "模型發布",
+  模型發佈: "模型發布",
+  "模型發佈/更新": "模型發布",
   product_update: "產品發布",
+  product_release: "產品發布",
+  product: "產品發布",
+  产品发布: "產品發布",
+  產品發佈: "產品發布",
+  "產品發佈/更新": "產品發布",
   industry_event: "行業動態",
   policy: "行業動態",
+  industry: "行業動態",
+  行业动态: "行業動態",
   research_paper: "論文研究",
+  paper: "論文研究",
+  论文研究: "論文研究",
   opinion_tutorial: "觀點與技巧",
+  tips: "觀點與技巧",
+  技巧与观点: "觀點與技巧",
+  技巧與觀點: "觀點與技巧",
 };
+const normalizeCategory = (value) =>
+  CATEGORY_MAP[value?.trim?.() ?? ""] ??
+  (["模型發布", "產品發布", "行業動態", "論文研究", "觀點與技巧"].includes(value)
+    ? value
+    : "行業動態");
 const KEYWORD_CATEGORY = [
   ["論文研究", /paper|arxiv|benchmark|study|research|propose|evaluat|論文|研究|基準/i],
   ["觀點與技巧", /how to|guide|tutorial|tips|opinion|why|教學|教程|技巧|觀點|點樣|點解/i],
@@ -140,9 +160,10 @@ const upsertRow = (it, placement) => {
   const existing = rows.get(fp);
   if (existing && rank[existing.placement] >= rank[placement]) return;
   const title = tc(it.title ?? "");
+  const summary = tc(it.summary ?? "") || null;
   rows.set(fp, {
     title,
-    summary: tc(it.summary ?? "") || null,
+    summary,
     original_url: it.url ?? null,
     category: classify(it),
     tags: Array.isArray(it.topics) ? it.topics.slice(0, 5) : [],
@@ -150,7 +171,7 @@ const upsertRow = (it, placement) => {
       typeof it.hot_score === "number"
         ? Math.min(99, Math.round(it.hot_score * 100))
         : 0,
-    lang: hasCJK(it.title) ? "zh" : "en",
+    lang: hasCJK(title) && hasCJK(summary) ? "zh-HK" : "en",
     placement,
     fingerprint: fp,
     published_at: it.published_at ?? null,
@@ -200,6 +221,9 @@ for (const row of payload) {
   // Keep an explicit null when no source seed matches instead of omitting the
   // key (mixed new/existing batches otherwise fail with PGRST102).
   row.source_id = sourceId ?? null;
+  // Internal-only field used by the publication policy. It is removed before
+  // the PostgREST upsert so every database row keeps the schema shape.
+  row.source_name = tc(argroItem?.source?.name ?? "");
 }
 
 async function fetchExistingByFingerprint(fingerprints) {
@@ -223,18 +247,67 @@ for (let i = 0; i < payload.length; i += EXISTING_LOOKUP_CHUNK) {
 }
 for (const row of payload) {
   const existing = existingByFingerprint.get(row.fingerprint);
-  if (!existing) {
-    row.status = AUTO_PUBLISH ? "published" : "pending";
-    continue;
+  if (existing) {
+    // Keep explicit editor placement/source/category decisions. Existing
+    // summaries stay authoritative, but are normalised through OpenCC so old
+    // Simplified Chinese cannot leak back into the public Hong Kong feed.
+    row.status = existing.status ?? "pending";
+    row.placement = existing.placement ?? row.placement;
+    row.source_id = existing.source_id ?? row.source_id ?? null;
+    if (existing.summary?.trim()) row.summary = tc(existing.summary);
+    if (existing.category?.trim()) row.category = normalizeCategory(existing.category);
+  } else {
+    row.status = "pending";
   }
-  // Keep editor decisions when present, while preserving a uniform object
-  // shape across new and existing rows (required by PostgREST upsert).
-  row.status = existing.status ?? "pending";
-  row.placement = existing.placement ?? row.placement;
-  row.source_id = existing.source_id ?? row.source_id ?? null;
-  if (existing.summary?.trim()) row.summary = existing.summary;
-  if (existing.category?.trim()) row.category = existing.category;
+  if (hasCJK(row.title) && hasCJK(row.summary)) row.lang = "zh-HK";
+  else row.lang = "en";
 }
+
+const autoPublishFingerprints = new Set(
+  selectPublicationCandidates(payload, {
+    now: Date.parse(fetchedAt),
+    maxPerSourcePerDay: MAX_AUTO_PUBLISH_PER_SOURCE_DAY,
+  }).map((row) => row.fingerprint),
+);
+const blockerCounts = new Map();
+for (const row of payload) {
+  const existing = existingByFingerprint.get(row.fingerprint);
+  const quality = assessNewsQuality(row, { now: Date.parse(fetchedAt) });
+  for (const blocker of quality.blockers) {
+    blockerCounts.set(blocker, (blockerCounts.get(blocker) ?? 0) + 1);
+  }
+  const canRemainPublished =
+    autoPublishFingerprints.has(row.fingerprint) ||
+    (quality.blockers.length > 0 &&
+      quality.blockers.every(
+        (blocker) => blocker === "outside_freshness_window",
+      ));
+  const shouldAutoPublish =
+    AUTO_PUBLISH &&
+    quality.readyForPublication &&
+    autoPublishFingerprints.has(row.fingerprint);
+
+  if (existing?.status === "rejected" || existing?.status === "reviewed") {
+    row.status = existing.status;
+  } else if (shouldAutoPublish) {
+    row.status = "published";
+  } else if (existing?.status === "published" && canRemainPublished) {
+    row.status = "published";
+  } else {
+    // Fail closed: incomplete, English, non-AI or over-concentrated rows stay
+    // available to admins but disappear from every public read path.
+    row.status = "pending";
+  }
+  delete row.source_name;
+}
+
+console.log(
+  `quality: ${autoPublishFingerprints.size} publication candidate(s); ` +
+    [...blockerCounts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .map(([key, count]) => `${key}=${count}`)
+      .join(", "),
+);
 
 // upsert(on_conflict=fingerprint)— 分批 100
 let written = 0;
@@ -258,5 +331,7 @@ for (let i = 0; i < payload.length; i += 100) {
 }
 
 console.log(
-  `supabase: upserted ${written} items (${AUTO_PUBLISH ? "new rows published" : "new rows pending review"}). Done.`,
+  `supabase: upserted ${written} items (` +
+    `${payload.filter((row) => row.status === "published").length} published, ` +
+    `${payload.filter((row) => row.status === "pending").length} pending). Done.`,
 );

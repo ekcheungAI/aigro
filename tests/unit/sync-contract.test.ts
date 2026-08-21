@@ -14,9 +14,12 @@ describe("Argro sync release contract", () => {
     expect(script).toContain("fetchStreamPages");
   });
 
-  it("keeps new rows pending unless auto-publish is explicitly enabled", () => {
+  it("only auto-publishes rows that pass the Hong Kong Chinese AI quality gate", () => {
     expect(script).toContain('const AUTO_PUBLISH = process.env.ARGRO_AUTO_PUBLISH === "true"');
-    expect(script).toContain('row.status = AUTO_PUBLISH ? "published" : "pending"');
+    expect(script).toContain('from "./lib/news-quality.mjs"');
+    expect(script).toContain("assessNewsQuality");
+    expect(script).toContain("quality.readyForPublication");
+    expect(script).toContain('row.lang = "zh-HK"');
   });
 
   it("preserves editorial decisions without creating mixed-shape upsert batches", () => {
@@ -28,8 +31,10 @@ describe("Argro sync release contract", () => {
     expect(script).toContain(
       "row.source_id = existing.source_id ?? row.source_id ?? null",
     );
-    expect(script).toContain("if (existing.summary?.trim()) row.summary = existing.summary");
-    expect(script).toContain("if (existing.category?.trim()) row.category = existing.category");
+    expect(script).not.toContain("if (existing.summary?.trim()) row.summary = existing.summary");
+    expect(script).toContain(
+      "if (existing.category?.trim()) row.category = normalizeCategory(existing.category)",
+    );
     expect(script).not.toContain("delete row.status");
     expect(script).not.toContain("delete row.placement");
     expect(script).not.toContain("delete row.summary");
